@@ -23,7 +23,7 @@ namespace HugsAndKisses
         {
             try
             {
-                if (!Config.EnableMod || __instance.IsInvisible || __instance.isSleeping.Value || !who.canMove || who.NotifyQuests((Quest quest) => quest.OnItemOfferedToNpc(__instance, who.ActiveObject, false), true) || (who.pantsItem.Value?.ParentSheetIndex == 15 && (__instance.Name.Equals("Lewis")) || __instance.Name.Equals("Marnie")) || (__instance.Name.Equals("Krobus") && who.hasQuest("28")) || !who.IsLocalPlayer)
+                if (!Config.EnableMod || __instance.IsInvisible || __instance.isSleeping.Value || !who.canMove || (who.ActiveObject != null && who.NotifyQuests((Quest quest) => quest.OnItemOfferedToNpc(__instance, who.ActiveObject, false), true)) || (who.pantsItem.Value?.ParentSheetIndex == 15 && (__instance.Name.Equals("Lewis")) || __instance.Name.Equals("Marnie")) || (__instance.Name.Equals("Krobus") && who.hasQuest("28")) || !who.IsLocalPlayer)
                 {
                     return true;
                 }
