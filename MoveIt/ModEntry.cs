@@ -74,9 +74,12 @@ namespace MoveIt
                     sourceRect.Height = (movingObject as ResourceClump).height.Value * 16;
                     e.SpriteBatch.Draw(Game1.objectSpriteSheet, Game1.getMousePosition().ToVector2(), sourceRect, Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 1);
                 }
-                else if (movingObject is TerrainFeature)
+                else if (movingObject.GetType().IsAssignableTo(typeof(TerrainFeature)))
                 {
-                    (movingObject as TerrainFeature).draw(e.SpriteBatch, Game1.currentCursorTile);
+                    Vector2 tileLocation = (movingObject as TerrainFeature).Tile;
+                    (movingObject as TerrainFeature).Tile = Game1.currentCursorTile;
+                    (movingObject as TerrainFeature).draw(e.SpriteBatch);
+
                 }
                 else if (movingObject is Object)
                 {

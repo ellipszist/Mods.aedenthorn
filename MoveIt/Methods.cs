@@ -59,42 +59,14 @@ namespace MoveIt
                     }
                 }
             }
-            if (Game1.currentLocation is Forest)
-            {
-                foreach (var a in (Game1.currentLocation as Forest).marniesLivestock)
-                {
-                    if (a.GetBoundingBox().Contains(mp))
-                    {
-                        Pickup(a, cursorTile, a.Name);
-                        return;
-                    }
-                }
-                if ((Game1.currentLocation as Forest).log?.occupiesTile((int)cursorTile.X, (int)cursorTile.Y) == true)
-                {
-                    Pickup((Game1.currentLocation as Forest).log, cursorTile, (Game1.currentLocation as Forest).log.GetType().ToString());
-                    return;
-                }
-            }
-            if (Game1.currentLocation is Woods)
-            {
-
-                foreach (var rc in (Game1.currentLocation as Woods).stumps)
-                {
-                    if (rc.occupiesTile((int)cursorTile.X, (int)cursorTile.Y))
-                    {
-                        Pickup(rc, cursorTile, rc.GetType().ToString());
-                        return;
-                    }
-                }
-            }
             if (Game1.currentLocation.objects.TryGetValue(cursorTile, out var obj))
             {
                 Pickup(obj, cursorTile, obj.Name);
                 return;
             }
-            if (Game1.currentLocation is BuildableGameLocation)
+            if (Game1.currentLocation.buildings?.Any() == true)
             {
-                var building = (Game1.currentLocation as BuildableGameLocation).buildings.FirstOrDefault(b => b.intersects(new Rectangle(Utility.Vector2ToPoint(Game1.currentCursorTile * 64 - new Vector2(32, 32)), new Point(64, 64))));
+                var building = Game1.currentLocation.buildings.FirstOrDefault(b => b.intersects(new Rectangle(Utility.Vector2ToPoint(Game1.currentCursorTile * 64 - new Vector2(32, 32)), new Point(64, 64))));
                 if (building != null)
                 {
                     var mousePos = Game1.getMousePosition().ToVector2();
@@ -170,28 +142,11 @@ namespace MoveIt
             }
             else if (movingObject is ResourceClump)
             {
-                if (Game1.currentLocation is Forest && (Game1.currentLocation as Forest).log == movingObject)
+                var index = Game1.currentLocation.resourceClumps.IndexOf(movingObject as ResourceClump);
+                if (index >= 0)
                 {
-                    (Game1.currentLocation as Forest).log.currentTileLocation = Game1.lastCursorTile;
-                    (Game1.currentLocation as Forest).log.tile.Value = Game1.lastCursorTile;
+                    Game1.currentLocation.resourceClumps[index].Tile = Game1.lastCursorTile;
                     movingObject = null;
-                }
-                else if (Game1.currentLocation is Woods && (Game1.currentLocation as Woods).stumps.IndexOf(movingObject as ResourceClump) >= 0)
-                {
-                    var index = (Game1.currentLocation as Woods).stumps.IndexOf(movingObject as ResourceClump);
-                    (Game1.currentLocation as Woods).stumps[index].currentTileLocation = Game1.lastCursorTile;
-                    (Game1.currentLocation as Woods).stumps[index].tile.Value = Game1.lastCursorTile;
-                    movingObject = null;
-                }
-                else
-                {
-                    var index = Game1.currentLocation.resourceClumps.IndexOf(movingObject as ResourceClump);
-                    if (index >= 0)
-                    {
-                        Game1.currentLocation.resourceClumps[index].currentTileLocation = Game1.lastCursorTile;
-                        Game1.currentLocation.resourceClumps[index].tile.Value = Game1.lastCursorTile;
-                        movingObject = null;
-                    }
                 }
             }
             else if (movingObject is TerrainFeature)
@@ -201,8 +156,7 @@ namespace MoveIt
                     var index = Game1.currentLocation.largeTerrainFeatures.IndexOf(movingObject as LargeTerrainFeature);
                     if (index >= 0)
                     {
-                        Game1.currentLocation.largeTerrainFeatures[index].currentTileLocation = Game1.lastCursorTile;
-                        Game1.currentLocation.largeTerrainFeatures[index].tilePosition.Value = Game1.lastCursorTile;
+                        Game1.currentLocation.largeTerrainFeatures[index].Tile = Game1.lastCursorTile;
                         movingObject = null;
                     }
                 }
@@ -219,7 +173,7 @@ namespace MoveIt
                     Game1.currentLocation.terrainFeatures[Game1.currentCursorTile] = tf;
                     if (Game1.currentLocation.terrainFeatures[Game1.currentCursorTile] is HoeDirt)
                     {
-                        (Game1.currentLocation.terrainFeatures[Game1.currentCursorTile] as HoeDirt).updateNeighbors(Game1.currentLocation, Game1.currentCursorTile);
+                        (Game1.currentLocation.terrainFeatures[Game1.currentCursorTile] as HoeDirt).updateNeighbors();
                         if ((Game1.currentLocation.terrainFeatures[Game1.currentCursorTile] as HoeDirt).crop is not null)
                             (Game1.currentLocation.terrainFeatures[Game1.currentCursorTile] as HoeDirt).crop.updateDrawMath(Game1.currentCursorTile);
                     }
@@ -228,9 +182,9 @@ namespace MoveIt
             }
             else if (movingObject is Building)
             {
-                if (Game1.currentLocation is BuildableGameLocation && ((BuildableGameLocation)Game1.currentLocation).buildings.Contains((Building)movingObject))
+                if (Game1.currentLocation.buildings?.Contains((Building)movingObject) == true)
                 {
-                    if (((BuildableGameLocation)Game1.currentLocation).buildStructure((Building)movingObject, new Vector2((int)Math.Round(Game1.currentCursorTile.X - movingOffset.X / 64), (int)Math.Round(Game1.currentCursorTile.Y - movingOffset.Y / 64)), Game1.player, false))
+                    if (Game1.currentLocation.buildStructure((Building)movingObject, new Vector2((int)Math.Round(Game1.currentCursorTile.X - movingOffset.X / 64), (int)Math.Round(Game1.currentCursorTile.Y - movingOffset.Y / 64)), Game1.player, false))
                     {
                         if (movingObject is ShippingBin)
                         {
