@@ -46,7 +46,7 @@ namespace OverworldChests
 							double fraction = Math.Pow(random.NextDouble(), 1 / Config.RarityChance);
 							int level = (int)Math.Ceiling(fraction * Config.Mult);
 							Chest chest = advancedLootFrameworkApi.MakeChest(treasuresList, Config.ItemListChances, Config.MaxItems, Config.MinItemValue, Config.MaxItemValue, level, Config.IncreaseRate, Config.ItemsBaseMaxValue, freeTile);
-
+							chest.CanBeGrabbed = false;
 							chest.playerChoiceColor.Value = MakeTint(fraction);
 							chest.modData.Add(modKey, "T");
 							chest.modData.Add(modCoinKey, advancedLootFrameworkApi.GetChestCoins(level, Config.IncreaseRate, Config.CoinBaseMin, Config.CoinBaseMax).ToString());

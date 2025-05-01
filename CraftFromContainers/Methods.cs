@@ -12,7 +12,7 @@ namespace CraftAndBuildFromContainers
 {
 	public partial class ModEntry
 	{
-		internal static List<IInventory> cachedContainers;
+		public static List<IInventory> cachedContainers;
 
 		private static bool IsValidToPull()
 		{
@@ -29,8 +29,8 @@ namespace CraftAndBuildFromContainers
 
 		public static List<IInventory> GetContainers()
 		{
-			if (cachedContainers is not null)
-				return cachedContainers;
+			//if (cachedContainers is not null)
+				//return cachedContainers;
 
 			List<IInventory> list = new();
 
@@ -53,7 +53,7 @@ namespace CraftAndBuildFromContainers
 
 					if (farmhouse.upgradeLevel > 0)
 					{
-						list.Add(farmhouse.fridge.Value.Items);
+						list.Add(farmhouse.fridge.Value.GetItemsForPlayer());
 					}
 				}
 				foreach (Object obj in location.objects.Values)
@@ -62,11 +62,11 @@ namespace CraftAndBuildFromContainers
 					{
 						if (obj is Chest objAsChest && objAsChest.playerChest.Value && objAsChest.CanBeGrabbed && (!objAsChest.fridge.Value || Config.IncludeMiniFridges) && (objAsChest.SpecialChestType != Chest.SpecialChestTypes.MiniShippingBin || Config.IncludeMiniShippingBins) && (objAsChest.SpecialChestType != Chest.SpecialChestTypes.JunimoChest || Config.IncludeJunimoChests))
 						{
-							list.Add(objAsChest.Items);
+							list.Add(objAsChest.GetItemsForPlayer());
 						}
 						else if (obj.heldObject.Value is Chest objHeldObjectAsChest && Config.IncludeAutoGrabbers)
 						{
-							list.Add(objHeldObjectAsChest.Items);
+							list.Add(objHeldObjectAsChest.GetItemsForPlayer());
 						}
 					}
 				}
