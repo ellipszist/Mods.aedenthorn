@@ -69,6 +69,8 @@ namespace DMT
             foreach (var tileInfo in tileInfos)
             {
                 var pair = tileInfo.Split('=');
+                if (pair.Length != 2)
+                    continue;
                 var layerXY = pair[0].Split(' ');
                 var l = who.currentLocation.Map.GetLayer(layerXY[0]);
                 l ??= AddLayer(who.currentLocation.Map, layerXY[0]);
@@ -135,12 +137,10 @@ namespace DMT
                     if (tileInfo.Length == 3)
                     {
                         tile.Layer.Tiles[int.Parse(tileInfo[0]), int.Parse(tileInfo[1])].Properties[tileInfo[2]] = pair[1];
-                        continue;
                     }
-                    if (tileInfo.Length == 4)
+                    else if (tileInfo.Length == 4)
                     {
-                        var l = who.currentLocation.Map.GetLayer(tileInfo[0]);
-                        l ??= AddLayer(who.currentLocation.Map, tileInfo[0]);
+                        var l = who.currentLocation.Map.GetLayer(tileInfo[0]) ?? AddLayer(who.currentLocation.Map, tileInfo[0]);
                         l.Tiles[int.Parse(tileInfo[1]), int.Parse(tileInfo[2])].Properties[tileInfo[3]] = pair[1];
                     }
                 }
