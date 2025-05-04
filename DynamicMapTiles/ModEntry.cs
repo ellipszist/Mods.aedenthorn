@@ -13,6 +13,7 @@ using StardewModdingAPI.Utilities;
 using StardewValley;
 using Microsoft.Xna.Framework;
 using Netcode;
+using Newtonsoft.Json.Linq;
 
 namespace DMT
 {
@@ -33,7 +34,9 @@ namespace DMT
 
         internal PerScreen<Dictionary<string, DynamicTileProperty>> InternalProperties = new(() => []);
 
-        internal PerScreen<SecondUpdateData> SecondUpdateLoops = new(() => new());
+        internal PerScreen<List<SecondUpdateData>> SecondUpdateFiredLoops = new(() => new());
+        internal PerScreen<List<SecondUpdateData>> SecondUpdateContinuousLoops = new(() => new());
+        internal PerScreen<long> UpdateTicks = new(() => new());
 
         public override void Entry(IModHelper helper)
         {
@@ -45,7 +48,7 @@ namespace DMT
             Helper.Events.Player.Warped += onWarped;
             Helper.Events.Content.AssetRequested += onAssetRequested;
             Helper.Events.Content.AssetsInvalidated += onAssetInvalidated;
-            Helper.Events.GameLoop.OneSecondUpdateTicked += onOneSecondUpdate;
+            Helper.Events.GameLoop.UpdateTicked += onUpdateTicked;
             Helper.Events.GameLoop.SaveLoaded += onSaveLoad;
 
             Helper.ConsoleCommands.Add("dmt", "DMT test commands", onConsoleCommand);
@@ -55,30 +58,76 @@ namespace DMT
         {
             var passOutEvent = Helper.Reflection.GetField<NetEvent0>(Game1.player, "passOutEvent", false);
             passOutEvent.GetValue().onEvent += onFarmerPassOut;
+            UpdateTicks.Value = 0;
         }
 
-        private void onOneSecondUpdate(object? sender, OneSecondUpdateTickedEventArgs e)
+        private void onUpdateTicked(object? sender, UpdateTickedEventArgs e)
         {
-            if (!Config.Enabled || !SContext.IsPlayerFree || SecondUpdateLoops.Value.Loops <= 0)
+            if (!Config.Enabled || !SContext.IsPlayerFree)
                 return;
-            --SecondUpdateLoops.Value.Loops;
-
-            var who = SecondUpdateLoops.Value.Who;
-            var value = SecondUpdateLoops.Value.Value;
-            var value2 = SecondUpdateLoops.Value.FloatValue;
-
-            if (SecondUpdateLoops.Value.IsHealth)
+            if (SecondUpdateFiredLoops.Value.Count == 0 && SecondUpdateContinuousLoops.Value.Count == 0)
             {
-                if (value > 0)
-                {
-                    who.health = Math.Min(who.health + value, who.maxHealth);
-                    who.currentLocation.debris.Add(new(value, new(who.getStandingPosition().X + 8, who.getStandingPosition().Y), Color.LimeGreen, 1f, who));
-                }
-                else
-                    who.takeDamage(Math.Abs(value), false, null);
+                UpdateTicks.Value = 0;
                 return;
             }
-            who.Stamina += value2;
+            UpdateTicks.Value++;
+            if (SecondUpdateFiredLoops.Value.Count > 0)
+            {
+                for (int i = SecondUpdateFiredLoops.Value.Count - 1; i >= 0; i--)
+                {
+                    var su = SecondUpdateFiredLoops.Value[i];
+                    if (su.Loops <= 0)
+                    {
+                        SecondUpdateFiredLoops.Value.RemoveAt(i);
+                        continue;
+                    }
+                    if (UpdateTicks.Value - su.LastTick < 60)
+                        continue;
+                    su.LastTick = UpdateTicks.Value;
+                    --SecondUpdateFiredLoops.Value[i].Loops;
+                    FireTileEvent(su);
+                }
+            }
+            if (SecondUpdateContinuousLoops.Value.Count > 0)
+            {
+                for (int i = SecondUpdateContinuousLoops.Value.Count - 1; i >= 0; i--)
+                {
+                    var su = SecondUpdateContinuousLoops.Value[i];
+                    if (su.Who.currentLocation != su.Location || su.Who.Tile != su.Tile)
+                    {
+                        SecondUpdateContinuousLoops.Value.RemoveAt(i);
+                        continue;
+                    }
+                    if (UpdateTicks.Value - su.LastTick < 60)
+                        continue;
+                    su.LastTick = UpdateTicks.Value;
+                    FireTileEvent(su);
+                }
+            }
+        }
+
+        private void FireTileEvent(SecondUpdateData su)
+        {
+            var who = su.Who;
+            var value = su.Value;
+            switch (su.type)
+            {
+                case SecondUpdateData.SecondUpdateType.Health:
+                    if (value > 0)
+                    {
+                        who.health = (int)Math.Min(who.health + value, who.maxHealth);
+                        who.currentLocation.debris.Add(new((int)value, new(who.getStandingPosition().X + 8, who.getStandingPosition().Y), Color.LimeGreen, 1f, who));
+                    }
+                    else
+                        who.takeDamage(Math.Abs((int)value), false, null);
+                    who.currentTemporaryInvincibilityDuration = 500;
+                    return;
+                case SecondUpdateData.SecondUpdateType.Stamina:
+                    who.Stamina += value;
+                    return;
+                default:
+                    return;
+            }
         }
 
         private void onAssetInvalidated(object? sender, AssetsInvalidatedEventArgs e)
@@ -148,9 +197,7 @@ namespace DMT
 
         private void onFarmerPassOut()
         {
-            if (SecondUpdateLoops.Value.Loops <= 0)
-                return;
-            SecondUpdateLoops.Value.Loops = 0;
+            SecondUpdateFiredLoops.Value.Clear();
         }
     }
 }

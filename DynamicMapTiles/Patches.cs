@@ -135,9 +135,10 @@ namespace DMT
 
         internal static bool GameLocation_CheckAction_Prefix(GameLocation __instance, xLocation tileLocation, Farmer who, ref bool __result)
         {
-            if (!Enabled || !__instance.isTileOnMap(new Vector2(tileLocation.X, tileLocation.Y)))
+            if (!Enabled || !__instance.isTileOnMap(new Vector2(tileLocation.X, tileLocation.Y)) || who.ActiveItem is null)
                 return true;
-            if (who.ActiveItem is not Item item || !TriggerActions([.. __instance.Map.Layers], who, new(tileLocation.X, tileLocation.Y),
+            Item item = who.ActiveItem;
+            if (!TriggerActions([.. __instance.Map.Layers], who, new(tileLocation.X, tileLocation.Y),
                 [
                     string.Format(Triggers.UseItem, BuildFormattedTrigger(item.Name, '-', item.Stack, '-', item.Quality)),
                     string.Format(Triggers.UseItem, BuildFormattedTrigger(item.QualifiedItemId, '-', item.Stack, '-', item.Quality)),

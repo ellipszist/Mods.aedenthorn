@@ -35,6 +35,8 @@ namespace DMT.Data
         public const string StaminaKey = "DMT/stamina";
         public const string HealthPerSecondKey = "DMT/healthPerSecond";
         public const string StaminaPerSecondKey = "DMT/staminaPerSecond";
+        public const string HealthPerSecondContKey = "DMT/healthPerSecondContinuous";
+        public const string StaminaPerSecondContKey = "DMT/staminaPerSecondContinuous";
         public const string BuffKey = "DMT/buff";
         public const string SpeedKey = "DMT/speed";
         public const string MoveKey = "DMT/move";

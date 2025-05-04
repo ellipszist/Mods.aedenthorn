@@ -1,22 +1,26 @@
-﻿using StardewValley;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.Xna.Framework;
+using StardewValley;
 
 namespace DMT.Data
 {
     public record SecondUpdateData
     {
+        public long LastTick { get; set; } = Context.UpdateTicks.Value - 60;
         public int Loops { get; set; } = 0;
 
-        public int Value { get; set; } = 0;
+        public Vector2 Tile { get; set; }
 
-        public float FloatValue { get; set; } = 0f;
+        public GameLocation Location { get; set; }
+
+        public float Value { get; set; } = 0f;
 
         public Farmer Who { get; set; }
 
-        public bool IsHealth { get; set; } = true;
+        public enum SecondUpdateType
+        {
+            Health,
+            Stamina
+        }
+        public SecondUpdateType type { get; set; } = SecondUpdateType.Health;
     }
 }

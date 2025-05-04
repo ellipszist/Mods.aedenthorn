@@ -75,12 +75,12 @@ namespace DMT
                 if (string.IsNullOrEmpty(pair[1]))
                 {
                     l.Tiles[int.Parse(layerXY[1]), int.Parse(layerXY[2])] = null;
-                    return;
+                    continue;
                 }
                 if (int.TryParse(pair[1], out int num))
                 {
                     l.Tiles[int.Parse(layerXY[1]), int.Parse(layerXY[2])] = new StaticTile(l, tile.TileSheet, BlendMode.Alpha, num);
-                    return;
+                    continue;
                 }
                 if (pair[1].Contains(','))
                 {
@@ -99,13 +99,13 @@ namespace DMT
 
                     }
                     l.Tiles[int.Parse(layerXY[1]), int.Parse(layerXY[2])] = new AnimatedTile(l, [.. tiles], int.Parse(indexesDuration[1]));
-                    return;
+                    continue;
                 }
                 if (pair[1].Contains('/'))
                 {
                     var sheetIndex = pair[1].Split('/');
                     l.Tiles[int.Parse(layerXY[1]), int.Parse(layerXY[2])] = new StaticTile(tile.Layer, who.currentLocation.Map.GetTileSheet(sheetIndex[0]), BlendMode.Alpha, int.Parse(sheetIndex[1]));
-                    return;
+                    continue;
                 }
             }
         }
@@ -343,7 +343,15 @@ namespace DMT
             var split = value.Split('|');
             if (!int.TryParse(split[0], out int loops) || !int.TryParse(split[1], out int number))
                 return;
-            Context.SecondUpdateLoops.Value = new() { Loops = loops, Value = number, IsHealth = true, Who = who };
+            Context.SecondUpdateFiredLoops.Value.Add(new() { Loops = loops, Value = number, type = SecondUpdateData.SecondUpdateType.Health, Who = who });
+        }
+        
+
+        public static void DoUpdateHealthPerSecondCont(Farmer who, string value)
+        {
+            if (!int.TryParse(value, out int number))
+                return;
+            Context.SecondUpdateContinuousLoops.Value.Add(new() { Tile = who.Tile, Location = who.currentLocation, Value = number, type = SecondUpdateData.SecondUpdateType.Health, Who = who });
         }
 
         public static void DoUpdateStamina(Farmer who, string value)
@@ -360,7 +368,15 @@ namespace DMT
             var split = value.Split('|');
             if (!int.TryParse(split[0], out int loops) || !float.TryParse(split[1], out var number))
                 return;
-            Context.SecondUpdateLoops.Value = new() { Loops = loops, FloatValue = number, IsHealth = false, Who = who };
+            Context.SecondUpdateFiredLoops.Value.Add(new() { Loops = loops, Value = number, type = SecondUpdateData.SecondUpdateType.Health, Who = who });
+        }
+        
+
+        public static void DoUpdateStaminaPerSecondCont(Farmer who, string value)
+        {
+            if (!int.TryParse(value, out int number))
+                return;
+            Context.SecondUpdateContinuousLoops.Value.Add(new() { Tile = who.Tile, Location = who.currentLocation, Value = number, type = SecondUpdateData.SecondUpdateType.Stamina, Who = who });
         }
 
         public static void DoAddBuff(Farmer who, string value)

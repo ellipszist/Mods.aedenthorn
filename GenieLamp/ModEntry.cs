@@ -29,7 +29,6 @@ namespace GenieLamp
 			SHelper = helper;
 
 			helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
-			helper.Events.GameLoop.DayStarted += GameLoop_DayStarted;
 
 			// Load Harmony patches
 			try
@@ -46,11 +45,6 @@ namespace GenieLamp
 				Monitor.Log($"Issue with Harmony patching: {e}", LogLevel.Error);
 				return;
 			}
-		}
-
-		private void GameLoop_DayStarted(object sender, StardewModdingAPI.Events.DayStartedEventArgs e)
-		{
-			Game1.player.addItemToInventory(new Object("124", 1));
 		}
 
 		private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
