@@ -60,7 +60,8 @@ namespace FarmerPortraits
                 if (!Config.EnableMod || !__instance.transitionInitialized ||  __instance.transitioning || (!Config.ShowWithQuestions && __instance.isQuestion) ||  (!Config.ShowWithNPCPortrait && __instance.isPortraitBox()) || (!Config.ShowWithEvents && Game1.eventUp) || (!Config.ShowMisc && !__instance.isQuestion && !__instance.isPortraitBox()))
                     return;
                 int boxHeight = 384;
-                drawBox(b, __instance.x - 448 - 32, __instance.y + __instance.height - boxHeight, 448, boxHeight);
+                int boxWidth = 448;
+                drawBox(b, __instance.x - boxWidth - 32, __instance.y + __instance.height - boxHeight, boxWidth, boxHeight);
             }
 
             private static void drawBox(SpriteBatch b, int xPos, int yPos, int boxWidth, int boxHeight)
@@ -74,17 +75,17 @@ namespace FarmerPortraits
                 b.Draw(Game1.mouseCursors, new Vector2(xPos + boxWidth - 8, yPos - 28), new Rectangle?(new Rectangle(291, 311, 12, 11)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.87f);
                 b.Draw(Game1.mouseCursors, new Vector2(xPos + boxWidth - 8, yPos + boxHeight - 8), new Rectangle?(new Rectangle(291, 326, 12, 12)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.87f);
 
-                if (backgroundTexture != null && Config.UseCustomBackground)
-                    b.Draw(backgroundTexture, new Rectangle(xPos - 4, yPos, boxWidth + 12, boxHeight + 4), null, Color.White);
+                if (backgroundTexture.Value != null && Config.UseCustomBackground)
+                    b.Draw(backgroundTexture.Value, new Rectangle(xPos - 4, yPos, boxWidth + 12, boxHeight + 4), null, Color.White);
                 else
                     b.Draw(Game1.mouseCursors, new Vector2(xPos - 4, yPos), new Rectangle?(new Rectangle(583, 411, 115, 97)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.88f); // background
 
                 int portraitBoxX = xPos + 76;
                 int portraitBoxY = yPos + boxHeight / 2 - 148 - 36;
                 int frame = Config.FacingFront ? 0 : 6;
-                if (portraitTexture != null && Config.UseCustomPortrait)
+                if (portraitTexture.Value != null && Config.UseCustomPortrait)
                 {
-                    b.Draw(portraitTexture, new Rectangle(portraitBoxX + 20, portraitBoxY + 24, 256, 256), null, Color.White, 0f, Vector2.Zero, SpriteEffects.None, 0.88f);
+                    b.Draw(portraitTexture.Value, new Rectangle(portraitBoxX + 20, portraitBoxY + 24, 256, 256), null, Color.White, 0f, Vector2.Zero, SpriteEffects.None, 0.88f);
                 }
                 else
                 {

@@ -2,7 +2,11 @@
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
+using StardewModdingAPI.Utilities;
 using StardewValley;
+using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace FarmerPortraits
 {
@@ -15,8 +19,8 @@ namespace FarmerPortraits
         public static ModConfig Config;
         public static ModEntry context;
 
-        private static Texture2D portraitTexture;
-        private static Texture2D backgroundTexture;
+        private static PerScreen<Texture2D> portraitTexture = new(() => null);
+        private static PerScreen<Texture2D> backgroundTexture = new(() => null);
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
@@ -43,7 +47,7 @@ namespace FarmerPortraits
         {
             if (e.Button == SButton.OemCloseBrackets)
             {
-                Game1.DrawDialogue(Game1.getCharacterFromName("Lewis"), "Data\\ExtraDialogue:Clint_NoInventorySpace");
+                Game1.DrawDialogue(Game1.getCharacterFromName("Clint"), "Data\\ExtraDialogue:Clint_NoInventorySpace");
             }
         }
 
@@ -55,21 +59,84 @@ namespace FarmerPortraits
 
         private static void ReloadTextures()
         {
+            portraitTexture.Value = null;
+            backgroundTexture.Value = null;
             try
             {
-                portraitTexture = SHelper.GameContent.Load<Texture2D>("aedenthorn.FarmerPortraits/portrait");
+                var files = Directory.GetFiles(SHelper.DirectoryPath, $"portrait_{Game1.player.Name}.png");
+                if (files.Any())
+                {
+                    portraitTexture.Value = SHelper.ModContent.Load<Texture2D>(files[0].Substring(SHelper.DirectoryPath.Length + 1));
+                }
+                if (portraitTexture.Value is null)
+                {
+                    files = Directory.GetFiles(SHelper.DirectoryPath, "portrait.png");
+                    if (files.Any())
+                    {
+                        portraitTexture.Value = SHelper.ModContent.Load<Texture2D>(files[0].Substring(SHelper.DirectoryPath.Length + 1));
+                    }
+                }
+                if (portraitTexture.Value is null)
+                {
+                    try
+                    {
+                        portraitTexture.Value = SHelper.GameContent.Load<Texture2D>($"aedenthorn.FarmerPortraits/portrait_{Game1.player.Name}");
+                    }
+                    catch
+                    {
+                        try
+                        {
+                            portraitTexture.Value = SHelper.GameContent.Load<Texture2D>("aedenthorn.FarmerPortraits/portrait");
+                        }
+                        catch
+                        {
+                            portraitTexture.Value = null;
+                        }
+                    }
+                }
+
             }
             catch
             {
-                portraitTexture = null;
+                portraitTexture.Value = null;
             }
             try
             {
-                backgroundTexture = SHelper.GameContent.Load<Texture2D>("aedenthorn.FarmerPortraits/background");
+                var files = Directory.GetFiles(SHelper.DirectoryPath, $"background_{Game1.player.Name}.png");
+                if (files.Any())
+                {
+                    backgroundTexture.Value = SHelper.ModContent.Load<Texture2D>(files[0].Substring(SHelper.DirectoryPath.Length + 1));
+                }
+                if (backgroundTexture.Value is null)
+                {
+                    files = Directory.GetFiles(SHelper.DirectoryPath, "background.png");
+                    if (files.Any())
+                    {
+                        backgroundTexture.Value = SHelper.ModContent.Load<Texture2D>(files[0].Substring(SHelper.DirectoryPath.Length + 1));
+                    }
+                }
+                if (backgroundTexture.Value is null)
+                {
+                    try
+                    {
+                        backgroundTexture.Value = SHelper.GameContent.Load<Texture2D>($"aedenthorn.FarmerPortraits/background_{Game1.player.Name}");
+                    }
+                    catch
+                    {
+                        try
+                        {
+                            backgroundTexture.Value = SHelper.GameContent.Load<Texture2D>("aedenthorn.FarmerPortraits/background");
+                        }
+                        catch
+                        {
+                            backgroundTexture.Value = null;
+                        }
+                    }
+                }
             }
             catch
             {
-                backgroundTexture = null;
+                backgroundTexture.Value = null;
             }
         }
 
