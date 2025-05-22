@@ -27,7 +27,6 @@ namespace FruitTreeTweaks
                 if (!Config.EnableMod && __instance.daysUntilMature.Value != Config.DaysUntilMature)
                     return;
                 __instance.daysUntilMature.Value = Math.Min(Config.DaysUntilMature, __instance.daysUntilMature.Value);
-                //Log($"New fruit tree: set days until mature to {Config.DaysUntilMature}", debugOnly: true); unnecessary atm
             }
         }
         [HarmonyPatch(typeof(FruitTree), new Type[] { typeof(string), typeof(int) })]
@@ -39,7 +38,6 @@ namespace FruitTreeTweaks
                 if (!Config.EnableMod && __instance.daysUntilMature.Value != Config.DaysUntilMature)
                     return;
                 __instance.daysUntilMature.Value = Math.Min(Config.DaysUntilMature, __instance.daysUntilMature.Value);
-                //Log($"New fruit tree: set days until mature to {Config.DaysUntilMature}", debugOnly: true); unnecessary atm
             }
         }
         [HarmonyPatch(typeof(FruitTree), nameof(FruitTree.dayUpdate))]
@@ -47,13 +45,13 @@ namespace FruitTreeTweaks
         {
             public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
             {
-                //Log($"Transpiling FruitTree.dayUpdate", LogLevel.Debug);
+                SMonitor.Log($"Transpiling FruitTree.dayUpdate", LogLevel.Debug);
                 var codes = new List<CodeInstruction>(instructions);
                 for (int i = 0; i < codes.Count; i++)
                 {
                     if (i < codes.Count - 3 && codes[i].opcode == OpCodes.Ldfld && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(FruitTree), nameof(FruitTree.daysUntilMature)) && codes[i + 3].opcode == OpCodes.Bgt_S)
                     {
-                        //Log("replacing daysUntilMature value with method", LogLevel.Debug);
+                        SMonitor.Log("replacing daysUntilMature value with method", LogLevel.Debug);
                         codes.Insert(i + 3, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.ChangeDaysToMatureCheck))));
                     }
                 }
