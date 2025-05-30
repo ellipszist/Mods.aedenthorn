@@ -90,6 +90,12 @@ namespace FishSpotBait
 				getValue: () => Config.ModEnabled,
 				setValue: value => Config.ModEnabled = value
 			);
+			configMenu.AddKeybind(
+				mod: ModManifest,
+				name: () => SHelper.Translation.Get("GMCM.ModKey.Name"),
+				getValue: () => Config.ModKey,
+				setValue: value => Config.ModKey = value
+			);
 			configMenu.AddNumberOption(
 				mod: ModManifest,
 				name: () => SHelper.Translation.Get("GMCM.RandomRadius.Name"),

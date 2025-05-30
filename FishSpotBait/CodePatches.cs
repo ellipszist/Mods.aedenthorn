@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using xTile.Dimensions;
 using StardewValley;
 using Object = StardewValley.Object;
+using StardewModdingAPI;
 
 namespace FishSpotBait
 {
@@ -13,7 +14,7 @@ namespace FishSpotBait
 		{
 			public static bool Prefix(GameLocation __instance, Location tileLocation, Farmer who, ref bool __result)
 			{
-				if (!Config.ModEnabled || who.ActiveObject is null || who.ActiveObject.Category != Object.baitCategory)
+				if (!Config.ModEnabled || (Config.ModKey != SButton.None && !SHelper.Input.IsDown(Config.ModKey)) || who.ActiveObject is null || who.ActiveObject.Category != Object.baitCategory)
 					return true;
 
 				Point fishSpotTile = Utility.Vector2ToPoint(Game1.currentCursorTile);

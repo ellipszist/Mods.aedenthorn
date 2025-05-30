@@ -6,5 +6,5 @@
 	"UniqueID": "aedenthorn.PushPull",
 	"EntryDll": "PushPull.dll",
 	"MinimumApiVersion": "4.1.0",
-	"UpdateKeys": [ "Nexus:" ]
+	"UpdateKeys": [ "Nexus:34375" ]
 }

@@ -75,7 +75,7 @@ namespace PushPull
 
             var destination = f.Tile;
             
-            if (!f.currentLocation.objects.TryGetValue(startTile, out var obj) || movingObjects.ContainsKey(obj) || !IsAllowed(f.currentLocation, obj, destination, false))
+            if (!f.currentLocation.objects.TryGetValue(startTile, out var obj) || movingObjects.ContainsKey(obj) || !IsAllowed(f.currentLocation, obj, destination, false) || !IsAllowed(f.currentLocation, obj, destination - new Vector2(xDiff, yDiff), false))
                 return false;
 
             if (PullingTile.Value != startTile)
