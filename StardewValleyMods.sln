@@ -595,6 +595,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModifyThis", "ModifyThis\Mo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PushPull", "PushPull\PushPull.csproj", "{C705B7EC-F37B-1C69-6241-C93E0AA36496}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weeds", "Weeds\Weeds.csproj", "{F832D34D-1885-1B06-52E5-B648B21A9722}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -2939,6 +2941,14 @@ Global
 		{C705B7EC-F37B-1C69-6241-C93E0AA36496}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C705B7EC-F37B-1C69-6241-C93E0AA36496}.Release|x64.ActiveCfg = Release|Any CPU
 		{C705B7EC-F37B-1C69-6241-C93E0AA36496}.Release|x64.Build.0 = Release|Any CPU
+		{F832D34D-1885-1B06-52E5-B648B21A9722}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F832D34D-1885-1B06-52E5-B648B21A9722}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F832D34D-1885-1B06-52E5-B648B21A9722}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F832D34D-1885-1B06-52E5-B648B21A9722}.Debug|x64.Build.0 = Debug|Any CPU
+		{F832D34D-1885-1B06-52E5-B648B21A9722}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F832D34D-1885-1B06-52E5-B648B21A9722}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F832D34D-1885-1B06-52E5-B648B21A9722}.Release|x64.ActiveCfg = Release|Any CPU
+		{F832D34D-1885-1B06-52E5-B648B21A9722}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
