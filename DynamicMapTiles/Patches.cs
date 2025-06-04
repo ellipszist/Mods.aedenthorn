@@ -6,6 +6,7 @@ using StardewValley;
 using StardewValley.Monsters;
 using System.Globalization;
 using static StardewValley.Minigames.AbigailGame;
+using Object = StardewValley.Object;
 
 namespace DMT
 {
@@ -68,6 +69,18 @@ namespace DMT
             harmony.Patch(
                 original: AccessTools.Method(typeof(Monster), nameof(Monster.takeDamage), [typeof(int), typeof(int), typeof(int), typeof(bool), typeof(double), typeof(Farmer)]),
                 postfix: new(typeof(Patches), nameof(Monster_TakeDamage_Postfix))
+            );
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Crop), nameof(Crop.newDay)),
+                postfix: new(typeof(Patches), nameof(Crop_newDay_Postfix))
+            );
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Object), nameof(Object.placementAction)),
+                postfix: new(typeof(Patches), nameof(Object_placementAction_Postfix))
+            );
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Object), nameof(Object.checkForAction)),
+                postfix: new(typeof(Patches), nameof(Object_checkForAction_Postfix))
             );
         }
 
@@ -256,6 +269,24 @@ namespace DMT
             if (!Enabled || (!Context.Config.TriggerDuringEvents && Game1.eventUp) || __instance.Health > 0 || __instance.currentLocation?.Name != who.currentLocation.Name)
                 return;
             TriggerActions([.. who.currentLocation.Map.Layers], who, __instance.TilePoint, [string.Format(Triggers.MonsterSlain, Utils.BuildFormattedTrigger(__instance.Name))]);
+        }
+        internal static void Crop_newDay_Postfix(Crop __instance)
+        {
+            if (!Enabled || !Game1.IsMasterGame || __instance.IsErrorCrop())
+                return;
+            TriggerActions([.. __instance.currentLocation.Map.Layers], Game1.player, __instance.tilePosition.ToPoint(), [string.Format(Triggers.CropGrown, Utils.BuildFormattedTrigger(__instance.netSeedIndex.Value))]);
+        }
+        internal static void Object_placementAction_Postfix(Object __instance, GameLocation location, int x, int y, Farmer who)
+        {
+            if (!Enabled || who is null)
+                return;
+            TriggerActions([.. location.Map.Layers], who, __instance.TileLocation.ToPoint(), [string.Format(Triggers.ObjectPlaced, Utils.BuildFormattedTrigger(__instance.QualifiedItemId))]);
+        }
+        internal static void Object_checkForAction_Postfix(Object __instance, Farmer who, bool justCheckingForActivity)
+        {
+            if (!Enabled || who is null || justCheckingForActivity)
+                return;
+            TriggerActions([.. __instance.Location.Map.Layers], who, __instance.TileLocation.ToPoint(), [string.Format(Triggers.ObjectClicked, Utils.BuildFormattedTrigger(__instance.QualifiedItemId))]);
         }
     }
 }

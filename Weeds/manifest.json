@@ -6,5 +6,5 @@
 	"UniqueID": "aedenthorn.Weeds",
 	"EntryDll": "Weeds.dll",
 	"MinimumApiVersion": "4.1.0",
-	"UpdateKeys": [ "Nexus:34375" ]
+	"UpdateKeys": [ "Nexus:" ]
 }

@@ -13,7 +13,6 @@ using StardewModdingAPI.Utilities;
 using StardewValley;
 using Microsoft.Xna.Framework;
 using Netcode;
-using Newtonsoft.Json.Linq;
 
 namespace DMT
 {
