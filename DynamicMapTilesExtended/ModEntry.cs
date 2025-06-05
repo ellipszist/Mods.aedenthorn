@@ -1,25 +1,25 @@
-﻿global using xRectangle = xTile.Dimensions.Rectangle;
-global using xLocation = xTile.Dimensions.Location;
-global using xSize = xTile.Dimensions.Size;
-global using SContext = StardewModdingAPI.Context;
-global using LogLevel = StardewModdingAPI.LogLevel;
-global using static DMT.ModEntry;
+﻿global using static DMT.ModEntry;
 global using static DMT.Utils;
-using DMT.Data;
-using StardewModdingAPI;
-using StardewModdingAPI.Events;
+global using LogLevel = StardewModdingAPI.LogLevel;
+global using SContext = StardewModdingAPI.Context;
+global using xLocation = xTile.Dimensions.Location;
+global using xRectangle = xTile.Dimensions.Rectangle;
+global using xSize = xTile.Dimensions.Size;
 using DMT.APIs;
-using StardewModdingAPI.Utilities;
-using StardewValley;
+using DMT.Data;
 using Microsoft.Xna.Framework;
 using Netcode;
+using StardewModdingAPI;
+using StardewModdingAPI.Events;
+using StardewModdingAPI.Utilities;
+using StardewValley;
 
 namespace DMT
 {
     internal class ModEntry : Mod
     {
-        public string TileDataDictPath => $"DMT/Tiles";
-        public string AnimationDataDictPath => $"DMT/Animations";
+        public string TileDataDictPath => "DMT/Tiles";
+        public string AnimationDataDictPath => "DMT/Animations";
 
         internal static ModEntry Context { get; private set; }
 
@@ -161,27 +161,27 @@ namespace DMT
             Patches.Patch(this);
 
             var configMenu = Helper.ModRegistry.GetApi<IGMCMApi>("spacechase0.GenericModConfigMenu");
-            if (configMenu is null)
-                return;
-
-            // register mod
-            configMenu.Register(
-                mod: ModManifest,
-                reset: () => Config = new(),
-                save: () => Helper.WriteConfig(Config)
-            );
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Mod Enabled",
-                getValue: () => Config.Enabled,
-                setValue: value => Config.Enabled = value
-            );
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Trigger During Events",
-                getValue: () => Config.TriggerDuringEvents,
-                setValue: value => Config.TriggerDuringEvents = value
-            );
+            if (configMenu is not null)
+            {
+                // register mod
+                configMenu.Register(
+                    mod: ModManifest,
+                    reset: () => Config = new(),
+                    save: () => Helper.WriteConfig(Config)
+                );
+                configMenu.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => "Mod Enabled",
+                    getValue: () => Config.Enabled,
+                    setValue: value => Config.Enabled = value
+                );
+                configMenu.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => "Trigger During Events",
+                    getValue: () => Config.TriggerDuringEvents,
+                    setValue: value => Config.TriggerDuringEvents = value
+                );
+            }
         }
 
         private void onConsoleCommand(string cmd, string[] args)

@@ -1,8 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using StardewValley;
-using xTile.Tiles;
-
-namespace DMT.Data
+﻿namespace DMT.Data
 {
     public static class Keys
     {

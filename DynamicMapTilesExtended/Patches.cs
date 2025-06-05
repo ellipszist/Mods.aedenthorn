@@ -5,7 +5,6 @@ using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Monsters;
 using System.Globalization;
-using static StardewValley.Minigames.AbigailGame;
 using Object = StardewValley.Object;
 
 namespace DMT

@@ -395,8 +395,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoundTweaker", "SoundTweake
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Guns", "Guns\Guns.csproj", "{C91B4E10-BA03-45CC-86FF-ABAF908E24A4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DynamicMapTiles", "DynamicMapTiles\DynamicMapTiles.csproj", "{021BC077-A5C6-4BCF-A7E4-596355F593FB}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AdditionalMineMaps", "AdditionalMineMaps\AdditionalMineMaps.csproj", "{08A7CFBA-8B09-4410-A4A2-CCEA4EB98437}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConversationBubbles", "ConversationBubbles\ConversationBubbles.csproj", "{1B121E4E-459D-4955-AF9E-088A1E4029E5}"
@@ -596,6 +594,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PushPull", "PushPull\PushPull.csproj", "{C705B7EC-F37B-1C69-6241-C93E0AA36496}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weeds", "Weeds\Weeds.csproj", "{F832D34D-1885-1B06-52E5-B648B21A9722}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicMapTilesExtended", "DynamicMapTilesExtended\DynamicMapTilesExtended.csproj", "{A679E12B-FC18-AEE8-1359-A879EC49FCDF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -2141,14 +2141,6 @@ Global
 		{C91B4E10-BA03-45CC-86FF-ABAF908E24A4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C91B4E10-BA03-45CC-86FF-ABAF908E24A4}.Release|x64.ActiveCfg = Release|x64
 		{C91B4E10-BA03-45CC-86FF-ABAF908E24A4}.Release|x64.Build.0 = Release|x64
-		{021BC077-A5C6-4BCF-A7E4-596355F593FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{021BC077-A5C6-4BCF-A7E4-596355F593FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{021BC077-A5C6-4BCF-A7E4-596355F593FB}.Debug|x64.ActiveCfg = Debug|x64
-		{021BC077-A5C6-4BCF-A7E4-596355F593FB}.Debug|x64.Build.0 = Debug|x64
-		{021BC077-A5C6-4BCF-A7E4-596355F593FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{021BC077-A5C6-4BCF-A7E4-596355F593FB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{021BC077-A5C6-4BCF-A7E4-596355F593FB}.Release|x64.ActiveCfg = Release|x64
-		{021BC077-A5C6-4BCF-A7E4-596355F593FB}.Release|x64.Build.0 = Release|x64
 		{08A7CFBA-8B09-4410-A4A2-CCEA4EB98437}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{08A7CFBA-8B09-4410-A4A2-CCEA4EB98437}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{08A7CFBA-8B09-4410-A4A2-CCEA4EB98437}.Debug|x64.ActiveCfg = Debug|x64
@@ -2949,6 +2941,14 @@ Global
 		{F832D34D-1885-1B06-52E5-B648B21A9722}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F832D34D-1885-1B06-52E5-B648B21A9722}.Release|x64.ActiveCfg = Release|Any CPU
 		{F832D34D-1885-1B06-52E5-B648B21A9722}.Release|x64.Build.0 = Release|Any CPU
+		{A679E12B-FC18-AEE8-1359-A879EC49FCDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A679E12B-FC18-AEE8-1359-A879EC49FCDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A679E12B-FC18-AEE8-1359-A879EC49FCDF}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A679E12B-FC18-AEE8-1359-A879EC49FCDF}.Debug|x64.Build.0 = Debug|Any CPU
+		{A679E12B-FC18-AEE8-1359-A879EC49FCDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A679E12B-FC18-AEE8-1359-A879EC49FCDF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A679E12B-FC18-AEE8-1359-A879EC49FCDF}.Release|x64.ActiveCfg = Release|Any CPU
+		{A679E12B-FC18-AEE8-1359-A879EC49FCDF}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
