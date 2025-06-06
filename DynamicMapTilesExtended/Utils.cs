@@ -547,7 +547,7 @@ namespace DMT
                     continue;
                 if (!Context.InternalProperties.Value[item.Value].Key.Equals(key, StringComparison.OrdinalIgnoreCase))
                     continue;
-                propertyValue = item.Value;
+                propertyValue = Context.InternalProperties.Value[item.Value].Value;
                 return true;
             }
 

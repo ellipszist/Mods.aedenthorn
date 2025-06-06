@@ -212,13 +212,8 @@ namespace DMT
             {
                 var tile = layer.Tiles[tilePos.X, tilePos.Y];
                 var oldTile = layer.Tiles[oldTilePos.X, oldTilePos.Y];
-                
-                if ((oldTile?.HasProperty(Keys.SlipperyKey, out var prop) ?? false) && float.TryParse(prop, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
-                {
-                    f.xVelocity = 0f;
-                    f.yVelocity = 0f;
-                }
-                if ((tile?.HasProperty(Keys.SlipperyKey, out prop) ?? false) && float.TryParse(prop, NumberStyles.Any, CultureInfo.InvariantCulture, out var amount))
+
+                if ((tile?.HasProperty(Keys.SlipperyKey, out var prop) ?? false) && float.TryParse(prop, NumberStyles.Any, CultureInfo.InvariantCulture, out var amount))
                 {
                     //Cap off with Math.Max (determine max allowed speed)
                     if (f.movementDirections.Contains(0))
@@ -229,6 +224,11 @@ namespace DMT
                         f.yVelocity = -Math.Max(Math.Abs(f.yVelocity) + amount, .16f);
                     if (f.movementDirections.Contains(3))
                         f.xVelocity = -Math.Max(Math.Abs(f.xVelocity) + amount, .16f);
+                }
+                else if ((oldTile?.HasProperty(Keys.SlipperyKey, out prop) ?? false) && float.TryParse(prop, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
+                {
+                    f.xVelocity = 0f;
+                    f.yVelocity = 0f;
                 }
             }
 
