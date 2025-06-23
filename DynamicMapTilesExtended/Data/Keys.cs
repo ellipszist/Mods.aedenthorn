@@ -1,4 +1,7 @@
-﻿namespace DMT.Data
+﻿using HarmonyLib;
+using System.Reflection;
+
+namespace DMT.Data
 {
     public static class Keys
     {
@@ -38,45 +41,28 @@
         public const string MoveKey = "DMT/move";
         public const string EmoteKey = "DMT/emote";
         public const string AnimationKey = "DMT/animation";
+        public const string AnimationOffKey = "DMT/animationOff";
         public const string SlipperyKey = "DMT/slippery";
         public const string WarpKey = "DMT/warp";
 
-        public static readonly List<string> AllKeys =
-        [
-            AddLayerKey,
-            AddTilesheetKey,
-            ChangeIndexKey,
-            ChangeMultipleIndexKey,
-            ChangePropertiesKey,
-            ChangeMultiplePropertiesKey,
-            ExplodeKey,
-            ExplosionKey,
-            PushKey,
-            PushOthersKey,
-            SoundKey,
-            TeleportKey,
-            TeleportTileKey,
-            GiveKey,
-            TakeKey,
-            ChestKey,
-            MessageKey,
-            EventKey,
-            MailKey,
-            MailRemoveKey,
-            MailBoxKey,
-            InvalidateKey,
-            MusicKey,
-            HealthKey,
-            StaminaKey,
-            HealthPerSecondKey,
-            StaminaPerSecondKey,
-            BuffKey,
-            SpeedKey,
-            MoveKey,
-            EmoteKey,
-            AnimationKey,
-            WarpKey
-        ];
+        private static List<string?> allKeys;
+
+        public static List<string?> AllKeys
+        {
+            get
+            {
+                if (allKeys == null)
+                {
+                    allKeys = new();
+                    foreach (var t in AccessTools.GetDeclaredFields(typeof(Keys)))
+                    {
+                        if(t.IsLiteral)
+                            allKeys.Add((string?)typeof(Keys).GetField(t.Name)?.GetValue(null));
+                    }
+                }
+                return allKeys;
+            }
+        }
 
         public static readonly HashSet<string> ModKeys = [];
     }

@@ -25,13 +25,27 @@ namespace DMT
 
         public Config Config { get; private set; }
 
-        public Dictionary<string, List<PushedTile>> PushTileDict { get; } = [];
+        public static int animationCounter = 0;
 
-        public Dictionary<string, List<Animation>> AnimationsDict { get; private set; } = [];
+        public Dictionary<GameLocation, List<PushedTile>> PushTileDict { get; } = [];
+
+        public Dictionary<string, List<Animation>> animationsDict;
+        public Dictionary<string, List<Animation>> AnimationsDict {
+            get
+            {
+                if(animationsDict is null)
+                {
+                    animationsDict = Helper.GameContent.Load<Dictionary<string, List<Animation>>>(AnimationDataDictPath);
+                }
+                return animationsDict; 
+            }
+            private set
+            {
+                animationsDict = value;
+            } 
+        }
 
         public Dictionary<string, DynamicTile> DynamicTiles { get; private set; } = [];
-
-        internal PerScreen<Dictionary<string, DynamicTileProperty>> InternalProperties = new(() => []);
 
         internal PerScreen<List<SecondUpdateData>> SecondUpdateFiredLoops = new(() => new());
         internal PerScreen<List<SecondUpdateData>> SecondUpdateContinuousLoops = new(() => new());
@@ -57,6 +71,7 @@ namespace DMT
         {
             var passOutEvent = Helper.Reflection.GetField<NetEvent0>(Game1.player, "passOutEvent", false);
             passOutEvent.GetValue().onEvent += onFarmerPassOut;
+            PushTileDict.Clear();
             UpdateTicks.Value = 0;
         }
 
@@ -67,40 +82,59 @@ namespace DMT
             if (SecondUpdateFiredLoops.Value.Count == 0 && SecondUpdateContinuousLoops.Value.Count == 0)
             {
                 UpdateTicks.Value = 0;
-                return;
             }
-            UpdateTicks.Value++;
-            if (SecondUpdateFiredLoops.Value.Count > 0)
+            else
             {
-                for (int i = SecondUpdateFiredLoops.Value.Count - 1; i >= 0; i--)
+                UpdateTicks.Value++;
+                if (SecondUpdateFiredLoops.Value.Count > 0)
                 {
-                    var su = SecondUpdateFiredLoops.Value[i];
-                    if (su.Loops <= 0)
+                    for (int i = SecondUpdateFiredLoops.Value.Count - 1; i >= 0; i--)
                     {
-                        SecondUpdateFiredLoops.Value.RemoveAt(i);
-                        continue;
+                        var su = SecondUpdateFiredLoops.Value[i];
+                        if (su.Loops <= 0)
+                        {
+                            SecondUpdateFiredLoops.Value.RemoveAt(i);
+                            continue;
+                        }
+                        if (UpdateTicks.Value - su.LastTick < 60)
+                            continue;
+                        su.LastTick = UpdateTicks.Value;
+                        --SecondUpdateFiredLoops.Value[i].Loops;
+                        FireTileEvent(su);
                     }
-                    if (UpdateTicks.Value - su.LastTick < 60)
-                        continue;
-                    su.LastTick = UpdateTicks.Value;
-                    --SecondUpdateFiredLoops.Value[i].Loops;
-                    FireTileEvent(su);
+                }
+                if (SecondUpdateContinuousLoops.Value.Count > 0)
+                {
+                    for (int i = SecondUpdateContinuousLoops.Value.Count - 1; i >= 0; i--)
+                    {
+                        var su = SecondUpdateContinuousLoops.Value[i];
+                        if (su.Who.currentLocation != su.Location || su.Who.Tile != su.Tile)
+                        {
+                            SecondUpdateContinuousLoops.Value.RemoveAt(i);
+                            continue;
+                        }
+                        if (UpdateTicks.Value - su.LastTick < 60)
+                            continue;
+                        su.LastTick = UpdateTicks.Value;
+                        FireTileEvent(su);
+                    }
                 }
             }
-            if (SecondUpdateContinuousLoops.Value.Count > 0)
+            if(PushTileDict.Count > 0)
             {
-                for (int i = SecondUpdateContinuousLoops.Value.Count - 1; i >= 0; i--)
+                foreach(var kvp in PushTileDict)
                 {
-                    var su = SecondUpdateContinuousLoops.Value[i];
-                    if (su.Who.currentLocation != su.Location || su.Who.Tile != su.Tile)
+                    for(int i = kvp.Value.Count - 1; i >= 0; i--)
                     {
-                        SecondUpdateContinuousLoops.Value.RemoveAt(i);
-                        continue;
+                        var tile = kvp.Value[i];
+                        tile.Position += GetNextTile(tile.Direction);
+                        if(tile.Position == new Point(tile.Destination.X * 64, tile.Destination.Y * 64))
+                        {
+                            kvp.Key.Map.GetLayer("Buildings").Tiles[tile.Destination.X, tile.Destination.Y] = tile.Tile;
+                            kvp.Value.RemoveAt(i);
+                            TriggerActions([kvp.Key.Map.GetLayer("Back")], tile.Farmer, kvp.Key, tile.Origin, ["Pushed"]);
+                        }
                     }
-                    if (UpdateTicks.Value - su.LastTick < 60)
-                        continue;
-                    su.LastTick = UpdateTicks.Value;
-                    FireTileEvent(su);
                 }
             }
         }
@@ -133,7 +167,6 @@ namespace DMT
         {
             if (e.NamesWithoutLocale.Any(x => x.IsEquivalentTo(AnimationDataDictPath)))
             {
-                AnimationsDict = [];
                 AnimationsDict = Helper.GameContent.Load<Dictionary<string, List<Animation>>>(AnimationDataDictPath);
             }
 
@@ -153,7 +186,7 @@ namespace DMT
         {
             GameLocation l = e.NewLocation;
             LoadLocation(l);
-            TriggerActions([.. l.Map.Layers], e.Player, e.Player.TilePoint, ["Enter"]);
+            TriggerActions([.. l.Map.Layers], e.Player, e.NewLocation, e.Player.TilePoint, ["Enter"]);
         }
 
         private void onGameLaunched(object? sender, GameLaunchedEventArgs e)
@@ -191,7 +224,7 @@ namespace DMT
             var who = Game1.player;
             var l = who.currentLocation;
             l.setTileProperty(who.TilePoint.X, who.TilePoint.Y, "Back", args[0] + "_Once_On", args[1]);
-            TriggerActions([l.Map.GetLayer("Back")], who, who.TilePoint, ["On"]);
+            TriggerActions([l.Map.GetLayer("Back")], who, l, who.TilePoint, ["On"]);
         }
 
         private void onFarmerPassOut()

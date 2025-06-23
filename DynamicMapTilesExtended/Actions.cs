@@ -119,7 +119,7 @@ namespace DMT
                 var pair = prop.Split('=');
                 if (pair.Length == 2)
                     tile.Properties[pair[0]] = pair[1];
-                else
+                else if (tile.Properties.Count > 2)
                     tile.Properties.Remove(pair[0]);
             }
         }
@@ -427,25 +427,36 @@ namespace DMT
             who.currentLocation.explode(pos, radius, who, damagesFarmer, damageRadius, destroyObjects);
         }
 
-        public static void DoAnimate(Farmer who, string value)
+        public static void DoAnimate(Farmer who, string value, bool off)
         {
             if (!value.Contains(','))
                 return;
-            Animation? anim;
+            List<Animation> anims = new();
             var opt = value.Split(',');
             if (opt.Length == 2)
             {
-                if (!Context.AnimationsDict.TryGetValue(opt[0], out var anims))
+                var dict = Context.AnimationsDict;
+                if (!Context.AnimationsDict.TryGetValue(opt[0], out var animSet))
                     return;
-                anim = anims?.Find(x => x.Name.Equals(opt[1], StringComparison.OrdinalIgnoreCase));
+                var names = opt[1].Split('|');
+                foreach(var name in names)
+                {
+                    anims.AddRange(animSet.FindAll(x => x.Name?.Equals(name, StringComparison.OrdinalIgnoreCase) == true || x.Group?.Equals(name, StringComparison.OrdinalIgnoreCase) == true));
+                }
             }
             else
-                anim = JsonConvert.DeserializeObject<Animation>(value);
-            if (anim?.ToSAnim() is not TemporaryAnimatedSprite sprite)
-                return;
+                anims = JsonConvert.DeserializeObject<List<Animation>>(value) ?? new();
+            foreach (var anim in anims)
+            {
+                if (anim?.ToSAnim() is not TemporaryAnimatedSprite sprite)
+                    continue;
 
-            who.currentLocation.removeTemporarySpritesWithIDLocal(sprite.id);
-            who.currentLocation.TemporarySprites.Add(sprite);
+                who.currentLocation.removeTemporarySpritesWithIDLocal(sprite.id);
+                if (!off)
+                {
+                    who.currentLocation.TemporarySprites.Add(sprite);
+                }
+            }
         }
 
         public static void DoPushTiles(Farmer who, Tile tile, Point tilePos) => PushTilesWithOthers(who, tile, tilePos);

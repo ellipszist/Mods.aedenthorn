@@ -10,8 +10,12 @@ namespace DMT.Data
 
         public Farmer Farmer { get; set; }
 
+        public Point Origin { get; set; }
+
         public Point Position { get; set; }
 
         public int Direction { get; set; }
+
+        public Point Destination { get; set; }
     }
 }

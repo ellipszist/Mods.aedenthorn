@@ -104,7 +104,7 @@ namespace DMT
                 {
                     if (!string.IsNullOrEmpty(prop) && !ExplodingFarmer.Value.mailReceived.Contains(prop))
                         ExplodingFarmer.Value.mailReceived.Add(prop);
-                    TriggerActions([tile.Layer], ExplodingFarmer.Value, new((int)x, (int)y), ["Explode"]);
+                    TriggerActions([tile.Layer], ExplodingFarmer.Value, __instance, new((int)x, (int)y), ["Explode"]);
                 }
                 layer.Tiles[(int)x, (int)y] = null;
             }
@@ -112,7 +112,7 @@ namespace DMT
 
         internal static bool GameLocation_IsCollidingPosition_Prefix(GameLocation __instance, Rectangle position, ref bool __result)
         {
-            if (!Enabled || !Context.PushTileDict.TryGetValue(__instance.Name, out var tiles))
+            if (!Enabled || !Context.PushTileDict.TryGetValue(__instance, out var tiles))
                 return true;
 
             foreach (var tile in tiles)
@@ -128,7 +128,7 @@ namespace DMT
 
         internal static void GameLocation_Draw_Postfix(GameLocation __instance)
         {
-            if (!Enabled || !Context.PushTileDict.TryGetValue(__instance.Name, out var tiles))
+            if (!Enabled || !Context.PushTileDict.TryGetValue(__instance, out var tiles))
                 return;
 
             foreach (var tile in tiles)
@@ -139,7 +139,7 @@ namespace DMT
         {
             if (!Enabled || t is null || t.getLastFarmerToUse() is null || !__instance.isTileOnMap(new Vector2(tileX, tileY)))
                 return true;
-            if (!TriggerActions([.. __instance.Map.Layers], t.getLastFarmerToUse(), new(tileX, tileY), [string.Format(Triggers.UseTool, Utils.BuildFormattedTrigger(t.GetType().Name))]))
+            if (!TriggerActions([.. __instance.Map.Layers], t.getLastFarmerToUse(), __instance, new(tileX, tileY), [string.Format(Triggers.UseTool, Utils.BuildFormattedTrigger(t.GetType().Name))]))
                 return true;
             __result = true;
             return false;
@@ -150,7 +150,7 @@ namespace DMT
             if (!Enabled || !__instance.isTileOnMap(new Vector2(tileLocation.X, tileLocation.Y)) || who.ActiveItem is null)
                 return true;
             Item item = who.ActiveItem;
-            if (!TriggerActions([.. __instance.Map.Layers], who, new(tileLocation.X, tileLocation.Y),
+            if (!TriggerActions([.. __instance.Map.Layers], who, __instance, new(tileLocation.X, tileLocation.Y),
                 [
                     string.Format(Triggers.UseItem, BuildFormattedTrigger(item.Name, '-', item.Stack, '-', item.Quality)),
                     string.Format(Triggers.UseItem, BuildFormattedTrigger(item.QualifiedItemId, '-', item.Stack, '-', item.Quality)),
@@ -204,8 +204,8 @@ namespace DMT
             var layer = f.currentLocation.Map.GetLayer("Back");
             if (oldTilePos != tilePos)
             {
-                TriggerActions([layer], f, oldTilePos, ["Off"]);
-                TriggerActions([layer], f, tilePos, ["On"]);
+                TriggerActions([layer], f, __instance.currentLocation, oldTilePos, ["Off"]);
+                TriggerActions([layer], f, __instance.currentLocation, tilePos, ["On"]);
             }
 
             if (f.currentLocation.isTileOnMap(tilePos))
@@ -240,14 +240,17 @@ namespace DMT
                 xLocation startLoc = new(startTile.X, startTile.Y);
 
                 var buildings = f.currentLocation.Map.GetLayer("Buildings");
-                var tile = buildings.PickTile(startLoc, Game1.viewport.Size);
+                var tile = buildings.PickTile(startLoc * 64, Game1.viewport.Size);
+
+                if (tile is null)
+                    return;
 
                 if (!(tile?.HasProperty(Keys.PushKey, out var prop) ?? false) && !(tile?.HasProperty(Keys.PushableKey, out prop) ?? false))
                     return;
                 var destination = startTile + GetNextTile(f.FacingDirection);
                 foreach (var item in prop.ToString().Split(','))
                 {
-                    var split = item.Split(' ');
+                    var split = item.Trim().Split(' ');
                     if (split.Length != 2 || !int.TryParse(split[0], out int x) || !int.TryParse(split[1], out int y) || destination.X != x || destination.Y != y)
                         continue;
                     PushTilesWithOthers(f, tile, startTile);
@@ -260,32 +263,32 @@ namespace DMT
         {
             if (!Enabled || (!Context.Config.TriggerDuringEvents && Game1.eventUp) || !Game1.dialogueUp || __instance.currentLocation?.Name != who.currentLocation.Name)
                 return;
-            TriggerActions([.. who.currentLocation.Map.Layers], who, __instance.TilePoint, [string.Format(Triggers.TalkToNPC, Utils.BuildFormattedTrigger(__instance.Name))]);
+            TriggerActions([.. who.currentLocation.Map.Layers], who, __instance.currentLocation, __instance.TilePoint, [string.Format(Triggers.TalkToNPC, Utils.BuildFormattedTrigger(__instance.Name))]);
         }
 
         internal static void Monster_TakeDamage_Postfix(Monster __instance, Farmer who)
         {
             if (!Enabled || (!Context.Config.TriggerDuringEvents && Game1.eventUp) || __instance.Health > 0 || __instance.currentLocation?.Name != who.currentLocation.Name)
                 return;
-            TriggerActions([.. who.currentLocation.Map.Layers], who, __instance.TilePoint, [string.Format(Triggers.MonsterSlain, Utils.BuildFormattedTrigger(__instance.Name))]);
+            TriggerActions([.. who.currentLocation.Map.Layers], who, __instance.currentLocation, __instance.TilePoint, [string.Format(Triggers.MonsterSlain, Utils.BuildFormattedTrigger(__instance.Name))]);
         }
         internal static void Crop_newDay_Postfix(Crop __instance)
         {
             if (!Enabled || !Game1.IsMasterGame || __instance.IsErrorCrop())
                 return;
-            TriggerActions([.. __instance.currentLocation.Map.Layers], Game1.player, __instance.tilePosition.ToPoint(), [string.Format(Triggers.CropGrown, Utils.BuildFormattedTrigger(__instance.netSeedIndex.Value))]);
+            TriggerActions([.. __instance.currentLocation.Map.Layers], null, __instance.currentLocation, __instance.tilePosition.ToPoint(), [string.Format(Triggers.CropGrown, Utils.BuildFormattedTrigger(__instance.netSeedIndex.Value))]);
         }
         internal static void Object_placementAction_Postfix(Object __instance, GameLocation location, int x, int y, Farmer who)
         {
             if (!Enabled || who is null)
                 return;
-            TriggerActions([.. location.Map.Layers], who, __instance.TileLocation.ToPoint(), [string.Format(Triggers.ObjectPlaced, Utils.BuildFormattedTrigger(__instance.QualifiedItemId))]);
+            TriggerActions([.. location.Map.Layers], who, location, __instance.TileLocation.ToPoint(), [string.Format(Triggers.ObjectPlaced, Utils.BuildFormattedTrigger(__instance.QualifiedItemId))]);
         }
         internal static void Object_checkForAction_Postfix(Object __instance, Farmer who, bool justCheckingForActivity)
         {
             if (!Enabled || who is null || justCheckingForActivity)
                 return;
-            TriggerActions([.. __instance.Location.Map.Layers], who, __instance.TileLocation.ToPoint(), [string.Format(Triggers.ObjectClicked, Utils.BuildFormattedTrigger(__instance.QualifiedItemId))]);
+            TriggerActions([.. __instance.Location.Map.Layers], who, __instance.Location, __instance.TileLocation.ToPoint(), [string.Format(Triggers.ObjectClicked, Utils.BuildFormattedTrigger(__instance.QualifiedItemId))]);
         }
     }
 }

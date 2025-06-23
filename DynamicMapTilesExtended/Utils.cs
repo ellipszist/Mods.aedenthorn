@@ -1,8 +1,10 @@
 ﻿using DMT.Data;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Newtonsoft.Json;
 using StardewValley;
 using System.Diagnostics.CodeAnalysis;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using xTile;
@@ -17,6 +19,8 @@ namespace DMT
 
         public static bool CheckTrigger(DynamicTileProperty property, IEnumerable<string> triggers)
         {
+            if (property.Trigger == null)
+                return false;
             foreach (var trigger in triggers)
             {
                 if (!trigger.Equals(property.Trigger, StringComparison.OrdinalIgnoreCase) && !trigger.Contains(property.Trigger, StringComparison.OrdinalIgnoreCase))
@@ -42,7 +46,7 @@ namespace DMT
         {
             for (int i = 0; i < tiles.Count; i++)
             {
-                var destination = tiles[i].p + GetNextTile(dir);
+                Point destination = tiles[i].p + GetNextTile(dir);
                 if (!l.isTileOnMap(tiles[i].p) || !l.isTileOnMap(destination) || 
                     (
                         tiles[i].t.Layer.Tiles[destination.X, destination.Y] is Tile t &&
@@ -51,14 +55,15 @@ namespace DMT
                     ))
                     return false;
             }
-            if (!Context.PushTileDict.TryGetValue(l.Name, out var pushed))
-                Context.PushTileDict[l.Name] = pushed = [];
+            if (!Context.PushTileDict.TryGetValue(l, out var pushed))
+                Context.PushTileDict[l] = pushed = [];
             for (int i = 0; i < tiles.Count; i++)
             {
+                Point destination = tiles[i].p + GetNextTile(dir);
                 var (p, t) = tiles[i];
                 if (t.Layer.Id == "Buildings")
-                    TriggerActions([t.Layer], f, p, ["Push"]);
-                pushed.Add(new() { Tile = t, Position = new(p.X * 64, p.Y * 64), Direction = dir, Farmer = f });
+                    TriggerActions([t.Layer], f, l, p, ["Push"]);
+                pushed.Add(new() { Tile = t, Position = new(p.X * 64, p.Y * 64), Origin = p, Direction = dir, Farmer = f, Destination = destination });
                 tiles[i].t.Layer.Tiles[p.X, p.Y] = null;
             }
             return true;
@@ -136,15 +141,12 @@ namespace DMT
             return item;
         }
 
-        internal static DynamicTileProperty? GetInternalProperty(string id)
+        internal static DynamicTileProperty? GetInternalProperty(string data)
         {
-            foreach (var prop in Context.InternalProperties.Value)
-                if (prop.Key == id)
-                    return prop.Value;
-            return null;
+            return JsonConvert.DeserializeObject<DynamicTileProperty>(data);
         }
 
-        internal static DynamicTileProperty ParseOldProperty(KeyValuePair<string, string> old)
+        internal static DynamicTileProperty ParseProperty(KeyValuePair<string, string> old)
         {
             DynamicTileProperty prop = new() { Value = old.Value };
             string key = old.Key;
@@ -153,7 +155,7 @@ namespace DMT
                 if (!key.StartsWith(item, StringComparison.OrdinalIgnoreCase))
                     continue; 
                 prop.Key = item;
-                key = key.Replace(item, "");
+                key = key.Substring(item.Length);
                 break;
             }
             if (string.IsNullOrWhiteSpace(prop.Key))
@@ -168,17 +170,15 @@ namespace DMT
                 key = key[4..];
             }
             key = key.Trim('_');
-            foreach (var item in Triggers.Regexes)
+            if (!string.IsNullOrWhiteSpace(key))
             {
-                if (!Regex.IsMatch(key, item))
-                    continue;
-                prop.Trigger = key;
-                break;
-            }
-            if (string.IsNullOrWhiteSpace(prop.Trigger))
-            {
-                Context.Monitor.Log($"Found unknown trigger {key} when parsing old property format, this property will be ignored", LogLevel.Warn);
-                return null;
+                foreach (var item in Triggers.Regexes)
+                {
+                    if (!Regex.IsMatch(key, item))
+                        continue;
+                    prop.Trigger = key;
+                    break;
+                }
             }
             return prop;
         }
@@ -231,12 +231,11 @@ namespace DMT
 
         //All of the methods below this line cost me a lot (mainly sanity wise), continue at your own risk
 
-        public static bool TriggerActions(List<Layer> layers, Farmer who, Point tilePosition, string[] triggers)
+        public static bool TriggerActions(List<Layer> layers, Farmer? who, GameLocation location, Point tilePosition, string[] triggers)
         {
-            if (!Enabled || !who.currentLocation.isTileOnMap(tilePosition) || (!Context.Config.TriggerDuringEvents && Game1.eventUp))
+            if (!Enabled || !location.isTileOnMap(tilePosition) || (!Context.Config.TriggerDuringEvents && Game1.eventUp))
                 return false;
 
-            bool triggered = false;
             List<(DynamicTileProperty prop, Tile tile)> properties = GetPropertiesForTriggers(layers, who, tilePosition, triggers);
             /*foreach (var layer in layers)
             {
@@ -259,10 +258,15 @@ namespace DMT
                     properties.Add(new(prop, tile));
                 }
             }*/
-            if(properties.Count == 0)
+            if (properties.Count == 0)
             {
                 return false;
             }
+            return DoTriggerActions(who, tilePosition, properties);
+        }
+        public static bool DoTriggerActions(Farmer who, Point tilePosition, List<(DynamicTileProperty prop, Tile tile)> properties)
+        {
+            bool triggered = false;
 
             foreach (var item in properties)
             {
@@ -358,7 +362,10 @@ namespace DMT
                             Actions.DoExplode(who, value, tilePosition);
                             break;
                         case Keys.AnimationKey:
-                            Actions.DoAnimate(who, value);
+                            Actions.DoAnimate(who, value, false);
+                            break;
+                        case Keys.AnimationOffKey:
+                            Actions.DoAnimate(who, value, true);
                             break;
                         case Keys.PushKey:
                             Actions.DoPushTiles(who, tile, tilePosition);
@@ -404,14 +411,14 @@ namespace DMT
             }
 
             if (globalTriggers.Count > 0)
-                properties.AddRange(GetPropertiesForGlobalTriggers(layers, who, globalTriggers));
+                properties.AddRange(GetPropertiesForGlobalTriggers(layers, globalTriggers));
             if (localTriggers.Count > 0)
-                properties.AddRange(GetPropertiesForLocalTriggers(layers, who, tilePosition, localTriggers));
+                properties.AddRange(GetPropertiesForLocalTriggers(layers, tilePosition, localTriggers));
 
             return properties;
         }
 
-        internal static List<(DynamicTileProperty prop, Tile tile)> GetPropertiesForLocalTriggers(List<Layer> layers, Farmer who, Point tilePosition, IEnumerable<string> triggers)
+        internal static List<(DynamicTileProperty prop, Tile tile)> GetPropertiesForLocalTriggers(List<Layer> layers, Point tilePosition, IEnumerable<string> triggers)
         {
             List<(DynamicTileProperty prop, Tile tile)> properties = [];
             foreach (var layer in layers)
@@ -424,7 +431,7 @@ namespace DMT
 
                 foreach (var key in props)
                 {
-                    DynamicTileProperty? prop = !key.StartsWith("DMT_PROP_INTERNAL") ? ParseOldProperty(new(key, tile.Properties[key])) : GetInternalProperty(tile.Properties[key]);
+                    DynamicTileProperty? prop = ParseProperty(new(key, tile.Properties[key]));
 
                     if (prop is null || !CheckTrigger(prop, triggers))
                         continue;
@@ -438,7 +445,7 @@ namespace DMT
             return properties;
         }
 
-        internal static List<(DynamicTileProperty prop, Tile tile)> GetPropertiesForGlobalTriggers(List<Layer> layers, Farmer who, IEnumerable<string> triggers)
+        internal static List<(DynamicTileProperty prop, Tile tile)> GetPropertiesForGlobalTriggers(List<Layer> layers, IEnumerable<string> triggers)
         {
             List<(DynamicTileProperty prop, Tile tile)> properties = [];
             int width = layers[0].Tiles.Array.GetLength(0);
@@ -457,7 +464,7 @@ namespace DMT
 
                         foreach (var key in props)
                         {
-                            DynamicTileProperty? prop = !key.StartsWith("DMT_PROP_INTERNAL") ? ParseOldProperty(new(key, tile.Properties[key])) : GetInternalProperty(tile.Properties[key]);
+                            DynamicTileProperty? prop = ParseProperty(new(key, tile.Properties[key]));
 
                             if (prop is null || !CheckTrigger(prop, triggers))
                                 continue;
@@ -477,25 +484,20 @@ namespace DMT
         /// Load the tile properties to a location from the dictionary asset
         /// </summary>
         /// <param name="l">The location to load properties to</param>
-        /// <remarks>
-        /// I really hope this works because I do not want to re-write this monstrosity
-        /// </remarks>
         internal static void LoadLocation(GameLocation l)
         {
             if (!Context.Config.Enabled)
                 return;
             var dict = Context.Helper.GameContent.Load<Dictionary<string, DynamicTile>>(Context.TileDataDictPath);
-            Context.InternalProperties.Value = [];
-            int internalPropCounter = 0;
             foreach (var item in dict)
             {
                 int count = 0;
                 int count2 = 0;
                 var value = item.Value;
-                var tileSheets = l.Map.TileSheets.ToList();
-
                 if (!IsValidLocation(value, l))
                     continue;
+
+                var tileSheets = l.Map.TileSheets.ToList();
 
                 foreach (var layer in l.Map.Layers)
                 {
@@ -515,12 +517,20 @@ namespace DMT
                                 continue;
                             count++;
                             foreach (var prop in value.Properties)
+                            {
                                 layer.Tiles[x, y].Properties[prop.Key] = prop.Value;
+                            }
                             foreach (var action in value.Actions)
                             {
-                                ++count2;
-                                layer.Tiles[x, y].Properties[$"DMT_PROP_INTERNAL_{++internalPropCounter}"] = internalPropCounter.ToString();
-                                Context.InternalProperties.Value[internalPropCounter.ToString()] = action;
+                                if(action.trigger == Triggers.Load)
+                                {
+                                    DoTriggerActions(Game1.player, new(x, y), [(action, tile)]);
+                                }
+                                else
+                                {
+                                    ++count2;
+                                    layer.Tiles[x, y].Properties[CreatePropertyKey(action)] = action.Value;
+                                }
                             }
                         }
                     }
@@ -541,17 +551,11 @@ namespace DMT
                 return true;
             }
 
-            foreach (var item in t.Properties)
-            {
-                if (!item.Key.StartsWith("DMT_PROP_INTERNAL"))
-                    continue;
-                if (!Context.InternalProperties.Value[item.Value].Key.Equals(key, StringComparison.OrdinalIgnoreCase))
-                    continue;
-                propertyValue = Context.InternalProperties.Value[item.Value].Value;
-                return true;
-            }
-
             return false;
+        }
+        internal static string CreatePropertyKey(DynamicTileProperty action)
+        {
+            return $"{action.Key}{(action.Once ? "_Once" : "")}{(action.Trigger != null ? "_" + action.Trigger : "")}";
         }
 
         internal static bool IsValidLocation(DynamicTile tileData, GameLocation l)

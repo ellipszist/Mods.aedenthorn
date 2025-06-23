@@ -2,6 +2,7 @@
 {
     public static class Triggers
     {
+        public const string Load = "Load";
         public const string StepOn = "On";
         public const string StepOff = "Off";
         public const string EnterLocation = "Enter";

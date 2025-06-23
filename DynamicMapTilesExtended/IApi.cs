@@ -11,11 +11,12 @@ namespace DMT
         /// Trigger all actions with the given triggers in the current location
         /// </summary>
         /// <param name="layers">The layers on which to check the tiles</param>
-        /// <param name="who">The player which triggered the action and on who the action will be performed</param>
+        /// <param name="who">The player which triggered the action and on who the action will be performed, may be null</param>
+        /// <param name="location">The game location of the tile</param>
         /// <param name="tilePosition">The X Y position of the tile on the map where the trigger originated from</param>
         /// <param name="triggers">The types of triggers to run</param>
         /// <returns>true if any action was triggered, false otherwise</returns>
-        public bool TriggerActions(IEnumerable<Layer> layers, Farmer who, Point tilePosition, IEnumerable<string> triggers);
+        public bool TriggerActions(IEnumerable<Layer> layers, Farmer? who, GameLocation location, Point tilePosition, IEnumerable<string> triggers);
 
         /// <summary>
         /// Add a regular expression which should be interpreted as a global trigger

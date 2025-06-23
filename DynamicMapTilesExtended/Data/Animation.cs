@@ -9,11 +9,24 @@ namespace DMT.Data
         /// <summary>
         /// A unique name for this animation
         /// </summary>
+        public string group;
+        /// <summary>
+        /// A unique name for this animation
+        /// </summary>
         public string Name
         {
             get => name; 
             set => name = value;
         }
+        /// <summary>
+        /// A group name for this animation
+        /// </summary>
+        public string Group
+        {
+            get => group; 
+            set => group = value;
+        }
+        public const int idBase = -87965;
         public int id = -87965;
         /// <summary>
         /// The internal game id for this animation
@@ -230,6 +243,10 @@ namespace DMT.Data
             {
                 try
                 {
+                    if(Id == idBase)
+                    {
+                        Id -= ++animationCounter;
+                    }
                     sprite = new(Texture, SourceRect, Interval, Length, Loops, Position, Flicker, Flipped, LayerDepth, AlphaFade, Color, Scale, ScaleChange, Rotation, RotationChange, Local)
                     {
                         motion = Motion,
