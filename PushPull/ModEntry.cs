@@ -1,14 +1,11 @@
-﻿using System;
-using HarmonyLib;
-using xTile.Dimensions;
-using StardewModdingAPI;
-using StardewValley;
-using StardewValley.Locations;
-using Object = StardewValley.Object;
-using Microsoft.Xna.Framework.Graphics;
-using StardewModdingAPI.Utilities;
+﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using StardewModdingAPI;
+using StardewModdingAPI.Utilities;
+using StardewValley;
 using StardewValley.Objects;
+using Object = StardewValley.Object;
 
 namespace PushPull
 {

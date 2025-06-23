@@ -17,6 +17,7 @@ namespace Weeds
 		internal static ModConfig Config;
 		internal static ModEntry context;
 		internal static string modKey = "aedenthorn.Weeds/weed";
+		internal static string modFlippedKey = "aedenthorn.Weeds/weedFlipped";
 		internal static string texPath = "aedenthorn.Weeds/weed";
         internal static Texture2D weedTex;
 
@@ -81,12 +82,23 @@ namespace Weeds
                     reset: () => Config = new ModConfig(),
                     save: () => Helper.WriteConfig(Config)
                 );
-
                 configMenu.AddBoolOption(
                     mod: ModManifest,
                     name: () => ModEntry.SHelper.Translation.Get("GMCM.ModEnabled.Name"),
                     getValue: () => Config.ModEnabled,
                     setValue: value => Config.ModEnabled = value
+                );
+                configMenu.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM.WeedsStopGrowth.Name"),
+                    getValue: () => Config.WeedsStopGrowth,
+                    setValue: value => Config.WeedsStopGrowth = value
+                );
+                configMenu.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM.WeededDoubleGrowth.Name"),
+                    getValue: () => Config.WeededDoubleGrowth,
+                    setValue: value => Config.WeededDoubleGrowth = value
                 );
                 configMenu.AddNumberOption(
                     mod: ModManifest,
@@ -112,17 +124,29 @@ namespace Weeds
                     getValue: () => Config.WeedStaminaUse,
                     setValue: value => Config.WeedStaminaUse = value
                 );
-                configMenu.AddBoolOption(
+                configMenu.AddNumberOption(
                     mod: ModManifest,
-                    name: () => SHelper.Translation.Get("GMCM.WeedsStopGrowth.Name"),
-                    getValue: () => Config.WeedsStopGrowth,
-                    setValue: value => Config.WeedsStopGrowth = value
+                    name: () => SHelper.Translation.Get("GMCM.WeedTintR.Name"),
+                    getValue: () => Config.WeedTintR,
+                    setValue: value => Config.WeedTintR = value
                 );
-                configMenu.AddBoolOption(
+                configMenu.AddNumberOption(
                     mod: ModManifest,
-                    name: () => SHelper.Translation.Get("GMCM.Clumps.Name"),
-                    getValue: () => Config.WeededDoubleGrowth,
-                    setValue: value => Config.WeededDoubleGrowth = value
+                    name: () => SHelper.Translation.Get("GMCM.WeedTintG.Name"),
+                    getValue: () => Config.WeedTintG,
+                    setValue: value => Config.WeedTintG = value
+                );
+                configMenu.AddNumberOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM.WeedTintB.Name"),
+                    getValue: () => Config.WeedTintB,
+                    setValue: value => Config.WeedTintB = value
+                );
+                configMenu.AddNumberOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM.WeedTintA.Name"),
+                    getValue: () => Config.WeedTintA,
+                    setValue: value => Config.WeedTintA = value
                 );
             }
 

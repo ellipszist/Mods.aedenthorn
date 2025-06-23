@@ -41,7 +41,8 @@ namespace PushPull
             if (!Config.ModEnabled || Game1.eventUp || __state is null || __instance.currentLocation is null)
                 return;
             var f = __instance;
-            var tilePos = f.TilePoint.ToVector2();
+            var bbc = f.GetBoundingBox().Center;
+            var tilePos = new Vector2(bbc.X / 64, bbc.Y / 64);
 
             if (f.movementDirections.Any() && __state[0] == f.Position)
             {
