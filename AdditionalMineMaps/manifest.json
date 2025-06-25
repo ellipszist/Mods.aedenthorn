@@ -1,7 +1,7 @@
 ﻿{
 	"Name": "Additional Mine Maps",
 	"Author": "aedenthorn",
-	"Version": "0.2.2",
+	"Version": "0.2.4",
 	"Description": "Lets you add extra maps to the list of maps used by the mines and skull cave.",
 	"UniqueID": "aedenthorn.AdditionalMineMaps",
 	"EntryDll": "AdditionalMineMaps.dll",

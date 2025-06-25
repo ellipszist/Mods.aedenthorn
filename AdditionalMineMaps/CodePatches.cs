@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using HarmonyLib;
+using Netcode;
 using StardewValley;
 using StardewValley.Locations;
 
@@ -12,6 +14,7 @@ namespace AdditionalMineMaps
 			public static void Prefix(MineShaft __instance)
 			{
 				__instance.modData.Remove(mapPathKey);
+				__instance.modData.Remove(mapTypeKey);
 				if (!Config.ModEnabled || mapDict.Count == 0)
 					return;
 				var level = __instance.mineLevel;
@@ -39,8 +42,11 @@ namespace AdditionalMineMaps
 					if (Game1.random.Next(count) >= mapDict.Count)
 						return;
 				}
-				string map = list[Game1.random.Next(list.Count)].mapPath;
+				var randomMap = list[Game1.random.Next(list.Count)];
+
+                string map = randomMap.mapPath;
 				__instance.modData[mapPathKey] = map;
+				__instance.modData[mapTypeKey] = randomMap.mapType;
 			}
 		}
 
@@ -48,9 +54,52 @@ namespace AdditionalMineMaps
 		{
 			public static void Prefix(GameLocation __instance)
 			{
-				if (!Config.ModEnabled || __instance is not MineShaft || !__instance.modData.TryGetValue(mapPathKey, out string mapPath) || __instance.mapPath.Value == mapPath)
+				if (!Config.ModEnabled || __instance is not MineShaft ms || !__instance.modData.TryGetValue(mapPathKey, out string mapPath))
 					return;
-				__instance.mapPath.Value = mapPath;
+				if(__instance.mapPath.Value != mapPath)
+					__instance.mapPath.Value = mapPath;
+				if (__instance.modData[mapTypeKey] == "T")
+					AccessTools.FieldRefAccess<MineShaft, NetBool>(ms, "netIsTreasureRoom").Value = true;
+			}
+		}
+		public class MineShaft_isQuarryArea_Get_Patch
+		{
+			public static bool Prefix(MineShaft __instance, ref bool __result)
+			{
+				if (!Config.ModEnabled || __instance is not MineShaft ms || !__instance.modData.TryGetValue(mapTypeKey, out string mapType) || mapType != "Q")
+					return true;
+				__result = true;
+				return false;
+			}
+		}
+		public class MineShaft_isDinoArea_Get_Patch
+        {
+			public static bool Prefix(MineShaft __instance, ref bool __result)
+			{
+				if (!Config.ModEnabled || __instance is not MineShaft ms || !__instance.modData.TryGetValue(mapTypeKey, out string mapType) || mapType != "D")
+					return true;
+				__result = true;
+				return false;
+			}
+		}
+		public class MineShaft_isMonsterArea_Get_Patch
+        {
+			public static bool Prefix(MineShaft __instance, ref bool __result)
+			{
+				if (!Config.ModEnabled || __instance is not MineShaft ms || !__instance.modData.TryGetValue(mapTypeKey, out string mapType) || mapType != "M")
+					return true;
+				__result = true;
+				return false;
+			}
+		}
+		public class MineShaft_isSlimeArea_Get_Patch
+        {
+			public static bool Prefix(MineShaft __instance, ref bool __result)
+			{
+				if (!Config.ModEnabled || __instance is not MineShaft ms || !__instance.modData.TryGetValue(mapTypeKey, out string mapType) || mapType != "S")
+					return true;
+				__result = true;
+				return false;
 			}
 		}
 	}

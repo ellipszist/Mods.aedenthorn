@@ -18,6 +18,7 @@ namespace AdditionalMineMaps
 
 		internal static string dictPath = "aedenthorn.AdditionalMineMaps/dictionary";
 		internal static string mapPathKey = "aedenthorn.AdditionalMineMaps/mapPath";
+		internal static string mapTypeKey = "aedenthorn.AdditionalMineMaps/mapType";
 
 		internal static Dictionary<string, MapData> mapDict;
 		internal static Dictionary<int, MapData> forcedMapDict = new();
@@ -49,6 +50,22 @@ namespace AdditionalMineMaps
 				harmony.Patch(
 					original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.updateMap)),
 					prefix: new HarmonyMethod(typeof(GameLocation_updateMap_Patch), nameof(GameLocation_updateMap_Patch.Prefix))
+				);
+				harmony.Patch(
+					original: AccessTools.DeclaredPropertyGetter(typeof(MineShaft), nameof(MineShaft.isQuarryArea)),
+					prefix: new HarmonyMethod(typeof(MineShaft_isQuarryArea_Get_Patch), nameof(MineShaft_isQuarryArea_Get_Patch.Prefix))
+				);
+				harmony.Patch(
+					original: AccessTools.DeclaredPropertyGetter(typeof(MineShaft), nameof(MineShaft.isDinoArea)),
+					prefix: new HarmonyMethod(typeof(MineShaft_isDinoArea_Get_Patch), nameof(MineShaft_isDinoArea_Get_Patch.Prefix))
+				);
+				harmony.Patch(
+					original: AccessTools.DeclaredPropertyGetter(typeof(MineShaft), nameof(MineShaft.isMonsterArea)),
+					prefix: new HarmonyMethod(typeof(MineShaft_isMonsterArea_Get_Patch), nameof(MineShaft_isMonsterArea_Get_Patch.Prefix))
+				);
+				harmony.Patch(
+					original: AccessTools.DeclaredPropertyGetter(typeof(MineShaft), nameof(MineShaft.isSlimeArea)),
+					prefix: new HarmonyMethod(typeof(MineShaft_isSlimeArea_Get_Patch), nameof(MineShaft_isSlimeArea_Get_Patch.Prefix))
 				);
 			}
 			catch (Exception e)
