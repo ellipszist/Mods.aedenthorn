@@ -10,10 +10,10 @@ namespace Weeds
 {
 	public partial class ModEntry
     {
-        internal static void HoeDirt_performUseAction_Postfix(TerrainFeature __instance, ref bool __result, Vector2 tileLocation)
+        internal static bool HoeDirt_performUseAction_Prefix(TerrainFeature __instance, ref bool __result, Vector2 tileLocation)
         {
             if (!Config.ModEnabled || __result || !__instance.modData.TryGetValue(modKey, out var data) || int.Parse(data) <= 25)
-                return;
+                return true;
             Game1.player.mostRecentlyGrabbedItem = null;
             Game1.player.animateOnce(279 + Game1.player.FacingDirection);
             Game1.player.currentLocation.playSound("moss_cut", null, null, SoundContext.Default);
@@ -21,6 +21,8 @@ namespace Weeds
             Game1.player.Stamina -= Math.Max(0, Config.WeedStaminaUse - (float)Game1.player.FarmingLevel * 0.1f);
             __instance.modData.Remove(modKey);
             __instance.modData.Remove(modFlippedKey);
+            __result = true;
+            return false;
         }
         internal static bool Crop_newDay_Prefix(Crop __instance)
         {

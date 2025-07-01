@@ -2,9 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
-using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
-using Object = StardewValley.Object;
 
 namespace Weeds
 {
@@ -47,7 +45,7 @@ namespace Weeds
             );
             harmony.Patch(
                 original: AccessTools.Method(typeof(HoeDirt), nameof(HoeDirt.performUseAction)),
-                postfix: new(typeof(ModEntry), nameof(HoeDirt_performUseAction_Postfix))
+                prefix: new(typeof(ModEntry), nameof(HoeDirt_performUseAction_Prefix))
             );
             harmony.Patch(
                 original: AccessTools.Method(typeof(HoeDirt), nameof(HoeDirt.dayUpdate)),
