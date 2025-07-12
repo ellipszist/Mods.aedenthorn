@@ -30,6 +30,7 @@
 	"GMCM.IncludeAutoGrabbers.Name": "Include Auto-Grabbers",
 	"GMCM.SecondarySortingPriority.Name": "Secondary Sorting Priority",
 	"GMCM.MenuKey.Name": "Menu Key",
+	"GMCM.FilterItems.Name": "Filter by item names",
 	"GMCM.ModToOpen.Name": "Req. Mod Key To Open",
 	"GMCM.ModKey.Name": "Mod Key",
 	"GMCM.ModKey.Tooltip": "Hold down to open menu and to transfer contents instead of swapping menus.",

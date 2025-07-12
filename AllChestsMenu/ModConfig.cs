@@ -7,6 +7,7 @@ namespace AllChestsMenu
 		public bool ModEnabled { get; set; } = true;
 		public bool ModToOpen { get; set; } = false;
 		public bool LimitToCurrentLocation { get; set; } = false;
+		public bool FilterItems { get; set; } = true;
 		public bool IncludeFridge { get; set; } = true;
 		public bool IncludeMiniFridges { get; set; } = true;
 		public bool IncludeShippingBin { get; set; } = true;

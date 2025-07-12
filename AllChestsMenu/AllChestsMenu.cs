@@ -355,10 +355,30 @@ namespace AllChestsMenu
 				allChestDataList[i].index = i;
 
 				ChestData chestData = allChestDataList[i];
-
-				if (!string.IsNullOrEmpty(whichLocation) && !chestData.label.ToLower().Contains(whichLocation.ToLower()))
+				
+				if (ModEntry.Config.FilterItems)
 				{
-					continue;
+					if (!string.IsNullOrEmpty(whichLocation))
+					{
+						var searchTerm = whichLocation.ToLower().Trim();
+						var nameMatches = chestData.label.ToLower().Contains(searchTerm);
+						var itemMatches = chestData.chest.Items
+							.Any(item =>
+								item != null && item.DisplayName.ToLower().Trim()
+									.Contains(searchTerm));
+						if (!nameMatches && !itemMatches)
+						{
+							continue;
+						}
+					}
+				}
+				else
+				{
+					if (!string.IsNullOrEmpty(whichLocation) &&
+						!chestData.label.ToLower().Contains(whichLocation.ToLower()))
+					{
+						continue;
+					}
 				}
 
 				int columns = 12;
@@ -1054,6 +1074,12 @@ namespace AllChestsMenu
 		public override void update(GameTime time)
 		{
 			base.update(time);
+			if (renamingChest != null)
+			{
+				return;
+			}
+			
+			locationText.Selected = true;
 			if (whichLocation?.ToLower() != locationText.Text.ToLower())
 			{
 				whichLocation = locationText.Text;
