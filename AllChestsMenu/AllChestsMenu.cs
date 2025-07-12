@@ -356,26 +356,32 @@ namespace AllChestsMenu
 
 				ChestData chestData = allChestDataList[i];
 				
-				if (ModEntry.Config.FilterItems)
+				if (!string.IsNullOrEmpty(whichLocation))
 				{
-					if (!string.IsNullOrEmpty(whichLocation))
+					var searchTerm = whichLocation.ToLower().Trim();
+					var chestNameMatches = chestData.label.ToLower().Contains(searchTerm);
+					var anyItemMatches = false;
+					if (ModEntry.Config.FilterItems || ModEntry.Config.FilterItemsCategory || ModEntry.Config.FilterItemsDescription)
 					{
-						var searchTerm = whichLocation.ToLower().Trim();
-						var nameMatches = chestData.label.ToLower().Contains(searchTerm);
-						var itemMatches = chestData.chest.Items
-							.Any(item =>
-								item != null && item.DisplayName.ToLower().Trim()
-									.Contains(searchTerm));
-						if (!nameMatches && !itemMatches)
+						anyItemMatches = chestData.chest.Items.Any(item =>
 						{
-							continue;
-						}
+							if (item == null)
+								return false;
+
+							bool nameMatch = ModEntry.Config.FilterItems && item.DisplayName.ToLower().Trim().Contains(searchTerm);
+							if (nameMatch) return true;
+
+							bool categoryMatch = ModEntry.Config.FilterItemsCategory && item.getCategoryName().ToLower().Trim().Contains(searchTerm);
+							if (categoryMatch) return true;
+
+							bool descriptionMatch = ModEntry.Config.FilterItemsDescription && item.getDescription().ToLower().Trim().Contains(searchTerm);
+							if (descriptionMatch) return true;
+							
+							return false;
+						});
 					}
-				}
-				else
-				{
-					if (!string.IsNullOrEmpty(whichLocation) &&
-						!chestData.label.ToLower().Contains(whichLocation.ToLower()))
+
+					if (!chestNameMatches && !anyItemMatches)
 					{
 						continue;
 					}
