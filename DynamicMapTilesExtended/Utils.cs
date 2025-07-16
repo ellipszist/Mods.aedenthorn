@@ -160,7 +160,6 @@ namespace DMT
             }
             if (string.IsNullOrWhiteSpace(prop.Key))
             {
-                //Context.Monitor.Log($"Found unknown key {key} when parsing old property format, this property will be ignored", LogLevel.Warn);
                 return null;
             }
             key = key.Trim('_');
@@ -266,7 +265,7 @@ namespace DMT
         }
         public static bool DoTriggerActions(Farmer who, Point tilePosition, List<(DynamicTileProperty prop, Tile tile)> properties)
         {
-            bool triggered = false;
+            List<string> triggered = new();
 
             foreach (var item in properties)
             {
@@ -386,7 +385,7 @@ namespace DMT
                             break;
                     }
                     if (found)
-                        triggered = true;
+                        triggered.Add(item.prop.key);
                 }
                 catch (Exception ex)
                 {
@@ -394,7 +393,12 @@ namespace DMT
                     Context.Monitor.Log($"[{ex.GetType().Name}] {ex.Message}\n{ex.Message}", LogLevel.Error);
                 }
             }
-            return triggered;
+            if (triggered.Any())
+            {
+                Context.Monitor.Log($"Triggered at {tilePosition} by {who?.displayName ?? "no one"}: {string.Join(',', triggered)}");
+                return true;
+            }
+            return false;
         }
 
         internal static List<(DynamicTileProperty prop, Tile tile)> GetPropertiesForTriggers(List<Layer> layers, Farmer who, Point tilePosition, IEnumerable<string> triggers)

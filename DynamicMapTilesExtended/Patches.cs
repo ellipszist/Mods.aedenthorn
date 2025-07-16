@@ -71,6 +71,7 @@ namespace DMT
             );
             harmony.Patch(
                 original: AccessTools.Method(typeof(Crop), nameof(Crop.newDay)),
+                prefix: new(typeof(Patches), nameof(Crop_newDay_Prefix)),
                 postfix: new(typeof(Patches), nameof(Crop_newDay_Postfix))
             );
             harmony.Patch(
@@ -164,6 +165,7 @@ namespace DMT
 
         internal static void Farmer_GetMovementSpeed_Postfix(Farmer __instance, ref float __result)
         {
+
             if (!Enabled || (!Context.Config.TriggerDuringEvents && Game1.eventUp) || __instance.currentLocation is null)
                 return;
 
@@ -199,7 +201,7 @@ namespace DMT
             if (!Enabled || (!Context.Config.TriggerDuringEvents && Game1.eventUp) || __state is null || __instance.currentLocation is null)
                 return;
             var f = __instance;
-            var tilePos = f.TilePoint;
+            var tilePos = new Point((int)f.position.Value.X / 64, (int)f.position.Value.Y / 64);
             var oldTilePos = Utility.Vector2ToPoint(__state[1]);
             var layer = f.currentLocation.Map.GetLayer("Back");
             if (oldTilePos != tilePos)
@@ -272,10 +274,17 @@ namespace DMT
                 return;
             TriggerActions([.. who.currentLocation.Map.Layers], who, __instance.currentLocation, __instance.TilePoint, [string.Format(Triggers.MonsterSlain, Utils.BuildFormattedTrigger(__instance.Name))]);
         }
-        internal static void Crop_newDay_Postfix(Crop __instance)
+        internal static void Crop_newDay_Prefix(Crop __instance, ref bool __state)
         {
-            if (!Enabled || !Game1.IsMasterGame || __instance.IsErrorCrop())
+            if (!Enabled || !Game1.IsMasterGame || __instance.IsErrorCrop() || __instance.fullyGrown.Value)
                 return;
+            __state = true;
+        }
+        internal static void Crop_newDay_Postfix(Crop __instance, bool __state)
+        {
+            if (!Enabled || !Game1.IsMasterGame || __instance.IsErrorCrop() || !__state || !__instance.fullyGrown.Value)
+                return;
+            Context.Monitor.Log($"Crop {__instance.netSeedIndex.Value} grew up");
             TriggerActions([.. __instance.currentLocation.Map.Layers], null, __instance.currentLocation, __instance.tilePosition.ToPoint(), [string.Format(Triggers.CropGrown, Utils.BuildFormattedTrigger(__instance.netSeedIndex.Value))]);
         }
         internal static void Object_placementAction_Postfix(Object __instance, GameLocation location, int x, int y, Farmer who)

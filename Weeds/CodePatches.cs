@@ -12,11 +12,11 @@ namespace Weeds
     {
         internal static bool HoeDirt_performUseAction_Prefix(TerrainFeature __instance, ref bool __result, Vector2 tileLocation)
         {
-            if (!Config.ModEnabled || __result || !__instance.modData.TryGetValue(modKey, out var data) || int.Parse(data) <= 25)
+            if (!Config.ModEnabled || !__instance.modData.TryGetValue(modKey, out var data) || int.Parse(data) < 25)
                 return true;
             Game1.player.mostRecentlyGrabbedItem = null;
             Game1.player.animateOnce(279 + Game1.player.FacingDirection);
-            Game1.player.currentLocation.playSound("moss_cut", null, null, SoundContext.Default);
+            Game1.player.currentLocation.playSound("moss_cut");
             Game1.player.gainExperience(2, Config.WeedExp);
             Game1.player.Stamina -= Math.Max(0, Config.WeedStaminaUse - (float)Game1.player.FarmingLevel * 0.1f);
             __instance.modData.Remove(modKey);
@@ -59,6 +59,8 @@ namespace Weeds
             if(Game1.currentLocation.IsOutdoors && Game1.season == Season.Winter)
             {
                 __instance.modData[modKey] = "0";
+                if (Game1.random.NextDouble() < 0.5)
+                    __instance.modData[modFlippedKey] = "true";
                 return;
             }
             int weed = 1;
@@ -71,7 +73,7 @@ namespace Weeds
                 if (Game1.random.NextDouble() < 0.5)
                     __instance.modData[modFlippedKey] = "true";
             }
-                weed += Game1.random.Next(Config.WeedGrowthPerDayMin, Config.WeedGrowthPerDayMax);
+            weed += Game1.random.Next(Config.WeedGrowthPerDayMin, Config.WeedGrowthPerDayMax);
             __instance.modData[modKey] = weed.ToString();
         }
         internal static void HoeDirt_draw_Postfix(HoeDirt __instance, SpriteBatch spriteBatch)
