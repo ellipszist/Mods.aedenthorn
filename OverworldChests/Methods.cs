@@ -20,7 +20,6 @@ namespace OverworldChests
 		{
 			if (!Config.ModEnabled && !ignoreModEnabled)
 				return;
-
 			Utility.ForEachLocation(location =>
 			{
 				if (location is not FarmHouse && (Config.IncludeIndoorLocations || location.IsOutdoors) && IsLocationAllowed(location))

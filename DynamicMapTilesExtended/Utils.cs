@@ -395,7 +395,7 @@ namespace DMT
             }
             if (triggered.Any())
             {
-                Context.Monitor.Log($"Triggered at {tilePosition} by {who?.displayName ?? "no one"}: {string.Join(',', triggered)}");
+                //Context.Monitor.Log($"Triggered at {tilePosition} by {who?.displayName ?? "no one"}: {string.Join(',', triggered)}");
                 return true;
             }
             return false;

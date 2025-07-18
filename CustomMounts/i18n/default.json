@@ -1,0 +1,12 @@
+{
+	// GMCM
+	"GMCM.ModEnabled.Name": "Mod Enabled",
+	"LadderDown.Name": "Basement Ladder",
+	"LadderDown.Desc": "A ladder to your basement",
+	"DestinationMissing": "The destination location is missing!",
+	"LadderMissing": "The destination ladder is missing!",
+	"InvalidTile": "Those coordinates are invalid!",
+	"DestinationBlocked": "Something is blocking those coordinates!",
+	"Destination.Name": "Destination Name",
+	"Destination.Tile": "Destination Tile"
+}
