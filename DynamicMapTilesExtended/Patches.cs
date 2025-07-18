@@ -201,7 +201,8 @@ namespace DMT
             if (!Enabled || (!Context.Config.TriggerDuringEvents && Game1.eventUp) || __state is null || __instance.currentLocation is null)
                 return;
             var f = __instance;
-            var tilePos = new Point((int)f.position.Value.X / 64, (int)f.position.Value.Y / 64);
+            var center = f.GetBoundingBox().Center;
+            var tilePos = new Point(center.X / 64, center.Y / 64);
             var oldTilePos = Utility.Vector2ToPoint(__state[1]);
             var layer = f.currentLocation.Map.GetLayer("Back");
             if (oldTilePos != tilePos)
