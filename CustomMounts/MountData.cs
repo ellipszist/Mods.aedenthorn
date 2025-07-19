@@ -15,6 +15,11 @@ namespace CustomMounts
         public string TexturePath;
         public int FrameWidth = 32;
         public int FrameHeight = 32;
+        public string EatItem = "(O)Carrot";
+        public string EatSound = "eat";
+        public string FluteItem = "(O)911";
+        public string FluteSound = "horse_flute";
+        public bool AllowHats = true;
         public float HatScale = 1;
         public Vector2[] HatOffsets = {
             Vector2.Zero,

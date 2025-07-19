@@ -1,8 +1,12 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Netcode;
 using StardewValley;
+using StardewValley.Buildings;
 using StardewValley.Characters;
 using StardewValley.Objects;
+using xTile.Dimensions;
+using Object = StardewValley.Object;
 
 namespace CustomMounts
 {
@@ -56,6 +60,94 @@ namespace CustomMounts
                 default:
                     return which;
             }
+        }
+        private static string SetCarrotItem(string item, Horse horse)
+        {
+            if (!Config.ModEnabled || !horse.modData.TryGetValue(modKey, out var key) || !mountDict.TryGetValue(key, out var data))
+                return item;
+            return data.EatItem;
+        }
+        private static string SetEatSound(string sound, Horse horse)
+        {
+            if (!Config.ModEnabled || !horse.modData.TryGetValue(modKey, out var key) || !mountDict.TryGetValue(key, out var data))
+                return sound;
+            return data.EatSound;
+        }
+        private static string SetFluteItem(string value, Object obj)
+        {
+            if (!Config.ModEnabled)
+                return value;
+            Utility.ForEachBuilding<Stable>(delegate (Stable stable)
+            {
+                Horse curHorse = stable.getStableHorse();
+                var owner = curHorse?.getOwner();
+                var ownerId = curHorse?.ownerId;
+                if (owner == Game1.player)
+                {
+                    if(curHorse.modData.TryGetValue(modKey, out var key) && mountDict.TryGetValue(key, out var data))
+                    {
+                        if(obj.QualifiedItemId == data.FluteItem)
+                        {
+                            value = data.FluteItem;
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }, true);
+            return value;
+        }
+        private static string SetFluteSound(string value, Object obj)
+        {
+            if (!Config.ModEnabled)
+                return value;
+            Utility.ForEachBuilding<Stable>(delegate (Stable stable)
+            {
+                Horse curHorse = stable.getStableHorse();
+                if (curHorse?.getOwner() == Game1.player)
+                {
+                    if (curHorse.modData.TryGetValue(modKey, out var key) && mountDict.TryGetValue(key, out var data))
+                    {
+                        if (obj.QualifiedItemId == data.FluteItem)
+                        {
+                            value = data.FluteSound;
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }, true);
+            return value;
+        }
+        private static Horse GetHorseForFlute(long uid)
+        {
+            Farmer farmer = Game1.GetPlayer(uid, false);
+            Object obj = farmer.ActiveObject;
+            Horse horse = null;
+            Utility.ForEachBuilding<Stable>(delegate (Stable stable)
+            {
+                Horse curHorse = stable.getStableHorse();
+                if (curHorse != null && curHorse.getOwner() == farmer && (!Config.ModEnabled || IsFluteFor(curHorse, obj)))
+                {
+                    horse = curHorse;
+                    return false;
+                }
+                return true;
+            }, true);
+            return horse;
+        }
+
+        private static bool IsFluteFor(Horse horse, Object obj)
+        {
+            if (!horse.modData.TryGetValue(modKey, out var key) || !mountDict.TryGetValue(key, out var data))
+                return obj.QualifiedItemId == "(O)911";
+            return obj.QualifiedItemId == data.FluteItem;
+        }
+
+        private static void PreventOwnershipErasure(NetLong l, long v)
+        {
+            if (!Config.ModEnabled || !Config.AllowMultipleMounts)
+                l.Value = v;
         }
     }
 }

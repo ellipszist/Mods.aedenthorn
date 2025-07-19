@@ -4,6 +4,8 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Buildings;
 using StardewValley.Characters;
+using System.Reflection;
+using Object = StardewValley.Object;
 
 namespace CustomMounts
 {
@@ -36,7 +38,23 @@ namespace CustomMounts
             helper.Events.Input.ButtonPressed += Input_ButtonPressed;
 			
             Harmony harmony = new(ModManifest.UniqueID);
-
+            foreach (var list in (from type in typeof(Horse).Assembly.GetTypes()
+                               where type.FullName.StartsWith("StardewValley.Characters.Horse")
+                                 select type.GetMethods(
+                                 BindingFlags.Public | BindingFlags.NonPublic |
+                                 BindingFlags.Instance | BindingFlags.Static)))
+            {
+                foreach(var m in list)
+                {
+                    if (m.Name.Contains("<checkAction>"))
+                    {
+                        harmony.Patch(
+                            original: m,
+                            transpiler: new(typeof(ModEntry), nameof(Horse_checkAction2_Transpiler))
+                        );
+                    }
+                }
+            }
 
             harmony.Patch(
                 original: AccessTools.Constructor(typeof(Horse), new Type[] { typeof(Guid), typeof(int), typeof(int) } ),
@@ -59,29 +77,52 @@ namespace CustomMounts
                 transpiler: new(typeof(ModEntry), nameof(Horse_draw_Transpiler))
             );
             harmony.Patch(
-                original: AccessTools.Method(typeof(NPC), nameof(NPC.behaviorOnFarmerLocationEntry)),
-                prefix: new(typeof(ModEntry), nameof(NPC_behaviorOnFarmerLocationEntry_Prefix))
-            );
-            harmony.Patch(
-                original: AccessTools.Method(typeof(Farmer), nameof(Farmer.updateMovementAnimation)),
-                transpiler: new(typeof(ModEntry), nameof(Farmer_updateMovementAnimation_Transpiler))
+                original: AccessTools.Method(typeof(Horse), nameof(Horse.checkAction)),
+                prefix: new(typeof(ModEntry), nameof(Horse_checkAction_Prefix)),
+                transpiler: new(typeof(ModEntry), nameof(Horse_checkAction_Transpiler))
             );
             harmony.Patch(
                 original: AccessTools.Method(typeof(Horse), nameof(Horse.SyncPositionToRider)),
                 postfix: new(typeof(ModEntry), nameof(Horse_SyncPositionToRider_Postfix))
             );
+
+            harmony.Patch(
+                original: AccessTools.Method(typeof(NPC), nameof(NPC.behaviorOnFarmerLocationEntry)),
+                prefix: new(typeof(ModEntry), nameof(NPC_behaviorOnFarmerLocationEntry_Prefix))
+            );
+
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Object), nameof(Object.performUseAction)),
+                transpiler: new(typeof(ModEntry), nameof(Object_performUseAction_Transpiler))
+            );
+
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Farmer), nameof(Farmer.updateMovementAnimation)),
+                transpiler: new(typeof(ModEntry), nameof(Farmer_updateMovementAnimation_Transpiler))
+            );
+
+            harmony.Patch(
+                original: AccessTools.Method(typeof(FarmerTeam), nameof(FarmerTeam.OnRequestHorseWarp)),
+                transpiler: new(typeof(ModEntry), nameof(FarmerTeam_OnRequestHorseWarp_Transpiler))
+            );
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Game1), nameof(Game1.UpdateHorseOwnership)),
+                transpiler: new(typeof(ModEntry), nameof(Game1_UpdateHorseOwnership_Transpiler))
+            );
         }
 
         private void Input_ButtonPressed(object? sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
         {
+            return;
             if(e.Button == SButton.O)
             {
                 var cc = Game1.getFarm().characters;
                 for (int i = cc.Count - 1; i >= 0; i--)
                 {
-                    if (cc[i] is Horse)
+                    if (cc[i] is Horse horse)
                     {
-                        cc.RemoveAt(i);
+                        var v = horse.ownerId.Value;
+                        //cc.RemoveAt(i);
                     }
                 }
             }
@@ -132,6 +173,12 @@ namespace CustomMounts
                     name: () => ModEntry.SHelper.Translation.Get("GMCM.ModEnabled.Name"),
                     getValue: () => Config.ModEnabled,
                     setValue: value => Config.ModEnabled = value
+                );
+                configMenu.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => ModEntry.SHelper.Translation.Get("GMCM.AllowMultipleMounts.Name"),
+                    getValue: () => Config.AllowMultipleMounts,
+                    setValue: value => Config.AllowMultipleMounts = value
                 );
             }
 		}

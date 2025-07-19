@@ -1,7 +1,7 @@
 ﻿{
 	"Name": "CustomMounts",
 	"Author": "aedenthorn",
-	"Version": "0.2.0",
+	"Version": "0.3.0",
 	"Description": "Custom Mounts.",
 	"UniqueID": "aedenthorn.CustomMounts",
 	"EntryDll": "CustomMounts.dll",
