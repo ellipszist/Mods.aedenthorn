@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.Buildings;
 using StardewValley.Characters;
@@ -19,15 +20,30 @@ namespace CustomMounts
             __instance.Sprite.currentFrame = 0;
             return false;
         }
+        public static bool Stable_GetDefaultHorseTile_Prefix(Stable __instance, ref Point __result)
+        {
+            if (!Config.ModEnabled)
+                return true;
+            foreach (var kvp in MountDict)
+            {
+                var bd = __instance.GetData();
+                if (bd.Name == kvp.Value.Stable)
+                {
+                    __result = new Point(__instance.tileX.Value + kvp.Value.SpawnOffset.X, __instance.tileY.Value + kvp.Value.SpawnOffset.Y);
+                    return false;
+                }
+            }
+            return true;
+        }
 
         public static void Horse_Postfix(Horse __instance, Guid horseId, int xTile, int yTile)
         {
-            if (!Config.ModEnabled || !mountDict.Any())
+            if (!Config.ModEnabled || !MountDict.Any())
                 return;
             var stable = __instance.TryFindStable();
-            foreach(var kvp in mountDict)
+            var bd = stable.GetData();
+            foreach (var kvp in MountDict)
             {
-                var bd = stable.GetData();
                 if (bd.Name == kvp.Value.Stable)
                 {
                     __instance.modData[modKey] = kvp.Key;
@@ -43,24 +59,20 @@ namespace CustomMounts
                 return true;
             if (__instance.Sprite != null && __instance.spriteOverridden)
                 return true;
-            if(mountDict is null)
-            {
-                mountDict = SHelper.GameContent.Load<Dictionary<string, MountData>>(dictPath);
-            }
-            if (!mountDict.TryGetValue(key, out var data))
+            if (!MountDict.TryGetValue(key, out var data))
                 return true;
             SetSprite(__instance, data);
             return false;
         }
         public static void Horse_GetBoundingBox_Postfix(Horse __instance, ref Rectangle __result)
         {
-            if (!Config.ModEnabled || !__instance.modData.TryGetValue(modKey, out var key) || !mountDict.TryGetValue(key, out var data))
+            if (!Config.ModEnabled || !__instance.modData.TryGetValue(modKey, out var key) || !MountDict.TryGetValue(key, out var data))
                 return;
            __result.Inflate(data.HorizontalSizeDiff, data.VerticalSizeDiff);
         }
         public static void Horse_SyncPositionToRider_Postfix(Horse __instance, bool ___roomForHorseAtDismountTile)
         {
-            if (!Config.ModEnabled || __instance.rider is null || __instance.dismounting.Value || !__instance.modData.TryGetValue(modKey, out var key) || !mountDict.TryGetValue(key, out var data))
+            if (!Config.ModEnabled || __instance.rider is null || __instance.dismounting.Value || !__instance.modData.TryGetValue(modKey, out var key) || !MountDict.TryGetValue(key, out var data))
                 return;
             __instance.Position += new Vector2(-data.HorizontalSizeDiff * 2, data.VerticalSizeDiff);
             if(__instance.Position.X < 0)
@@ -97,6 +109,37 @@ namespace CustomMounts
 
             return codes.AsEnumerable();
         }
+        public static void Horse_draw_Prefix(Horse __instance, int ___munchingCarrotTimer, ref int __state)
+        {
+            if (!Config.ModEnabled || ___munchingCarrotTimer <= 0|| (__instance.Sprite.SpriteWidth == 32 && __instance.Sprite.SpriteHeight == 32))
+                return;
+            __state = ___munchingCarrotTimer;
+            ___munchingCarrotTimer = 0;
+        }
+        public static int toggle;
+        public static void Horse_draw_Postfix(Horse __instance, SpriteBatch b, ref int ___munchingCarrotTimer, int __state)
+        {
+            if (__state <= 0 || ++toggle < 10)
+                return;
+            toggle %= 20;
+            float xScale = __instance.Sprite.SpriteWidth / 32f;
+            float yScale = __instance.Sprite.SpriteHeight / 32f;
+            switch (__instance.FacingDirection)
+            {
+                case 1:
+                    b.Draw(__instance.Sprite.Texture, __instance.getLocalPosition(Game1.viewport) + new Vector2(80f * xScale, -56f * yScale + 16 * (yScale - 1)), new Rectangle?(new Rectangle((int)Math.Round(179 * xScale) + (int)(Game1.currentGameTime.TotalGameTime.TotalMilliseconds % 600.0) / 300 * (int)Math.Round(16 * xScale), (int)Math.Round(97 * yScale), (int)Math.Round(16 * xScale), (int)Math.Round(14 * yScale))), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, (__instance.Position.Y + 64f) / 10000f + 1E-07f);
+                    return;
+                case 2:
+                    b.Draw(__instance.Sprite.Texture, __instance.getLocalPosition(Game1.viewport) + new Vector2(24f * xScale, -24f * yScale + 16 * (yScale - 1)), new Rectangle?(new Rectangle((int)Math.Round(170 * xScale) + (int)(Game1.currentGameTime.TotalGameTime.TotalMilliseconds % 600.0) / 300 * (int)Math.Round(16 * xScale), (int)Math.Round(112 * yScale), (int)Math.Round(16 * xScale), (int)Math.Round(16 * yScale))), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, (__instance.Position.Y + 64f) / 10000f + 1E-07f);
+                    return;
+                case 3:
+                    b.Draw(__instance.Sprite.Texture, __instance.getLocalPosition(Game1.viewport) + new Vector2(-16f * xScale, -56f * yScale + 16 * (yScale - 1)), new Rectangle?(new Rectangle((int)Math.Round(179 * xScale) + (int)(Game1.currentGameTime.TotalGameTime.TotalMilliseconds % 600.0) / 300 * (int)Math.Round(16 * xScale), (int)Math.Round(97 * yScale), (int)Math.Round(16 * xScale), (int)Math.Round(14 * yScale))), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.FlipHorizontally, (__instance.Position.Y + 64f) / 10000f + 1E-07f);
+                    break;
+                default:
+                    return;
+            }
+            ___munchingCarrotTimer = __state;
+        }
         public static IEnumerable<CodeInstruction> Horse_draw_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             SMonitor.Log($"Transpiling Horse.draw");
@@ -118,7 +161,7 @@ namespace CustomMounts
         }
         public static bool Horse_checkAction_Prefix(Horse __instance, Farmer who)
         {
-            if (!Config.ModEnabled || !__instance.modData.TryGetValue(modKey, out var key) || !mountDict.TryGetValue(key, out var data) || data.AllowHats)
+            if (!Config.ModEnabled || !__instance.modData.TryGetValue(modKey, out var key) || !MountDict.TryGetValue(key, out var data) || data.AllowHats)
                 return true;
             if (who != null && who.canMove || __instance.rider == null && who.mount == null && !who.FarmerSprite.PauseForSingleAnimation && __instance.currentLocation == who.currentLocation)
             {
@@ -216,6 +259,24 @@ namespace CustomMounts
                 {
                     SMonitor.Log($"Adding method to change mount speed");
                     codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.SetSpeed))));
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                    break;
+                }
+            }
+
+            return codes.AsEnumerable();
+        }
+        public static IEnumerable<CodeInstruction> Farmer_getMovementSpeed_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            SMonitor.Log($"Transpiling Farmer.getMovementSpeed");
+
+            var codes = new List<CodeInstruction>(instructions);
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (i > 3 && codes[i].opcode == OpCodes.Ldc_R4 && codes[i - 4].opcode == OpCodes.Ldfld && ((FieldInfo)codes[i - 4].operand).Name == "ateCarrotToday")
+                {
+                    SMonitor.Log($"Adding method to change carrot speed bonus");
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.SetSpeedBonus))));
                     codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
                     break;
                 }

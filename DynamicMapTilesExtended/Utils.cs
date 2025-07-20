@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using StardewValley;
 using System.Diagnostics.CodeAnalysis;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using xTile;
@@ -23,7 +22,7 @@ namespace DMT
                 return false;
             foreach (var trigger in triggers)
             {
-                if (!trigger.Equals(property.Trigger, StringComparison.OrdinalIgnoreCase) && !trigger.Contains(property.Trigger, StringComparison.OrdinalIgnoreCase))
+                if (!trigger.Equals(property.Trigger, StringComparison.OrdinalIgnoreCase) && !trigger.StartsWith(property.Trigger + "(", StringComparison.OrdinalIgnoreCase))
                     continue;
                 return true;
             }

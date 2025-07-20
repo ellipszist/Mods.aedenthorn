@@ -19,7 +19,12 @@ namespace CustomMounts
 		public static ModEntry context;
         public static string modKey = "aedenthorn.CustomMounts";
         public static string dictPath = "aedenthorn.CustomMounts/dict";
-        public static Dictionary<string, MountData> mountDict;
+        public static Dictionary<string, MountData> MountDict {
+            get
+            {
+                return SHelper.GameContent.Load<Dictionary<string, MountData>>(dictPath);
+            }
+        }
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
@@ -74,6 +79,8 @@ namespace CustomMounts
             );
             harmony.Patch(
                 original: AccessTools.Method(typeof(Horse), nameof(Horse.draw), new Type[] { typeof(SpriteBatch) }),
+                prefix: new(typeof(ModEntry), nameof(Horse_draw_Prefix)),
+                postfix: new(typeof(ModEntry), nameof(Horse_draw_Postfix)),
                 transpiler: new(typeof(ModEntry), nameof(Horse_draw_Transpiler))
             );
             harmony.Patch(
@@ -84,6 +91,11 @@ namespace CustomMounts
             harmony.Patch(
                 original: AccessTools.Method(typeof(Horse), nameof(Horse.SyncPositionToRider)),
                 postfix: new(typeof(ModEntry), nameof(Horse_SyncPositionToRider_Postfix))
+            );
+            
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Stable), nameof(Stable.GetDefaultHorseTile)),
+                prefix: new(typeof(ModEntry), nameof(Stable_GetDefaultHorseTile_Prefix))
             );
 
             harmony.Patch(
@@ -99,6 +111,11 @@ namespace CustomMounts
             harmony.Patch(
                 original: AccessTools.Method(typeof(Farmer), nameof(Farmer.updateMovementAnimation)),
                 transpiler: new(typeof(ModEntry), nameof(Farmer_updateMovementAnimation_Transpiler))
+            );
+
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Farmer), nameof(Farmer.getMovementSpeed)),
+                transpiler: new(typeof(ModEntry), nameof(Farmer_getMovementSpeed_Transpiler))
             );
 
             harmony.Patch(
@@ -121,8 +138,7 @@ namespace CustomMounts
                 {
                     if (cc[i] is Horse horse)
                     {
-                        var v = horse.ownerId.Value;
-                        //cc.RemoveAt(i);
+                        cc.RemoveAt(i);
                     }
                 }
             }
@@ -130,7 +146,6 @@ namespace CustomMounts
 
         private void GameLoop_SaveLoaded(object? sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)
         {
-            mountDict = SHelper.GameContent.Load<Dictionary<string, MountData>>(dictPath);
         }
 
         private void Content_AssetRequested(object? sender, StardewModdingAPI.Events.AssetRequestedEventArgs e)

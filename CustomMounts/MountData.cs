@@ -6,6 +6,7 @@ namespace CustomMounts
     {
         public string Name;
         public string Stable;
+        public Point SpawnOffset = new Point(1,1);
         public string FootstepSound;
         public string FootstepSoundWood;
         public string FootstepSoundStone;
@@ -17,6 +18,7 @@ namespace CustomMounts
         public int FrameHeight = 32;
         public string EatItem = "(O)Carrot";
         public string EatSound = "eat";
+        public float EatSpeedBonus = 0.4f;
         public string FluteItem = "(O)911";
         public string FluteSound = "horse_flute";
         public bool AllowHats = true;
