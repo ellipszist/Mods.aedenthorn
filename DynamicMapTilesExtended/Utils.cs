@@ -281,6 +281,15 @@ namespace DMT
                         case Keys.AddTilesheetKey:
                             Actions.DoAddTileSheet(who, value);
                             break;
+                        case Keys.AnimationKey:
+                            Actions.DoAnimate(who, value, false);
+                            break;
+                        case Keys.AnimationOffKey:
+                            Actions.DoAnimate(who, value, true);
+                            break;
+                        case Keys.BuffKey:
+                            Actions.DoAddBuff(who, value);
+                            break;
                         case Keys.ChangeIndexKey:
                             Actions.DoChangeIndex(who, value, tile, tilePosition);
                             break;
@@ -293,29 +302,35 @@ namespace DMT
                         case Keys.ChangeMultiplePropertiesKey:
                             Actions.DoChangeMultipleProperties(who, value, tile);
                             break;
-                        case Keys.SoundKey:
-                            Actions.DoPlaySound(who, value);
+                        case Keys.ChestKey:
+                            Actions.DoSpawnChest(who, value);
                             break;
-                        case Keys.TeleportKey:
-                            Actions.DoTeleport(who, value);
+                        case Keys.EmoteKey:
+                            Actions.DoEmote(who, value);
                             break;
-                        case Keys.TeleportTileKey:
-                            Actions.DoTeleportTile(who, value);
+                        case Keys.EventKey:
+                            Actions.DoPlayEvent(value);
+                            break;
+                        case Keys.ExplosionKey:
+                            Actions.DoExplode(who, value, tilePosition);
                             break;
                         case Keys.GiveKey:
                             Actions.DoGive(who, value);
                             break;
-                        case Keys.TakeKey:
-                            Actions.DoTake(who, value);
+                        case Keys.HealthKey:
+                            Actions.DoUpdateHealth(who, value);
                             break;
-                        case Keys.ChestKey:
-                            Actions.DoSpawnChest(who, value);
+                        case Keys.HealthPerSecondKey:
+                            Actions.DoUpdateHealthPerSecond(who, value);
                             break;
-                        case Keys.MessageKey:
-                            Actions.DoShowMessage(value);
+                        case Keys.HealthPerSecondContKey:
+                            Actions.DoUpdateHealthPerSecondCont(who, value);
                             break;
-                        case Keys.EventKey:
-                            Actions.DoPlayEvent(value);
+                        case Keys.InvalidateKey:
+                            Actions.DoInvalidateAsset(value);
+                            break;
+                        case Keys.MailBoxKey:
+                            Actions.DoAddMailForTomorrow(who, value);
                             break;
                         case Keys.MailKey:
                             Actions.DoAddMailflag(who, value);
@@ -323,53 +338,38 @@ namespace DMT
                         case Keys.MailRemoveKey:
                             Actions.DoRemoveMailflag(who, value);
                             break;
-                        case Keys.MailBoxKey:
-                            Actions.DoAddMailForTomorrow(who, value);
-                            break;
-                        case Keys.InvalidateKey:
-                            Actions.DoInvalidateAsset(value);
+                        case Keys.MessageKey:
+                            Actions.DoShowMessage(value);
                             break;
                         case Keys.MusicKey:
                             Actions.DoPlayMusic(value);
-                            break;
-                        case Keys.HealthKey:
-                            Actions.DoUpdateHealth(who, value);
-                            break;
-                        case Keys.StaminaKey:
-                            Actions.DoUpdateStamina(who, value);
-                            break;
-                        case Keys.HealthPerSecondKey:
-                            Actions.DoUpdateHealthPerSecond(who, value);
-                            break;
-                        case Keys.StaminaPerSecondKey:
-                            Actions.DoUpdateStaminaPerSecond(who, value);
-                            break;
-                        case Keys.HealthPerSecondContKey:
-                            Actions.DoUpdateHealthPerSecondCont(who, value);
-                            break;
-                        case Keys.StaminaPerSecondContKey:
-                            Actions.DoUpdateStaminaPerSecondCont(who, value);
-                            break;
-                        case Keys.BuffKey:
-                            Actions.DoAddBuff(who, value);
-                            break;
-                        case Keys.EmoteKey:
-                            Actions.DoEmote(who, value);
-                            break;
-                        case Keys.ExplosionKey:
-                            Actions.DoExplode(who, value, tilePosition);
-                            break;
-                        case Keys.AnimationKey:
-                            Actions.DoAnimate(who, value, false);
-                            break;
-                        case Keys.AnimationOffKey:
-                            Actions.DoAnimate(who, value, true);
                             break;
                         case Keys.PushKey:
                             Actions.DoPushTiles(who, tile, tilePosition);
                             break;
                         case Keys.PushOthersKey:
                             Actions.DoPushOtherTiles(who, value, tile, tilePosition);
+                            break;
+                        case Keys.StaminaKey:
+                            Actions.DoUpdateStamina(who, value);
+                            break;
+                        case Keys.StaminaPerSecondKey:
+                            Actions.DoUpdateStaminaPerSecond(who, value);
+                            break;
+                        case Keys.StaminaPerSecondContKey:
+                            Actions.DoUpdateStaminaPerSecondCont(who, value);
+                            break;
+                        case Keys.SoundKey:
+                            Actions.DoPlaySound(who, value);
+                            break;
+                        case Keys.TakeKey:
+                            Actions.DoTake(who, value);
+                            break;
+                        case Keys.TeleportKey:
+                            Actions.DoTeleport(who, value);
+                            break;
+                        case Keys.TeleportTileKey:
+                            Actions.DoTeleportTile(who, value);
                             break;
                         case Keys.WarpKey:
                             Actions.DoWarp(who, value);

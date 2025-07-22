@@ -1,10 +1,13 @@
 ﻿using HarmonyLib;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Buildings;
 using StardewValley.Characters;
+using StardewValley.Menus;
 using System.Reflection;
+using System.Reflection.PortableExecutable;
 using Object = StardewValley.Object;
 
 namespace CustomMounts
@@ -62,7 +65,7 @@ namespace CustomMounts
             }
 
             harmony.Patch(
-                original: AccessTools.Constructor(typeof(Horse), new Type[] { typeof(Guid), typeof(int), typeof(int) } ),
+                original: AccessTools.Constructor(typeof(Horse), [typeof(Guid), typeof(int), typeof(int)] ),
                 postfix: new(typeof(ModEntry), nameof(Horse_Postfix))
             );
             harmony.Patch(
@@ -78,7 +81,7 @@ namespace CustomMounts
                 transpiler: new(typeof(ModEntry), nameof(Horse_PerformDefaultHorseFootstep_Transpiler))
             );
             harmony.Patch(
-                original: AccessTools.Method(typeof(Horse), nameof(Horse.draw), new Type[] { typeof(SpriteBatch) }),
+                original: AccessTools.Method(typeof(Horse), nameof(Horse.draw), [typeof(SpriteBatch)]),
                 prefix: new(typeof(ModEntry), nameof(Horse_draw_Prefix)),
                 postfix: new(typeof(ModEntry), nameof(Horse_draw_Postfix)),
                 transpiler: new(typeof(ModEntry), nameof(Horse_draw_Transpiler))
@@ -97,7 +100,13 @@ namespace CustomMounts
                 original: AccessTools.Method(typeof(Stable), nameof(Stable.GetDefaultHorseTile)),
                 prefix: new(typeof(ModEntry), nameof(Stable_GetDefaultHorseTile_Prefix))
             );
-
+            /*
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Character), nameof(Character.faceDirection)),
+                prefix: new(typeof(ModEntry), nameof(Character_faceDirection_Prefix))
+            );
+            */
+            
             harmony.Patch(
                 original: AccessTools.Method(typeof(NPC), nameof(NPC.behaviorOnFarmerLocationEntry)),
                 prefix: new(typeof(ModEntry), nameof(NPC_behaviorOnFarmerLocationEntry_Prefix))
@@ -109,6 +118,11 @@ namespace CustomMounts
             );
 
             harmony.Patch(
+                original: AccessTools.Method(typeof(Farmer), nameof(Farmer.Update), [typeof(GameTime), typeof(GameLocation)]),
+                prefix: new(typeof(ModEntry), nameof(Farmer_Update_Prefix)),
+                postfix: new(typeof(ModEntry), nameof(Farmer_Update_Postfix))
+            );
+            harmony.Patch(
                 original: AccessTools.Method(typeof(Farmer), nameof(Farmer.updateMovementAnimation)),
                 transpiler: new(typeof(ModEntry), nameof(Farmer_updateMovementAnimation_Transpiler))
             );
@@ -117,7 +131,6 @@ namespace CustomMounts
                 original: AccessTools.Method(typeof(Farmer), nameof(Farmer.getMovementSpeed)),
                 transpiler: new(typeof(ModEntry), nameof(Farmer_getMovementSpeed_Transpiler))
             );
-
             harmony.Patch(
                 original: AccessTools.Method(typeof(FarmerTeam), nameof(FarmerTeam.OnRequestHorseWarp)),
                 transpiler: new(typeof(ModEntry), nameof(FarmerTeam_OnRequestHorseWarp_Transpiler))
@@ -126,10 +139,15 @@ namespace CustomMounts
                 original: AccessTools.Method(typeof(Game1), nameof(Game1.UpdateHorseOwnership)),
                 transpiler: new(typeof(ModEntry), nameof(Game1_UpdateHorseOwnership_Transpiler))
             );
+            harmony.Patch(
+                original: AccessTools.Method(typeof(AnimalPage), nameof(AnimalPage.CreateSpriteComponent)),
+                postfix: new(typeof(ModEntry), nameof(AnimalPage_CreateSpriteComponent_Postfix))
+            );
         }
 
         private void Input_ButtonPressed(object? sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
         {
+            //Game1.player.xOffset = 0;
             return;
             if(e.Button == SButton.O)
             {
@@ -194,6 +212,12 @@ namespace CustomMounts
                     name: () => ModEntry.SHelper.Translation.Get("GMCM.AllowMultipleMounts.Name"),
                     getValue: () => Config.AllowMultipleMounts,
                     setValue: value => Config.AllowMultipleMounts = value
+                );
+                configMenu.AddKeybind(
+                    mod: ModManifest,
+                    name: () => ModEntry.SHelper.Translation.Get("GMCM.RenameModKey.Name"),
+                    getValue: () => Config.RenameModKey,
+                    setValue: value => Config.RenameModKey = value
                 );
             }
 		}

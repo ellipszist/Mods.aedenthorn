@@ -13,6 +13,7 @@ namespace CustomMounts
         public int Speed = 2;
         public float HorizontalSizeDiff;
         public float VerticalSizeDiff;
+        public Point Size = Point.Zero;
         public string TexturePath;
         public int FrameWidth = 32;
         public int FrameHeight = 32;

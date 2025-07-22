@@ -7,6 +7,7 @@ using StardewValley.Characters;
 using StardewValley.Objects;
 using xTile.Dimensions;
 using Object = StardewValley.Object;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace CustomMounts
 {
@@ -25,6 +26,23 @@ namespace CustomMounts
                 location += data.HatOffsets[horse.FacingDirection];
             }
             hat.draw(spriteBatch, location, scaleSize, transparency, layerDepth, direction, useAnimalTexture);
+
+        }
+        public static int toggle;
+        private static void DrawHorse(SpriteBatch spriteBatch, Texture2D texture, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, float scale, SpriteEffects effects, float layerDepth, Horse horse)
+        {
+            if (!Config.ModEnabled || horse.rider is null || !horse.modData.TryGetValue(modKey, out var key) || !MountDict.TryGetValue(key, out var data))
+            {
+
+            }
+            else
+            {
+                float xScale = horse.Sprite.SpriteWidth / 32f;
+                float yScale = horse.Sprite.SpriteHeight / 32f;
+                position = horse.getLocalPosition(Game1.viewport) + new Vector2(48f * xScale, -24f * yScale - horse.rider.yOffset - (horse.Sprite.SpriteHeight - 32) / 2);
+                sourceRectangle = new Rectangle((int)Math.Round(160 * xScale), (int)Math.Round(96 * yScale), (int)Math.Round(9 * xScale), (int)Math.Round(15 * yScale));
+            }
+            spriteBatch.Draw(texture, position, sourceRectangle, color, rotation, origin, scale, effects, layerDepth);
 
         }
 
@@ -79,6 +97,18 @@ namespace CustomMounts
             if (!Config.ModEnabled || !horse.modData.TryGetValue(modKey, out var key) || !MountDict.TryGetValue(key, out var data))
                 return sound;
             return data.EatSound;
+        }
+        private static string SetNameYourHorse(string value, Horse horse)
+        {
+            if (!Config.ModEnabled || !horse.modData.TryGetValue(modKey, out var key) || !MountDict.TryGetValue(key, out var data))
+                return value;
+            return string.Format(SHelper.Translation.Get("NameYourX"), data.Name);
+        }
+        private static string SetDefaultHorseName(string value, Horse horse)
+        {
+            if (!Config.ModEnabled || !horse.modData.TryGetValue(modKey, out var key) || !MountDict.TryGetValue(key, out var data))
+                return value;
+            return data.Name;
         }
         private static string SetFluteItem(string value, Object obj)
         {
@@ -155,6 +185,16 @@ namespace CustomMounts
         {
             if (!Config.ModEnabled || !Config.AllowMultipleMounts)
                 l.Value = v;
+        }
+        private static bool CheckModData(Horse horse, out MountData data)
+        {
+            if (!horse.modData.TryGetValue(modKey, out var key) || !MountDict.TryGetValue(key, out var d))
+            {
+                data = null;
+                return false;
+            }
+            data = d;
+            return true;
         }
     }
 }

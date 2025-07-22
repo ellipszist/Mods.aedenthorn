@@ -282,7 +282,7 @@ namespace MobilePhone
             {
                 RefreshView1();
             };
-            Game1.warpFarmer(locationRequest.Location.Name, Game1.player.TilePoint.X, Game1.player.TilePoint.Y, Game1.player.FacingDirection);
+            Game1.warpFarmer(locationRequest, Game1.player.TilePoint.X, Game1.player.TilePoint.Y, Game1.player.FacingDirection);
             return false;
         }
 
@@ -296,26 +296,23 @@ namespace MobilePhone
                 RefreshView2();
 
             };
-            Game1.warpFarmer(locationRequest.Location.Name, Game1.player.TilePoint.X, Game1.player.TilePoint.Y, Game1.player.FacingDirection);
+            Game1.warpFarmer(locationRequest, Game1.player.TilePoint.X, Game1.player.TilePoint.Y, Game1.player.FacingDirection);
             return false;
         }
         private static void RefreshView1()
         {
-            if (!(Game1.activeClickableMenu is CarpenterMenu))
+            if (Game1.activeClickableMenu is not CarpenterMenu menu)
                 return;
-
-            Helper.Reflection.GetField<bool>(Game1.activeClickableMenu, "onFarm").SetValue(false);
+            menu.onFarm = false;
             Game1.player.viewingLocation.Value = null;
-            Helper.Reflection.GetMethod(Game1.activeClickableMenu, "resetBounds").Invoke(new object[] { });
-            Helper.Reflection.GetField<bool>(Game1.activeClickableMenu, "upgrading").SetValue(false);
-            Helper.Reflection.GetField<bool>(Game1.activeClickableMenu, "moving").SetValue(false);
-            Helper.Reflection.GetField<Building>(Game1.activeClickableMenu, "buildingToMove").SetValue(null);
-            Helper.Reflection.GetField<bool>(Game1.activeClickableMenu, "freeze").SetValue(false);
+            Helper.Reflection.GetMethod(menu, "resetBounds").Invoke(new object[] { });
+            menu.Action = CarpenterMenu.CarpentryAction.None;
+            menu.buildingToMove = null;
+            menu.freeze = false;
             Game1.displayHUD = true;
             Game1.viewportFreeze = false;
             Game1.viewport.Location = ModEntry.callViewportLocation;
-            Helper.Reflection.GetField<bool>(Game1.activeClickableMenu, "drawBG").SetValue(true);
-            Helper.Reflection.GetField<bool>(Game1.activeClickableMenu, "demolishing").SetValue(false);
+            menu.drawBG = true;
             Game1.displayFarmer = true;
             if (Game1.options.SnappyMenus)
             {
@@ -325,15 +322,15 @@ namespace MobilePhone
         }
         private static void RefreshView2()
         {
-            if (!(Game1.activeClickableMenu is CarpenterMenu))
+            if (Game1.activeClickableMenu is not CarpenterMenu menu)
                 return;
 
 
             Game1.displayHUD = true;
             Game1.player.viewingLocation.Value = null;
             Game1.viewportFreeze = false;
-            Game1.viewport.Location = new Location(320, 1536);
-            Helper.Reflection.GetField<bool>(Game1.activeClickableMenu, "freeze").SetValue(false);
+            Game1.viewport.Location = ModEntry.callViewportLocation;
+            menu.freeze = false;
             Game1.displayFarmer = true;
             robinPhoneConstructionMessage(Game1.activeClickableMenu, (Game1.activeClickableMenu as CarpenterMenu).Blueprint);
         }
@@ -341,20 +338,32 @@ namespace MobilePhone
         private static async void robinPhoneConstructionMessage(IClickableMenu instance, CarpenterMenu.BlueprintEntry CurrentBlueprint)
         {
             Game1.player.forceCanMove();
-            string dialoguePath = "Data\\ExtraDialogue:Robin_" + (Helper.Reflection.GetField<bool>(instance, "upgrading").GetValue() ? "Upgrade" : "New") + "Construction";
+            string dialoguePath = "Data\\ExtraDialogue:Robin_" + ((instance as CarpenterMenu).Action == CarpenterMenu.CarpentryAction.Upgrade ? "Upgrade" : "New") + "Construction";
             if (Utility.isFestivalDay(Game1.dayOfMonth + 1, Game1.season))
             {
                 dialoguePath += "_Festival";
             }
+            string displayName = (instance as CarpenterMenu).Blueprint.DisplayName;
+            string generalName = (instance as CarpenterMenu).Blueprint.DisplayNameForGeneralType;
             if (CurrentBlueprint.BuildDays <= 0)
             {
-                Game1.DrawDialogue(Game1.getCharacterFromName("Robin", true), Game1.content.LoadString("Data\\ExtraDialogue:Robin_Instant", (LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.de) ? CurrentBlueprint.DisplayName : CurrentBlueprint.DisplayName.ToLower()));
+                Game1.DrawDialogue(Game1.getCharacterFromName("Robin", true, false), "Data\\ExtraDialogue:Robin_Instant", new object[]
+                {
+                        displayName.ToLower(),
+                        displayName
+                });
             }
             else
             {
-                Game1.DrawDialogue(Game1.getCharacterFromName("Robin", true), Game1.content.LoadString(dialoguePath, (LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.de) ? CurrentBlueprint.DisplayName : CurrentBlueprint.DisplayName.ToLower(), (LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.de) ? CurrentBlueprint.DisplayName.Split(' ').Last().Split('-').Last() : ((LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.pt || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.es || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.it) ? CurrentBlueprint.DisplayName.ToLower().Split(' ').First() : CurrentBlueprint.DisplayName.ToLower().Split(' ').Last())));
-            }
+                Game1.DrawDialogue(Game1.getCharacterFromName("Robin", true, false), dialoguePath, new object[]
+                {
+                    displayName.ToLower(),
+                    generalName.ToLower(),
+                    displayName,
+                    generalName
+                });
 
+            }
             while (Game1.activeClickableMenu is DialogueBox)
             {
                 await Task.Delay(50);
