@@ -4,6 +4,7 @@ using Netcode;
 using StardewValley;
 using StardewValley.Buildings;
 using StardewValley.Characters;
+using StardewValley.ItemTypeDefinitions;
 using StardewValley.Objects;
 using xTile.Dimensions;
 using Object = StardewValley.Object;
@@ -23,11 +24,64 @@ namespace CustomMounts
             else
             {
                 scaleSize = (int)Math.Round(scaleSize * data.HatScale);
-                location += data.HatOffsets[horse.FacingDirection];
+
+                if (horse.FacingDirection == 3)
+                {
+                    if (data.HatFramesFlipped != null && data.HatFramesFlipped.TryGetValue(horse.Sprite.CurrentFrame, out var frame))
+                    {
+                        location += frame.Offset;
+                        HatDraw(hat, frame.Rotation * (float)(Math.PI / 180), spriteBatch, location, scaleSize, transparency, layerDepth, direction, useAnimalTexture);
+                        return;
+                    }
+                }
+                else
+                {
+                    if (data.HatFrames != null && data.HatFrames.TryGetValue(horse.Sprite.CurrentFrame, out var frame))
+                    {
+                        location += frame.Offset;
+                        HatDraw(hat, frame.Rotation * (float)(Math.PI / 180), spriteBatch, location, scaleSize, transparency, layerDepth, direction, useAnimalTexture);
+                        return;
+                    }
+                }
+                location += data.HatOffsets[horse.FacingDirection] - new Vector2(0, 20);
+                hat.draw(spriteBatch, location, scaleSize, transparency, layerDepth, direction, useAnimalTexture);
             }
-            hat.draw(spriteBatch, location, scaleSize, transparency, layerDepth, direction, useAnimalTexture);
 
         }
+        private static void HatDraw(Hat hat, float rotation, SpriteBatch spriteBatch, Vector2 location, float scaleSize, float transparency, float layerDepth, int direction, bool useAnimalTexture = false)
+        {
+            ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem(hat.QualifiedItemId);
+            int spriteIndex = itemData.SpriteIndex;
+            Texture2D texture;
+            if (useAnimalTexture)
+            {
+                string textureName = itemData.GetTextureName();
+                if (Game1.content.DoesAssetExist<Texture2D>(textureName + "_animals"))
+                {
+                    textureName += "_animals";
+                }
+                texture = Game1.content.Load<Texture2D>(textureName);
+            }
+            else
+            {
+                texture = itemData.GetTexture();
+            }
+            switch (direction)
+            {
+                case 0:
+                    direction = 3;
+                    break;
+                case 2:
+                    direction = 0;
+                    break;
+                case 3:
+                    direction = 2;
+                    break;
+            }
+            Rectangle drawnSourceRect = ((!itemData.IsErrorItem) ? new Rectangle(spriteIndex * 20 % texture.Width, spriteIndex * 20 / texture.Width * 20 * 4 + direction * 20, 20, 20) : itemData.GetSourceRect(0, null));
+            spriteBatch.Draw(texture, location + new Vector2(10f, 10f), new Rectangle?(drawnSourceRect), hat.isPrismatic.Value ? (Utility.GetPrismaticColor(0, 1f) * transparency) : (Color.White * transparency), rotation, new Vector2(3f, 3f), 3f * scaleSize, SpriteEffects.None, layerDepth);
+        }
+
         public static int toggle;
         private static void DrawHorse(SpriteBatch spriteBatch, Texture2D texture, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, float scale, SpriteEffects effects, float layerDepth, Horse horse)
         {
@@ -185,6 +239,37 @@ namespace CustomMounts
         {
             if (!Config.ModEnabled || !Config.AllowMultipleMounts)
                 l.Value = v;
+        }
+        private static double OverrideRandomAnimationChance(double v, Horse horse)
+        {
+            if (!Config.ModEnabled || !CheckModData(horse, out var data) || data.CustomAnimations == null)
+            {
+                return 0.002;
+            }
+            else
+            {
+                var roll = Game1.random.NextDouble();
+                double totalChance = 0;
+                foreach (var l in data.CustomAnimations)
+                {
+                    if (l.Value.FacingDirection != horse.FacingDirection)
+                        continue;
+                    totalChance += l.Value.Chance;
+                    if (roll < totalChance)
+                    {
+                        horse.Sprite.loop = false;
+                        List<FarmerSprite.AnimationFrame> frames = new();
+                        foreach (var f in l.Value.Frames)
+                        {
+                            frames.Add(new FarmerSprite.AnimationFrame(f.Frame, Game1.random.Next(f.MinLength, f.MaxLength), false, f.Flip, null, false));
+                        }
+                        horse.modData[animKey] = l.Key;
+                        horse.Sprite.setCurrentAnimation(frames);
+                        break;
+                    }
+                }
+                return 0;
+            }
         }
         private static bool CheckModData(Horse horse, out MountData data)
         {

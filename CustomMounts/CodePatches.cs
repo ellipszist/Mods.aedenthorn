@@ -10,6 +10,7 @@ using StardewValley.Menus;
 using StardewValley.Objects;
 using System.Reflection;
 using System.Reflection.Emit;
+using static StardewValley.Minigames.CraneGame;
 
 namespace CustomMounts
 {
@@ -257,8 +258,6 @@ namespace CustomMounts
             }
             return true;
         }
-
-
         public static IEnumerable<CodeInstruction> Horse_checkAction_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             SMonitor.Log($"Transpiling Horse.checkAction");
@@ -271,6 +270,48 @@ namespace CustomMounts
                     SMonitor.Log($"Preventing ownership erasure");
                     codes[i + 2].opcode = OpCodes.Call;
                     codes[i + 2].operand = AccessTools.Method(typeof(ModEntry), nameof(ModEntry.PreventOwnershipErasure));
+                    break;
+                }
+            }
+
+            return codes.AsEnumerable();
+        }
+        public static void Horse_update_Prefix(Horse __instance, GameLocation location)
+        {
+            if (Config.ModEnabled && __instance.modData.TryGetValue(animKey, out var anim))
+            {
+                if (__instance.Sprite?.CurrentAnimation != null && __instance.rider is null)
+                {
+                    var data = MountDict[__instance.modData[modKey]];
+                    var animData = data.CustomAnimations[anim];
+                    if(animData.FacingDirection != __instance.FacingDirection || animData.Frames.Length <= __instance.Sprite.currentAnimationIndex)
+                    {
+                        __instance.modData.Remove(animKey);
+                    }
+                    else if (animData.Frames[__instance.Sprite.currentAnimationIndex].Sound != null)
+                    {
+                        location.playSound(animData.Frames[__instance.Sprite.currentAnimationIndex].Sound, __instance.Tile);
+                    }
+                }
+                else
+                {
+                    __instance.modData.Remove(animKey);
+                }
+            }
+        }
+        public static IEnumerable<CodeInstruction> Horse_update_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            SMonitor.Log($"Transpiling Horse.update");
+
+            var codes = new List<CodeInstruction>(instructions);
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if(i > 7 && codes[i - 8].opcode == OpCodes.Ldc_I4_2 && codes[i].opcode == OpCodes.Ldc_R8 && (double)codes[i].operand == 0.002)
+                {
+                    SMonitor.Log($"Overriding random animation chance");
+                    codes.Insert(i + 1, new(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.OverrideRandomAnimationChance))));
+                    codes.Insert(i + 1, new(OpCodes.Ldarg_0));
+                    codes[i - 8].opcode = OpCodes.Ldc_I4_8;
                     break;
                 }
             }

@@ -7,7 +7,6 @@ using StardewValley.Buildings;
 using StardewValley.Characters;
 using StardewValley.Menus;
 using System.Reflection;
-using System.Reflection.PortableExecutable;
 using Object = StardewValley.Object;
 
 namespace CustomMounts
@@ -21,6 +20,7 @@ namespace CustomMounts
 		public static ModConfig Config;
 		public static ModEntry context;
         public static string modKey = "aedenthorn.CustomMounts";
+        public static string animKey = "aedenthorn.CustomMounts/animation";
         public static string dictPath = "aedenthorn.CustomMounts/dict";
         public static Dictionary<string, MountData> MountDict {
             get
@@ -92,6 +92,11 @@ namespace CustomMounts
                 transpiler: new(typeof(ModEntry), nameof(Horse_checkAction_Transpiler))
             );
             harmony.Patch(
+                original: AccessTools.Method(typeof(Horse), nameof(Horse.update), [typeof(GameTime), typeof(GameLocation)]),
+                prefix: new(typeof(ModEntry), nameof(Horse_update_Prefix)),
+                transpiler: new(typeof(ModEntry), nameof(Horse_update_Transpiler))
+            );
+            harmony.Patch(
                 original: AccessTools.Method(typeof(Horse), nameof(Horse.SyncPositionToRider)),
                 postfix: new(typeof(ModEntry), nameof(Horse_SyncPositionToRider_Postfix))
             );
@@ -147,10 +152,10 @@ namespace CustomMounts
 
         private void Input_ButtonPressed(object? sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
         {
-            //Game1.player.xOffset = 0;
-            return;
             if(e.Button == SButton.O)
             {
+                SHelper.GameContent.InvalidateCache(dictPath);
+                return;
                 var cc = Game1.getFarm().characters;
                 for (int i = cc.Count - 1; i >= 0; i--)
                 {
@@ -168,19 +173,6 @@ namespace CustomMounts
 
         private void Content_AssetRequested(object? sender, StardewModdingAPI.Events.AssetRequestedEventArgs e)
         {
-            try
-            {
-                var bb = Game1.getFarm().buildings;
-                foreach(var b in bb)
-                {
-                    if(b is Stable)
-                    {
-                        var x = (b as Stable).HorseId;
-                    }
-                }
-
-            }
-            catch { }
             if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
             {
                 e.LoadFrom(() => new Dictionary<string, MountData>(), StardewModdingAPI.Events.AssetLoadPriority.Exclusive);

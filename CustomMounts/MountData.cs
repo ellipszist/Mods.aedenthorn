@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System.Security.Cryptography.X509Certificates;
 
 namespace CustomMounts
 {
@@ -30,5 +31,30 @@ namespace CustomMounts
             Vector2.Zero,
             Vector2.Zero
         };
+        public Dictionary<int, HatFrame> HatFrames;
+        public Dictionary<int, HatFrame> HatFramesFlipped;
+        public Dictionary<string,CustomFrameset> CustomAnimations;
+    }
+
+    public class HatFrame
+    {
+        public Vector2 Offset;
+        public float Rotation;
+    }
+
+    public class CustomFrameset
+    {
+        public double Chance;
+        public int FacingDirection;
+        public CustomFrame[] Frames;
+    }
+    public class CustomFrame
+    {
+        public int Frame;
+        public bool Flip;
+        public int MinLength;
+        public int MaxLength;
+        public double SoundChance = 1;
+        public string Sound;
     }
 }
