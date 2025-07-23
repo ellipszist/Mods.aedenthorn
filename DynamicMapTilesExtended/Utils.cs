@@ -91,7 +91,7 @@ namespace DMT
                         continue;
                     tiles.Add((new(x, y), otherTile));
                 }
-                catch { } //Write logging here, just not now, it's late again (2:39AM)... Why the fuck do I keep working on this so late!
+                catch { }
             }
             PushTiles(f.currentLocation, tiles, f.FacingDirection, f);
         }
@@ -145,11 +145,13 @@ namespace DMT
             return JsonConvert.DeserializeObject<DynamicTileProperty>(data);
         }
 
-        internal static DynamicTileProperty ParseProperty(KeyValuePair<string, string> old)
+        internal static DynamicTileProperty? ParseProperty(KeyValuePair<string, string> kvp, IOrderedEnumerable<string> keys)
         {
-            DynamicTileProperty prop = new() { Value = old.Value };
-            string key = old.Key;
-            foreach (var item in Keys.AllKeys.Union(Keys.ModKeys).OrderByDescending(x => x.Length))
+            if (!kvp.Key.StartsWith(ModPrefix))
+                return null;
+            DynamicTileProperty prop = new() { Value = kvp.Value };
+            string key = kvp.Key;
+            foreach (var item in keys)
             {
                 if (!key.StartsWith(item, StringComparison.OrdinalIgnoreCase))
                     continue; 
@@ -157,7 +159,7 @@ namespace DMT
                 key = key.Substring(item.Length);
                 break;
             }
-            if (string.IsNullOrWhiteSpace(prop.Key))
+            if (string.IsNullOrWhiteSpace(key))
             {
                 return null;
             }
@@ -405,6 +407,7 @@ namespace DMT
             List<string> localTriggers = [];
             List<string> globalTriggers = [];
             List<(DynamicTileProperty prop, Tile tile)> properties = [];
+            var allKeys = Keys.AllKeys.Union(Keys.ModKeys).OrderByDescending(x => x.Length);
             foreach (var trigger in (string[])[.. triggers])
             {
                 if (IsGlobalTrigger(trigger))
@@ -414,14 +417,14 @@ namespace DMT
             }
 
             if (globalTriggers.Count > 0)
-                properties.AddRange(GetPropertiesForGlobalTriggers(layers, globalTriggers));
+                properties.AddRange(GetPropertiesForGlobalTriggers(layers, globalTriggers, allKeys));
             if (localTriggers.Count > 0)
-                properties.AddRange(GetPropertiesForLocalTriggers(layers, tilePosition, localTriggers));
+                properties.AddRange(GetPropertiesForLocalTriggers(layers, tilePosition, localTriggers, allKeys));
 
             return properties;
         }
 
-        internal static List<(DynamicTileProperty prop, Tile tile)> GetPropertiesForLocalTriggers(List<Layer> layers, Point tilePosition, IEnumerable<string> triggers)
+        internal static List<(DynamicTileProperty prop, Tile tile)> GetPropertiesForLocalTriggers(List<Layer> layers, Point tilePosition, IEnumerable<string> triggers, IOrderedEnumerable<string> allKeys)
         {
             List<(DynamicTileProperty prop, Tile tile)> properties = [];
             foreach (var layer in layers)
@@ -434,7 +437,7 @@ namespace DMT
 
                 foreach (var key in props)
                 {
-                    DynamicTileProperty? prop = ParseProperty(new(key, tile.Properties[key]));
+                    DynamicTileProperty? prop = ParseProperty(new(key, tile.Properties[key]), allKeys);
 
                     if (prop is null || !CheckTrigger(prop, triggers))
                         continue;
@@ -448,7 +451,7 @@ namespace DMT
             return properties;
         }
 
-        internal static List<(DynamicTileProperty prop, Tile tile)> GetPropertiesForGlobalTriggers(List<Layer> layers, IEnumerable<string> triggers)
+        internal static List<(DynamicTileProperty prop, Tile tile)> GetPropertiesForGlobalTriggers(List<Layer> layers, IEnumerable<string> triggers, IOrderedEnumerable<string> allKeys)
         {
             List<(DynamicTileProperty prop, Tile tile)> properties = [];
             int width = layers[0].Tiles.Array.GetLength(0);
@@ -463,11 +466,9 @@ namespace DMT
 
                         if (tile is null)
                             continue;
-                        string[] props = [.. tile.Properties.Keys];
-
-                        foreach (var key in props)
+                        foreach (var key in tile.Properties.Keys)
                         {
-                            DynamicTileProperty? prop = ParseProperty(new(key, tile.Properties[key]));
+                            DynamicTileProperty? prop = ParseProperty(new(key, tile.Properties[key]), allKeys);
 
                             if (prop is null || !CheckTrigger(prop, triggers))
                                 continue;

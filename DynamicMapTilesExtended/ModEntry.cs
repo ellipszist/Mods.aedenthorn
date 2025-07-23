@@ -18,6 +18,7 @@ namespace DMT
 {
     internal class ModEntry : Mod
     {
+        public static string ModPrefix => "DMT/";
         public string TileDataDictPath => "DMT/Tiles";
         public string AnimationDataDictPath => "DMT/Animations";
 

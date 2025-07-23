@@ -77,6 +77,8 @@ namespace CustomMounts
             if (!Config.ModEnabled || !MountDict.Any())
                 return;
             var stable = __instance.TryFindStable();
+            if (stable is null)
+                return;
             var bd = stable.GetData();
             foreach (var kvp in MountDict)
             {
@@ -102,33 +104,9 @@ namespace CustomMounts
         }
         public static void Horse_GetBoundingBox_Postfix(Horse __instance, bool ___squeezingThroughGate, ref Rectangle __result)
         {
-            if (!Config.ModEnabled || !__instance.modData.TryGetValue(modKey, out var key) || !MountDict.TryGetValue(key, out var data) || data.Size == Point.Zero)
+            if (!Config.ModEnabled)
                 return;
-            var xDiff = data.Size.X - __result.Width;
-            var yDiff = data.Size.Y - __result.Height;
-            __result.X -= xDiff / 2;
-            __result.Y -= yDiff / 2;
-             __result.Width = data.Size.X;
-            __result.Height = data.Size.Y;
-            if (___squeezingThroughGate && (__instance.FacingDirection == 0 || __instance.FacingDirection == 2))
-            {
-                __result.Inflate(-36, 0);
-            }
-            return;
-
-            switch (__instance.FacingDirection)
-            {
-                case 0:
-                case 2:
-                    __result.Width = data.Size.Y;
-                    __result.Height = data.Size.X;
-                    break;
-                case 1:
-                case 3:
-                    __result.Width = data.Size.X;
-                    __result.Height = data.Size.Y;
-                    break;
-            }
+             __result.Width += 96 - __instance.Sprite.SpriteWidth * 3;
         }
         public static void Horse_SyncPositionToRider_Postfix(Horse __instance)
         {

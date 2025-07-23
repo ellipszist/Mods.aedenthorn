@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Monsters;
+using System.Diagnostics;
 using System.Globalization;
 using Object = StardewValley.Object;
 
@@ -266,6 +267,8 @@ namespace DMT
         {
             if (!Enabled || (!Context.Config.TriggerDuringEvents && Game1.eventUp) || !Game1.dialogueUp || __instance.currentLocation?.Name != who.currentLocation.Name)
                 return;
+            Stopwatch s = new();
+            s.Start();
             TriggerActions([.. who.currentLocation.Map.Layers], who, __instance.currentLocation, __instance.TilePoint, [string.Format(Triggers.TalkToNPC, Utils.BuildFormattedTrigger(__instance.Name))]);
         }
 
