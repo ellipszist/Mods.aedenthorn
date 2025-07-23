@@ -106,7 +106,9 @@ namespace CustomMounts
         {
             if (!Config.ModEnabled)
                 return;
-             __result.Width += 96 - __instance.Sprite.SpriteWidth * 3;
+            int diff = __instance.Sprite.SpriteWidth * 3 - 96;
+             __result.Width -= diff;
+
         }
         public static void Horse_SyncPositionToRider_Postfix(Horse __instance)
         {
@@ -153,6 +155,7 @@ namespace CustomMounts
 
             if (!Config.ModEnabled || ___munchingCarrotTimer <= 0|| (__instance.Sprite.SpriteWidth == 32 && __instance.Sprite.SpriteHeight == 32))
                 return;
+            
             __state = ___munchingCarrotTimer;
             ___munchingCarrotTimer = 0;
         }
@@ -165,26 +168,29 @@ namespace CustomMounts
                 return;
             toggle %= 120;
             */
-            if (__state <= 0)
-                return;
-            float xScale = __instance.Sprite.SpriteWidth / 32f;
-            float yScale = __instance.Sprite.SpriteHeight / 32f;
-            int yDiff = (__instance.Sprite.SpriteHeight - 32) / 2;
-            switch (__instance.FacingDirection)
+            if (__state > 0)
             {
-                case 1:
-                    b.Draw(__instance.Sprite.Texture, __instance.getLocalPosition(Game1.viewport) + new Vector2(80f * xScale, -56f * yScale - yDiff), new Rectangle?(new Rectangle((int)Math.Round(179 * xScale) + (int)(Game1.currentGameTime.TotalGameTime.TotalMilliseconds % 600.0) / 300 * (int)Math.Round(16 * xScale), (int)Math.Round(97 * yScale), (int)Math.Round(16 * xScale), (int)Math.Round(14 * yScale))), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, (__instance.Position.Y + 64f) / 10000f + 1E-07f);
-                    return;
-                case 2:
-                    b.Draw(__instance.Sprite.Texture, __instance.getLocalPosition(Game1.viewport) + new Vector2(24f * xScale, -24f * yScale - yDiff), new Rectangle?(new Rectangle((int)Math.Round(170 * xScale) + (int)(Game1.currentGameTime.TotalGameTime.TotalMilliseconds % 600.0) / 300 * (int)Math.Round(16 * xScale), (int)Math.Round(112 * yScale), (int)Math.Round(16 * xScale), (int)Math.Round(16 * yScale))), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, (__instance.Position.Y + 64f) / 10000f + 1E-07f);
-                    return;
-                case 3:
-                    b.Draw(__instance.Sprite.Texture, __instance.getLocalPosition(Game1.viewport) + new Vector2(-16f * xScale, -56f * yScale - yDiff), new Rectangle?(new Rectangle((int)Math.Round(179 * xScale) + (int)(Game1.currentGameTime.TotalGameTime.TotalMilliseconds % 600.0) / 300 * (int)Math.Round(16 * xScale), (int)Math.Round(97 * yScale), (int)Math.Round(16 * xScale), (int)Math.Round(14 * yScale))), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.FlipHorizontally, (__instance.Position.Y + 64f) / 10000f + 1E-07f);
-                    break;
-                default:
-                    return;
+
+                float xScale = __instance.Sprite.SpriteWidth / 32f;
+                float yScale = __instance.Sprite.SpriteHeight / 32f;
+                int yDiff = (__instance.Sprite.SpriteHeight - 32) / 2;
+                switch (__instance.FacingDirection)
+                {
+                    case 1:
+                        b.Draw(__instance.Sprite.Texture, __instance.getLocalPosition(Game1.viewport) + new Vector2(80f * xScale, -56f * yScale - yDiff), new Rectangle?(new Rectangle((int)Math.Round(179 * xScale) + (int)(Game1.currentGameTime.TotalGameTime.TotalMilliseconds % 600.0) / 300 * (int)Math.Round(16 * xScale), (int)Math.Round(97 * yScale), (int)Math.Round(16 * xScale), (int)Math.Round(14 * yScale))), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, (__instance.Position.Y + 64f) / 10000f + 1E-07f);
+                        return;
+                    case 2:
+                        b.Draw(__instance.Sprite.Texture, __instance.getLocalPosition(Game1.viewport) + new Vector2(24f * xScale, -24f * yScale - yDiff), new Rectangle?(new Rectangle((int)Math.Round(170 * xScale) + (int)(Game1.currentGameTime.TotalGameTime.TotalMilliseconds % 600.0) / 300 * (int)Math.Round(16 * xScale), (int)Math.Round(112 * yScale), (int)Math.Round(16 * xScale), (int)Math.Round(16 * yScale))), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, (__instance.Position.Y + 64f) / 10000f + 1E-07f);
+                        return;
+                    case 3:
+                        b.Draw(__instance.Sprite.Texture, __instance.getLocalPosition(Game1.viewport) + new Vector2(-16f * xScale, -56f * yScale - yDiff), new Rectangle?(new Rectangle((int)Math.Round(179 * xScale) + (int)(Game1.currentGameTime.TotalGameTime.TotalMilliseconds % 600.0) / 300 * (int)Math.Round(16 * xScale), (int)Math.Round(97 * yScale), (int)Math.Round(16 * xScale), (int)Math.Round(14 * yScale))), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.FlipHorizontally, (__instance.Position.Y + 64f) / 10000f + 1E-07f);
+                        break;
+                    default:
+                        return;
+                }
+                ___munchingCarrotTimer = __state;
             }
-            ___munchingCarrotTimer = __state;
+
         }
         public static IEnumerable<CodeInstruction> Horse_draw_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
@@ -208,6 +214,24 @@ namespace CustomMounts
                     codes[i].operand = AccessTools.Method(typeof(ModEntry), nameof(ModEntry.DrawHorse));
                     codes.Insert(i, new CodeInstruction(OpCodes.Ldarg_0));
                     i++;
+                }
+            }
+
+            return codes.AsEnumerable();
+        }
+        public static IEnumerable<CodeInstruction> NPC_draw_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            SMonitor.Log($"Transpiling NPC.draw");
+
+            var codes = new List<CodeInstruction>(instructions);
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if(codes[i].opcode == OpCodes.Call && codes[i].operand is MethodInfo && (MethodInfo) codes[i].operand == AccessTools.Method(typeof(Character), nameof(Character.getLocalPosition)))
+                {
+                    SMonitor.Log($"Overriding draw position");
+                    codes.Insert(i + 1, new(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetDrawPosition))));
+                    codes.Insert(i + 1, new(OpCodes.Ldarg_0));
+                    i+=2;
                 }
             }
 

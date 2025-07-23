@@ -101,6 +101,14 @@ namespace CustomMounts
         }
 
 
+        private static Vector2 GetDrawPosition(Vector2 position, Character __instance)
+        {
+            if (!Config.ModEnabled || __instance is not Horse || __instance.Sprite.SpriteWidth == 32)
+                return position;
+            return position + new Vector2(32 - __instance.Sprite.SpriteWidth, 0) * 1.5f;
+        }
+
+
         private static void SetSprite(Horse horse, MountData data)
         {
             horse.Sprite = new AnimatedSprite(data.TexturePath, 0, data.FrameWidth, data.FrameHeight);

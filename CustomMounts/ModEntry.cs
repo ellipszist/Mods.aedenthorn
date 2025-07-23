@@ -117,6 +117,12 @@ namespace CustomMounts
                 prefix: new(typeof(ModEntry), nameof(NPC_behaviorOnFarmerLocationEntry_Prefix))
             );
 
+
+            //harmony.Patch(
+            //    original: AccessTools.Method(typeof(NPC), nameof(NPC.draw), [typeof(SpriteBatch), typeof(float)]),
+            //    transpiler: new(typeof(ModEntry), nameof(NPC_draw_Transpiler))
+            //);
+
             harmony.Patch(
                 original: AccessTools.Method(typeof(Object), nameof(Object.performUseAction)),
                 transpiler: new(typeof(ModEntry), nameof(Object_performUseAction_Transpiler))
