@@ -406,12 +406,11 @@ namespace CustomBackpack
         [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.performAction), new Type[] { typeof(string[]), typeof(Farmer), typeof(Location) })]
         public class GameLocation_performAction_Patch
         {
-            public static bool Prefix(GameLocation __instance, string action, Farmer who, Location tileLocation, ref bool __result)
+            public static bool Prefix(GameLocation __instance, string[] action, Farmer who, Location tileLocation, ref bool __result)
             {
                 if (!Config.ModEnabled || !dataDict.Any())
                     return true;
-                string[] actionParams = action.Split(' ', StringSplitOptions.None);
-                string text = actionParams[0];
+                string text = action[0];
                 if (text != "BuyBackpack")
                 {
                     return true;

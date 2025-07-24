@@ -2,21 +2,21 @@
 {
     public static class Triggers
     {
-        public const string Load = "Load";
-        public const string StepOn = "On";
-        public const string StepOff = "Off";
+        public const string Action = "Action";
+        public const string CropGrown = "CropGrown{0}";
         public const string EnterLocation = "Enter";
+        public const string Explode = "Explode";
+        public const string Load = "Load";
+        public const string MonsterSlain = "MonsterSlain{0}";
+        public const string ObjectClicked = "ObjectClicked{0}";
+        public const string ObjectPlaced = "ObjectPlaced{0}";
         public const string PushTile = "Push";
         public const string PushedTile = "Pushed";
-        public const string Explode = "Explode";
-        public const string Action = "Action";
-        public const string UseTool = "Tool{0}";
-        public const string UseItem = "Item{0}";
+        public const string StepOff = "Off";
+        public const string StepOn = "On";
         public const string TalkToNPC = "Talk{0}";
-        public const string MonsterSlain = "MonsterSlain{0}";
-        public const string CropGrown = "CropGrown{0}";
-        public const string ObjectPlaced = "ObjectPlaced{0}";
-        public const string ObjectClicked = "ObjectClicked{0}";
+        public const string UseItem = "Item{0}";
+        public const string UseTool = "Tool{0}";
         
         public const string UseToolRegex = @"Tool(\([A-z]{1,}\)){0,1}";
         public const string UseItemRegex = @"Item(\([\(\)_A-z0-9]{1,}(\-[0-9]{1,}){0,2}\)){0,1}"; //Item(\([\(\)_A-z0-9]{1,}((\-[0-9]{1,}){0,1}(\-[0-9]{1,}(\+{0,1}|\-{0,1}){0,1}){0,1}){0,1}\)){0,1}
@@ -27,20 +27,20 @@
         public const string ObjectClickedRegex = @"ObjectClicked(\(\([A-z]+\)[A-z0-9]+\))?";
 
         public static readonly HashSet<string> Regexes = [
-            StepOn,
-            StepOff,
-            EnterLocation,
-            PushTile,
-            PushedTile,
-            Explode,
             Action,
-            UseToolRegex,
-            UseItemRegex,
-            TalkToNPCRegex,
+            CropGrownRegex,
+            EnterLocation,
+            Explode,
             MonsterSlainRegex,
             ObjectPlacedRegex,
             ObjectClickedRegex,
-            CropGrownRegex
+            PushTile,
+            PushedTile,
+            StepOff,
+            StepOn,
+            TalkToNPCRegex,
+            UseItemRegex,
+            UseToolRegex
         ];
 
         public static readonly HashSet<string> GlobalTriggers = [

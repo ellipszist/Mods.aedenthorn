@@ -2,8 +2,11 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using StardewValley;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Metrics;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using xTile;
@@ -407,7 +410,7 @@ namespace DMT
             List<string> localTriggers = [];
             List<string> globalTriggers = [];
             List<(DynamicTileProperty prop, Tile tile)> properties = [];
-            var allKeys = Keys.AllKeys.Union(Keys.ModKeys).OrderByDescending(x => x.Length);
+            IOrderedEnumerable<string> allKeys = (IOrderedEnumerable<string>)Keys.AllKeys.Union(Keys.ModKeys).OrderByDescending(x => x.Length);
             foreach (var trigger in (string[])[.. triggers])
             {
                 if (IsGlobalTrigger(trigger))
@@ -493,29 +496,41 @@ namespace DMT
             if (!Context.Config.Enabled)
                 return;
             var dict = Context.Helper.GameContent.Load<Dictionary<string, DynamicTile>>(Context.TileDataDictPath);
-            foreach (var item in dict)
+            var keys = dict.Keys.ToList();
+            DMTPropertyDict[l] = new();
+            for(int i = keys.Count - 1; i >= 0 ; i--)
             {
-                int count = 0;
-                int count2 = 0;
-                var value = item.Value;
-                if (!IsValidLocation(value, l))
-                    continue;
-
-                var tileSheets = l.Map.TileSheets.ToList();
-
-                foreach (var layer in l.Map.Layers)
+                if (!IsValidLocation(dict[keys[i]], l))
                 {
-                    if (!(value.Layers?.Contains(layer.Id) ?? true))
-                        continue;
-                    int width = layer.Tiles.Array.GetLength(0);
-                    int height = layer.Tiles.Array.GetLength(1);
-                    for (int x = 0; x < width; x++)
+                    keys.RemoveAt(i);
+                }
+            }
+
+            foreach (var layer in l.Map.Layers)
+            {
+                DMTPropertyDict[l][layer.Id] = new();
+                for (int i = keys.Count - 1; i >= 0; i--)
+                {
+                    if (!(dict[keys[i]].Layers?.Contains(layer.Id) ?? true))
                     {
-                        for (int y = 0; y < height; y++)
+                        keys.RemoveAt(i);
+                    }
+                }
+                int width = layer.Tiles.Array.GetLength(0);
+                int height = layer.Tiles.Array.GetLength(1);
+                for (int x = 0; x < width; x++)
+                {
+                    for (int y = 0; y < height; y++)
+                    {
+                        var tile = layer.Tiles[x, y];
+                        if (tile is null)
+                            continue;
+                        foreach (var key in keys)
                         {
-                            var tile = layer.Tiles[x, y];
-                            if (tile is null)
-                                continue;
+                            int count = 0;
+                            int count2 = 0;
+                            var value = dict[key];
+
                             Point tilePoint = new(x, y);
                             if (!IsValidTile(value, tile, tilePoint))
                                 continue;
@@ -526,7 +541,7 @@ namespace DMT
                             }
                             foreach (var action in value.Actions)
                             {
-                                if(action.trigger == Triggers.Load)
+                                if (action.trigger == Triggers.Load)
                                 {
                                     DoTriggerActions(Game1.player, new(x, y), [(action, tile)]);
                                 }
@@ -536,11 +551,10 @@ namespace DMT
                                     layer.Tiles[x, y].Properties[CreatePropertyKey(action)] = action.Value;
                                 }
                             }
+                            Context.Monitor.Log($"Added {count} properties from {key}{(count2 > 0 ? $" (Including {count2} new format properties)" : "")} to {l.Name}");
                         }
                     }
                 }
-
-                Context.Monitor.Log($"Added {count} properties from {item.Key}{(count2 > 0 ? $" (Including {count2} new format properties)" : "")} to {l.Name}");
             }
         }
 
