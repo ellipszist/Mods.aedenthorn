@@ -17,7 +17,7 @@ namespace CustomMounts
 
         private static void DrawHat(Hat hat, SpriteBatch spriteBatch, Vector2 location, float scaleSize, float transparency, float layerDepth, int direction, bool useAnimalTexture, Horse horse)
         {
-            if (!Config.ModEnabled || !horse.modData.TryGetValue(modKey, out var key) || !MountDict.TryGetValue(key, out var data))
+            if (!CheckModData(horse, out var data))
             {
 
             }
@@ -85,7 +85,7 @@ namespace CustomMounts
         public static int toggle;
         private static void DrawHorse(SpriteBatch spriteBatch, Texture2D texture, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, float scale, SpriteEffects effects, float layerDepth, Horse horse)
         {
-            if (!Config.ModEnabled || horse.rider is null || !horse.modData.TryGetValue(modKey, out var key) || !MountDict.TryGetValue(key, out var data))
+            if (!Config.ModEnabled || horse.rider is null || !CheckModData(horse, out var data))
             {
 
             }
@@ -134,41 +134,41 @@ namespace CustomMounts
 
         private static string SetStepSound(string which, Horse horse)
         {
-            if (!Config.ModEnabled || !horse.modData.TryGetValue(modKey, out var key) || !MountDict.TryGetValue(key, out var data))
+            if (!CheckModData(horse, out var data))
                 return which;
             switch (which)
             {
                 case "thudStep":
-                    return data.FootstepSound ?? which;
+                    return string.IsNullOrEmpty(data.FootstepSound) ? which : data.FootstepSound;
                 case "woodyStep":
-                    return data.FootstepSoundWood ?? which;
+                    return string.IsNullOrEmpty(data.FootstepSoundWood) ? which : data.FootstepSoundWood;
                 case "stoneStep":
-                    return data.FootstepSoundStone ?? which;
+                    return string.IsNullOrEmpty(data.FootstepSoundStone) ? which : data.FootstepSoundStone;
                 default:
                     return which;
             }
         }
         private static string SetCarrotItem(string item, Horse horse)
         {
-            if (!Config.ModEnabled || !horse.modData.TryGetValue(modKey, out var key) || !MountDict.TryGetValue(key, out var data))
+            if (!CheckModData(horse, out var data))
                 return item;
             return data.EatItem;
         }
         private static string SetEatSound(string sound, Horse horse)
         {
-            if (!Config.ModEnabled || !horse.modData.TryGetValue(modKey, out var key) || !MountDict.TryGetValue(key, out var data))
+            if (!CheckModData(horse, out var data))
                 return sound;
             return data.EatSound;
         }
         private static string SetNameYourHorse(string value, Horse horse)
         {
-            if (!Config.ModEnabled || !horse.modData.TryGetValue(modKey, out var key) || !MountDict.TryGetValue(key, out var data))
+            if (!CheckModData(horse, out var data))
                 return value;
             return string.Format(SHelper.Translation.Get("NameYourX"), data.Name);
         }
         private static string SetDefaultHorseName(string value, Horse horse)
         {
-            if (!Config.ModEnabled || !horse.modData.TryGetValue(modKey, out var key) || !MountDict.TryGetValue(key, out var data))
+            if (!CheckModData(horse, out var data))
                 return value;
             return data.Name;
         }
@@ -238,7 +238,7 @@ namespace CustomMounts
 
         private static bool IsFluteFor(Horse horse, Object obj)
         {
-            if (!horse.modData.TryGetValue(modKey, out var key) || !MountDict.TryGetValue(key, out var data))
+            if (!CheckModData(horse, out var data))
                 return obj.QualifiedItemId == "(O)911";
             return obj.QualifiedItemId == data.FluteItem;
         }
@@ -250,7 +250,7 @@ namespace CustomMounts
         }
         private static double OverrideRandomAnimationChance(double v, Horse horse)
         {
-            if (!Config.ModEnabled || !CheckModData(horse, out var data) || data.CustomAnimations == null)
+            if (!CheckModData(horse, out var data) || data.CustomAnimations == null)
             {
                 return 0.002;
             }
@@ -281,7 +281,7 @@ namespace CustomMounts
         }
         private static bool CheckModData(Horse horse, out MountData data)
         {
-            if (!horse.modData.TryGetValue(modKey, out var key) || !MountDict.TryGetValue(key, out var d))
+            if (!Config.ModEnabled || !horse.modData.TryGetValue(modKey, out var key) || !MountDict.TryGetValue(key, out var d))
             {
                 data = null;
                 return false;
