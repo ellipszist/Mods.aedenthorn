@@ -5,18 +5,12 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.GameData.Locations;
-using StardewValley.GameData.Shirts;
 using StardewValley.Menus;
 using StardewValley.Tools;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using xTile;
-using xTile.Dimensions;
-using xTile.Tiles;
-using Rectangle = Microsoft.Xna.Framework.Rectangle; 
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Swim
 {
