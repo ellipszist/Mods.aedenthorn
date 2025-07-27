@@ -14,6 +14,23 @@ namespace CustomMounts
 {
     public partial class ModEntry
     {
+        private static void MakeCustomMount(Horse __instance)
+        {
+            var stable = __instance.TryFindStable();
+            if (stable is null)
+                return;
+            var bd = stable.GetData();
+            foreach (var kvp in MountDict)
+            {
+                if (bd.Name == kvp.Value.Stable)
+                {
+                    __instance.modData[modKey] = kvp.Key;
+                    __instance.Name = kvp.Value.Name;
+                    __instance.displayName = kvp.Value.Name;
+                    SetSprite(__instance, kvp.Value);
+                }
+            }
+        }
 
         private static void DrawHat(Hat hat, SpriteBatch spriteBatch, Vector2 location, float scaleSize, float transparency, float layerDepth, int direction, bool useAnimalTexture, Horse horse)
         {

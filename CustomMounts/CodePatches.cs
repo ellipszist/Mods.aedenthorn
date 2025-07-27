@@ -56,13 +56,22 @@ namespace CustomMounts
             __instance.Sprite.currentFrame = 0;
             return false;
         }
+        public static void Building_OnUpgraded_Postfix(Building __instance)
+        {
+            if (!Config.ModEnabled || __instance is not Stable stable)
+                return;
+            Horse horse = stable.getStableHorse();
+            if (horse is null)
+                return;
+            MakeCustomMount(horse);
+        }
         public static bool Stable_GetDefaultHorseTile_Prefix(Stable __instance, ref Point __result)
         {
             if (!Config.ModEnabled)
                 return true;
+            var bd = __instance.GetData();
             foreach (var kvp in MountDict)
             {
-                var bd = __instance.GetData();
                 if (bd.Name == kvp.Value.Stable)
                 {
                     __result = new Point(__instance.tileX.Value + kvp.Value.SpawnOffset.X, __instance.tileY.Value + kvp.Value.SpawnOffset.Y);
@@ -72,25 +81,13 @@ namespace CustomMounts
             return true;
         }
 
-        public static void Horse_Postfix(Horse __instance, Guid horseId, int xTile, int yTile)
+        public static void Horse_Postfix(Horse __instance)
         {
-            if (!Config.ModEnabled || !MountDict.Any())
+            if (!Config.ModEnabled)
                 return;
-            var stable = __instance.TryFindStable();
-            if (stable is null)
-                return;
-            var bd = stable.GetData();
-            foreach (var kvp in MountDict)
-            {
-                if (bd.Name == kvp.Value.Stable)
-                {
-                    __instance.modData[modKey] = kvp.Key;
-                    __instance.Name = kvp.Value.Name;
-                    __instance.displayName = kvp.Value.Name;
-                    SetSprite(__instance, kvp.Value);
-                }
-            }
+            MakeCustomMount(__instance);
         }
+
         public static bool Horse_ChooseAppearance_Prefix(Horse __instance)
         {
             if (!Config.ModEnabled || !__instance.modData.TryGetValue(modKey, out var key))
@@ -101,6 +98,12 @@ namespace CustomMounts
                 return true;
             SetSprite(__instance, data);
             return false;
+        }
+        public static void Horse_dayUpdate_Postfix(Horse __instance)
+        {
+            if (!Config.ModEnabled)
+                return;
+            MakeCustomMount(__instance);
         }
         public static void Horse_GetBoundingBox_Postfix(Horse __instance, bool ___squeezingThroughGate, ref Rectangle __result)
         {

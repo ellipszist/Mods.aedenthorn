@@ -77,6 +77,10 @@ namespace CustomMounts
                 postfix: new(typeof(ModEntry), nameof(Horse_GetBoundingBox_Postfix))
             );
             harmony.Patch(
+                original: AccessTools.Method(typeof(Horse), nameof(Horse.dayUpdate)),
+                postfix: new(typeof(ModEntry), nameof(Horse_dayUpdate_Postfix))
+            );
+            harmony.Patch(
                 original: AccessTools.Method(typeof(Horse), nameof(Horse.PerformDefaultHorseFootstep)),
                 transpiler: new(typeof(ModEntry), nameof(Horse_PerformDefaultHorseFootstep_Transpiler))
             );
@@ -101,6 +105,11 @@ namespace CustomMounts
                 postfix: new(typeof(ModEntry), nameof(Horse_SyncPositionToRider_Postfix))
             );
             
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Building), nameof(Building.OnUpgraded)),
+                postfix: new(typeof(ModEntry), nameof(Building_OnUpgraded_Postfix))
+            );
+
             harmony.Patch(
                 original: AccessTools.Method(typeof(Stable), nameof(Stable.GetDefaultHorseTile)),
                 prefix: new(typeof(ModEntry), nameof(Stable_GetDefaultHorseTile_Prefix))
