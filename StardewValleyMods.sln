@@ -601,6 +601,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortableBasements", "Portab
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomMounts", "CustomMounts\CustomMounts.csproj", "{D05E3854-700E-5A7C-78AD-4F71549BD60A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PetClothes", "PetClothes\PetClothes.csproj", "{C24930DE-DFD6-4885-8D6A-D14F9DB24121}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -2969,6 +2971,14 @@ Global
 		{D05E3854-700E-5A7C-78AD-4F71549BD60A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D05E3854-700E-5A7C-78AD-4F71549BD60A}.Release|x64.ActiveCfg = Release|Any CPU
 		{D05E3854-700E-5A7C-78AD-4F71549BD60A}.Release|x64.Build.0 = Release|Any CPU
+		{C24930DE-DFD6-4885-8D6A-D14F9DB24121}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C24930DE-DFD6-4885-8D6A-D14F9DB24121}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C24930DE-DFD6-4885-8D6A-D14F9DB24121}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C24930DE-DFD6-4885-8D6A-D14F9DB24121}.Debug|x64.Build.0 = Debug|Any CPU
+		{C24930DE-DFD6-4885-8D6A-D14F9DB24121}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C24930DE-DFD6-4885-8D6A-D14F9DB24121}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C24930DE-DFD6-4885-8D6A-D14F9DB24121}.Release|x64.ActiveCfg = Release|Any CPU
+		{C24930DE-DFD6-4885-8D6A-D14F9DB24121}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
