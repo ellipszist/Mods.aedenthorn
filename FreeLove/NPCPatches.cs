@@ -7,6 +7,7 @@ using StardewValley.Characters;
 using StardewValley.Extensions;
 using StardewValley.Locations;
 using StardewValley.Network;
+using StardewValley.Quests;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -245,7 +246,7 @@ namespace FreeLove
                 {
                     ModEntry.tempOfficialSpouse = null;
                 }
-                return;
+                return; //TODO: Everything beyond this point is unreachable. Is this intentional? 
 
                 // custom dialogues
 
@@ -416,7 +417,7 @@ namespace FreeLove
             try
             {
 
-                if (!__instance.isVillager())
+                if (!__instance.IsVillager)
                 {
                     __result = false;
                     return false;
@@ -455,7 +456,7 @@ namespace FreeLove
         public static bool NPC_isMarried_Prefix(NPC __instance, ref bool __result)
         {
             __result = false;
-            if (!__instance.isVillager())
+            if (!__instance.IsVillager)
             {
                 return false;
             }
@@ -473,7 +474,7 @@ namespace FreeLove
         public static bool NPC_isMarriedOrEngaged_Prefix(NPC __instance, ref bool __result)
         {
             __result = false;
-            if (!__instance.isVillager())
+            if (!__instance.IsVillager)
             {
                 return false;
             }
@@ -521,9 +522,9 @@ namespace FreeLove
             }
         }
 
-        public static bool NPC_checkAction_Prefix(ref NPC __instance, ref Farmer who, GameLocation l, ref bool __result)
+        public static bool NPC_checkAction_Prefix(NPC __instance, Farmer who, GameLocation l, ref bool __result)
         {
-            if (!Config.EnableMod || __instance.IsInvisible || __instance.isSleeping.Value || !who.canMove || who.checkForQuestComplete(__instance, -1, -1, who.ActiveObject, null, -1, 5) || (who.pantsItem.Value?.ParentSheetIndex == 15 && (__instance.Name.Equals("Lewis") || __instance.Name.Equals("Marnie"))) || (__instance.Name.Equals("Krobus") && who.hasQuest("28")))
+            if (!Config.EnableMod || __instance.IsInvisible || __instance.isSleeping.Value || !who.canMove || who.NotifyQuests((Quest quest) => quest.OnNpcSocialized(__instance, false), false) || (who.pantsItem.Value?.ParentSheetIndex == 15 && (__instance.Name.Equals("Lewis") || __instance.Name.Equals("Marnie"))) || (__instance.Name.Equals("Krobus") && who.hasQuest("28")))
                 return true;
 
             try
@@ -699,8 +700,10 @@ namespace FreeLove
         }
 
 
-        public static bool NPC_tryToReceiveActiveObject_Prefix(NPC __instance, ref Farmer who, Dictionary<string, string> ___dialogue)
+        public static bool NPC_tryToReceiveActiveObject_Prefix(NPC __instance, ref Farmer who, Dictionary<string, string> ___dialogue, bool probe)
         {
+            if (!Config.EnableMod || probe)
+                return true;
             try
             {
                 Friendship friendship;
@@ -822,7 +825,7 @@ namespace FreeLove
                             Game1.drawObjectDialogue(Game1.content.LoadString("Strings\\StringsFromCSFiles:NPC.cs.3969", __instance.displayName));
                             return false;
                         }
-                        __instance.CurrentDialogue.Push(new Dialogue(__instance, "Strings\\StringsFromCSFiles:NPC.cs." + ((__instance.Gender == 1) ? "3970" : "3971"), false));
+                        __instance.CurrentDialogue.Push(new Dialogue(__instance, "Strings\\StringsFromCSFiles:NPC.cs." + ((__instance.Gender == Gender.Female) ? "3970" : "3971"), false));
                         Game1.drawDialogue(__instance);
                         return false;
                     }
@@ -842,6 +845,11 @@ namespace FreeLove
                         Game1.drawDialogue(__instance);
                         who.changeFriendship(-50, __instance);
                         return false;
+                    }
+                    else if (__instance.TryGetDialogue("RejectItem_(O)460") != null)
+                    {
+                        Monitor.Log($"Tried to give pendant to someone with dialogue key RejectItem_(O)460");
+                        return true;
                     }
                     else
                     {

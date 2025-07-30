@@ -432,7 +432,7 @@ namespace MapEdit
                     mod: ModManifest,
                     name: () => SHelper.Translation.Get("GMCM_Option_BorderThickness_Name"),
                     getValue: () => Config.BorderThickness,
-                    setValue: value => Config.BorderThickness = value,
+                    setValue: value => Config.BorderThickness = (int)value,
                     min: 1,
                     max: 16
                 );
@@ -440,7 +440,7 @@ namespace MapEdit
                     mod: ModManifest,
                     name: () => SHelper.Translation.Get("GMCM_Option_DefaultAnimationInterval_Name"),
                     getValue: () => Config.DefaultAnimationInterval,
-                    setValue: value => Config.DefaultAnimationInterval = value
+                    setValue: value => Config.DefaultAnimationInterval = (int)value
                 );
             }
         }

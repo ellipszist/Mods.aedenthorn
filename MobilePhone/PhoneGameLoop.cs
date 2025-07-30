@@ -595,6 +595,7 @@ namespace MobilePhone
         public static void GameLoop_DayStarted(object sender, DayStartedEventArgs e)
         {
             ModEntry.calledToday.Clear();
+            ModEntry.callingNPC = null;
         }
 
         public static void GameLoop_SaveLoaded(object sender, SaveLoadedEventArgs e)

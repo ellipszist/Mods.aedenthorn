@@ -131,7 +131,6 @@ namespace SewerSlimes
                                     map.GetLayer("Back").Tiles[x, y].Properties["NPCBarrier"] = "t";
                                 }
                                 catch {
-                                    var fx = 1;
                                 }
                             }
                         }
