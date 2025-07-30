@@ -360,10 +360,36 @@ namespace AllChestsMenu
 				allChestDataList[i].index = i;
 
 				ChestData chestData = allChestDataList[i];
-
-				if (!string.IsNullOrEmpty(whichLocation) && !chestData.label.ToLower().Contains(whichLocation.ToLower()))
+				
+				if (!string.IsNullOrEmpty(whichLocation))
 				{
-					continue;
+					var searchTerm = whichLocation.ToLower().Trim();
+					var chestNameMatches = chestData.label.ToLower().Contains(searchTerm);
+					var anyItemMatches = false;
+					if (ModEntry.Config.FilterItems || ModEntry.Config.FilterItemsCategory || ModEntry.Config.FilterItemsDescription)
+					{
+						anyItemMatches = chestData.chest.Items.Any(item =>
+						{
+							if (item == null)
+								return false;
+
+							bool nameMatch = ModEntry.Config.FilterItems && item.DisplayName.ToLower().Trim().Contains(searchTerm);
+							if (nameMatch) return true;
+
+							bool categoryMatch = ModEntry.Config.FilterItemsCategory && item.getCategoryName().ToLower().Trim().Contains(searchTerm);
+							if (categoryMatch) return true;
+
+							bool descriptionMatch = ModEntry.Config.FilterItemsDescription && item.getDescription().ToLower().Trim().Contains(searchTerm);
+							if (descriptionMatch) return true;
+							
+							return false;
+						});
+					}
+
+					if (!chestNameMatches && !anyItemMatches)
+					{
+						continue;
+					}
 				}
 
 				int columns = 12;
@@ -1115,6 +1141,12 @@ namespace AllChestsMenu
 		public override void update(GameTime time)
 		{
 			base.update(time);
+			if (renamingChest != null)
+			{
+				return;
+			}
+			
+			locationText.Selected = true;
 			if (whichLocation?.ToLower() != locationText.Text.ToLower())
 			{
 				whichLocation = locationText.Text;
