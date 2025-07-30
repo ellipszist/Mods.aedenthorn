@@ -88,9 +88,11 @@ namespace AllChestsMenu
 		public string nameString;
 		public string fridgeString;
 		public string sortString;
+
         public bool draggingScrollbar;
 		public int scrollbarWidth;
         private bool scrolling;
+        private int totalHeight;
 
         public AllChestsMenu() : base(Game1.uiViewport.Width / 2 - (windowWidth + borderWidth * 2) / 2, -borderWidth - 64, windowWidth + borderWidth * 2, Game1.uiViewport.Height + borderWidth * 2 + 64, false)
 		{
@@ -393,7 +395,23 @@ namespace AllChestsMenu
 				}
 				chestDataList.Add(chestData);
 			}
-			inventoryButtons.Clear();
+            int lastY = chestDataList[0].menu.yPositionOnScreen;
+            int lastHeight = 0;
+            for (int i = 0; i < chestDataList.Count; i++)
+            {
+                if (lastY < chestDataList[i].menu.yPositionOnScreen)
+                {
+                    totalHeight += chestDataList[i].menu.yPositionOnScreen - lastY;
+                    lastY = chestDataList[i].menu.yPositionOnScreen;
+                }
+                if (i >= chestDataList.Count - 2 && lastHeight < chestDataList[i].menu.height)
+                {
+                    lastHeight = chestDataList[i].menu.height;
+                }
+            }
+            totalHeight += lastHeight;
+
+            inventoryButtons.Clear();
 			inventoryCells.Clear();
 			for (int i = 0; i < chestDataList.Count; i++)
 			{
@@ -645,24 +663,6 @@ namespace AllChestsMenu
 			if(chestDataList.Count > 0)
 			{
                 //scrollbar
-                int first = -1;
-                int last = -1;
-                int totalHeight = 0;
-                int lastY = chestDataList[0].menu.yPositionOnScreen;
-                int lastHeight = 0;
-                for (int i = 0; i < chestDataList.Count; i++)
-                {
-                    if (lastY < chestDataList[i].menu.yPositionOnScreen)
-                    {
-                        totalHeight += chestDataList[i].menu.yPositionOnScreen - lastY;
-                        lastY = chestDataList[i].menu.yPositionOnScreen;
-                    }
-                    if (i >= chestDataList.Count - 2 && lastHeight < chestDataList[i].menu.height)
-                    {
-                        lastHeight = chestDataList[i].menu.height;
-                    }
-                }
-                totalHeight += lastHeight;
                 int scrollbarSize = cutoff - 12;
                 int barHeight = (int)Math.Round((float)scrollbarSize * (float)scrollbarSize / (float)totalHeight);
                 int barOffset = (int)Math.Round(scrolled * scrollInterval * ((float)scrollbarSize / totalHeight));
@@ -740,7 +740,9 @@ namespace AllChestsMenu
             base.leftClickHeld(x, y);
             if (scrolling)
             {
-
+                int scrollbarSize = cutoff - 12;
+                int barHeight = (int)Math.Round((float)scrollbarSize * (float)scrollbarSize / (float)totalHeight);
+                float percent = (float)(y - yPositionOnScreen + borderWidth + 76) / ;
             }
         }
         public override void releaseLeftClick(int x, int y)
