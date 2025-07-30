@@ -89,6 +89,7 @@ namespace AllChestsMenu
 		public string fridgeString;
 		public string sortString;
 
+        public int clickpos;
         public bool draggingScrollbar;
 		public int scrollbarWidth;
         private bool scrolling;
@@ -423,6 +424,7 @@ namespace AllChestsMenu
 			}
             int lastY = chestDataList[0].menu.yPositionOnScreen;
             int lastHeight = 0;
+			totalHeight = 0;
             for (int i = 0; i < chestDataList.Count; i++)
             {
                 if (lastY < chestDataList[i].menu.yPositionOnScreen)
@@ -692,16 +694,16 @@ namespace AllChestsMenu
                 int scrollbarSize = cutoff - 12;
                 int barHeight = (int)Math.Round((float)scrollbarSize * (float)scrollbarSize / (float)totalHeight);
                 int barOffset = (int)Math.Round(scrolled * scrollInterval * ((float)scrollbarSize / totalHeight));
-                if (scrollbarRect.Contains(Game1.getMousePosition()))
+                scrollbarBack = new Rectangle(xPositionOnScreen + width - borderWidth - scrollbarWidth + 8, yPositionOnScreen + borderWidth + 76, scrollbarWidth, scrollbarSize);
+                scrollbarRect = new Rectangle(xPositionOnScreen + width - borderWidth - scrollbarWidth + 8, yPositionOnScreen + borderWidth + 76 + barOffset, scrollbarWidth, barHeight);
+                if (scrollbarBack.Contains(Game1.getMousePosition()) || scrolling)
                 {
-                    scrollbarWidth = Math.Min(16, Math.Max(8, scrollbarWidth + 1));
+                    scrollbarWidth = Math.Min(24, Math.Max(12, scrollbarWidth + 1));
                 }
                 else
                 {
-                    scrollbarWidth = Math.Max(8, Math.Min(16, scrollbarWidth - 1));
+                    scrollbarWidth = Math.Max(12, Math.Min(24, scrollbarWidth - 1));
                 }
-                scrollbarBack = new Rectangle(xPositionOnScreen + width - borderWidth - scrollbarWidth + 8, yPositionOnScreen + borderWidth + 76, scrollbarWidth, scrollbarSize);
-                scrollbarRect = new Rectangle(xPositionOnScreen + width - borderWidth - scrollbarWidth + 8, yPositionOnScreen + borderWidth + 76 + barOffset, scrollbarWidth, barHeight);
                 b.Draw(Game1.staminaRect, scrollbarBack, Color.Gray);
                 b.Draw(Game1.staminaRect, scrollbarRect, Color.Orange);
                 SpriteText.drawString(b, barOffset+"", 16, 16);
@@ -766,9 +768,17 @@ namespace AllChestsMenu
             base.leftClickHeld(x, y);
             if (scrolling)
             {
-                int scrollbarSize = cutoff - 12;
+                float scrollbarSize = cutoff - 12;
+				float scale = scrollbarSize / totalHeight;
                 int barHeight = (int)Math.Round((float)scrollbarSize * (float)scrollbarSize / (float)totalHeight);
-                float percent = (float)(y - yPositionOnScreen + borderWidth + 76) / ;
+                int pos = (int)Math.Round(Math.Min(totalHeight, Math.Max(0,(float)(y - clickpos - yPositionOnScreen + borderWidth + 76))) / (scrollInterval *  scale));
+				if(pos != scrolled)
+				{
+					if (pos > scrolled && !canScroll)
+						return;
+					scrolled = pos;
+                    PopulateMenus(false);
+                }
             }
         }
         public override void releaseLeftClick(int x, int y)
@@ -861,7 +871,8 @@ namespace AllChestsMenu
 			{
 				if(scrollbarRect.Contains(x, y))
 				{
-					scrolling = true;
+					clickpos = y - yPositionOnScreen + borderWidth + 76;
+                    scrolling = true;
 				}
 				for (int i = 0; i < chestDataList.Count; i++)
 				{
