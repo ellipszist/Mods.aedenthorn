@@ -74,7 +74,9 @@ namespace AllChestsMenu
 		public int heldMenu = -1;
 		public int ccMagnitude = 10000000;
 		public int cutoff;
-		public string whichLocation;
+        public Rectangle scrollbarRect;
+        public Rectangle scrollbarBack;
+        public string whichLocation;
 		public string[] widgetText;
 		public Dictionary<string, string> sortNames = new();
 		public ChestData targetChest;
@@ -86,8 +88,11 @@ namespace AllChestsMenu
 		public string nameString;
 		public string fridgeString;
 		public string sortString;
+        public bool draggingScrollbar;
+		public int scrollbarWidth;
+        private bool scrolling;
 
-		public AllChestsMenu() : base(Game1.uiViewport.Width / 2 - (windowWidth + borderWidth * 2) / 2, -borderWidth - 64, windowWidth + borderWidth * 2, Game1.uiViewport.Height + borderWidth * 2 + 64, false)
+        public AllChestsMenu() : base(Game1.uiViewport.Width / 2 - (windowWidth + borderWidth * 2) / 2, -borderWidth - 64, windowWidth + borderWidth * 2, Game1.uiViewport.Height + borderWidth * 2 + 64, false)
 		{
 			currentSort = ModEntry.Config.CurrentSort;
 			cutoff = Game1.uiViewport.Height - 64 * 3 - 8 - borderWidth;
@@ -637,7 +642,47 @@ namespace AllChestsMenu
 					}
 				}
 			}
-			Game1.drawDialogueBox(xPositionOnScreen, cutoff - borderWidth * 2, width, 64 * 4 + borderWidth * 2, false, true, null, false, true);
+			if(chestDataList.Count > 0)
+			{
+                //scrollbar
+                int first = -1;
+                int last = -1;
+                int totalHeight = 0;
+                int lastY = chestDataList[0].menu.yPositionOnScreen;
+                int lastHeight = 0;
+                for (int i = 0; i < chestDataList.Count; i++)
+                {
+                    if (lastY < chestDataList[i].menu.yPositionOnScreen)
+                    {
+                        totalHeight += chestDataList[i].menu.yPositionOnScreen - lastY;
+                        lastY = chestDataList[i].menu.yPositionOnScreen;
+                    }
+                    if (i >= chestDataList.Count - 2 && lastHeight < chestDataList[i].menu.height)
+                    {
+                        lastHeight = chestDataList[i].menu.height;
+                    }
+                }
+                totalHeight += lastHeight;
+                int scrollbarSize = cutoff - 12;
+                int barHeight = (int)Math.Round((float)scrollbarSize * (float)scrollbarSize / (float)totalHeight);
+                int barOffset = (int)Math.Round(scrolled * scrollInterval * ((float)scrollbarSize / totalHeight));
+                if (scrollbarRect.Contains(Game1.getMousePosition()))
+                {
+                    scrollbarWidth = Math.Min(16, Math.Max(8, scrollbarWidth + 1));
+                }
+                else
+                {
+                    scrollbarWidth = Math.Max(8, Math.Min(16, scrollbarWidth - 1));
+                }
+                scrollbarBack = new Rectangle(xPositionOnScreen + width - borderWidth - scrollbarWidth + 8, yPositionOnScreen + borderWidth + 76, scrollbarWidth, scrollbarSize);
+                scrollbarRect = new Rectangle(xPositionOnScreen + width - borderWidth - scrollbarWidth + 8, yPositionOnScreen + borderWidth + 76 + barOffset, scrollbarWidth, barHeight);
+                b.Draw(Game1.staminaRect, scrollbarBack, Color.Gray);
+                b.Draw(Game1.staminaRect, scrollbarRect, Color.Orange);
+                SpriteText.drawString(b, barOffset+"", 16, 16);
+                SpriteText.drawString(b, scrollbarSize+"", 16, 64);
+            }
+
+            Game1.drawDialogueBox(xPositionOnScreen, cutoff - borderWidth * 2, width, 64 * 4 + borderWidth * 2, false, true, null, false, true);
 			playerInventoryMenu.draw(b);
 			SpriteText.drawString(b, filterString, locationText.X + 16, locationText.Y - 48);
 			locationText.Draw(b);
@@ -690,8 +735,20 @@ namespace AllChestsMenu
 			emergencyShutDown();
 			Game1.activeClickableMenu = new AllChestsMenu();
 		}
+        public override void leftClickHeld(int x, int y)
+        {
+            base.leftClickHeld(x, y);
+            if (scrolling)
+            {
 
-		public override void receiveLeftClick(int x, int y, bool playSound = true)
+            }
+        }
+        public override void releaseLeftClick(int x, int y)
+        {
+            base.releaseLeftClick(x, y);
+			scrolling = false;
+        }
+        public override void receiveLeftClick(int x, int y, bool playSound = true)
 		{
 			Item held = heldItem;
 			Rectangle rect;
@@ -774,6 +831,10 @@ namespace AllChestsMenu
 			}
 			else
 			{
+				if(scrollbarRect.Contains(x, y))
+				{
+					scrolling = true;
+				}
 				for (int i = 0; i < chestDataList.Count; i++)
 				{
 					for (int j = 0; j < chestDataList[i].inventoryButtons.Count; j++)

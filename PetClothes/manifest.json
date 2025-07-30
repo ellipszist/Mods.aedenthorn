@@ -6,5 +6,5 @@
 	"UniqueID": "aedenthorn.PetClothes",
 	"EntryDll": "PetClothes.dll",
 	"MinimumApiVersion": "4.1.0",
-	"UpdateKeys": [ "Nexus:" ]
+	"UpdateKeys": [ "Nexus:36122" ]
 }

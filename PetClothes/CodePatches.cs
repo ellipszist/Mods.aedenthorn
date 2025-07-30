@@ -38,20 +38,14 @@ namespace PetClothes
                     return true;
                 if(__instance.modData.TryGetValue(modKeyItem, out string item))
                 {
-                    if (who.Items.Count <= who.CurrentToolIndex || who.Items[who.CurrentToolIndex] is null)
+                    if (SHelper.Input.IsDown(Config.RemoveModKey))
                     {
-                        if (SHelper.Input.IsDown(Config.RemoveModKey))
-                        {
-                            __instance.modData.Remove(modKeyItem);
-                            __instance.modData.Remove(modKeyTexture);
-                        }
-                        else
-                        {
-                            return true;
-                        }
+                        __instance.modData.Remove(modKeyItem);
+                        __instance.modData.Remove(modKeyTexture);
                     }
-                    else if(IsPetClothes(__instance, who.Items[who.CurrentToolIndex], out string texture))
+                    else if(who.Items.Count > who.CurrentToolIndex && who.Items[who.CurrentToolIndex] is not null && IsPetClothes(__instance, who.Items[who.CurrentToolIndex], out string texture))
                     {
+                        Game1.playSound("dirtyHit", null);
                         __instance.modData[modKeyItem] = who.Items[who.CurrentToolIndex].QualifiedItemId;
                         __instance.modData[modKeyTexture] = texture;
                         who.reduceActiveItemByOne();
@@ -60,13 +54,13 @@ namespace PetClothes
                     {
                         return true;
                     }
-                    Game1.createItemDebris(ItemRegistry.Create($"(O){item}", 1, 0, false), __instance.Position, __instance.FacingDirection, null, -1, false);
-                    Game1.playSound("dirtyHit", null);
+                    Game1.createItemDebris(ItemRegistry.Create(item, 1, 0, false), __instance.Position, __instance.FacingDirection, null, -1, false);
                     __result = true;
                     return false;
                 }
                 else if (IsPetClothes(__instance, who.Items[who.CurrentToolIndex], out string texture))
                 {
+                    Game1.playSound("dirtyHit", null);
                     __instance.modData[modKeyItem] = who.Items[who.CurrentToolIndex].QualifiedItemId;
                     __instance.modData[modKeyTexture] = texture;
                     who.reduceActiveItemByOne();
