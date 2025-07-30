@@ -116,6 +116,24 @@ namespace AllChestsMenu
 					getValue: () => Config.UnrestrictedShippingBin,
 					setValue: value => Config.UnrestrictedShippingBin = value
 				);
+                gmcm.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM.FilterItems.Name"),
+                    getValue: () => Config.FilterItems,
+                    setValue: value => Config.FilterItems = value
+                );
+                gmcm.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM.FilterItemsCategory.Name"),
+                    getValue: () => Config.FilterItemsCategory,
+                    setValue: value => Config.FilterItemsCategory = value
+                );
+                gmcm.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM.FilterItemsDescription.Name"),
+                    getValue: () => Config.FilterItemsDescription,
+                    setValue: value => Config.FilterItemsDescription = value
+                );
 				gmcm.AddBoolOption(
 					mod: ModManifest,
 					name: () => SHelper.Translation.Get("GMCM.IncludeMiniShippingBins.Name"),
