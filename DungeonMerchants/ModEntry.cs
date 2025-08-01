@@ -79,76 +79,74 @@ namespace DungeonMerchants
         {
             // get Generic Mod Config Menu's API (if it's installed)
             var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
-            if (configMenu is not null)
-            {
+            if (configMenu is null)
+                return;
 
-                // register mod
-                configMenu.Register(
-                    mod: ModManifest,
-                    reset: () => Config = new ModConfig(),
-                    save: () => Helper.WriteConfig(Config)
-                );
+            // register mod
+            configMenu.Register(
+                mod: ModManifest,
+                reset: () => Config = new ModConfig(),
+                save: () => Helper.WriteConfig(Config)
+            );
 
-                configMenu.AddBoolOption(
-                    mod: ModManifest,
-                    name: () => "Mod Enabled",
-                    getValue: () => Config.ModEnabled,
-                    setValue: value => Config.ModEnabled = value
-                );
-                configMenu.AddNumberOption(
-                    mod: ModManifest,
-                    name: () => "Dwarf Floor Min",
-                    getValue: () => Config.DwarfFloorMin,
-                    setValue: value => Config.DwarfFloorMin = value
-                );
-                configMenu.AddNumberOption(
-                    mod: ModManifest,
-                    name: () => "Dwarf Floor Max",
-                    getValue: () => Config.DwarfFloorMax,
-                    setValue: value => Config.DwarfFloorMax = value
-                );
-                configMenu.AddTextOption(
-                    mod: ModManifest,
-                    name: () => "Dwarf Floor Chance %",
-                    tooltip: () => "Percent chance to spawn dwarf on any floor",
-                    getValue: () => Config.DwarfFloorChancePercent + "",
-                    setValue: delegate (string value) { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out float f)) { Config.DwarfFloorChancePercent = f; } }
-                );
-                configMenu.AddNumberOption(
-                    mod: ModManifest,
-                    name: () => "Dwarf Floor Mult",
-                    tooltip: () => "Spawn dwarf on floors that are multiples of this number",
-                    getValue: () => Config.DwarfFloorMult,
-                    setValue: value => Config.DwarfFloorMult = value
-                );
-                configMenu.AddNumberOption(
-                    mod: ModManifest,
-                    name: () => "Merchant Floor Min",
-                    getValue: () => Config.MerchantFloorMin,
-                    setValue: value => Config.MerchantFloorMin = value
-                );
-                configMenu.AddNumberOption(
-                    mod: ModManifest,
-                    name: () => "Merchant Floor Max",
-                    getValue: () => Config.MerchantFloorMax,
-                    setValue: value => Config.MerchantFloorMax = value
-                );
-                configMenu.AddTextOption(
-                    mod: ModManifest,
-                    name: () => "Merchant Floor Chance %",
-                    tooltip: () => "Percent chance to spawn merchant on any floor",
-                    getValue: () => Config.MerchantFloorChancePercent + "",
-                    setValue: delegate (string value) { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out float f)) { Config.MerchantFloorChancePercent = f; } }
-                );
-                configMenu.AddNumberOption(
-                    mod: ModManifest,
-                    name: () => "Merchant Floor Mult",
-                    tooltip: () => "Spawn merchant on floors that are multiples of this number",
-                    getValue: () => Config.MerchantFloorMult,
-                    setValue: value => Config.MerchantFloorMult = value
-                );
-            }
-
+            configMenu.AddBoolOption(
+                mod: ModManifest,
+                name: () => "Mod Enabled",
+                getValue: () => Config.ModEnabled,
+                setValue: value => Config.ModEnabled = value
+            );
+            configMenu.AddNumberOption(
+                mod: ModManifest,
+                name: () => "Dwarf Floor Min",
+                getValue: () => Config.DwarfFloorMin,
+                setValue: value => Config.DwarfFloorMin = value
+            );
+            configMenu.AddNumberOption(
+                mod: ModManifest,
+                name: () => "Dwarf Floor Max",
+                getValue: () => Config.DwarfFloorMax,
+                setValue: value => Config.DwarfFloorMax = value
+            );
+            configMenu.AddTextOption(
+                mod: ModManifest,
+                name: () => "Dwarf Floor Chance %",
+                tooltip: () => "Percent chance to spawn dwarf on any floor",
+                getValue: () => Config.DwarfFloorChancePercent + "",
+                setValue: delegate(string value) { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out float f)) { Config.DwarfFloorChancePercent = f; } } 
+            );
+            configMenu.AddNumberOption(
+                mod: ModManifest,
+                name: () => "Dwarf Floor Mult",
+                tooltip: () => "Spawn dwarf on floors that are multiples of this number",
+                getValue: () => Config.DwarfFloorMult,
+                setValue: value => Config.DwarfFloorMult = value
+            );
+            configMenu.AddNumberOption(
+                mod: ModManifest,
+                name: () => "Merchant Floor Min",
+                getValue: () => Config.MerchantFloorMin,
+                setValue: value => Config.MerchantFloorMin = value
+            );
+            configMenu.AddNumberOption(
+                mod: ModManifest,
+                name: () => "Merchant Floor Max",
+                getValue: () => Config.MerchantFloorMax,
+                setValue: value => Config.MerchantFloorMax = value
+            );
+            configMenu.AddTextOption(
+                mod: ModManifest,
+                name: () => "Merchant Floor Chance %",
+                tooltip: () => "Percent chance to spawn merchant on any floor",
+                getValue: () => Config.MerchantFloorChancePercent + "",
+                setValue: delegate(string value) { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out float f)) { Config.MerchantFloorChancePercent = f; } } 
+            );
+            configMenu.AddNumberOption(
+                mod: ModManifest,
+                name: () => "Merchant Floor Mult",
+                tooltip: () => "Spawn merchant on floors that are multiples of this number",
+                getValue: () => Config.MerchantFloorMult,
+                setValue: value => Config.MerchantFloorMult = value
+            );
         }
     }
 }

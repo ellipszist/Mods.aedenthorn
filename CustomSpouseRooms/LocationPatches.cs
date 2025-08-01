@@ -63,7 +63,6 @@ namespace CustomSpouseRooms
         {
             if (!Config.EnableMod)
                 return;
-            loadingSpouseRooms = false;
             try
             {
                 var allSpouses = GetSpouses(__instance.owner, -1).Keys.ToList();
@@ -76,98 +75,8 @@ namespace CustomSpouseRooms
                 SMonitor.Log($"Failed in {nameof(FarmHouse_updateFarmLayout_Prefix)}:\n{ex}", LogLevel.Error);
             }
         }
-        public static void FarmHouse_updateFarmLayout_Postfix(FarmHouse __instance, HashSet<string> ____appliedMapOverrides)
-        {
-            if (!Config.EnableMod || !loadingSpouseRooms)
-                return;
-            loadingSpouseRooms = false;
-            var allSpouses = GetSpouses(__instance.owner, -1).Keys.ToList();
-            if (allSpouses.Count == 0)
-                return;
-            GetFarmHouseSpouseRooms(__instance, allSpouses, out List<string> orderedSpouses, out List<string> customSpouses);
 
-            __instance.reloadMap();
-
-            if (____appliedMapOverrides.Contains("spouse_room"))
-            {
-                ____appliedMapOverrides.Remove("spouse_room");
-            }
-            __instance.map.Properties.Remove("DayTiles");
-            __instance.map.Properties.Remove("NightTiles");
-
-            foreach (string spouse in customSpouses)
-            {
-                SpouseRoomData srd = customRoomData[spouse];
-                MakeSpouseRoom(__instance, ____appliedMapOverrides, srd);
-            }
-
-            int xOffset = 7;
-
-            for (int i = 0; i < orderedSpouses.Count; i++)
-            {
-                string spouse = orderedSpouses[i];
-
-                SpouseRoomData srd = null;
-                if (customRoomData.TryGetValue(spouse, out SpouseRoomData srd1))
-                {
-                    srd = new SpouseRoomData(srd1);
-                }
-
-                Point corner = __instance.GetSpouseRoomCorner() + new Point(xOffset * i, 0);
-
-                Point spouseOffset;
-                int indexInSpouseMapSheet = -1;
-
-                if (srd != null && (srd.upgradeLevel < 0 || srd.upgradeLevel == __instance.upgradeLevel))
-                {
-                    spouseOffset = srd.spousePosOffset;
-                    indexInSpouseMapSheet = srd.templateIndex;
-                }
-                else
-                {
-                    spouseOffset = new Point(4, 5);
-                }
-
-                var shellStart = corner - new Point(1, 1);
-
-                if (i == 0)
-                    __instance.spouseRoomSpot = shellStart;
-
-                if (srd == null)
-                {
-                    srd = new SpouseRoomData()
-                    {
-                        name = spouse,
-                        spousePosOffset = spouseOffset,
-                        templateIndex = indexInSpouseMapSheet
-                    };
-
-                }
-
-                srd.shellType = i < orderedSpouses.Count - 1 ? "custom_spouse_room_open_right" : "custom_spouse_room_closed_right";
-                if (i == 0 && __instance.upgradeLevel > 1)
-                {
-                    srd.shellType += "_2";
-                }
-                SMonitor.Log($"Using shell {srd.shellType} for {srd.name}");
-
-                srd.startPos = shellStart;
-
-                if (customRoomData.TryGetValue((i + 1).ToString(), out SpouseRoomData srdi) && (srdi.upgradeLevel >= __instance.upgradeLevel || srdi.upgradeLevel < 0) && !srdi.islandFarmHouse)
-                {
-                    SMonitor.Log($"Found index override {i + 1}, using start pos, etc.");
-                    srd.startPos = srdi.startPos;
-                    if (srdi.shellType is not null)
-                        srd.shellType = srdi.shellType;
-                    if (srdi.templateName is not null)
-                        srd.templateName = srdi.templateName;
-                }
-
-                MakeSpouseRoom(__instance, ____appliedMapOverrides, srd, i == 0);
-            }
-        }
-
-        public static bool FarmHouse_loadSpouseRoom_Prefix(FarmHouse __instance, HashSet<string> ____appliedMapOverrides, ref bool __state)
+        public static bool FarmHouse_loadSpouseRoom_Prefix(FarmHouse __instance, HashSet<string> ____appliedMapOverrides)
         {
             if (!Config.EnableMod)
                 return true;
@@ -195,7 +104,88 @@ namespace CustomSpouseRooms
                     SMonitor.Log("Single uncustomized spouse room, letting vanilla game take over");
                     return true;
                 }
-                loadingSpouseRooms = true;
+
+                GetFarmHouseSpouseRooms(__instance, allSpouses, out List<string> orderedSpouses, out List<string> customSpouses);
+
+                __instance.reloadMap();
+
+                if (____appliedMapOverrides.Contains("spouse_room"))
+                {
+                    ____appliedMapOverrides.Remove("spouse_room");
+                }
+                __instance.map.Properties.Remove("DayTiles");
+                __instance.map.Properties.Remove("NightTiles");
+
+                foreach (string spouse in customSpouses)
+                {
+                    SpouseRoomData srd = customRoomData[spouse];
+                    MakeSpouseRoom(__instance, ____appliedMapOverrides, srd);
+                }
+
+                int xOffset = 7;
+
+                for (int i = 0; i < orderedSpouses.Count; i++)
+                {
+                    string spouse = orderedSpouses[i];
+
+                    SpouseRoomData srd = null;
+                    if (customRoomData.TryGetValue(spouse, out SpouseRoomData srd1))
+                    {
+                        srd = new SpouseRoomData(srd1);
+                    }
+
+                    Point corner = __instance.GetSpouseRoomCorner() + new Point(xOffset * i, 0);
+
+                    Point spouseOffset;
+                    int indexInSpouseMapSheet = -1;
+
+                    if (srd != null && (srd.upgradeLevel < 0 || srd.upgradeLevel == __instance.upgradeLevel))
+                    {
+                        spouseOffset = srd.spousePosOffset;
+                        indexInSpouseMapSheet = srd.templateIndex;
+                    }
+                    else
+                    {
+                        spouseOffset = new Point(4, 5);
+                    }
+
+                    var shellStart = corner - new Point(1, 1);
+
+                    if (i == 0)
+                        __instance.spouseRoomSpot = shellStart;
+
+                    if (srd == null)
+                    {
+                        srd = new SpouseRoomData()
+                        {
+                            name = spouse,
+                            spousePosOffset = spouseOffset,
+                            templateIndex = indexInSpouseMapSheet
+                        };
+
+                    }
+
+                    srd.shellType = i < orderedSpouses.Count - 1 ? "custom_spouse_room_open_right" : "custom_spouse_room_closed_right";
+                    if (i == 0 && __instance.upgradeLevel > 1)
+                    {
+                        srd.shellType += "_2";
+                    }
+                    SMonitor.Log($"Using shell {srd.shellType} for {srd.name}");
+
+                    srd.startPos = shellStart;
+
+                    if (customRoomData.TryGetValue((i + 1).ToString(), out SpouseRoomData srdi) && (srdi.upgradeLevel >= __instance.upgradeLevel || srdi.upgradeLevel < 0) && !srdi.islandFarmHouse)
+                    {
+                        SMonitor.Log($"Found index override {i + 1}, using start pos, etc.");
+                        srd.startPos = srdi.startPos;
+                        if (srdi.shellType is not null)
+                            srd.shellType = srdi.shellType;
+                        if (srdi.templateName is not null)
+                            srd.templateName = srdi.templateName;
+                    }
+
+                    MakeSpouseRoom(__instance, ____appliedMapOverrides, srd, i == 0);
+                }
                 return false;
             }
             catch (Exception ex)
@@ -204,6 +194,7 @@ namespace CustomSpouseRooms
             }
             return true;
         }
+
         public static void DecoratableLocation_MakeMapModifications_Postfix(DecoratableLocation __instance, HashSet<string> ____appliedMapOverrides)
         {
             if (!Config.EnableMod || __instance is not IslandFarmHouse)
