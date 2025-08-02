@@ -84,6 +84,8 @@ namespace CustomSpouseRooms
             var allSpouses = GetSpouses(__instance.owner, -1).Keys.ToList();
             if (allSpouses.Count == 0)
                 return;
+            SMonitor.Log("Loading spouse rooms, clearing current room data");
+            currentRoomData.Clear();
             GetFarmHouseSpouseRooms(__instance, allSpouses, out List<string> orderedSpouses, out List<string> customSpouses);
 
             __instance.reloadMap();
@@ -184,8 +186,6 @@ namespace CustomSpouseRooms
             ModEntry.justLoadedSave = false;
             try
             {
-                SMonitor.Log("Loading spouse rooms, clearing current room data");
-                currentRoomData.Clear();
                 var allSpouses = GetSpouses(__instance.owner, -1).Keys.ToList();
                 if (allSpouses.Count == 0)
                     return true;
@@ -195,6 +195,7 @@ namespace CustomSpouseRooms
                     SMonitor.Log("Single uncustomized spouse room, letting vanilla game take over");
                     return true;
                 }
+                SMonitor.Log("Preparing to load custom spouse rooms");
                 loadingSpouseRooms = true;
                 return false;
             }

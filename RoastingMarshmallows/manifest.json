@@ -1,0 +1,10 @@
+﻿{
+	"Name": "RoastingMarshmallows",
+	"Author": "aedenthorn",
+	"Version": "0.1.0",
+	"Description": "Roasting Marshmallows.",
+	"UniqueID": "aedenthorn.RoastingMarshmallows",
+	"EntryDll": "RoastingMarshmallows.dll",
+	"MinimumApiVersion": "4.1.0",
+	"UpdateKeys": [ "Nexus:" ]
+}
