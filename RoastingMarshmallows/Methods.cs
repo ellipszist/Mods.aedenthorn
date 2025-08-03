@@ -1,9 +1,5 @@
-﻿using StardewValley.Characters;
+﻿using Microsoft.Xna.Framework;
 using StardewValley;
-using Microsoft.Xna.Framework.Graphics;
-using StardewValley.Monsters;
-using Microsoft.Xna.Framework;
-using xTile.Dimensions;
 
 namespace RoastingMarshmallows
 {
@@ -30,33 +26,31 @@ namespace RoastingMarshmallows
                         break;
                 }
 
-                if (farmer.currentLocation.Objects.TryGetValue(t, out var obj))
+                if (farmer.currentLocation.Objects.TryGetValue(t, out var obj) && obj is Torch && obj.QualifiedItemId == "(BC)146" && (obj as Torch).IsOn)
                 {
-                    if (obj is Torch && obj.QualifiedItemId == "(BC)146" && (obj as Torch).IsOn)
+                    if (farmer.modData.TryGetValue(modKey, out var pstring))
                     {
-                        if (farmer.modData.TryGetValue(modKey, out var pstring))
+                        var percent = int.Parse(pstring);
+                        if (inc)
                         {
-                            var percent = int.Parse(pstring);
-                            if (inc)
+                            percent++;
+                            if (percent >= Config.RoastFrames)
                             {
-                                percent++;
-                                if (percent >= Config.RoastFrames)
-                                {
-                                    SMonitor.Log("Burnt marshmallow", StardewModdingAPI.LogLevel.Debug);
-                                    farmer.currentLocation.playSound("fireball");
-                                    farmer.modData.Remove(modKey);
-                                    return -1;
-                                }
-                                farmer.modData[modKey] = percent + "";
+                                SMonitor.Log("Burnt marshmallow", StardewModdingAPI.LogLevel.Debug);
+                                farmer.currentLocation.playSound("fireball");
+                                farmer.modData.Remove(modKey);
+                                return -1;
                             }
-                            return percent;
+                            farmer.modData[modKey] = percent + "";
                         }
-                        else if (start)
-                        {
-                            farmer.currentLocation.playSound("grassyStep");
-                            farmer.modData[modKey] = "1";
-                            return 1;
-                        }
+                        return percent;
+                    }
+                    else if (start && farmer.Items.CountId(rawItem) > 0)
+                    {
+                        farmer.Items.ReduceId(rawItem, 1);
+                        farmer.currentLocation.playSound("grassyStep");
+                        farmer.modData[modKey] = "1";
+                        return 1;
                     }
                 }
             }

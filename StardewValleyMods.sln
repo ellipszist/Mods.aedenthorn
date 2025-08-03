@@ -605,6 +605,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PetClothes", "PetClothes\Pe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoastingMarshmallows", "RoastingMarshmallows\RoastingMarshmallows.csproj", "{BD35DBA4-C956-975D-2009-D5655F05D918}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuickChestColor", "QuickChestColor\QuickChestColor.csproj", "{84ED88C0-A29A-A3A0-616F-470CC15D48FD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -2989,6 +2991,14 @@ Global
 		{BD35DBA4-C956-975D-2009-D5655F05D918}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BD35DBA4-C956-975D-2009-D5655F05D918}.Release|x64.ActiveCfg = Release|Any CPU
 		{BD35DBA4-C956-975D-2009-D5655F05D918}.Release|x64.Build.0 = Release|Any CPU
+		{84ED88C0-A29A-A3A0-616F-470CC15D48FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84ED88C0-A29A-A3A0-616F-470CC15D48FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84ED88C0-A29A-A3A0-616F-470CC15D48FD}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{84ED88C0-A29A-A3A0-616F-470CC15D48FD}.Debug|x64.Build.0 = Debug|Any CPU
+		{84ED88C0-A29A-A3A0-616F-470CC15D48FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84ED88C0-A29A-A3A0-616F-470CC15D48FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84ED88C0-A29A-A3A0-616F-470CC15D48FD}.Release|x64.ActiveCfg = Release|Any CPU
+		{84ED88C0-A29A-A3A0-616F-470CC15D48FD}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
