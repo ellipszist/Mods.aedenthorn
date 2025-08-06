@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 
 namespace RoastingMarshmallows
@@ -36,7 +37,6 @@ namespace RoastingMarshmallows
                             percent++;
                             if (percent >= Config.RoastFrames)
                             {
-                                SMonitor.Log("Burnt marshmallow", StardewModdingAPI.LogLevel.Debug);
                                 farmer.currentLocation.playSound("fireball");
                                 farmer.modData.Remove(modKey);
                                 return -1;
@@ -54,9 +54,32 @@ namespace RoastingMarshmallows
                     }
                 }
             }
-
-            farmer.modData.Remove(modKey);
+            if (farmer.modData.TryGetValue(modKey, out var pstring2))
+            {
+                RemoveMarshmallow(int.Parse(pstring2));
+            }
             return -1;
+        }
+
+        private static void RemoveMarshmallow(int progress)
+        {
+            var texture = SHelper.GameContent.Load<Texture2D>(texturePath);
+            int frames = texture.Width / (texture.Height / 2);
+            int intervalLength = Config.RoastFrames / frames;
+            Game1.player.currentLocation.playSound("dwoop");
+            if (progress > intervalLength * (frames - 1))
+            {
+                Game1.createObjectDebris(burntItem, Game1.player.TilePoint.X, Game1.player.TilePoint.Y, Game1.player.currentLocation);
+            }
+            else if (progress > intervalLength * (frames - 2))
+            {
+                Game1.createObjectDebris(cookedItem, Game1.player.TilePoint.X, Game1.player.TilePoint.Y, Game1.player.currentLocation);
+            }
+            else
+            {
+                Game1.createObjectDebris(rawItem, Game1.player.TilePoint.X, Game1.player.TilePoint.Y, Game1.player.currentLocation);
+            }
+            Game1.player.modData.Remove(modKey);
         }
     }
 }

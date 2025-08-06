@@ -2,9 +2,7 @@
 	// GMCM
 	"GMCM.ModEnabled.Name": "Mod Enabled",
 	"GMCM.RoastKey.Name": "Roast Key",
-	"GMCM.RawItem.Name": "Raw Item",
-	"GMCM.CookedItem.Name": "Cooked Item",
-	"GMCM.BurntItem.Name": "Burnt Item",
+	"GMCM.RoastFrames.Name": "Roast Frames",
 	"RawMarshmallow.Name": "Raw Marshmallow",
 	"RawMarshmallow.Description": "An uncooked marshmallow.",
 	"CookedMarshmallow.Name": "Cooked Marshmallow",

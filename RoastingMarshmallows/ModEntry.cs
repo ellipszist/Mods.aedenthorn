@@ -16,7 +16,7 @@ namespace RoastingMarshmallows
 		public static ModConfig Config;
 		public static ModEntry context;
         public static string modKey = "aedenthorn.RoastingMarshmallows/roastProgress";
-        public static string texturePath = "aedenthorn.RoastingMarshmallows/texture";
+        public static string texturePath = "aedenthorn.RoastingMarshmallows_Stick/texture";
         public static string rawItem = "aedenthorn.RoastingMarshmallows_RawMarshmallow";
         public static string cookedItem = "aedenthorn.RoastingMarshmallows_CookedMarshmallow";
         public static string burntItem = "aedenthorn.RoastingMarshmallows_BurntMarshmallow";
@@ -33,7 +33,6 @@ namespace RoastingMarshmallows
 			SModManifest = ModManifest;
 
 			helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
-            helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
             helper.Events.GameLoop.UpdateTicked += GameLoop_UpdateTicked;
             helper.Events.Content.AssetRequested += Content_AssetRequested;
             helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
@@ -52,41 +51,19 @@ namespace RoastingMarshmallows
 
         private void Input_ButtonsChanged(object? sender, StardewModdingAPI.Events.ButtonsChangedEventArgs e)
         {
-            if (!Config.ModEnabled)
+            if (!Config.ModEnabled || !Context.IsPlayerFree)
                 return;
             if (Config.RoastKey.JustPressed())
             {
                 int progress = GetRoastProgress(Game1.player, false, true);
                 if(progress > 1) // remove
                 {
-                    var texture = SHelper.GameContent.Load<Texture2D>(texturePath);
-                    int frames = (texture.Width / texture.Height);
-                    int intervalLength = Config.RoastFrames / frames;
-                    Game1.player.currentLocation.playSound("dwoop");
-                    if (progress > intervalLength * (frames - 1))
-                    {
-                        Game1.createObjectDebris(burntItem, Game1.player.TilePoint.X, Game1.player.TilePoint.Y, Game1.player.currentLocation);
-                    }
-                    else if (progress > intervalLength * (frames - 2))
-                    {
-                        Game1.createObjectDebris(cookedItem, Game1.player.TilePoint.X, Game1.player.TilePoint.Y, Game1.player.currentLocation);
-                    }
-                    else
-                    {
-                        Game1.createObjectDebris(rawItem, Game1.player.TilePoint.X, Game1.player.TilePoint.Y, Game1.player.currentLocation);
-                    }
-                    Game1.player.modData.Remove(modKey);
+                    RemoveMarshmallow(progress);
                 }
             }
         }
 
-        private void GameLoop_SaveLoaded(object? sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)
-        {
-            var dict = SHelper.GameContent.Load<Dictionary<string, string>>(modKey + "/items");
-            rawItem = dict["raw"];
-            cookedItem = dict["cooked"];
-            burntItem = dict["burnt"];
-        }
+
 
         private void Content_AssetRequested(object? sender, StardewModdingAPI.Events.AssetRequestedEventArgs e)
         {
@@ -157,15 +134,6 @@ namespace RoastingMarshmallows
             {
                 e.LoadFromModFile<Texture2D>("assets/burnt_marshmallow.png", StardewModdingAPI.Events.AssetLoadPriority.Exclusive);
             }
-            else if (e.NameWithoutLocale.IsEquivalentTo(modKey + "/items"))
-            {
-                e.LoadFrom(() => new Dictionary<string, string>()
-                {
-                    {"raw", "aedenthorn.RoastingMarshmallows_RawMarshmallow" },
-                    {"cooked", "aedenthorn.RoastingMarshmallows_CookedMarshmallow" },
-                    {"burnt", "aedenthorn.RoastingMarshmallows_BurntMarshmallow" }
-                }, StardewModdingAPI.Events.AssetLoadPriority.Exclusive);
-            }
         }
 
         private void GameLoop_GameLaunched(object? sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
@@ -193,6 +161,12 @@ namespace RoastingMarshmallows
                     name: () => ModEntry.SHelper.Translation.Get("GMCM.RoastKey.Name"),
                     getValue: () => Config.RoastKey,
                     setValue: value => Config.RoastKey = value
+                );
+                configMenu.AddNumberOption(
+                    mod: ModManifest,
+                    name: () => ModEntry.SHelper.Translation.Get("GMCM.RoastFrames.Name"),
+                    getValue: () => Config.RoastFrames,
+                    setValue: value => Config.RoastFrames = value
                 );
             }
 		}
