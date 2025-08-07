@@ -248,7 +248,7 @@ namespace MobileCatalogues
                 }
                 else if (Config.SeedsToInclude.ToLower() == "season")
                 {
-                    include = new Crop(crop.Key, 0, 0).seasonsToGrowIn.Contains(Game1.currentSeason);
+                    include = new Crop(crop.Key, 0, 0, null).seasonsToGrowIn.Contains(Game1.currentSeason);
                 }
                 if (include)
                 {

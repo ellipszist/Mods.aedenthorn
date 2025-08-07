@@ -487,6 +487,24 @@ namespace CustomMounts
 
             return codes.AsEnumerable();
         }
+        public static IEnumerable<CodeInstruction> Stable_updateHorseOwnership_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            SMonitor.Log($"Transpiling Stable.UpdateHorseOwnership");
+
+            var codes = new List<CodeInstruction>(instructions);
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (i < codes.Count - 2 && codes[i].opcode == OpCodes.Callvirt && (MethodInfo)codes[i].operand == AccessTools.Method(typeof(Horse), nameof(Horse.getOwner)) && codes[i+1].opcode == OpCodes.Brfalse_S)
+                {
+                    SMonitor.Log($"Preventing name erasure");
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.PreventNameErasure))));
+                    break;
+                }
+            }
+
+            return codes.AsEnumerable();
+        }
+
         public static void AnimalPage_CreateSpriteComponent_Postfix(AnimalPage.AnimalEntry entry, int index, ref ClickableTextureComponent __result)
         {
             if (!Config.ModEnabled || entry.Animal is not Horse horse || !CheckModData(horse, out var data))

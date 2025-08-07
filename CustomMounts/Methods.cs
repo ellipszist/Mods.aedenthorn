@@ -26,8 +26,8 @@ namespace CustomMounts
                 {
                     __instance.modData[modKey] = kvp.Key;
                     __instance.Name = kvp.Value.Name;
-                    __instance.displayName = kvp.Value.Name;
                     SetSprite(__instance, kvp.Value);
+                    return;
                 }
             }
         }
@@ -235,11 +235,13 @@ namespace CustomMounts
             }, true);
             return value;
         }
-        private static Horse GetHorseForFlute(long uid)
+        private static Horse? GetHorseForFlute(long uid)
         {
-            Farmer farmer = Game1.GetPlayer(uid, false);
-            Object obj = farmer.ActiveObject;
-            Horse horse = null;
+            Farmer? farmer = Game1.GetPlayer(uid, false);
+            if (farmer.Items.Count <= farmer.CurrentToolIndex || farmer.Items[farmer.CurrentToolIndex] is null)
+                return null;
+            Item obj = farmer.Items[farmer.CurrentToolIndex];
+            Horse? horse = null;
             Utility.ForEachBuilding<Stable>(delegate (Stable stable)
             {
                 Horse curHorse = stable.getStableHorse();
@@ -253,7 +255,7 @@ namespace CustomMounts
             return horse;
         }
 
-        private static bool IsFluteFor(Horse horse, Object obj)
+        private static bool IsFluteFor(Horse horse, Item obj)
         {
             if (!CheckModData(horse, out var data))
                 return obj.QualifiedItemId == "(O)911";
@@ -264,6 +266,12 @@ namespace CustomMounts
         {
             if (!Config.ModEnabled || !Config.AllowMultipleMounts)
                 l.Value = v;
+        }
+        private static Farmer? PreventNameErasure(Farmer? result)
+        {
+            if (!Config.ModEnabled || !Config.AllowMultipleMounts)
+                return result;
+            return null;
         }
         private static double OverrideRandomAnimationChance(double v, Horse horse)
         {

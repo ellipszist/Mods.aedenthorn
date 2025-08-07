@@ -20,6 +20,7 @@ namespace CustomMounts
 		public static ModConfig Config;
 		public static ModEntry context;
         public static string modKey = "aedenthorn.CustomMounts";
+        public static string nameKey = "aedenthorn.CustomMounts/name";
         public static string animKey = "aedenthorn.CustomMounts/animation";
         public static string dictPath = "aedenthorn.CustomMounts/dict";
         public static Dictionary<string, MountData> MountDict {
@@ -105,6 +106,7 @@ namespace CustomMounts
                 postfix: new(typeof(ModEntry), nameof(Horse_SyncPositionToRider_Postfix))
             );
             
+
             harmony.Patch(
                 original: AccessTools.Method(typeof(Building), nameof(Building.OnUpgraded)),
                 postfix: new(typeof(ModEntry), nameof(Building_OnUpgraded_Postfix))
@@ -114,18 +116,23 @@ namespace CustomMounts
                 original: AccessTools.Method(typeof(Stable), nameof(Stable.GetDefaultHorseTile)),
                 prefix: new(typeof(ModEntry), nameof(Stable_GetDefaultHorseTile_Prefix))
             );
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Stable), nameof(Stable.updateHorseOwnership)),
+                transpiler: new(typeof(ModEntry), nameof(Stable_updateHorseOwnership_Transpiler))
+            );
+
             /*
             harmony.Patch(
                 original: AccessTools.Method(typeof(Character), nameof(Character.faceDirection)),
                 prefix: new(typeof(ModEntry), nameof(Character_faceDirection_Prefix))
             );
             */
-            
+
             harmony.Patch(
                 original: AccessTools.Method(typeof(NPC), nameof(NPC.behaviorOnFarmerLocationEntry)),
                 prefix: new(typeof(ModEntry), nameof(NPC_behaviorOnFarmerLocationEntry_Prefix))
             );
-
+            
 
             //harmony.Patch(
             //    original: AccessTools.Method(typeof(NPC), nameof(NPC.draw), [typeof(SpriteBatch), typeof(float)]),
@@ -167,10 +174,10 @@ namespace CustomMounts
 
         private void Input_ButtonPressed(object? sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
         {
+            return;
             if(e.Button == SButton.O)
             {
                 SHelper.GameContent.InvalidateCache(dictPath);
-                return;
                 var cc = Game1.getFarm().characters;
                 for (int i = cc.Count - 1; i >= 0; i--)
                 {
