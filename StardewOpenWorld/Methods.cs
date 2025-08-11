@@ -3,6 +3,7 @@ using StardewValley;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using xTile;
 using xTile.Layers;
 using xTile.Tiles;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
@@ -11,134 +12,210 @@ namespace StardewOpenWorld
 {
     public partial class ModEntry
     {
-
-        private static void SetTiles(GameLocation gl, Point delta)
+        public void ResetChunkTiles()
         {
-
-            var oldTiles = (Tile[,])grassTiles.Clone();
-            for (int y = 0; y < openWorldTileSize; y++)
-            {
-                var ty = (openWorldTileSize + y + delta.Y) % openWorldTileSize;
-                for (int x = 0; x < openWorldTileSize; x++)
-                {
-                    var tx = (openWorldTileSize + x + delta.X) % openWorldTileSize;
-                    var tile = oldTiles[tx, ty];
-                    grassTiles[x, y] = tile;
-                }
-            }
-            /*
-            var objs = openWorldLocation.objects.Pairs.Where(o => rect.Contains(o.Key.X, o.Key.Y));
-            foreach (var obj in objs)
-            {
-                gl.objects[obj.Key - offset] = obj.Value;
-            }
-            SMonitor.Log($"applied objects in {s.ElapsedMilliseconds} ms");
-            s.Restart();
-            var tfs = openWorldLocation.terrainFeatures.Pairs.Where(o => rect.Contains(o.Key.X, o.Key.Y));
-            foreach (var tf in tfs)
-            {
-                gl.terrainFeatures[tf.Key - offset] = tf.Value;
-            }
-            SMonitor.Log($"applied tfs in {s.ElapsedMilliseconds} ms");
-            s.Stop();
-            */
+            int size = openWorldSize / openWorldChunkSize;
+            cachedChunks = new();
         }
 
-        public static void PlayerTileChanged(Point oldPoint, Point newPoint)
+        public static Tile[,] GetChunkTiles(string layer, int cx, int cy)
         {
-            if(newPoint.X / openWorldTileSize < oldPoint.X / openWorldTileSize)
+            if (cachedChunks.TryGetValue(new Point(cx, cy), out var chunk) && chunk.tiles.TryGetValue(layer, out var tiles))
             {
-                UnloadWorldTile(oldPoint.X / openWorldTileSize + 1, oldPoint.Y);
-                LoadWorldTile(oldPoint.X / openWorldTileSize - 1, oldPoint.Y);
+                return tiles;
             }
-            else if(newPoint.X / openWorldTileSize > oldPoint.X / openWorldTileSize)
-            {
-                UnloadWorldTile(oldPoint.X / openWorldTileSize - 1, oldPoint.Y);
-                LoadWorldTile(oldPoint.X / openWorldTileSize + 1, oldPoint.Y);
-            }
-            if(newPoint.Y / openWorldTileSize < oldPoint.Y / openWorldTileSize)
-            {
-                UnloadWorldTile(oldPoint.X, oldPoint.Y / openWorldTileSize + 1);
-                LoadWorldTile(oldPoint.X, oldPoint.Y / openWorldTileSize - 1);
-            }
-            else if(newPoint.Y / openWorldTileSize > oldPoint.Y / openWorldTileSize)
-            {
-                UnloadWorldTile(oldPoint.X, oldPoint.Y / openWorldTileSize - 1);
-                LoadWorldTile(oldPoint.X, oldPoint.Y / openWorldTileSize + 1);
-            }
+            return null;
         }
 
-        private static void UnloadWorldTile(int x, int y)
+        private static async void PreloadWorldChunk(int cx, int cy)
         {
-            if (!cachedWorldTiles.ContainsKey(new Point(x, y)))
+            int size = openWorldSize / openWorldChunkSize;
+            if (cx < 0 || cy < 0 || cx >= size || cy >= size)
                 return;
-            bool keep = false;
-            foreach(var f in Game1.getAllFarmers())
+            if (cachedChunks is null)
             {
-                if (f.currentLocation.Name.Contains(locName) && GetPlayerTile(f) == new Point(x, y))
+                int l = openWorldSize / openWorldChunkSize;
+                cachedChunks = new();
+            }
+            var point = new Point(cx, cy);
+            if (cachedChunks.ContainsKey(point))
+            {
+                return;
+            }
+            var chunk = new WorldChunk();
+            cachedChunks[point] = chunk;
+            biomeDict = SHelper.GameContent.Load<Dictionary<string, Biome>>(dictPath);
+        //    await Task.Factory.StartNew(() => PreloadWorldChunkAsync(point, chunk));
+        //}
+
+        //private static void PreloadWorldChunkAsync(Point point, WorldChunk chunk)
+        //{
+            foreach (var layer in openWorldLocation.Map.Layers)
+            {
+                if (layer.Id == "Back")
                 {
-                    keep = true;
-                    break;
+                    var backTiles = new Tile[openWorldChunkSize, openWorldChunkSize];
+                    Random r = Utility.CreateRandom(Game1.uniqueIDForThisGame, point.X * point.Y + point.X);
+                    var mainSheet = openWorldLocation.Map.GetTileSheet("outdoors");
+                    for (int y = 0; y < openWorldChunkSize; y++)
+                    {
+                        for (int x = 0; x < openWorldChunkSize; x++)
+                        {
+                            int idx = 351;
+                            var which = r.NextDouble();
+                            if (which < 0.025f)
+                            {
+                                idx = 304;
+                            }
+                            else if (which < 0.05f)
+                            {
+                                idx = 305;
+                            }
+                            else if (which < 0.15f)
+                            {
+                                idx = 300;
+                            }
+                            backTiles[x, y] = new StaticTile(layer, mainSheet, BlendMode.Alpha, idx);
+                        }
+                    }
+                    chunk.tiles[layer.Id] = backTiles;
                 }
             }
-            if (!keep)
-                cachedWorldTiles.Remove(new Point(x, y));
-        }
-
-        private static Point GetPlayerTile(Farmer f)
-        {
-            return new Point(f.TilePoint.X / openWorldTileSize, f.TilePoint.Y / openWorldTileSize);
-        }
-
-        private static void LoadWorldTile(int x, int y)
-        {
-            WorldTile tile = null;
-            if(!cachedWorldTiles.TryGetValue(new Point(x, y), out tile))
+            var chunkBox = new Rectangle(point.X * openWorldChunkSize, point.Y * openWorldChunkSize, openWorldChunkSize, openWorldChunkSize);
+            foreach(var b in biomeDict.Values)
             {
-                tile = CreateTile(x, y);
+                var map = SHelper.GameContent.Load<Map>(b.MapPath);
+                Rectangle mapBox = new(b.MapPosition, new(map.Layers[0].LayerWidth, map.Layers[0].LayerHeight));
+                if (!chunkBox.Intersects(mapBox))
+                    continue;
+                foreach(var l in map.Layers)
+                {
+                    var nl = openWorldLocation.Map.GetLayer(l.Id);
+                    if (nl == null)
+                    {
+                        nl = new Layer(l.Id, openWorldLocation.Map, new xTile.Dimensions.Size(openWorldChunkSize, openWorldChunkSize), l.TileSize);
+                        openWorldLocation.Map.AddLayer(nl);
+                        openWorldLocation.SortLayers();
+                    }
+                    if(!chunk.tiles.TryGetValue(l.Id, out var tiles))
+                    {
+                        tiles = new Tile[openWorldChunkSize, openWorldChunkSize];
+                        chunk.tiles[l.Id] = tiles;
+                    }
+                    for(int x = 0; x < l.Tiles.Array.GetLength(0); x++)
+                    {
+                        for (int y = 0; y < l.Tiles.Array.GetLength(1); y++)
+                        {
+                            var rp = new Point(b.MapPosition.X + x, b.MapPosition.Y + y);
+                            if (l.Tiles[x, y] != null && chunkBox.Contains(rp))
+                            {
+                                var rx = b.MapPosition.X + x - chunkBox.X;
+                                var ry = b.MapPosition.Y + y - chunkBox.Y;
+                                var ot = l.Tiles[x, y];
+                                var ots = ot.TileSheet;
+                                var nts = openWorldLocation.Map.TileSheets.FirstOrDefault(s => s.ImageSource == ots.ImageSource);
+                                if (nts == null)
+                                {
+                                    nts = new TileSheet(ots.Id, openWorldLocation.Map, ots.ImageSource, ots.SheetSize, l.TileSize);
+                                    openWorldLocation.Map.AddTileSheet(nts);
+                                }
+                                Tile tile;
+                                if (ot is AnimatedTile)
+                                {
+                                    List<StaticTile> frames = new();
+                                    foreach (var t in (ot as AnimatedTile).TileFrames)
+                                    {
+                                        var nts2 = openWorldLocation.Map.TileSheets.FirstOrDefault(s => s.ImageSource == t.TileSheet.ImageSource);
+                                        if (nts2 == null)
+                                        {
+                                            nts2 = new TileSheet(ots.Id, openWorldLocation.Map, ots.ImageSource, ots.SheetSize, l.TileSize);
+                                            openWorldLocation.Map.AddTileSheet(nts);
+                                        }
+                                        frames.Add(new StaticTile(nl, nts2, t.BlendMode, t.TileIndex));
+                                    }
+                                    tile = new AnimatedTile(nl, frames.ToArray(), (ot as AnimatedTile).FrameInterval);
+                                }
+                                else
+                                {
+                                    tile = new StaticTile(nl, nts, ot.BlendMode, ot.TileIndex);
+                                }
+                                
+                                chunk.tiles[l.Id][rx, ry] = tile;
+                            }
+                        }
+                    }
+                    chunk.tiles[l.Id] = tiles;
+                }
             }
-            LoadTileData(tile);
         }
 
-        private static void LoadTileData(WorldTile tile)
+        public static void PlayerTileChanged()
         {
-            throw new NotImplementedException();
+            int size = openWorldSize / openWorldChunkSize;
+            List<Point> keep = new();
+            foreach (var f in Game1.getAllFarmers())
+            {
+                if (f.currentLocation.Name.Contains(locName))
+                {
+                    var pc = GetPlayerChunk(f);
+                    PreloadWorldChunk(pc.X, pc.Y);
+                    keep.Add(new(pc.X, pc.Y));
+                    foreach (var p in Utility.getSurroundingTileLocationsArray(pc.ToVector2()))
+                    {
+                        PreloadWorldChunk((int)p.X, (int)p.Y);
+                        keep.Add(new((int)p.X, (int)p.Y));
+                    }
+                }
+            }
+            foreach(var p in cachedChunks.Keys.ToArray())
+            {
+                if (!keep.Contains(p))
+                {
+                    cachedChunks.Remove(p);
+                }
+            }
         }
 
-        private static WorldTile CreateTile(int x, int y)
+
+        private static Point GetPlayerChunk(Farmer f)
         {
-            WorldTile outTile = new WorldTile();
-            List<WorldTile> tiles = new List<WorldTile>();
+            return new Point(f.TilePoint.X / openWorldChunkSize, f.TilePoint.Y / openWorldChunkSize);
+        }
+
+        public static WorldChunk CreateChunk(int cx, int cy)
+        {
+            WorldChunk outchunk = new WorldChunk();
+            List<WorldChunk> chunks = new List<WorldChunk>();
             foreach (var biome in biomes) 
             {
-                var tile = biome.Value.Invoke(randomSeed, x, y);
-                if(tile != null)
-                    tiles.Add(tile);
+                var chunk = biome.Value.Invoke(Game1.uniqueIDForThisGame, cx, cy);
+                if(chunk != null)
+                    chunks.Add(chunk);
             }
-            if (!tiles.Any())
+            if (!chunks.Any())
                 return null;
-            tiles.Sort(delegate (WorldTile a, WorldTile b) { return a.priority.CompareTo(b.priority); });
-            foreach(var tile in tiles)
+            chunks.Sort(delegate (WorldChunk a, WorldChunk b) { return a.priority.CompareTo(b.priority); });
+            foreach(var chunk in chunks)
             {
-                foreach (var kvp in tile.objects)
-                    outTile.objects[kvp.Key] = kvp.Value;
-                foreach (var kvp in tile.terrainFeatures)
-                    outTile.terrainFeatures[kvp.Key] = kvp.Value;
-                foreach (var kvp in tile.back)
-                    outTile.back[kvp.Key] = kvp.Value;
-                foreach (var kvp in tile.buildings)
-                    outTile.buildings[kvp.Key] = kvp.Value;
-                foreach (var kvp in tile.front)
-                    outTile.front[kvp.Key] = kvp.Value;
-                foreach (var kvp in tile.alwaysFront)
-                    outTile.alwaysFront[kvp.Key] = kvp.Value;
+                foreach (var kvp in chunk.objects)
+                    outchunk.objects[kvp.Key] = kvp.Value;
+                foreach (var kvp in chunk.terrainFeatures)
+                    outchunk.terrainFeatures[kvp.Key] = kvp.Value;
+                foreach (var kvp in chunk.tiles)
+                {
+                    for(int x = 0; x < kvp.Value.GetLength(0); x++)
+                    {
+                        for (int y = 0; y < kvp.Value.GetLength(1); y++)
+                        {
+                            if (kvp.Value[x,y] != null)
+                            {
+                                outchunk.tiles[kvp.Key][x, y] = kvp.Value[x, y];
+                            }
+                        }
+                    }
+                }
             }
-            return outTile;
-        }
-
-        private static Rectangle GetTileRect(Vector2 v)
-        {
-            return new Rectangle((int)v.X * openWorldTileSize, (int)v.Y * openWorldTileSize, openWorldTileSize, openWorldTileSize);
+            return outchunk;
         }
         public static Tile GetTile(Layer layer, int x, int y)
         {
@@ -148,6 +225,5 @@ namespace StardewOpenWorld
         public static void SetTile(Layer layer, int x, int y, Tile value)
         {
         }
-
     }
 }

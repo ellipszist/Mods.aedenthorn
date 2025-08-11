@@ -2,12 +2,14 @@
 using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
+using StardewModdingAPI.Utilities;
 using StardewValley;
+using StardewValley.GameData.Locations;
+using StardewValley.GameData;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using xTile;
-using xTile.Tiles;
 
 namespace StardewOpenWorld
 {
@@ -20,26 +22,24 @@ namespace StardewOpenWorld
         public static ModConfig Config;
         public static ModEntry context;
 
-        public static string dataPath = "aedenthorn.StardewOpenWorld/dictionary";
+        public static string biomePath = "aedenthorn.StardewOpenWorld/biomes";
+        public static string dictPath = "aedenthorn.StardewOpenWorld/dict";
         public static string seedKey = "aedenthorn_StardewOpenWorld_seed";
         public static string mapPath = "StardewOpenWorldMap";
         public static string locName = "StardewOpenWorld";
         public static string tilePrefix = "StardewOpenWorldTile";
-        public static int randomSeed;
-        public static int openWorldTileSize = 100;
+        public static int openWorldChunkSize = 100;
         public static int openWorldSize = 100000;
         public static bool warping = false;
-        public static Point playerTileLocation;
-        public static Tile[,] grassTiles;
+        public static PerScreen<Point> playerTilePoint = new(() => new Point(-1, -1));
+        public static PerScreen<Point> playerChunk = new(() => new Point(-1,-1));
 
         public static GameLocation openWorldLocation;
         //private static Dictionary<string, Biome> biomes = new Dictionary<string, Biome>();
-        public static Dictionary<string, Func<int, int, int, WorldTile>> biomes;
-        public static Dictionary<Point, WorldTile> cachedWorldTiles = new Dictionary<Point, WorldTile>();
-        public static Dictionary<Point, WorldTile> loadedWorldTiles = new Dictionary<Point, WorldTile>();
-        public static Dictionary<Point, Tile> openWorldBack = new Dictionary<Point, Tile>();
-        public static Dictionary<Point, Tile> openWorldBuildings = new Dictionary<Point, Tile>();
-        public static Dictionary<Point, Tile> openWorldFront = new Dictionary<Point, Tile>();
+        public static Dictionary<string, Func<ulong, int, int, WorldChunk>> biomes;
+
+        public static Dictionary<Point, WorldChunk> cachedChunks;
+        public static Dictionary<string, Biome> biomeDict;
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
@@ -67,17 +67,8 @@ namespace StardewOpenWorld
         {
             if (!Config.ModEnabled)
                 return;
-            var sowseed = Helper.Data.ReadSaveData<SOWRandomSeed>(seedKey);
-
-            if (sowseed is null)
-            {
-                sowseed = new SOWRandomSeed(Guid.NewGuid().GetHashCode());
-                Helper.Data.WriteSaveData(seedKey, sowseed);
-            }
-            randomSeed = sowseed.seed;
-            Monitor.Log($"Random Seed: {randomSeed}");
+            openWorldLocation = Game1.getLocationFromName(locName);
         }
-
         private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
         {
             if (!Config.ModEnabled)
@@ -90,16 +81,98 @@ namespace StardewOpenWorld
             {
                 e.LoadFromModFile<Map>("assets/StardewOpenWorld.tmx", AssetLoadPriority.Exclusive);
             }
+            else if (e.NameWithoutLocale.IsEquivalentTo(biomePath))
+            {
+                e.LoadFrom(() => new Dictionary<string, Func<ulong, int, int, WorldChunk>>(), AssetLoadPriority.Exclusive);
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
+            {
+                e.LoadFrom(() => new Dictionary<string, Biome>(), AssetLoadPriority.Exclusive);
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo("Data/Locations"))
+            {
+                e.Edit(asset =>
+                {
+                    IDictionary<string, LocationData> data = asset.AsDictionary<string, LocationData>().Data;
+
+                    data.Add(locName, new LocationData()
+                    {
+                        DisplayName = "Stardew Open World",
+                        DefaultArrivalTile = new Point(50000, 50000),
+                        CreateOnLoad = new CreateLocationData()
+                        {
+                            MapPath = SHelper.ModContent.GetInternalAssetName("assets/StardewOpenWorld.tmx").Name,
+                            Type = "StardewValley.GameLocation",
+                            AlwaysActive = false
+                        },
+                        CanPlantHere = true,
+                        ExcludeFromNpcPathfinding = true,
+                        ArtifactSpots = null,
+                        FishAreas = null,
+                        Fish = null,
+                        Forage = null,
+                        MinDailyWeeds = 0,
+                        MaxDailyWeeds = 0,
+                        FirstDayWeedMultiplier = 0,
+                        MinDailyForageSpawn = 0,
+                        MaxDailyForageSpawn = 0,
+                        MaxSpawnedForageAtOnce = 0,
+                        ChanceForClay = 0,
+                        Music = null,
+                        MusicDefault = "EmilyDream",
+                        MusicContext = MusicContext.SubLocation,
+                        MusicIgnoredInRain = false,
+                        MusicIgnoredInSpring = false,
+                        MusicIgnoredInSummer = false,
+                        MusicIgnoredInFall = false,
+                        MusicIgnoredInWinter = false,
+                        MusicIgnoredInFallDebris = false,
+                        MusicIsTownTheme = false
+                    });
+                });
+            }
         }
 
         private void GameLoop_UpdateTicked(object sender, UpdateTickedEventArgs e)
         {
             if (!Config.ModEnabled || !Context.IsWorldReady)
                 return;
-            if (!Game1.isWarping && Game1.player.currentLocation.Name.Equals("Backwoods") && Game1.player.TilePoint.X == 24 && Game1.player.TilePoint.Y < 6)
+            if(Game1.player.currentLocation == openWorldLocation)
             {
-                //mapLocation = new Point(openWorldTileSize * 100, openWorldTileSize * 100);
-                Game1.warpFarmer(locName, 0, 0, false);
+                if(Game1.player.TilePoint != playerTilePoint.Value)
+                {
+                    var newChunk = GetPlayerChunk(Game1.player);
+                    if (newChunk != playerChunk.Value)
+                    {
+                        PlayerTileChanged();
+                        playerChunk.Value = newChunk;
+                    }
+                    playerTilePoint.Value = Game1.player.TilePoint;
+                }
+                return;
+            }
+            else if (playerChunk.Value.X != -1)
+            {
+                PlayerTileChanged();
+                playerTilePoint.Value = new(-1, -1);
+                playerChunk.Value = new(-1, -1);
+            }
+            if (!Game1.isWarping && Game1.player.currentLocation.Name.Equals("Backwoods"))
+            {
+                Game1.warpFarmer(locName, openWorldSize / 2, openWorldSize / 2, false);
+                int center = openWorldSize / openWorldChunkSize / 2;
+                for (int y = -1; y < 2; y++)
+                {
+                    for (int x = -1; x < 2; x++)
+                    {
+                        var cx = center + x;
+                        var cy = center + y;
+                        if (cx >= 0 && cy >= 0)
+                        {
+                            PreloadWorldChunk(cx, cy);
+                        }
+                    }
+                }
             }
         }
 

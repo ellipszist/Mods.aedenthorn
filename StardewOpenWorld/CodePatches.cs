@@ -2,17 +2,19 @@
 using Microsoft.Xna.Framework;
 using StardewValley;
 using System;
+using System.Collections.Generic;
 using xTile;
 using xTile.Dimensions;
 using xTile.Display;
 using xTile.Layers;
 using xTile.Tiles;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace StardewOpenWorld
 {
     public partial class ModEntry
     {
-        [HarmonyPatch(typeof(Game1), nameof(Game1.loadForNewGame))]
+        //[HarmonyPatch(typeof(Game1), nameof(Game1.loadForNewGame))]
         public static class Game1_loadForNewGame_Patch
         {
             public static void Postfix()
@@ -20,35 +22,8 @@ namespace StardewOpenWorld
                 if (!Config.ModEnabled)
                     return;
 
-
                 openWorldLocation = new GameLocation(mapPath, locName) { IsOutdoors = true, IsFarm = true, IsGreenhouse = false };
                 SMonitor.Log("Created new game location");
-                var back = openWorldLocation.Map.GetLayer("Back");
-                var mainSheet = openWorldLocation.Map.GetTileSheet("outdoors");
-
-                grassTiles = new Tile[openWorldTileSize, openWorldTileSize];
-                SMonitor.Log($"creating grass tiles");
-                for (int y = 0; y < openWorldTileSize; y++)
-                {
-                    for (int x = 0; x < openWorldTileSize; x++)
-                    {
-                        int idx = 351;
-                        var which = Game1.random.NextDouble();
-                        if (which < 0.025f)
-                        {
-                            idx = 304;
-                        }
-                        else if (which < 0.05f)
-                        {
-                            idx = 305;
-                        }
-                        else if (which < 0.15f)
-                        {
-                            idx = 300;
-                        }
-                        grassTiles[x, y] = new StaticTile(back, mainSheet, BlendMode.Alpha, idx);
-                    }
-                }
 
                 Game1.locations.Add(openWorldLocation);
             }
@@ -131,55 +106,95 @@ namespace StardewOpenWorld
         [HarmonyPatch(typeof(Layer), nameof(Layer.Draw))]
         public static class Layer_Draw_Patch
         {
-            public static bool Prefix(Layer __instance, IDisplayDevice displayDevice, xTile.Dimensions.Rectangle mapViewport, Location displayOffset, int pixelZoom)
+            public static bool Prefix(Layer __instance, IDisplayDevice displayDevice, xTile.Dimensions.Rectangle mapViewport, Location displayOffset, int pixelZoom, float sort_offset)
             {
                 if (!Config.ModEnabled || !Game1.currentLocation.Name.Contains(locName))
                     return true;
+                Layer.zoom = pixelZoom;
 
                 int tileWidth = pixelZoom * 16;
                 int tileHeight = pixelZoom * 16;
                 Location tileInternalOffset = new Location(Wrap(mapViewport.X, tileWidth), Wrap(mapViewport.Y, tileHeight));
                 Location tileLocation = displayOffset - tileInternalOffset;
-                int xMin = (tileInternalOffset.X < 32 ? 1 : 0);
-                int yMin = (tileInternalOffset.Y == 0 ? 1 : 0);
 
-                int xMax = mapViewport.Width / tileWidth + 2;
-                int yMax = mapViewport.Height / tileHeight + 2;
-                if (__instance.Id == "Back")
+                Point loc = Game1.player.TilePoint;
+                Tile[,] tiles = new Tile[openWorldChunkSize, openWorldChunkSize];
+                Point playerChunk = new(loc.X / openWorldChunkSize, loc.Y / openWorldChunkSize);
+                Rectangle playerBox = new(loc.X - openWorldChunkSize / 2, loc.Y - openWorldChunkSize / 2, openWorldChunkSize, openWorldChunkSize);
+                List<Tile[,]> surroundingChunkTiles = new();
+
+
+                for (int y = -1; y < 2; y++)
                 {
-
-                    Point loc = Game1.player.TilePoint;
-                    if (playerTileLocation != loc)
+                    for (int x = -1; x < 2; x++)
                     {
-                        Point delta = loc - playerTileLocation;
-                        SetTiles(Game1.player.currentLocation, delta);
-                        playerTileLocation = loc;
-                        SMonitor.Log($"x: {tileInternalOffset.X}");
-                    }
-                    for (int y = yMin; y < yMax; y++)
-                    {
-                        tileLocation.X = displayOffset.X - tileInternalOffset.X;
-                        for (int x = xMin; x < xMax; x++)
+                        var cx = playerChunk.X + x;
+                        var cy = playerChunk.Y + y;
+                        Tile[,] chunkTiles = null;
+                        if (cx >= 0 && cy >= 0)
                         {
-
-                            Tile tile = grassTiles[x, y];
-                            displayDevice.DrawTile(tile, tileLocation, (float)(y * (16 * pixelZoom) + 16 * pixelZoom) / 10000f);
-                            tileLocation.X += tileWidth;
+                            chunkTiles = GetChunkTiles(__instance.Id, cx, cy);
                         }
-                        tileLocation.Y += tileHeight;
+                        surroundingChunkTiles.Add(chunkTiles);
                     }
-
                 }
+                for (int ry = 0; ry < openWorldChunkSize; ry++)
+                {
+                    tileLocation.X = displayOffset.X - tileInternalOffset.X;
+                    if (tileInternalOffset.X < 32)
+                    {
+                        tileLocation.X -= tileWidth;
+                    }
+                    for (int rx = 0; rx < openWorldChunkSize; rx++)
+                    {
+                        int ax = playerBox.X + rx;
+                        int ay = playerBox.Y + ry;
 
+                        int idx = 0;
+                        for (int y = -1; y < 2; y++)
+                        {
+                            for (int x = -1; x < 2; x++)
+                            {
+                                var cx = playerChunk.X + x;
+                                var cy = playerChunk.Y + y;
+                                if (surroundingChunkTiles[idx] is not null)
+                                {
+                                    Rectangle chunkBox = new(openWorldChunkSize * cx, openWorldChunkSize * cy, openWorldChunkSize, openWorldChunkSize);
+                                    if (chunkBox.Contains(new Point(ax, ay)))
+                                    {
+                                        var tx = ax - openWorldChunkSize * cx;
+                                        var ty = ay - openWorldChunkSize * cy;
+                                        Tile tile = surroundingChunkTiles[idx][tx, ty];
+                                        if(tile is not null)
+                                        {
+                                            float drawn_sort = 0f;
+                                            if (sort_offset >= 0f)
+                                            {
+                                                drawn_sort = ((float)(ry * (16 * pixelZoom) + 16 * pixelZoom) + sort_offset) / 10000f;
+                                            }
+                                            if (!__instance.Id.Equals("Front"))
+                                            {
+                                                displayDevice.DrawTile(tile, tileLocation, drawn_sort);
+                                            }
+                                        }
+                                        goto next;
+                                    }
+                                }
+                                idx++;
+                            }
+                        }
+                    next:
+                        tileLocation.X += tileWidth;
+                    }
+                    tileLocation.Y += tileHeight;
+                }
                 return false;
             }
+
+
             private static int Wrap(int value, int span)
             {
                 value %= span;
-                if (value < 0)
-                {
-                    value += span;
-                }
                 return value;
             }
         }
