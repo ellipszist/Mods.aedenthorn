@@ -1,10 +1,7 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using System;
-using System.Diagnostics;
-using System.Reflection;
 using xTile;
 using xTile.Dimensions;
 using xTile.Display;
@@ -143,19 +140,21 @@ namespace StardewOpenWorld
                 int tileHeight = pixelZoom * 16;
                 Location tileInternalOffset = new Location(Wrap(mapViewport.X, tileWidth), Wrap(mapViewport.Y, tileHeight));
                 Location tileLocation = displayOffset - tileInternalOffset;
-                int xMin = (tileInternalOffset.X <= 32 ? 1 : 0);
-                int yMin = (tileInternalOffset.Y <= 32 ? 1 : 0);
+                int xMin = (tileInternalOffset.X < 32 ? 1 : 0);
+                int yMin = (tileInternalOffset.Y == 0 ? 1 : 0);
 
                 int xMax = mapViewport.Width / tileWidth + 2;
                 int yMax = mapViewport.Height / tileHeight + 2;
                 if (__instance.Id == "Back")
                 {
-                    Point loc = Game1.player.getTileLocationPoint();
+
+                    Point loc = Game1.player.TilePoint;
                     if (playerTileLocation != loc)
                     {
                         Point delta = loc - playerTileLocation;
                         SetTiles(Game1.player.currentLocation, delta);
                         playerTileLocation = loc;
+                        SMonitor.Log($"x: {tileInternalOffset.X}");
                     }
                     for (int y = yMin; y < yMax; y++)
                     {

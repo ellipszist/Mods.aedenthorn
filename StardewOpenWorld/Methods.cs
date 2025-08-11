@@ -1,17 +1,8 @@
-﻿using HarmonyLib;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
 using StardewValley;
-using StardewValley.Characters;
-using StardewValley.TerrainFeatures;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using xTile.Dimensions;
-using xTile.Display;
 using xTile.Layers;
 using xTile.Tiles;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
@@ -96,7 +87,7 @@ namespace StardewOpenWorld
 
         private static Point GetPlayerTile(Farmer f)
         {
-            return new Point(f.getTileX() / openWorldTileSize, f.getTileY() / openWorldTileSize);
+            return new Point(f.TilePoint.X / openWorldTileSize, f.TilePoint.Y / openWorldTileSize);
         }
 
         private static void LoadWorldTile(int x, int y)

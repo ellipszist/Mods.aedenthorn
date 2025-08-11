@@ -1,7 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using System;
-using xTile.Dimensions;
-using xTile.Layers;
+﻿using xTile.Layers;
 using xTile.Tiles;
 
 namespace StardewOpenWorld

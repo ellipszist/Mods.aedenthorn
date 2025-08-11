@@ -56,30 +56,30 @@ namespace RoastingMarshmallows
             }
             if (farmer.modData.TryGetValue(modKey, out var pstring2))
             {
-                RemoveMarshmallow(int.Parse(pstring2));
+                RemoveMarshmallow(farmer, int.Parse(pstring2));
             }
             return -1;
         }
 
-        private static void RemoveMarshmallow(int progress)
+        private static void RemoveMarshmallow(Farmer farmer, int progress)
         {
             var texture = SHelper.GameContent.Load<Texture2D>(texturePath);
             int frames = texture.Width / (texture.Height / 2);
             int intervalLength = Config.RoastFrames / frames;
-            Game1.player.currentLocation.playSound("dwoop");
+            farmer.currentLocation.playSound("dwoop");
             if (progress > intervalLength * (frames - 1))
             {
-                Game1.createObjectDebris(burntItem, Game1.player.TilePoint.X, Game1.player.TilePoint.Y, Game1.player.currentLocation);
+                Game1.createObjectDebris(burntItem, farmer.TilePoint.X, farmer.TilePoint.Y, farmer.currentLocation);
             }
             else if (progress > intervalLength * (frames - 2))
             {
-                Game1.createObjectDebris(cookedItem, Game1.player.TilePoint.X, Game1.player.TilePoint.Y, Game1.player.currentLocation);
+                Game1.createObjectDebris(cookedItem, farmer.TilePoint.X, farmer.TilePoint.Y, farmer.currentLocation);
             }
             else
             {
-                Game1.createObjectDebris(rawItem, Game1.player.TilePoint.X, Game1.player.TilePoint.Y, Game1.player.currentLocation);
+                Game1.createObjectDebris(rawItem, farmer.TilePoint.X, farmer.TilePoint.Y, farmer.currentLocation);
             }
-            Game1.player.modData.Remove(modKey);
+            farmer.modData.Remove(modKey);
         }
     }
 }

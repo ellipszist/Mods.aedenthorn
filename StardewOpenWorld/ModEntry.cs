@@ -1,19 +1,12 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Newtonsoft.Json;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
-using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.Locations;
-using StardewValley.TerrainFeatures;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using xTile;
-using xTile.Layers;
 using xTile.Tiles;
 
 namespace StardewOpenWorld
@@ -28,7 +21,7 @@ namespace StardewOpenWorld
         public static ModEntry context;
 
         public static string dataPath = "aedenthorn.StardewOpenWorld/dictionary";
-        public static string seedKey = "aedenthorn.StardewOpenWorld/seed";
+        public static string seedKey = "aedenthorn_StardewOpenWorld_seed";
         public static string mapPath = "StardewOpenWorldMap";
         public static string locName = "StardewOpenWorld";
         public static string tilePrefix = "StardewOpenWorldTile";
@@ -93,7 +86,7 @@ namespace StardewOpenWorld
             {
                 e.LoadFromModFile<Map>(Path.Combine("assets", "BackwoodsEdit.tmx"), AssetLoadPriority.High);
             }
-            else if (e.NameWithoutLocale.Name.Contains("StardewOpenWorldMap"))
+            else if (e.NameWithoutLocale.Name.Contains(mapPath))
             {
                 e.LoadFromModFile<Map>("assets/StardewOpenWorld.tmx", AssetLoadPriority.Exclusive);
             }
@@ -103,7 +96,7 @@ namespace StardewOpenWorld
         {
             if (!Config.ModEnabled || !Context.IsWorldReady)
                 return;
-            if (!Game1.isWarping && Game1.player.currentLocation.Name.Equals("Backwoods") && Game1.player.getTileLocation().X == 24 && Game1.player.getTileLocation().Y < 6)
+            if (!Game1.isWarping && Game1.player.currentLocation.Name.Equals("Backwoods") && Game1.player.TilePoint.X == 24 && Game1.player.TilePoint.Y < 6)
             {
                 //mapLocation = new Point(openWorldTileSize * 100, openWorldTileSize * 100);
                 Game1.warpFarmer(locName, 0, 0, false);

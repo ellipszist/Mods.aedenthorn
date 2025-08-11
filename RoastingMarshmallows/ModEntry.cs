@@ -58,7 +58,7 @@ namespace RoastingMarshmallows
                 int progress = GetRoastProgress(Game1.player, false, true);
                 if(progress > 1) // remove
                 {
-                    RemoveMarshmallow(progress);
+                    RemoveMarshmallow(Game1.player, progress);
                 }
             }
         }
