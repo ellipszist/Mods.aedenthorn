@@ -13,5 +13,6 @@ namespace StardewOpenWorld
         public Dictionary<Vector2,TerrainFeature> terrainFeatures = new();
         public Dictionary<string, Tile[,]> tiles = new();
         public int priority;
+        public bool initialized;
     }
 }

@@ -1,12 +1,14 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Netcode;
+using Newtonsoft.Json;
 using StardewValley;
 using StardewValley.Monsters;
 using StardewValley.TerrainFeatures;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection.Emit;
 using xTile;
@@ -41,6 +43,13 @@ namespace StardewOpenWorld
             if (!Config.ModEnabled || character.currentLocation?.Name.Contains(locName) != true)
                 return value;
             int v = value % (openWorldChunkSize * 64) + (Game1.viewport.Y / (openWorldChunkSize * 64) < value / (openWorldChunkSize * 64) ? openWorldChunkSize * 64 : 0);
+            return v;
+        }
+        public static float GetGlobalCharacterFloat(float value, Character character)
+        {
+            if (!Config.ModEnabled || character.currentLocation?.Name.Contains(locName) != true)
+                return value;
+            float v = value % (openWorldChunkSize * 64) + (Game1.viewport.Y / (openWorldChunkSize * 64) < value / (openWorldChunkSize * 64) ? openWorldChunkSize * 64 : 0);
             return v;
         }
         public static int GetGlobalTreeInt(int value, Tree tree)
@@ -92,22 +101,36 @@ namespace StardewOpenWorld
             int size = openWorldSize / openWorldChunkSize;
             if (cp.X < 0 || cp.Y < 0 || cp.X >= size || cp.Y >= size)
                 return;
-            if (cachedChunks.ContainsKey(cp))
+            WorldChunk chunk;
+            if (!cachedChunks.TryGetValue(cp, out chunk))
+            {
+                chunk = new();
+                cachedChunks[cp] = chunk;
+            }
+            else if (chunk.initialized)
             {
                 return;
             }
-            var chunk = new WorldChunk();
-            cachedChunks[cp] = chunk;
             //    await Task.Factory.StartNew(() => PreloadWorldChunkAsync(point, chunk));
             //}
 
             //private static void PreloadWorldChunkAsync(Point point, WorldChunk chunk)
             //{
-
+            Stopwatch s = new();
+            s.Start();
             AddGrassToChunk(cp, chunk);
+            //SMonitor.Log($"grass in {s.ElapsedMilliseconds}");
+            s.Restart();
             AddTreesToChunk(cp, chunk);
+            //SMonitor.Log($"trees in {s.ElapsedMilliseconds}");
+            s.Restart();
             AddBiomesToChunk(cp, chunk);
+            //SMonitor.Log($"Biomes in {s.ElapsedMilliseconds}");
+            s.Restart();
             AddMonstersToChunk(cp, chunk);
+            //SMonitor.Log($"Monsters {s.ElapsedMilliseconds}");
+            s.Stop();
+            cachedChunks[cp].initialized = true;
         }
 
 
@@ -214,52 +237,82 @@ namespace StardewOpenWorld
             }
         }
 
-        private static void AddTreesToChunk(Point point, WorldChunk chunk)
+        private static void AddTreesToChunk(Point chunkPoint, WorldChunk chunk)
         {
-            Random r = Utility.CreateRandom(Game1.uniqueIDForThisGame, point.X * point.Y + point.X, 42);
-
-            Dictionary<Point, Dictionary<Vector2, string>> surroundingChunkCenters = new();
-            for (int cx = -1; cx < 2; cx++)
-            {
-                for (int cy = -1; cy < 2; cy++)
-                {
-
-                    if (!treeCenters.TryGetValue(point + new Point(cx, cy), out var cs))
-                        surroundingChunkCenters[new(cx, cy)] = new();
-                    else
-                        surroundingChunkCenters[new(cx, cy)] = cs;
-                }
-            }
             Stopwatch s = new();
             s.Start();
-            for (int y = 0; y < openWorldChunkSize; y++)
+
+            Random r = Utility.CreateRandom(Game1.uniqueIDForThisGame, chunkPoint.X * chunkPoint.Y + chunkPoint.X, 42);
+            if (!treeCenters.TryGetValue(chunkPoint, out var centers))
+                return;
+            foreach (var c in centers)
             {
-                for (int x = 0; x < openWorldChunkSize; x++)
+
+                Point begin = new(0, 0);
+                Point end = new(0, 0);
+                int idx = 0;
+                int trees = r.Next(Config.MinTreesPerForest, Config.MaxTreesPerForest + 1);
+                while (idx < trees)
                 {
-                    Vector2 ap = new(x + point.X * openWorldChunkSize, y + point.Y * openWorldChunkSize);
-                    foreach (var chunkCenters in surroundingChunkCenters)
+                    for (int x = begin.X; x <= end.X; x++)
                     {
-                        Vector2 coff = new Vector2(chunkCenters.Key.X * openWorldChunkSize, chunkCenters.Key.Y * openWorldChunkSize);
-                        foreach (var c in chunkCenters.Value)
+                        for (int y = begin.Y; y <= end.Y; y++)
                         {
-                            var distance = Vector2.Distance(new Vector2(x, y), c.Key + coff);
-                            if (distance > 20)
+                            if (x != begin.X && x != end.X && y != begin.Y && y != end.Y)
                                 continue;
-                            double chance = (1 - Math.Pow(distance, 2) / 100) / 4;
-                            double roll = r.NextDouble();
-                            if (roll < chance)
+                            Vector2 v = c.Key + new Vector2(x, y);
+                            if (r.NextDouble() < Math.Pow(Config.TreeDensity, Vector2.Distance(v, c.Key) / 3f))
                             {
-                                chunk.terrainFeatures.Add(ap, new Tree(GetRandomTree(ap, r, c.Value), r.NextDouble() < 0.2 ? 4 : 5));
-                                goto next;
+                                Point offset = new();
+                                if (v.X < 0)
+                                {
+                                    offset += new Point(-1, 0);
+                                }
+                                else if (v.X >= openWorldChunkSize)
+                                {
+                                    offset += new Point(1, 0);
+                                }
+                                if (v.Y < 0)
+                                {
+                                    offset += new Point(0, -1);
+                                }
+                                else if (v.Y >= openWorldChunkSize)
+                                {
+                                    offset += new Point(0, 1);
+                                }
+                                if (offset.X == 0 && offset.Y == 0)
+                                {
+                                    var av = v + chunkPoint.ToVector2() * openWorldChunkSize;
+                                    if (!chunk.terrainFeatures.ContainsKey(av))
+                                        chunk.terrainFeatures[av] = new Tree(GetRandomTree(av, r, c.Value), r.NextDouble() < 0.2 ? 4 : 5);
+                                }
+                                else
+                                {
+                                    int num = openWorldSize / openWorldChunkSize;
+                                    Point ocp = chunkPoint + offset;
+                                    if(ocp.X >= 0 && ocp.X < num && ocp.Y >= 0 && ocp.Y < num)
+                                    {
+                                        var av = v + ocp.ToVector2() * openWorldChunkSize;
+                                        if (!cachedChunks.ContainsKey(ocp))
+                                            cachedChunks[ocp] = new();
+                                        if (!cachedChunks[ocp].terrainFeatures.ContainsKey(av))
+                                            cachedChunks[ocp].terrainFeatures[av] = new Tree(GetRandomTree(av, r, c.Value), r.NextDouble() < 0.2 ? 4 : 5);
+                                    }
+                                }
+                                idx++;
+                                if (idx >= trees)
+                                    goto next;
                             }
                         }
                     }
-                next:
-                    continue;
+                    begin -= new Point(1, 1);
+                    end += new Point(1, 1);
+                    if (end.X > openWorldChunkSize / 10)
+                        break;
                 }
+            next:
+                continue;
             }
-            s.Stop();
-            var sw = s.ElapsedMilliseconds;
         }
 
         private static string GetRandomTree(Vector2 p, Random r, string which = null)
@@ -291,15 +344,17 @@ namespace StardewOpenWorld
             }
             return "1";
         }
-        private void ReloadMonsterDict()
+        private Dictionary<string, MonsterSpawnInfo> GetMonsterDict()
         {
-            monsterDict = SHelper.GameContent.Load<Dictionary<string, MonsterSpawnInfo>>(monsterDictPath);
-            if (!monsterDict.ContainsKey("Slimes"))
+            if (File.Exists(Path.Combine(SHelper.DirectoryPath, "monsters.json")))
             {
-                monsterDict["Slimes"] = new MonsterSpawnInfo()
-                {
-                    Chance = 1,
-                    Monsters = new List<MonsterInfo>()
+                return JsonConvert.DeserializeObject<Dictionary<string, MonsterSpawnInfo>>(File.ReadAllText(Path.Combine(SHelper.DirectoryPath, "monsters.json")));
+            }
+            var dict = new Dictionary<string, MonsterSpawnInfo>();
+            dict["Slimes"] = new MonsterSpawnInfo()
+            {
+                Chance = 1,
+                Monsters = new List<MonsterInfo>()
                     {
                         new MonsterInfo()
                         {
@@ -315,13 +370,30 @@ namespace StardewOpenWorld
                             Type = "BigSlime",
                             Chance = 0.5,
                             MinLevel = 1,
-                            MaxLevel = 100,
+                            MaxLevel = 150,
                             Min = 1,
                             Max = 4
                         }
                     }
-                };
-            }
+            }; 
+            dict["Dinos"] = new MonsterSpawnInfo()
+            {
+                Chance = 0.5,
+                Monsters = new List<MonsterInfo>()
+                    {
+                        new MonsterInfo()
+                        {
+                            Type = "Dino",
+                            Chance = 1,
+                            MinLevel = 1,
+                            MaxLevel = 100,
+                            Min = 3,
+                            Max = 10
+                        }
+                    }
+            };
+            File.WriteAllText(Path.Combine(SHelper.DirectoryPath, "monsters.json"), JsonConvert.SerializeObject(dict, Formatting.Indented));
+            return dict;
         }
 
         private static string GetRandomMonsterSpawn(Vector2 p, Random r, string which = null)
@@ -377,13 +449,13 @@ namespace StardewOpenWorld
                 {
                     for (int x = begin.X; x <= end.X; x++)
                     {
-                        for (int y = begin.Y; y <= end.Y; x++)
+                        for (int y = begin.Y; y <= end.Y; y++)
                         {
                             if (x != begin.X && x != end.X && y != begin.Y && y != end.Y)
                                 continue;
-                            if (r.NextDouble() < Config.MonsterDensity)
+                            Vector2 v = mc.Key + new Vector2(x, y);
+                            if (r.NextDouble() < Math.Pow(Config.MonsterDensity, Vector2.Distance(v, mc.Key) / 3f))
                             {
-                                Vector2 v = mc.Key + new Vector2(x, y);
                                 Point offset = new();
                                 if (v.X < 0)
                                 {
@@ -403,67 +475,34 @@ namespace StardewOpenWorld
                                 }
                                 if(offset.X == 0 && offset.Y == 0)
                                 {
-                                    chunk.monsters[v] = monsters[idx];
+                                    var av = v + chunkPoint.ToVector2() * openWorldChunkSize;
+                                    chunk.monsters[av] = monsters[idx];
                                 }
                                 else
                                 {
+                                    int num = openWorldSize / openWorldChunkSize;
                                     Point ocp = chunkPoint + offset;
-                                    if(ocp.X >= 0 && ocp.X < openWorldSize / openWorldChunkSize && ocp.Y >= 0 && ocp.Y < openWorldSize / openWorldChunkSize)
+                                    if (ocp.X >= 0 && ocp.X < num && ocp.Y >= 0 && ocp.Y < num)
                                     {
-                                        BuildWorldChunk(ocp);
-                                        cachedChunks[ocp].monsters[v] = monsters[idx];
+                                        var av = v + ocp.ToVector2() * openWorldChunkSize;
+                                        if (!cachedChunks.ContainsKey(ocp))
+                                            cachedChunks[ocp] = new();
+                                        cachedChunks[ocp].monsters[av] = monsters[idx];
                                     }
                                 }
                                 idx++;
                                 if (idx >= monsters.Count)
-                                    goto done;
+                                    goto next;
                             }
                         }
                     }
                     begin -= new Point(1, 1);
                     end += new Point(1, 1);
+                    if (end.X > openWorldChunkSize / 10)
+                        break;
                 }
-            done:
-                return;
-            }
-
-            Dictionary<Point, Dictionary<Vector2, string>> surroundingChunkCenters = new();
-            for (int cx = -1; cx < 2; cx++)
-            {
-                for (int cy = -1; cy < 2; cy++)
-                {
-
-                    if (!monsterCenters.TryGetValue(chunkPoint + new Point(cx, cy), out var cs))
-                        surroundingChunkCenters[new(cx, cy)] = new();
-                    else
-                        surroundingChunkCenters[new(cx, cy)] = cs;
-                }
-            }
-            for (int y = 0; y < openWorldChunkSize; y++)
-            {
-                for (int x = 0; x < openWorldChunkSize; x++)
-                {
-                    Vector2 ap = new(x + chunkPoint.X * openWorldChunkSize, y + chunkPoint.Y * openWorldChunkSize);
-                    foreach (var chunkCenters in surroundingChunkCenters)
-                    {
-                        Vector2 coff = new Vector2(chunkCenters.Key.X * openWorldChunkSize, chunkCenters.Key.Y * openWorldChunkSize);
-                        foreach (var c in chunkCenters.Value)
-                        {
-                            var distance = Vector2.Distance(new Vector2(x, y), c.Key + coff);
-                            if (distance > 20)
-                                continue;
-                            double chance = (1 - Math.Pow(distance, 2) / 100) / 4;
-                            double roll = r.NextDouble();
-                            if (roll < chance)
-                            {
-                                chunk.terrainFeatures.Add(ap, new Tree(GetRandomTree(ap, r, c.Value), r.NextDouble() < 0.2 ? 4 : 5));
-                                goto next;
-                            }
-                        }
-                    }
-                next:
-                    continue;
-                }
+            next:
+                continue;
             }
         }
 
@@ -536,7 +575,7 @@ namespace StardewOpenWorld
             var grass = new List<int>() { 351, 304, 305, 300 };
             foreach (var t in chunk.terrainFeatures)
             {
-                if (IsGrassTile(chunk, t.Key))
+                if (IsOpenTile(chunk, t.Key))
                 {
                     openWorldLocation.terrainFeatures[t.Key] = t.Value;
                 }
@@ -548,17 +587,30 @@ namespace StardewOpenWorld
             var chunk = cachedChunks[pc];
             foreach (var t in chunk.monsters)
             {
-                if (IsGrassTile(chunk, t.Key))
+                if (IsOpenTile(chunk, t.Key))
                 {
                     Monster m = null;
                     switch (t.Value.Type)
                     {
                         case "GreenSlime":
-                            m = new GreenSlime(t.Key + pc.ToVector2() * openWorldChunkSize * 64, t.Value.Level);
+                            m = new GreenSlime(t.Key * 64, t.Value.Level);
                             m.modData[modKey] = $"{pc.X},{pc.Y}";
                             break;
                         case "BigSlime":
-                            m = new BigSlime(t.Key + pc.ToVector2() * openWorldChunkSize * 64, t.Value.Level);
+                            int mineArea = t.Value.Level;
+                            if(mineArea < 121 && mineArea > 39)
+                            {
+                                mineArea = mineArea / 40 * 40;
+                            }
+                            else if (mineArea > 25)
+                            {
+                                mineArea = 40;
+                            }
+                            m = new BigSlime(t.Key * 64, mineArea);
+                            m.modData[modKey] = $"{pc.X},{pc.Y}";
+                            break;
+                        case "Dino":
+                            m = new DinoMonster(t.Key * 64);
                             m.modData[modKey] = $"{pc.X},{pc.Y}";
                             break;
                     }
@@ -569,10 +621,10 @@ namespace StardewOpenWorld
                 }
             }
         }
-        public static bool IsGrassTile(WorldChunk chunk, Vector2 t)
+        public static bool IsOpenTile(WorldChunk chunk, Vector2 t)
         {
             Tile? tile = chunk.tiles["Back"][(int)t.X % openWorldChunkSize, (int)t.Y % openWorldChunkSize];
-            return tile is not null && grassTiles.Contains(tile.TileIndex);
+            return tile is not null && grassTiles.Contains(tile.TileIndex) && !openWorldLocation.terrainFeatures.ContainsKey(t) && !openWorldLocation.Objects.ContainsKey(t);
         }
 
         private static Point GetPlayerChunk(Farmer f)

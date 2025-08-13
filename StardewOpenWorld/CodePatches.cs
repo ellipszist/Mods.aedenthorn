@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Netcode;
 using StardewValley;
+using StardewValley.GameData.WildTrees;
 using StardewValley.Locations;
 using StardewValley.Monsters;
 using StardewValley.TerrainFeatures;
@@ -60,6 +61,83 @@ namespace StardewOpenWorld
                 return false;
             }
         }
+        [HarmonyPatch(typeof(Map), nameof(Map.DisplayWidth))]
+        [HarmonyPatch(MethodType.Getter)]
+        public static class Map_DisplayWidth_Patch
+        {
+            public static bool Prefix(Map __instance, ref int __result)
+            {
+                if (!Config.ModEnabled || !__instance.Id.Contains(locName))
+                    return true;
+                __result = openWorldSize * 64;
+                return false;
+            }
+        }
+        [HarmonyPatch(typeof(Map), nameof(Map.DisplayHeight))]
+        [HarmonyPatch(MethodType.Getter)]
+        public static class Map_DisplayHeight_Patch
+        {
+            public static bool Prefix(Map __instance, ref int __result)
+            {
+                if (!Config.ModEnabled || !__instance.Id.Contains(locName))
+                    return true;
+                __result = openWorldSize * 64;
+                return false;
+            }
+        }
+        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.sinkDebris))]
+        public static class GameLocation_sinkDebris_Patch
+        {
+            public static void Postfix(GameLocation __instance, Debris debris, Vector2 chunkTile, Vector2 chunkPosition, bool __result)
+            {
+                if (!Config.ModEnabled || !__instance.Name.Contains(locName) || !__result)
+                    return;
+                var x = Environment.StackTrace;
+            }
+        }
+        [HarmonyPatch(typeof(Tree), nameof(Tree.tickUpdate))]
+        public static class Tree_tickUpdate_Patch
+        {
+            public static void Prefix(Tree __instance)
+            {
+                if (!Config.ModEnabled || !__instance.falling.Value)
+                    return; 
+                WildTreeData data = __instance.GetData();
+
+                if (data != null)
+                {
+                    var x = data;
+                    Vector2 tileLocation = __instance.Tile;
+
+                    Game1.createMultipleObjectDebris("(O)92", (int)tileLocation.X + (__instance.shakeLeft.Value ? (-4) : 4), (int)tileLocation.Y, 5, __instance.lastPlayerToHit.Value, __instance.Location);
+                    foreach(var debris in __instance.Location.debris)
+                    {
+                        if (debris.isSinking.Value)
+                        {
+                            var xx = true;
+                        }
+                        foreach (var chunk in debris.Chunks)
+                        {
+                            Vector2 chunkTile = new Vector2((float)((int)((chunk.position.X + 32f) / 64f)), (float)((int)((chunk.position.Y + 32f) / 64f)));
+                            if (__instance.Location.sinkDebris(debris, chunkTile, chunk.position.Value))
+                            {
+                                var xx = true;
+
+                            }
+                            if(__instance.Location.doesTileSinkDebris((int)chunkTile.X, (int)chunkTile.Y, debris.debrisType.Value))
+                            {
+                                var xx = true;
+                            }
+                            if (chunk.position.X < -128f || chunk.position.Y < -64f || chunk.position.X >= (float)(__instance.Location.map.DisplayWidth + 64) || chunk.position.Y >= (float)(__instance.Location.map.DisplayHeight + 64))
+                            {
+                                var xx = true;
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
         [HarmonyPatch(typeof(Monster), nameof(Monster.update))]
         public static class Monster_update_Patch
         {
@@ -85,131 +163,6 @@ namespace StardewOpenWorld
             }
         }
 
-        [HarmonyPatch(typeof(Character), nameof(Character.draw), new Type[] { typeof(SpriteBatch), typeof(float) })]
-        public static class Character_draw_Patch
-        {
-            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
-            {
-                SMonitor.Log($"Transpiling Character.draw");
-
-                var codes = new List<CodeInstruction>(instructions);
-                for (int i = 0; i < codes.Count; i++)
-                {
-                    if (codes[i].opcode == OpCodes.Ldfld && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(Point), nameof(Point.Y)))
-                    {
-                        SMonitor.Log("Adding method to adjust draw layer");
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetGlobalCharacterInt))));
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
-                        i += 2;
-                    }
-                }
-
-                return codes.AsEnumerable();
-            }
-        }
-        [HarmonyPatch(typeof(GreenSlime), nameof(GreenSlime.draw), new Type[] { typeof(SpriteBatch) })]
-        public static class GreenSlime_draw_Patch
-        {
-            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
-            {
-                SMonitor.Log($"Transpiling GreenSlime.draw");
-
-                var codes = new List<CodeInstruction>(instructions);
-                for (int i = 0; i < codes.Count; i++)
-                {
-                    if (codes[i].opcode == OpCodes.Ldfld && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(Point), nameof(Point.Y)) && codes[i - 1].opcode == OpCodes.Call && codes[i - 1].operand is MethodInfo && (MethodInfo)codes[i - 1].operand == AccessTools.PropertyGetter(typeof(Character), nameof(Character.StandingPixel)))
-                    {
-                        SMonitor.Log("Adding method to adjust draw layer");
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetGlobalCharacterInt))));
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
-                        i += 2;
-                    }
-                }
-
-                return codes.AsEnumerable();
-            }
-        }
-
-        [HarmonyPatch(typeof(Tree), nameof(Tree.draw))]
-        public static class Tree_draw_Patch
-        {
-            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
-            {
-                SMonitor.Log($"Transpiling Tree.draw");
-
-                var codes = new List<CodeInstruction>(instructions);
-                for (int i = 0; i < codes.Count; i++)
-                {
-                    if (codes[i].opcode == OpCodes.Call && codes[i].operand is MethodInfo && (MethodInfo)codes[i].operand == AccessTools.PropertyGetter(typeof(Rectangle), nameof(Rectangle.Bottom)))
-                    {
-                        SMonitor.Log("Adding method to adjust draw layer");
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetGlobalTreeInt))));
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
-                        i += 2;
-                    }
-                    else if (codes[i].opcode == OpCodes.Ldfld && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(Vector2), nameof(Vector2.X)) && codes[i + 1].opcode == OpCodes.Ldc_R4 && codes[i + 2].opcode == OpCodes.Div)
-                    {
-                        SMonitor.Log("Adding method to adjust draw layer");
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetGlobalTileFloat))));
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
-                        i += 2;
-                    }
-                }
-
-                return codes.AsEnumerable();
-            }
-        }
-        [HarmonyPatch(typeof(Object), nameof(Object.draw), new Type[] { typeof(SpriteBatch), typeof(int), typeof(int), typeof(float) })]
-        public static class Object_draw_Patch
-        {
-            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
-            {
-                SMonitor.Log($"Transpiling Object.draw");
-
-                var codes = new List<CodeInstruction>(instructions);
-                for (int i = 0; i < codes.Count; i++)
-                {
-                    if (CodesCompare(codes, i, new OpCode[] { OpCodes.Ldc_R4,OpCodes.Ldarg_3,OpCodes.Ldc_I4_1,OpCodes.Add,OpCodes.Ldc_I4_S,OpCodes.Mul,OpCodes.Ldc_I4_S, OpCodes.Sub,OpCodes.Conv_R4,OpCodes.Ldc_R4,OpCodes.Div,OpCodes.Call,OpCodes.Ldarg_2,OpCodes.Conv_R4,OpCodes.Ldc_R4,OpCodes.Mul,OpCodes.Add,OpCodes.Stloc_S })){
-                        codes.Insert(i + 17, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetObjectDrawLayer))));
-                        codes.Insert(i + 17, new CodeInstruction(OpCodes.Ldarg_3));
-                        codes.Insert(i + 17, new CodeInstruction(OpCodes.Ldarg_2));
-                        codes.Insert(i + 17, new CodeInstruction(OpCodes.Ldarg_0));
-                        i += 21;                    
-                    }
-                    if (CodesCompare(codes, i, new OpCode[] { OpCodes.Ldc_R4,OpCodes.Ldarg_3,OpCodes.Ldc_I4_1,OpCodes.Add,OpCodes.Ldc_I4_S,OpCodes.Mul,OpCodes.Ldc_I4_2, OpCodes.Add,OpCodes.Conv_R4,OpCodes.Ldc_R4,OpCodes.Div,OpCodes.Call,OpCodes.Ldarg_2,OpCodes.Conv_R4,OpCodes.Ldc_R4,OpCodes.Div,OpCodes.Add,OpCodes.Stloc_S })){
-                        codes.Insert(i + 17, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetObjectDrawLayer2))));
-                        codes.Insert(i + 17, new CodeInstruction(OpCodes.Ldarg_3));
-                        codes.Insert(i + 17, new CodeInstruction(OpCodes.Ldarg_2));
-                        codes.Insert(i + 17, new CodeInstruction(OpCodes.Ldarg_0));
-                        break;                   
-                    }
-                }
-                return codes.AsEnumerable();
-            }
-        }
-        
-        [HarmonyPatch(typeof(Farmer), nameof(Farmer.getDrawLayer))]
-        public static class Farmer_getDrawLayer_Patch
-        {
-            public static bool Prefix(Farmer __instance, ref float __result)
-            {
-                if (!Config.ModEnabled || __instance.currentLocation != openWorldLocation)
-                    return true;
-                int rsp = __instance.StandingPixel.Y % (openWorldChunkSize * 64) + (Game1.viewport.Y / (openWorldChunkSize * 64) < __instance.StandingPixel.Y / (openWorldChunkSize * 64) ? openWorldChunkSize * 64 : 0);
-                if (__instance.onBridge.Value)
-                {
-                    __result = rsp / 10000f + __instance.drawLayerDisambiguator + 0.0256f;
-                }
-                else if (__instance.IsSitting() && __instance.mapChairSitPosition.Value.X != -1f && __instance.mapChairSitPosition.Value.Y != -1f)
-                {
-                    Vector2 sit_position = __instance.mapChairSitPosition.Value;
-                    __result = ((sit_position.Y % (openWorldChunkSize * 128) + 1f) * 64f + 3141) / 10000f;
-                }
-                else
-                    __result = rsp / 10000f + __instance.drawLayerDisambiguator;
-                return false;
-            }
-        }
         [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.hasTileAt), new Type[] { typeof(int),typeof(int),typeof(string),typeof(string) })]
         public static class GameLocation_hasTileAt_Patch1
         {

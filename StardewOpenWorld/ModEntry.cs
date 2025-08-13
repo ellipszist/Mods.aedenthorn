@@ -13,6 +13,7 @@ using xTile;
 using Object = StardewValley.Object;
 using xTile.Dimensions;
 using StardewValley.Monsters;
+using System.Diagnostics;
 
 namespace StardewOpenWorld
 {
@@ -83,12 +84,15 @@ namespace StardewOpenWorld
             if (!Config.ModEnabled)
                 return;
             openWorldLocation = Game1.getLocationFromName(locName);
-            ReloadMonsterDict();
-
+            openWorldLocation.debris.OnValueAdded += Debris_OnValueAdded;
+            openWorldLocation.debris.OnValueRemoved += Debris_OnValueRemoved;
+            monsterDict = SHelper.GameContent.Load<Dictionary<string, MonsterSpawnInfo>>(monsterDictPath);
             treeCenters = new();
+            cachedChunks = new();
+            loadedChunks = new();
             monsterCenters = new();
             Random r = Utility.CreateRandom(Game1.uniqueIDForThisGame, 242);
-            for (int i = 0; i < r.Next(openWorldSize / Config.TilesPerTreeMax * openWorldSize, openWorldSize / Config.TilesPerTreeMin * openWorldSize + 1); i++)
+            for (int i = 0; i < r.Next(openWorldSize / Config.TilesPerForestMax * openWorldSize, openWorldSize / Config.TilesPerForestMin * openWorldSize + 1); i++)
             {
                 Point ap = new(
                         r.Next(10, openWorldSize - 10),
@@ -116,8 +120,44 @@ namespace StardewOpenWorld
                 }
                 monsterCenters[cp][rp] = GetRandomMonsterSpawn(ap.ToVector2(), r);
             }
+            //CacheAllChunks();
         }
 
+        private void Debris_OnValueRemoved(Debris value)
+        {
+            if(value.Chunks.Count == 0)
+            {
+                var x = Environment.StackTrace;
+            }
+            if (value.item != null)
+            {
+                var x = Environment.StackTrace;
+            }
+        }
+
+        private void Debris_OnValueAdded(Debris value)
+        {
+            if (value.item != null)
+            {
+                var x = Environment.StackTrace;
+            }
+        }
+
+        private void CacheAllChunks()
+        {
+            Stopwatch s = new();
+            s.Start();
+            int num = openWorldSize / openWorldChunkSize;
+            for (int x = 0; x < num; x++)
+                for (int y = 0; y < num; y++)
+                {
+                    if(y == 0)
+                        SMonitor.Log($"Caching {(x * num)/(num*num)} chunks");
+                    BuildWorldChunk(new Point(x, y));
+                }
+            s.Stop();
+            SMonitor.Log($"Cached {num} chunks in {s.Elapsed.TotalSeconds}s");
+        }
 
         private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
         {
@@ -141,7 +181,7 @@ namespace StardewOpenWorld
             }
             else if (e.NameWithoutLocale.IsEquivalentTo(monsterDictPath))
             {
-                e.LoadFrom(() => new Dictionary<string, MonsterSpawnInfo>(), AssetLoadPriority.Exclusive);
+                e.LoadFrom(() => GetMonsterDict(), AssetLoadPriority.Exclusive);
             }
             else if (e.NameWithoutLocale.IsEquivalentTo("Data/Locations"))
             {
