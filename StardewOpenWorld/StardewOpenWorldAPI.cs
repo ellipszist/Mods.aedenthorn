@@ -10,7 +10,7 @@ namespace StardewOpenWorld
     {
         public void RegisterBiome(string id, Func<ulong, int, int, WorldChunk> func)
         {
-            ModEntry.biomes[id] = func;
+            ModEntry.biomeCodeDict[id] = func;
         }
     }
 }
