@@ -18,7 +18,7 @@ namespace OverworldChests
 
 		private const string modKey = "aedenthorn.OverworldChests";
 		private const string modCoinKey = "aedenthorn.OverworldChests/Coin";
-		private static IAdvancedLootFrameworkApi advancedLootFrameworkApi = null;
+		private static IAdvancedLootFrameworkApi advancedLootFrameworkApi;
 		private static List<object> treasuresList = new();
 		private static Random random;
 		private static int daysSinceLastSpawn;
@@ -87,7 +87,7 @@ namespace OverworldChests
 			random = new Random();
 			RegisterConsoleCommands();
 
-			// Get Mobile Advanced Loot Framework's API
+			// Get Advanced Loot Framework's API
 			advancedLootFrameworkApi = Helper.ModRegistry.GetApi<IAdvancedLootFrameworkApi>("aedenthorn.AdvancedLootFramework");
 			if (advancedLootFrameworkApi is not null)
 			{

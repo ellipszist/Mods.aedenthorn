@@ -1,10 +1,12 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Graphics.PackedVector;
 using Netcode;
 using StardewValley;
 using StardewValley.Locations;
 using StardewValley.Monsters;
+using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 using StardewValley.Util;
 using System;
@@ -134,9 +136,34 @@ namespace StardewOpenWorld
                     else if (codes[i].opcode == OpCodes.Ldfld && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(Vector2), nameof(Vector2.X)) && codes[i + 1].opcode == OpCodes.Ldc_R4 && codes[i + 2].opcode == OpCodes.Div)
                     {
                         SMonitor.Log("Adding method to adjust draw layer");
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetGlobalTileFloat))));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetGlobalTreeFloat))));
                         codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
                         i += 2;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+        [HarmonyPatch(typeof(Chest), nameof(Chest.draw), new Type[] { typeof(SpriteBatch), typeof(int), typeof(int), typeof(float) })]
+        public static class Chest_draw_Patch
+        {
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling Chest.draw");
+
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (CodesCompare(codes, i, new OpCode[] { OpCodes.Ldc_R4, OpCodes.Ldloc_1, OpCodes.Ldc_R4, OpCodes.Add, OpCodes.Ldc_R4, OpCodes.Mul, OpCodes.Ldc_R4, OpCodes.Sub, OpCodes.Ldc_R4, OpCodes.Div, OpCodes.Call, OpCodes.Ldloc_0, OpCodes.Ldc_R4, OpCodes.Mul, OpCodes.Add, OpCodes.Stloc_2 }))
+                    {
+                        SMonitor.Log("Adding method to adjust draw layer");
+
+                        codes.Insert(i + 15, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetChestDrawLayer))));
+                        codes.Insert(i + 15, new CodeInstruction(OpCodes.Ldarg_3));
+                        codes.Insert(i + 15, new CodeInstruction(OpCodes.Ldarg_2));
+                        codes.Insert(i + 15, new CodeInstruction(OpCodes.Ldarg_0));
+                        break;
                     }
                 }
 
@@ -155,19 +182,43 @@ namespace StardewOpenWorld
                 {
                     if (CodesCompare(codes, i, new OpCode[] { OpCodes.Ldc_R4, OpCodes.Ldarg_3, OpCodes.Ldc_I4_1, OpCodes.Add, OpCodes.Ldc_I4_S, OpCodes.Mul, OpCodes.Ldc_I4_S, OpCodes.Sub, OpCodes.Conv_R4, OpCodes.Ldc_R4, OpCodes.Div, OpCodes.Call, OpCodes.Ldarg_2, OpCodes.Conv_R4, OpCodes.Ldc_R4, OpCodes.Mul, OpCodes.Add, OpCodes.Stloc_S }))
                     {
+                        SMonitor.Log("Adding method to adjust draw layer");
+
                         codes.Insert(i + 17, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetObjectDrawLayer))));
                         codes.Insert(i + 17, new CodeInstruction(OpCodes.Ldarg_3));
                         codes.Insert(i + 17, new CodeInstruction(OpCodes.Ldarg_2));
                         codes.Insert(i + 17, new CodeInstruction(OpCodes.Ldarg_0));
                         i += 21;
                     }
-                    if (CodesCompare(codes, i, new OpCode[] { OpCodes.Ldc_R4, OpCodes.Ldarg_3, OpCodes.Ldc_I4_1, OpCodes.Add, OpCodes.Ldc_I4_S, OpCodes.Mul, OpCodes.Ldc_I4_2, OpCodes.Add, OpCodes.Conv_R4, OpCodes.Ldc_R4, OpCodes.Div, OpCodes.Call, OpCodes.Ldarg_2, OpCodes.Conv_R4, OpCodes.Ldc_R4, OpCodes.Div, OpCodes.Add, OpCodes.Stloc_S }))
+                    else if (CodesCompare(codes, i, new OpCode[] { OpCodes.Ldc_R4, OpCodes.Ldarg_3, OpCodes.Ldc_I4_1, OpCodes.Add, OpCodes.Ldc_I4_S, OpCodes.Mul, OpCodes.Ldc_I4_2, OpCodes.Add, OpCodes.Conv_R4, OpCodes.Ldc_R4, OpCodes.Div, OpCodes.Call, OpCodes.Ldarg_2, OpCodes.Conv_R4, OpCodes.Ldc_R4, OpCodes.Div, OpCodes.Add, OpCodes.Stloc_S }))
                     {
+                        SMonitor.Log("Adding method to adjust draw layer");
+
                         codes.Insert(i + 17, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetObjectDrawLayer2))));
                         codes.Insert(i + 17, new CodeInstruction(OpCodes.Ldarg_3));
                         codes.Insert(i + 17, new CodeInstruction(OpCodes.Ldarg_2));
                         codes.Insert(i + 17, new CodeInstruction(OpCodes.Ldarg_0));
-                        break;
+                        i += 21;
+                    }
+                    else if (CodesCompare(codes, i, new OpCode[] { OpCodes.Ldarg_3, OpCodes.Ldc_I4_1, OpCodes.Add, OpCodes.Ldc_I4_S, OpCodes.Mul, OpCodes.Conv_R4, OpCodes.Ldc_R4, OpCodes.Div, OpCodes.Ldarg_0, OpCodes.Ldfld, OpCodes.Callvirt, OpCodes.Ldc_R4, OpCodes.Div, OpCodes.Add, OpCodes.Stloc_S }))
+                    {
+                        SMonitor.Log("Adding method to adjust draw layer");
+
+                        codes.Insert(i + 14, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetObjectDrawLayer3))));
+                        codes.Insert(i + 14, new CodeInstruction(OpCodes.Ldarg_3));
+                        codes.Insert(i + 14, new CodeInstruction(OpCodes.Ldarg_2));
+                        codes.Insert(i + 14, new CodeInstruction(OpCodes.Ldarg_0));
+                        i += 15;
+                    }
+                    else if (codes[i].opcode == OpCodes.Callvirt && codes[i].operand is MethodInfo && (MethodInfo)codes[i].operand == AccessTools.Method(typeof(Object), nameof(Object.GetBoundingBoxAt)))
+                    {
+                        SMonitor.Log("Adding method to adjust draw layer");
+
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetObjectBoundingBox))));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_3));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_2));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                        i += 4;
                     }
                 }
                 return codes.AsEnumerable();

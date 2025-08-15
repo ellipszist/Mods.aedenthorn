@@ -1,19 +1,18 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
+using Netcode;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.GameData.Locations;
 using StardewValley.GameData;
+using StardewValley.GameData.Locations;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using xTile;
-using Object = StardewValley.Object;
-using xTile.Dimensions;
-using StardewValley.Monsters;
-using System.Diagnostics;
+using xTile.Tiles;
 
 namespace StardewOpenWorld
 {
@@ -27,21 +26,22 @@ namespace StardewOpenWorld
         public static ModEntry context;
 
         public static string modKey = "aedenthorn.StardewOpenWorld";
+        private const string modCoinKey = "aedenthorn.StardewOpenWorld/Coin";
         public static string codeBiomePath = "aedenthorn.StardewOpenWorld/code_biomes";
-        public static string biomeDictPath = "aedenthorn.StardewOpenWorld/biomes";
+        public static string landmarkDictPath = "aedenthorn.StardewOpenWorld/biomes";
         public static string monsterDictPath = "aedenthorn.StardewOpenWorld/monsters";
         public static string seedKey = "aedenthorn_StardewOpenWorld_seed";
-        public static string mapPath = "StardewOpenWorldMap";
+        public static string mapPath = "aedenthorn_StardewOpenWorld_Map";
         public static string locName = "StardewOpenWorld";
         public static string tilePrefix = "StardewOpenWorldTile";
         public static int openWorldChunkSize = 100;
-        public static int openWorldSize = 10000;
         public static bool warping = false;
 
         public static PerScreen<Point> playerTilePoint = new(() => new Point(-1, -1));
         public static PerScreen<Point> playerChunk = new(() => new Point(-1,-1));
 
         public static Dictionary<Point, Dictionary<Vector2, string>> treeCenters;
+        public static Dictionary<Point, List<Vector2>> rockCenters;
         public static Dictionary<Point, Dictionary<Vector2, string>> monsterCenters;
 
         public static GameLocation openWorldLocation;
@@ -52,9 +52,22 @@ namespace StardewOpenWorld
         public static List<Point> loadedChunks = new();
 
         public static Dictionary<string, MonsterSpawnInfo> monsterDict;
-        public static Dictionary<string, Biome> biomeDict;
-
+        public static Dictionary<string, Landmark> biomeDict;
+        public static int RandomSeed;
         public static List<int> grassTiles = new List<int>() { 351, 304, 305, 300 };
+
+        private static IAdvancedLootFrameworkApi advancedLootFrameworkApi;
+        private static List<object> treasuresList = new();
+        private static Debris debris;
+        private static readonly Color[] tintColors = new Color[]
+        {
+            Color.DarkGray,
+            Color.Brown,
+            Color.Silver,
+            Color.Gold,
+            Color.Purple,
+        };
+
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
@@ -69,12 +82,37 @@ namespace StardewOpenWorld
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
             helper.Events.GameLoop.UpdateTicked += GameLoop_UpdateTicked;
             helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
+            helper.Events.GameLoop.DayEnding += GameLoop_DayEnding;
             helper.Events.Content.AssetRequested += Content_AssetRequested;
+            helper.Events.Input.ButtonPressed += Input_ButtonPressed;
 
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
         }
+
+        private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
+        {
+            if(Config.Debug && e.Button == SButton.L)
+            {
+                debris = new Debris(ItemRegistry.Create("388", 5), Game1.player.Position + new Vector2(360, 360));
+                Game1.currentLocation.debris.Add(debris);
+            }
+        }
+
+        private void GameLoop_DayEnding(object sender, DayEndingEventArgs e)
+        {
+            if (Config.NewMapDaily)
+            {
+                RandomSeed = Utility.CreateRandomSeed(Game1.uniqueIDForThisGame / 100UL, Game1.stats.DaysPlayed * 10U + 1U);
+                treeCenters = new();
+                rockCenters = new();
+                monsterCenters = new();
+                cachedChunks = new();
+                loadedChunks = new();
+            }
+        }
+
         public override object GetApi()
         {
             return new StardewOpenWorldAPI();
@@ -83,20 +121,24 @@ namespace StardewOpenWorld
         {
             if (!Config.ModEnabled)
                 return;
+
+            RandomSeed = Utility.CreateRandomSeed(Game1.uniqueIDForThisGame / 100UL, Config.NewMapDaily ? Game1.stats.DaysPlayed * 10U + 1U : 0.0);
+
             openWorldLocation = Game1.getLocationFromName(locName);
             openWorldLocation.debris.OnValueAdded += Debris_OnValueAdded;
             openWorldLocation.debris.OnValueRemoved += Debris_OnValueRemoved;
             monsterDict = SHelper.GameContent.Load<Dictionary<string, MonsterSpawnInfo>>(monsterDictPath);
             treeCenters = new();
+            rockCenters = new();
+            monsterCenters = new();
             cachedChunks = new();
             loadedChunks = new();
-            monsterCenters = new();
-            Random r = Utility.CreateRandom(Game1.uniqueIDForThisGame, 242);
-            for (int i = 0; i < r.Next(openWorldSize / Config.TilesPerForestMax * openWorldSize, openWorldSize / Config.TilesPerForestMin * openWorldSize + 1); i++)
+            Random r = Utility.CreateRandom(RandomSeed, 242);
+            for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesPerForestMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesPerForestMin * Config.OpenWorldSize + 1); i++)
             {
                 Point ap = new(
-                        r.Next(10, openWorldSize - 10),
-                        r.Next(10, openWorldSize - 10)
+                        r.Next(10, Config.OpenWorldSize - 10),
+                        r.Next(10, Config.OpenWorldSize - 10)
                     );
                 Point cp = new(ap.X / openWorldChunkSize, ap.Y / openWorldChunkSize);
                 Vector2 rp = new(ap.X % openWorldChunkSize, ap.Y % openWorldChunkSize);
@@ -106,11 +148,25 @@ namespace StardewOpenWorld
                 }
                 treeCenters[cp][rp] = GetRandomTree(ap.ToVector2(), r);
             }
-            for (int i = 0; i < r.Next(openWorldSize / Config.TilesPerMonsterMax * openWorldSize, openWorldSize / Config.TilesPerMonsterMin * openWorldSize + 1); i++)
+            for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesPerOutcropMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesPerOutcropMin * Config.OpenWorldSize + 1); i++)
             {
                 Point ap = new(
-                        r.Next(10, openWorldSize - 10),
-                        r.Next(10, openWorldSize - 10)
+                        r.Next(10, Config.OpenWorldSize - 10),
+                        r.Next(10, Config.OpenWorldSize - 10)
+                    );
+                Point cp = new(ap.X / openWorldChunkSize, ap.Y / openWorldChunkSize);
+                Vector2 rp = new(ap.X % openWorldChunkSize, ap.Y % openWorldChunkSize);
+                if (!rockCenters.ContainsKey(cp))
+                {
+                    rockCenters[cp] = new();
+                }
+                rockCenters[cp].Add(rp);
+            }
+            for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesPerMonsterMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesPerMonsterMin * Config.OpenWorldSize + 1); i++)
+            {
+                Point ap = new(
+                        r.Next(10, Config.OpenWorldSize - 10),
+                        r.Next(10, Config.OpenWorldSize - 10)
                     );
                 Point cp = new(ap.X / openWorldChunkSize, ap.Y / openWorldChunkSize);
                 Vector2 rp = new(ap.X % openWorldChunkSize, ap.Y % openWorldChunkSize);
@@ -147,7 +203,7 @@ namespace StardewOpenWorld
         {
             Stopwatch s = new();
             s.Start();
-            int num = openWorldSize / openWorldChunkSize;
+            int num = Config.OpenWorldSize / openWorldChunkSize;
             for (int x = 0; x < num; x++)
                 for (int y = 0; y < num; y++)
                 {
@@ -163,21 +219,64 @@ namespace StardewOpenWorld
         {
             if (!Config.ModEnabled)
                 return;
-            if (e.NameWithoutLocale.IsEquivalentTo("Maps/Backwoods"))
-            {
-                e.LoadFromModFile<Map>(Path.Combine("assets", "BackwoodsEdit.tmx"), AssetLoadPriority.High);
-            }
-            else if (e.NameWithoutLocale.Name.Contains(mapPath))
+            if (e.NameWithoutLocale.IsEquivalentTo(mapPath))
             {
                 e.LoadFromModFile<Map>("assets/StardewOpenWorld.tmx", AssetLoadPriority.Exclusive);
+
+                e.Edit(asset =>
+                {
+                    Map map = asset.AsMap().Data;
+                    map.Properties["Warp"] = $"{Config.OpenWorldSize / 2 + openWorldChunkSize / 2} {Config.OpenWorldSize - 1} Mine 68 7 {Config.OpenWorldSize / 2 + openWorldChunkSize / 2 + 1} {Config.OpenWorldSize - 1} Mine 69 7";
+                });
+            }
+            else if (Config.CreateEntrance && e.NameWithoutLocale.IsEquivalentTo("Maps/Mine"))
+            {
+                e.Edit(asset =>
+                {
+                    Map map = asset.AsMap().Data;
+                    var bck = map.GetLayer("Back");
+                    var bld = map.GetLayer("Buildings");
+                    TileSheet sheet = bck.Tiles[68, 6].TileSheet;
+                    for(int x = 0; x < 4; x++)
+                    {
+                        for (int y = 0; y < 3; y++)
+                        {
+                            if (bck.Tiles[x, y] != null)
+                            {
+                                bck.Tiles[x, y].TileIndex = 218;
+                            }
+                            else
+                            {
+                                bck.Tiles[x + 67, y + 3] = new StaticTile(bck, sheet, BlendMode.Alpha, 218);
+                            }
+                        }
+                    }
+                    bld.Tiles[67, 3].TileIndex = 118;
+                    bld.Tiles[68, 3].TileIndex = 121;
+                    bld.Tiles[69, 3].TileIndex = 122;
+                    bld.Tiles[70, 3].TileIndex = 141;
+                    bld.Tiles[67, 4].TileIndex = 87;
+                    bld.Tiles[68, 4] = null;
+                    bld.Tiles[69, 4] = null;
+                    bld.Tiles[70, 4].TileIndex = 88;
+                    bld.Tiles[67, 5].TileIndex = 103;
+                    bld.Tiles[68, 5] = null;
+                    bld.Tiles[69, 5] = null;
+                    bld.Tiles[70, 5].TileIndex = 104;
+                    bld.Tiles[67, 6].TileIndex = 119;
+                    bld.Tiles[68, 6] = null;
+                    bld.Tiles[69, 6] = null;
+                    bld.Tiles[70, 6].TileIndex = 120;
+                    map.Properties["Warp"] = (string)map.Properties["Warp"] + $" 68 6 {locName} {Config.OpenWorldSize / 2 + openWorldChunkSize / 2 + 1} {Config.OpenWorldSize - 2} 69 6 {locName} {Config.OpenWorldSize / 2 + openWorldChunkSize / 2 + 2} {Config.OpenWorldSize - 2}";
+                });
             }
             else if (e.NameWithoutLocale.IsEquivalentTo(codeBiomePath))
             {
                 e.LoadFrom(() => new Dictionary<string, Func<ulong, int, int, WorldChunk>>(), AssetLoadPriority.Exclusive);
             }
-            else if (e.NameWithoutLocale.IsEquivalentTo(biomeDictPath))
+            else if (e.NameWithoutLocale.IsEquivalentTo(landmarkDictPath))
             {
-                e.LoadFrom(() => new Dictionary<string, Biome>(), AssetLoadPriority.Exclusive);
+                e.LoadFrom(() => new Dictionary<string, Landmark>(), AssetLoadPriority.Exclusive);
             }
             else if (e.NameWithoutLocale.IsEquivalentTo(monsterDictPath))
             {
@@ -192,10 +291,9 @@ namespace StardewOpenWorld
                     data.Add(locName, new LocationData()
                     {
                         DisplayName = "Stardew Open World",
-                        DefaultArrivalTile = new Point(50000, 50000),
                         CreateOnLoad = new CreateLocationData()
                         {
-                            MapPath = SHelper.ModContent.GetInternalAssetName("assets/StardewOpenWorld.tmx").Name,
+                            MapPath = mapPath,
                             Type = "StardewValley.GameLocation",
                             AlwaysActive = false
                         },
@@ -213,7 +311,7 @@ namespace StardewOpenWorld
                         MaxSpawnedForageAtOnce = 0,
                         ChanceForClay = 0,
                         Music = null,
-                        MusicDefault = "EmilyDream",
+                        MusicDefault = !string.IsNullOrEmpty(Config.BackgroundMusic) ? Config.BackgroundMusic : "",
                         MusicContext = MusicContext.SubLocation,
                         MusicIgnoredInRain = false,
                         MusicIgnoredInSpring = false,
@@ -261,44 +359,38 @@ namespace StardewOpenWorld
             }
             if (!Game1.isWarping && Game1.player.currentLocation.Name.Equals("Backwoods"))
             {
-                Game1.warpFarmer(locName, openWorldSize / 2, openWorldSize / 2, false);
-                int center = openWorldSize / openWorldChunkSize / 2;
-                for (int y = -1; y < 2; y++)
-                {
-                    for (int x = -1; x < 2; x++)
-                    {
-                        var cx = center + x;
-                        var cy = center + y;
-                        if (cx >= 0 && cy >= 0)
-                        {
-                            BuildWorldChunk(new Point(cx, cy));
-                        }
-                    }
-                }
+                Game1.warpFarmer(locName, Config.OpenWorldSize / 2 + openWorldChunkSize / 2 + 1, Config.OpenWorldSize - 2, 0);
             }
         }
 
         private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
-        {
+        {           // Get Advanced Loot Framework's API
+            advancedLootFrameworkApi = Helper.ModRegistry.GetApi<IAdvancedLootFrameworkApi>("aedenthorn.AdvancedLootFramework");
+            if (advancedLootFrameworkApi is not null)
+            {
+                Monitor.Log($"Loaded AdvancedLootFramework API");
+                UpdateTreasuresList();
+                Monitor.Log($"Got {treasuresList.Count} possible treasures");
+            }
+
             // get Generic Mod Config Menu's API (if it's installed)
             var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
-            if (configMenu is null)
-                return;
+            if (configMenu is not null)
+            {
+                // register mod
+                configMenu.Register(
+                    mod: ModManifest,
+                    reset: () => Config = new ModConfig(),
+                    save: () => Helper.WriteConfig(Config)
+                );
 
-            // register mod
-            configMenu.Register(
-                mod: ModManifest,
-                reset: () => Config = new ModConfig(),
-                save: () => Helper.WriteConfig(Config)
-            );
-
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Mod Enabled",
-                getValue: () => Config.ModEnabled,
-                setValue: value => Config.ModEnabled = value
-            );
+                configMenu.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => "Mod Enabled",
+                    getValue: () => Config.ModEnabled,
+                    setValue: value => Config.ModEnabled = value
+                );
+            }
         }
-
     }
 }

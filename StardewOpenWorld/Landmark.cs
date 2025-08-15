@@ -4,7 +4,7 @@ using xTile;
 
 namespace StardewOpenWorld
 {
-    public class Biome
+    public class Landmark
     {
         public string MapPath;
         public Point MapPosition;

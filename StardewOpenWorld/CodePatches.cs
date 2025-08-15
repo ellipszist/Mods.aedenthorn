@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Netcode;
+using Newtonsoft.Json.Linq;
 using StardewValley;
 using StardewValley.GameData.WildTrees;
 using StardewValley.Locations;
@@ -69,7 +70,7 @@ namespace StardewOpenWorld
             {
                 if (!Config.ModEnabled || !__instance.Id.Contains(locName))
                     return true;
-                __result = openWorldSize * 64;
+                __result = Config.OpenWorldSize * 64;
                 return false;
             }
         }
@@ -81,7 +82,7 @@ namespace StardewOpenWorld
             {
                 if (!Config.ModEnabled || !__instance.Id.Contains(locName))
                     return true;
-                __result = openWorldSize * 64;
+                __result = Config.OpenWorldSize * 64;
                 return false;
             }
         }
@@ -90,52 +91,62 @@ namespace StardewOpenWorld
         {
             public static void Postfix(GameLocation __instance, Debris debris, Vector2 chunkTile, Vector2 chunkPosition, bool __result)
             {
-                if (!Config.ModEnabled || !__instance.Name.Contains(locName) || !__result)
+                if (__result)
+                {
+                    var xx = true;
+                }
+                if (!Config.ModEnabled)
                     return;
+
+                if (debris.isSinking.Value)
+                {
+                    var xx = true;
+                }
+                foreach (var chunk in debris.Chunks)
+                {
+
+                    if (__instance.doesTileSinkDebris((int)chunkTile.X, (int)chunkTile.Y, debris.debrisType.Value))
+                    {
+                        var xx = true;
+                    }
+                    if (chunk.position.X < -128f || chunk.position.Y < -64f || chunk.position.X >= (float)(__instance.map.DisplayWidth + 64) || chunk.position.Y >= (float)(__instance.map.DisplayHeight + 64))
+                    {
+                        var xx = true;
+                    }
+                }
                 var x = Environment.StackTrace;
             }
         }
-        [HarmonyPatch(typeof(Tree), nameof(Tree.tickUpdate))]
-        public static class Tree_tickUpdate_Patch
+        [HarmonyPatch(typeof(NetObjectShrinkList<Chunk>), nameof(NetObjectShrinkList<Chunk>.RemoveAt))]
+        public static class RemoveAt_Patch
         {
-            public static void Prefix(Tree __instance)
+            public static void Prefix(NetObjectShrinkList<Chunk> __instance, int index)
             {
-                if (!Config.ModEnabled || !__instance.falling.Value)
-                    return; 
-                WildTreeData data = __instance.GetData();
-
-                if (data != null)
+                var y = __instance[index];
+                if(y.netDebrisType.Value != (int)Debris.DebrisType.LETTERS)
                 {
-                    var x = data;
-                    Vector2 tileLocation = __instance.Tile;
 
-                    Game1.createMultipleObjectDebris("(O)92", (int)tileLocation.X + (__instance.shakeLeft.Value ? (-4) : 4), (int)tileLocation.Y, 5, __instance.lastPlayerToHit.Value, __instance.Location);
-                    foreach(var debris in __instance.Location.debris)
-                    {
-                        if (debris.isSinking.Value)
-                        {
-                            var xx = true;
-                        }
-                        foreach (var chunk in debris.Chunks)
-                        {
-                            Vector2 chunkTile = new Vector2((float)((int)((chunk.position.X + 32f) / 64f)), (float)((int)((chunk.position.Y + 32f) / 64f)));
-                            if (__instance.Location.sinkDebris(debris, chunkTile, chunk.position.Value))
-                            {
-                                var xx = true;
-
-                            }
-                            if(__instance.Location.doesTileSinkDebris((int)chunkTile.X, (int)chunkTile.Y, debris.debrisType.Value))
-                            {
-                                var xx = true;
-                            }
-                            if (chunk.position.X < -128f || chunk.position.Y < -64f || chunk.position.X >= (float)(__instance.Location.map.DisplayWidth + 64) || chunk.position.Y >= (float)(__instance.Location.map.DisplayHeight + 64))
-                            {
-                                var xx = true;
-                            }
-                        }
-                    }
+                    var x = Environment.StackTrace;
                 }
-
+            }
+        }
+        [HarmonyPatch(typeof(Debris), nameof(Debris.updateChunks))]
+        public static class Debris_updateChunks_Patch
+        {
+            public static void Prefix(Debris __instance, ref bool __state)
+            {
+                if (!Config.ModEnabled )
+                    return;
+                __state = __instance.Chunks.Any();
+            }
+            public static void Postfix(Debris __instance, bool __state)
+            {
+                if (!Config.ModEnabled || !__state)
+                    return;
+                if (!__instance.Chunks.Any())
+                {
+                    var x = true;
+                }
             }
         }
         [HarmonyPatch(typeof(Monster), nameof(Monster.update))]
@@ -168,7 +179,7 @@ namespace StardewOpenWorld
         {
             public static bool Prefix(GameLocation __instance, int x, int y, string layer, string tilesheetId, ref bool __result)
             {
-                if (!Config.ModEnabled || layer != "Back" || !__instance.Name.Contains(locName) || x < 0 || y < 0 || x >= openWorldSize || y >= openWorldSize)
+                if (!Config.ModEnabled || layer != "Back" || !__instance.Name.Contains(locName) || x < 0 || y < 0 || x >= Config.OpenWorldSize || y >= Config.OpenWorldSize)
                     return true;
                 __result = true;
                 return false;
@@ -179,7 +190,7 @@ namespace StardewOpenWorld
         {
             public static bool Prefix(GameLocation __instance, Location tile, string layer, string tilesheetId, ref bool __result)
             {
-                if (!Config.ModEnabled || layer != "Back" || !__instance.Name.Contains(locName) || tile.X < 0 || tile.Y < 0 || tile.X >= openWorldSize || tile.Y >= openWorldSize)
+                if (!Config.ModEnabled || layer != "Back" || !__instance.Name.Contains(locName) || tile.X < 0 || tile.Y < 0 || tile.X >= Config.OpenWorldSize || tile.Y >= Config.OpenWorldSize)
                     return true;
                 __result = true;
                 return false;
@@ -357,7 +368,7 @@ namespace StardewOpenWorld
             {
                 if (!Config.ModEnabled || !__instance.Name.Contains(locName))
                     return true;
-                __result = position.X >= 0f && position.X < openWorldSize && position.Y >= 0f && position.Y < openWorldSize;
+                __result = position.X >= 0f && position.X < Config.OpenWorldSize && position.Y >= 0f && position.Y < Config.OpenWorldSize;
                 return false;
             }
         }
@@ -368,7 +379,7 @@ namespace StardewOpenWorld
             {
                 if (!Config.ModEnabled || !__instance.Name.Contains(locName))
                     return true;
-                __result = x >= 0f && x < openWorldSize && y >= 0f && y < openWorldSize;
+                __result = x >= 0f && x < Config.OpenWorldSize && y >= 0f && y < Config.OpenWorldSize;
                 return false;
             }
         }
@@ -396,17 +407,44 @@ namespace StardewOpenWorld
                 if (!Config.ModEnabled || !Game1.currentLocation.Name.Contains(locName))
                     return true;
                 Layer.zoom = pixelZoom;
-                displayOffset -= new Location(Game1.viewport.Width - 11 * 64, Game1.viewport.Height + 18 * 64 - 32);
                 int tileWidth = pixelZoom * 16;
                 int tileHeight = pixelZoom * 16;
+
                 Location tileInternalOffset = new Location(Wrap(mapViewport.X, tileWidth), Wrap(mapViewport.Y, tileHeight));
+                int tileXMin = ((mapViewport.X >= 0) ? (mapViewport.X / tileWidth) : ((mapViewport.X - tileWidth + 1) / tileWidth));
+                int tileYMin = ((mapViewport.Y >= 0) ? (mapViewport.Y / tileHeight) : ((mapViewport.Y - tileHeight + 1) / tileHeight));
+                if (tileXMin < 0)
+                {
+                    displayOffset.X -= tileXMin * tileWidth;
+                    tileXMin = 0;
+                }
+                if (tileYMin < 0)
+                {
+                    displayOffset.Y -= tileYMin * tileHeight;
+                    tileYMin = 0;
+                }
+                int tileColumns = 1 + (mapViewport.Size.Width - 1) / tileWidth;
+                int tileRows = 1 + (mapViewport.Size.Height - 1) / tileHeight;
+                if (tileInternalOffset.X != 0)
+                {
+                    tileColumns++;
+                }
+                if (tileInternalOffset.Y != 0)
+                {
+                    tileRows++;
+                }
+                int tileXMax = Math.Min(tileXMin + tileColumns, Config.OpenWorldSize);
+                int tileYMax = Math.Min(tileYMin + tileRows, Config.OpenWorldSize);
+
+                Rectangle drawBounds = new(tileXMin, tileYMin, tileXMax - tileXMin, tileYMax - tileYMin);
+
                 Location tileLocation = displayOffset - tileInternalOffset;
 
                 Point loc = Game1.player.TilePoint;
                 Tile[,] tiles = new Tile[openWorldChunkSize, openWorldChunkSize];
                 Point playerChunk = new(loc.X / openWorldChunkSize, loc.Y / openWorldChunkSize);
                 Rectangle playerBox = new(loc.X - openWorldChunkSize / 2, loc.Y - openWorldChunkSize / 2, openWorldChunkSize, openWorldChunkSize);
-                List<Tile[,]> surroundingChunkTiles = new();
+                Dictionary<Point, Tile[,]> surroundingChunkTiles = new();
 
                 for (int y = -1; y < 2; y++)
                 {
@@ -414,62 +452,40 @@ namespace StardewOpenWorld
                     {
                         var cx = playerChunk.X + x;
                         var cy = playerChunk.Y + y;
-                        Tile[,] chunkTiles = null;
-                        if (cx >= 0 && cy >= 0)
-                        {
-                            chunkTiles = GetChunkTiles(__instance.Id, cx, cy);
-                        }
-                        surroundingChunkTiles.Add(chunkTiles);
+                        if (!IsChunkInMap(cx, cy))
+                            continue;
+                        Rectangle chunkBounds = new(cx * openWorldChunkSize, cy * openWorldChunkSize, openWorldChunkSize, openWorldChunkSize);
+                        if (!chunkBounds.Intersects(drawBounds))
+                            continue;
+                        Tile[,] chunkTiles = GetChunkTiles(__instance.Id, cx, cy);
+                        surroundingChunkTiles.Add(new(cx, cy), chunkTiles);
                     }
                 }
-                for (int ry = 0; ry < openWorldChunkSize; ry++)
+                for (int ay = drawBounds.Y; ay < drawBounds.Bottom; ay++)
                 {
                     tileLocation.X = displayOffset.X - tileInternalOffset.X;
-                    if (tileInternalOffset.X < 32)
+                    for (int ax = drawBounds.X; ax < drawBounds.Right; ax++)
                     {
-                        tileLocation.X -= tileWidth;
-                    }
-                    for (int rx = 0; rx < openWorldChunkSize; rx++)
-                    {
-                        int ax = playerBox.X + rx;
-                        int ay = playerBox.Y + ry;
-
-                        int idx = 0;
-                        for (int y = -1; y < 2; y++)
+                        foreach (var kvp in surroundingChunkTiles)
                         {
-                            for (int x = -1; x < 2; x++)
+                            if (kvp.Value is null)
+                                continue;
+                            if (ax / openWorldChunkSize == kvp.Key.X && ay / openWorldChunkSize == kvp.Key.Y)
                             {
-                                var cx = playerChunk.X + x;
-                                var cy = playerChunk.Y + y;
-                                if (surroundingChunkTiles[idx] is not null)
+                                Tile tile = kvp.Value[ax % openWorldChunkSize, ay % openWorldChunkSize];
+                                if (tile is not null)
                                 {
-                                    Rectangle chunkBox = new(openWorldChunkSize * cx, openWorldChunkSize * cy, openWorldChunkSize, openWorldChunkSize);
-                                    if (chunkBox.Contains(new Point(ax, ay)))
+                                    float drawn_sort = 0f;
+                                    if (sort_offset >= 0f)
                                     {
-                                        var tx = ax - openWorldChunkSize * cx;
-                                        var ty = ay - openWorldChunkSize * cy;
-                                        Tile tile = surroundingChunkTiles[idx][tx, ty];
-                                        if(tile is not null)
-                                        {
-                                            if (__instance.Id.Equals("Front"))
-                                            {
-                                            }
-                                            float drawn_sort = 0f;
-                                            if (sort_offset >= 0f)
-                                            {
-                                                drawn_sort = (ry * (16 * pixelZoom) + 16 * pixelZoom + sort_offset) / 10000f;
-                                            }
-                                            displayDevice.DrawTile(tile, tileLocation, drawn_sort);
-
-
-                                        }
-                                        goto next;
+                                        drawn_sort = (ay / openWorldChunkSize * (16 * pixelZoom) + 16 * pixelZoom + sort_offset) / 10000f;
                                     }
+                                    displayDevice.DrawTile(tile, tileLocation, drawn_sort);
+
                                 }
-                                idx++;
+                                break;
                             }
                         }
-                    next:
                         tileLocation.X += tileWidth;
                     }
                     tileLocation.Y += tileHeight;
@@ -477,10 +493,13 @@ namespace StardewOpenWorld
                 return false;
             }
 
-
             private static int Wrap(int value, int span)
             {
                 value %= span;
+                if(value < 0)
+                {
+                    value += span;
+                }
                 return value;
             }
         }
