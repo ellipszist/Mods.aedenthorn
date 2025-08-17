@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using xTile;
 using xTile.Tiles;
 
@@ -40,9 +41,12 @@ namespace StardewOpenWorld
         public static PerScreen<Point> playerTilePoint = new(() => new Point(-1, -1));
         public static PerScreen<Point> playerChunk = new(() => new Point(-1,-1));
 
-        public static Dictionary<Point, Dictionary<Vector2, string>> treeCenters;
-        public static Dictionary<Point, List<Vector2>> rockCenters;
-        public static Dictionary<Point, Dictionary<Vector2, string>> monsterCenters;
+        public static Dictionary<string, Dictionary<int, AnimatedTile>> animatedTiles = new();
+        
+        public static Dictionary<Point, Dictionary<Vector2, string>> treeCenters = new();
+        public static Dictionary<Point, List<Vector2>> rockCenters = new();
+        public static Dictionary<Point, List<Point>> lakeCenters = new();
+        public static Dictionary<Point, Dictionary<Vector2, string>> monsterCenters = new();
 
         public static GameLocation openWorldLocation;
         //private static Dictionary<string, Biome> biomes = new Dictionary<string, Biome>();
@@ -51,9 +55,8 @@ namespace StardewOpenWorld
         public static Dictionary<Point, WorldChunk> cachedChunks = new();
         public static List<Point> loadedChunks = new();
 
-        public static Dictionary<string, MonsterSpawnInfo> monsterDict;
-        public static Dictionary<string, Landmark> biomeDict;
-        public static int RandomSeed;
+        public static Dictionary<string, Landmark> landmarkDict;
+        public static int RandomSeed = -1;
         public static List<int> grassTiles = new List<int>() { 351, 304, 305, 300 };
 
         private static IAdvancedLootFrameworkApi advancedLootFrameworkApi;
@@ -95,22 +98,12 @@ namespace StardewOpenWorld
         {
             if(Config.Debug && e.Button == SButton.L)
             {
-                debris = new Debris(ItemRegistry.Create("388", 5), Game1.player.Position + new Vector2(360, 360));
-                Game1.currentLocation.debris.Add(debris);
             }
         }
 
         private void GameLoop_DayEnding(object sender, DayEndingEventArgs e)
         {
-            if (Config.NewMapDaily)
-            {
-                RandomSeed = Utility.CreateRandomSeed(Game1.uniqueIDForThisGame / 100UL, Game1.stats.DaysPlayed * 10U + 1U);
-                treeCenters = new();
-                rockCenters = new();
-                monsterCenters = new();
-                cachedChunks = new();
-                loadedChunks = new();
-            }
+            ReloadOpenWorld(Config.NewMapDaily);
         }
 
         public override object GetApi()
@@ -122,82 +115,18 @@ namespace StardewOpenWorld
             if (!Config.ModEnabled)
                 return;
 
-            RandomSeed = Utility.CreateRandomSeed(Game1.uniqueIDForThisGame / 100UL, Config.NewMapDaily ? Game1.stats.DaysPlayed * 10U + 1U : 0.0);
-
             openWorldLocation = Game1.getLocationFromName(locName);
-            openWorldLocation.debris.OnValueAdded += Debris_OnValueAdded;
-            openWorldLocation.debris.OnValueRemoved += Debris_OnValueRemoved;
-            monsterDict = SHelper.GameContent.Load<Dictionary<string, MonsterSpawnInfo>>(monsterDictPath);
+
+            CreateAnimatedTiles();
+
             treeCenters = new();
             rockCenters = new();
             monsterCenters = new();
-            cachedChunks = new();
-            loadedChunks = new();
-            Random r = Utility.CreateRandom(RandomSeed, 242);
-            for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesPerForestMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesPerForestMin * Config.OpenWorldSize + 1); i++)
-            {
-                Point ap = new(
-                        r.Next(10, Config.OpenWorldSize - 10),
-                        r.Next(10, Config.OpenWorldSize - 10)
-                    );
-                Point cp = new(ap.X / openWorldChunkSize, ap.Y / openWorldChunkSize);
-                Vector2 rp = new(ap.X % openWorldChunkSize, ap.Y % openWorldChunkSize);
-                if (!treeCenters.ContainsKey(cp))
-                {
-                    treeCenters[cp] = new();
-                }
-                treeCenters[cp][rp] = GetRandomTree(ap.ToVector2(), r);
-            }
-            for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesPerOutcropMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesPerOutcropMin * Config.OpenWorldSize + 1); i++)
-            {
-                Point ap = new(
-                        r.Next(10, Config.OpenWorldSize - 10),
-                        r.Next(10, Config.OpenWorldSize - 10)
-                    );
-                Point cp = new(ap.X / openWorldChunkSize, ap.Y / openWorldChunkSize);
-                Vector2 rp = new(ap.X % openWorldChunkSize, ap.Y % openWorldChunkSize);
-                if (!rockCenters.ContainsKey(cp))
-                {
-                    rockCenters[cp] = new();
-                }
-                rockCenters[cp].Add(rp);
-            }
-            for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesPerMonsterMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesPerMonsterMin * Config.OpenWorldSize + 1); i++)
-            {
-                Point ap = new(
-                        r.Next(10, Config.OpenWorldSize - 10),
-                        r.Next(10, Config.OpenWorldSize - 10)
-                    );
-                Point cp = new(ap.X / openWorldChunkSize, ap.Y / openWorldChunkSize);
-                Vector2 rp = new(ap.X % openWorldChunkSize, ap.Y % openWorldChunkSize);
-                if (!monsterCenters.ContainsKey(cp))
-                {
-                    monsterCenters[cp] = new();
-                }
-                monsterCenters[cp][rp] = GetRandomMonsterSpawn(ap.ToVector2(), r);
-            }
+            ReloadOpenWorld(true);
+
             //CacheAllChunks();
         }
 
-        private void Debris_OnValueRemoved(Debris value)
-        {
-            if(value.Chunks.Count == 0)
-            {
-                var x = Environment.StackTrace;
-            }
-            if (value.item != null)
-            {
-                var x = Environment.StackTrace;
-            }
-        }
-
-        private void Debris_OnValueAdded(Debris value)
-        {
-            if (value.item != null)
-            {
-                var x = Environment.StackTrace;
-            }
-        }
 
         private void CacheAllChunks()
         {

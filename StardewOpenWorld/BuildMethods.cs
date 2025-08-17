@@ -1,6 +1,4 @@
-﻿using HarmonyLib;
-using Microsoft.Xna.Framework;
-using Netcode;
+﻿using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using StardewValley;
 using StardewValley.Locations;
@@ -13,9 +11,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 using xTile;
-using xTile.Dimensions;
 using xTile.Layers;
 using xTile.Tiles;
 using Object = StardewValley.Object;
@@ -25,6 +21,123 @@ namespace StardewOpenWorld
 {
     public partial class ModEntry
     {
+        public static void CreateAnimatedTiles()
+        {
+            animatedTiles.Clear();
+            foreach (var tlayer in Game1.getLocationFromName("Town").Map.Layers)
+            {
+                var layer = openWorldLocation.Map.GetLayer(tlayer.Id);
+                if (layer is null)
+                    continue;
+                animatedTiles[tlayer.Id] = new();
+                for(int x = 0; x < tlayer.LayerWidth; x++)
+                {
+                    for (int y = 0; y < tlayer.LayerHeight; y++)
+                    {
+                        if (tlayer.Tiles[x, y] is AnimatedTile tile)
+                        {
+                            List<StaticTile> tiles = new List<StaticTile>();
+                            foreach(var t in tile.TileFrames)
+                            {
+                                var ts = GetOpenWorldTileSheet(t.TileSheet);
+                                tiles.Add(new StaticTile(layer, ts, BlendMode.Alpha, t.TileIndex));
+                            }
+                            animatedTiles[tlayer.Id][tile.TileIndex] = new AnimatedTile(layer, tiles.ToArray(), tile.FrameInterval);
+                        }
+                    }
+                }
+            }
+        }
+
+        public static TileSheet GetOpenWorldTileSheet(TileSheet tileSheet)
+        {
+            var nts = openWorldLocation.Map.TileSheets.FirstOrDefault(s => s.ImageSource == tileSheet.ImageSource);
+            if (nts == null)
+            {
+                nts = new TileSheet(tileSheet.Id, openWorldLocation.Map, tileSheet.ImageSource, tileSheet.SheetSize, new xTile.Dimensions.Size(64, 64));
+                openWorldLocation.Map.AddTileSheet(nts);
+            }
+            return nts;
+        }
+
+        private void ReloadOpenWorld(bool force)
+        {
+            for(int i = loadedChunks.Count - 1; i >= 0; i--)
+            {
+                UnloadChunk(loadedChunks[i]);
+            }
+            loadedChunks = new();
+
+            if (force)
+            {
+                treeCenters = new();
+                rockCenters = new();
+                lakeCenters = new();
+                monsterCenters = new();
+                
+                RandomSeed = Utility.CreateRandomSeed(Game1.uniqueIDForThisGame / 100UL, Config.NewMapDaily ? Game1.stats.DaysPlayed * 10U + 1U : 0.0);
+
+                Random r = Utility.CreateRandom(RandomSeed, 242);
+                for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesPerForestMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesPerForestMin * Config.OpenWorldSize + 1); i++)
+                {
+                    Point ap = new(
+                            r.Next(10, Config.OpenWorldSize - 10),
+                            r.Next(10, Config.OpenWorldSize - 10)
+                        );
+                    Point cp = new(ap.X / openWorldChunkSize, ap.Y / openWorldChunkSize);
+                    Vector2 rp = new(ap.X % openWorldChunkSize, ap.Y % openWorldChunkSize);
+                    if (!treeCenters.ContainsKey(cp))
+                    {
+                        treeCenters[cp] = new();
+                    }
+                    treeCenters[cp][rp] = GetRandomTree(ap.ToVector2(), r);
+                }
+                for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesPerLakeMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesPerLakeMin * Config.OpenWorldSize + 1); i++)
+                {
+                    Point ap = new(
+                            r.Next(10, Config.OpenWorldSize - 10),
+                            r.Next(10, Config.OpenWorldSize - 10)
+                        );
+                    Point cp = new(ap.X / openWorldChunkSize, ap.Y / openWorldChunkSize);
+                    Point rp = new(ap.X % openWorldChunkSize, ap.Y % openWorldChunkSize);
+                    if (!lakeCenters.ContainsKey(cp))
+                    {
+                        lakeCenters[cp] = new();
+                    }
+                    lakeCenters[cp].Add(rp);
+                }
+                for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesPerOutcropMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesPerOutcropMin * Config.OpenWorldSize + 1); i++)
+                {
+                    Point ap = new(
+                            r.Next(10, Config.OpenWorldSize - 10),
+                            r.Next(10, Config.OpenWorldSize - 10)
+                        );
+                    Point cp = new(ap.X / openWorldChunkSize, ap.Y / openWorldChunkSize);
+                    Vector2 rp = new(ap.X % openWorldChunkSize, ap.Y % openWorldChunkSize);
+                    if (!rockCenters.ContainsKey(cp))
+                    {
+                        rockCenters[cp] = new();
+                    }
+                    rockCenters[cp].Add(rp);
+                }
+                for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesPerMonsterMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesPerMonsterMin * Config.OpenWorldSize + 1); i++)
+                {
+                    Point ap = new(
+                            r.Next(10, Config.OpenWorldSize - 10),
+                            r.Next(10, Config.OpenWorldSize - 10)
+                        );
+                    Point cp = new(ap.X / openWorldChunkSize, ap.Y / openWorldChunkSize);
+                    Vector2 rp = new(ap.X % openWorldChunkSize, ap.Y % openWorldChunkSize);
+                    if (!monsterCenters.ContainsKey(cp))
+                    {
+                        monsterCenters[cp] = new();
+                    }
+                    monsterCenters[cp][rp] = GetRandomMonsterSpawn(ap.ToVector2(), r);
+                }
+                cachedChunks = new();
+            }
+
+        }
         public static void BuildWorldChunk(Point cp)
         {
             int size = Config.OpenWorldSize / openWorldChunkSize;
@@ -33,8 +146,7 @@ namespace StardewOpenWorld
             WorldChunk chunk;
             if (!cachedChunks.TryGetValue(cp, out chunk))
             {
-                chunk = new();
-                cachedChunks[cp] = chunk;
+                chunk = CacheChunk(cp);
             }
             else if (chunk.initialized)
             {
@@ -46,147 +158,54 @@ namespace StardewOpenWorld
             //private static void PreloadWorldChunkAsync(Point point, WorldChunk chunk)
             //{
             Stopwatch s = new();
-            s.Start();
-            AddGrassToChunk(cp, chunk);
-            SMonitor.Log($"grass in {s.ElapsedMilliseconds}");
-            AddBorderToChunk(cp, chunk);
-            SMonitor.Log($"border in {s.ElapsedMilliseconds}");
-            s.Restart();
-            AddChestsToChunk(cp, chunk);
-            SMonitor.Log($"chests in {s.ElapsedMilliseconds}");
-            s.Restart();
-            AddTreesToChunk(cp, chunk);
-            SMonitor.Log($"trees in {s.ElapsedMilliseconds}");
-            s.Restart();
-            AddRocksToChunk(cp, chunk);
-            SMonitor.Log($"Rocks in {s.ElapsedMilliseconds}");
-            s.Restart();
+            //s.Start();
             AddLandmarksToChunk(cp, chunk);
-            SMonitor.Log($"Landmarks in {s.ElapsedMilliseconds}");
-            s.Restart();
+            //SMonitor.Log($"Landmarks in {s.ElapsedMilliseconds}");
+            //s.Restart();
+            AddLakesToChunk(cp, chunk);
+            //SMonitor.Log($"grass in {s.ElapsedMilliseconds}");
+            //s.Restart();
+            AddGrassToChunk(cp, chunk);
+            //SMonitor.Log($"grass in {s.ElapsedMilliseconds}");
+            //s.Restart();
+            AddBorderToChunk(cp, chunk);
+            //SMonitor.Log($"border in {s.ElapsedMilliseconds}");
+            //s.Restart();
+            AddChestsToChunk(cp, chunk);
+            //SMonitor.Log($"chests in {s.ElapsedMilliseconds}");
+            //s.Restart();
+            AddTreesToChunk(cp, chunk);
+            //SMonitor.Log($"trees in {s.ElapsedMilliseconds}");
+            //s.Restart();
+            AddRocksToChunk(cp, chunk);
+            //SMonitor.Log($"Rocks in {s.ElapsedMilliseconds}");
+            //s.Restart();
             AddMonstersToChunk(cp, chunk);
-            SMonitor.Log($"Monsters {s.ElapsedMilliseconds}");
+            //SMonitor.Log($"Monsters {s.ElapsedMilliseconds}");
             s.Stop();
+            SMonitor.Log($"Loaded chunk in {s.ElapsedMilliseconds}ms");
             cachedChunks[cp].initialized = true;
         }
 
-
-        private static void AddGrassToChunk(Point chunkPoint, WorldChunk chunk)
+        private static WorldChunk CacheChunk(Point cp)
         {
-            var layer = openWorldLocation.Map.GetLayer("Back");
-            var backTiles = new Tile[openWorldChunkSize, openWorldChunkSize];
-            Random r = Utility.CreateRandom(RandomSeed, chunkPoint.X * chunkPoint.Y + chunkPoint.X, 42);
-            var mainSheet = openWorldLocation.Map.GetTileSheet("outdoors");
-            for (int y = 0; y < openWorldChunkSize; y++)
-            {
-                for (int x = 0; x < openWorldChunkSize; x++)
-                {
-                    int idx = 351;
-                    var which = r.NextDouble();
-                    if (which < 0.025f)
-                    {
-                        idx = 304;
-                    }
-                    else if (which < 0.05f)
-                    {
-                        idx = 305;
-                    }
-                    else if (which < 0.15f)
-                    {
-                        idx = 300;
-                    }
-                    backTiles[x, y] = new StaticTile(layer, mainSheet, BlendMode.Alpha, idx);
-                }
-            }
-            chunk.tiles["Back"] = backTiles;
+            var chunk = new WorldChunk();
+            cachedChunks[cp] = chunk;
+            chunk.tiles["Back"] = new Tile[openWorldChunkSize, openWorldChunkSize];
+            chunk.tiles["Buildings"] = new Tile[openWorldChunkSize, openWorldChunkSize];
+            chunk.tiles["Front"] = new Tile[openWorldChunkSize, openWorldChunkSize];
+            return chunk;
         }
-
-        private static void AddBorderToChunk(Point chunkPoint, WorldChunk chunk)
-        {
-            Random r = Utility.CreateRandom(RandomSeed);
-
-            var grassTiles = new int[] { 150, 151, 152, 175, 175, 175, 175, 175, 175 };
-            var rightTiles = new int[] { 316, 341, 366, 391, 416 };
-            var leftTiles = new int[] { 319, 344, 369, 394, 419 };
-            var buildLayer = openWorldLocation.Map.GetLayer("Buildings");
-            var frontLayer = openWorldLocation.Map.GetLayer("Front");
-            var buildingTiles = new Tile[openWorldChunkSize, openWorldChunkSize];
-            var frontTiles = new Tile[openWorldChunkSize, openWorldChunkSize];
-            var ts = openWorldLocation.Map.GetTileSheet("outdoors");
-            if (chunkPoint.X == 0)
-            {
-                for (int y = 0; y < openWorldChunkSize; y++)
-                {
-                    buildingTiles[0, y] = new StaticTile(buildLayer, ts, BlendMode.Alpha, leftTiles[r.Next(leftTiles.Length)]);
-                }
-            }
-            else if (chunkPoint.X == Config.OpenWorldSize / openWorldChunkSize - 1)
-            {
-                for (int y = 0; y < openWorldChunkSize; y++)
-                {
-                    buildingTiles[openWorldChunkSize - 1, y] = new StaticTile(buildLayer, ts, BlendMode.Alpha, rightTiles[r.Next(rightTiles.Length)]);
-                }
-            }
-            if (chunkPoint.Y == 0)
-            {
-                for (int x = 0; x < openWorldChunkSize; x++)
-                {
-                    buildingTiles[x, 0] = new StaticTile(buildLayer, ts, BlendMode.Alpha, 217);
-                }
-            }
-            else if (chunkPoint.Y == Config.OpenWorldSize / openWorldChunkSize - 1)
-            {
-
-                for (int x = 0; x < openWorldChunkSize; x++)
-                {
-                    if (chunkPoint.X == Config.OpenWorldSize / openWorldChunkSize / 2)
-                    {
-                        var off = x - openWorldChunkSize / 2;
-                        if (off == 0 || off == 1)
-                        {
-                            continue;
-                        }
-                        else if (off == -1)
-                        {
-                            frontTiles[x, openWorldChunkSize - 2] = new StaticTile(frontLayer, ts, BlendMode.Alpha, 438);
-                            buildingTiles[x, openWorldChunkSize - 1] = new StaticTile(buildLayer, ts, BlendMode.Alpha, 217);
-                            frontTiles[x, openWorldChunkSize - 1] = new StaticTile(frontLayer, ts, BlendMode.Alpha, leftTiles[r.Next(leftTiles.Length)]);
-                        }
-                        else if (off == 2)
-                        {
-                            frontTiles[x, openWorldChunkSize - 2] = new StaticTile(frontLayer, ts, BlendMode.Alpha, 439);
-                            buildingTiles[x, openWorldChunkSize - 1] = new StaticTile(buildLayer, ts, BlendMode.Alpha, 217);
-                            frontTiles[x, openWorldChunkSize - 1] = new StaticTile(frontLayer, ts, BlendMode.Alpha, rightTiles[r.Next(rightTiles.Length)]);
-                        }
-                        else
-                        {
-                            frontTiles[x, openWorldChunkSize - 2] = new StaticTile(buildLayer, ts, BlendMode.Alpha, r.Next(413, 415));
-                            buildingTiles[x, openWorldChunkSize - 1] = new StaticTile(buildLayer, ts, BlendMode.Alpha, 217);
-                            frontTiles[x, openWorldChunkSize - 1] = new StaticTile(frontLayer, ts, BlendMode.Alpha, grassTiles[r.Next(grassTiles.Length)]);
-                        }
-                    }
-                    else
-                    {
-                        frontTiles[x, openWorldChunkSize - 2] = new StaticTile(buildLayer, ts, BlendMode.Alpha, r.Next(413, 415));
-                        buildingTiles[x, openWorldChunkSize - 1] = new StaticTile(buildLayer, ts, BlendMode.Alpha, 217);
-                        frontTiles[x, openWorldChunkSize - 1] = new StaticTile(frontLayer, ts, BlendMode.Alpha, grassTiles[r.Next(grassTiles.Length)]);
-                    }
-                }
-            }
-            chunk.tiles["Buildings"] = buildingTiles;
-            chunk.tiles["Front"] = frontTiles;
-        }
-
 
         public static void AddLandmarksToChunk(Point point, WorldChunk chunk)
         {
-            biomeDict = SHelper.GameContent.Load<Dictionary<string, Landmark>>(landmarkDictPath);
+            landmarkDict = SHelper.GameContent.Load<Dictionary<string, Landmark>>(landmarkDictPath);
 
             var chunkBox = new Rectangle(point.X * openWorldChunkSize, point.Y * openWorldChunkSize, openWorldChunkSize, openWorldChunkSize);
-            foreach (var b in biomeDict.Values)
+            foreach (var landmark in landmarkDict.Values)
             {
-                var map = SHelper.GameContent.Load<Map>(b.MapPath);
-                Rectangle mapBox = new(b.MapPosition, new(map.Layers[0].LayerWidth, map.Layers[0].LayerHeight));
+                var map = SHelper.GameContent.Load<Map>(landmark.MapPath);
+                Rectangle mapBox = new(landmark.MapPosition, new(map.Layers[0].LayerWidth, map.Layers[0].LayerHeight));
                 if (!chunkBox.Intersects(mapBox))
                     continue;
                 foreach (var l in map.Layers)
@@ -207,20 +226,15 @@ namespace StardewOpenWorld
                     {
                         for (int y = 0; y < l.Tiles.Array.GetLength(1); y++)
                         {
-                            var rp = new Point(b.MapPosition.X + x, b.MapPosition.Y + y);
+                            var rp = new Point(landmark.MapPosition.X + x, landmark.MapPosition.Y + y);
                             openWorldLocation.terrainFeatures.Remove(rp.ToVector2());
                             if (l.Tiles[x, y] != null && chunkBox.Contains(rp))
                             {
-                                var rx = b.MapPosition.X + x - chunkBox.X;
-                                var ry = b.MapPosition.Y + y - chunkBox.Y;
+                                var rx = landmark.MapPosition.X + x - chunkBox.X;
+                                var ry = landmark.MapPosition.Y + y - chunkBox.Y;
                                 var ot = l.Tiles[x, y];
                                 var ots = ot.TileSheet;
-                                var nts = openWorldLocation.Map.TileSheets.FirstOrDefault(s => s.ImageSource == ots.ImageSource);
-                                if (nts == null)
-                                {
-                                    nts = new TileSheet(ots.Id, openWorldLocation.Map, ots.ImageSource, ots.SheetSize, l.TileSize);
-                                    openWorldLocation.Map.AddTileSheet(nts);
-                                }
+                                var nts = GetOpenWorldTileSheet(ots);
                                 Tile tile;
                                 if (ot is AnimatedTile)
                                 {
@@ -250,6 +264,276 @@ namespace StardewOpenWorld
                 }
             }
         }
+
+
+        private static void AddLakesToChunk(Point chunkPoint, WorldChunk chunk)
+        {
+            Random r = Utility.CreateRandom(RandomSeed, chunkPoint.X * chunkPoint.Y + chunkPoint.X, "lakes".GetHashCode());
+            List<Rectangle> landmarks = new List<Rectangle>();
+            foreach (var landmark in landmarkDict.Values)
+            {
+                var map = SHelper.GameContent.Load<Map>(landmark.MapPath);
+                Rectangle mapBox = new(landmark.MapPosition, new(map.Layers[0].LayerWidth, map.Layers[0].LayerHeight));
+                landmarks.Add(mapBox);
+            }
+            if (!lakeCenters.TryGetValue(chunkPoint, out var centers))
+                return;
+            foreach (var c in centers)
+            {
+                Point begin = new(0, 0);
+                Point end = new(0, 0);
+                int idx = 0;
+                int maxTiles = r.Next(Config.MinLakeSize, Config.MaxLakeSize + 1);
+                List<Point> tiles = new List<Point>();
+                while (idx < maxTiles)
+                {
+                    foreach (var rect in landmarks)
+                    {
+                        var bounds = new Rectangle(c + begin - new Point(1, 1), (c + end + new Point(1, 1)) - (c + begin - new Point(1, 1)));
+                        if (rect.Intersects(bounds))
+                            goto next;
+                    }
+                    for (int x = begin.X; x <= end.X; x++)
+                    {
+                        for (int y = begin.Y; y <= end.Y; y++)
+                        {
+                            Point v = c + new Point(x, y);
+                            if (tiles.Contains(v))
+                                continue;
+                            double chance = v == c ? 1 : 0;
+                            if (tiles.Contains(v + new Point(-1, 0)))
+                                chance += 0.334;
+                            if (tiles.Contains(v + new Point(1, 0)))
+                                chance += 0.334;
+                            if (tiles.Contains(v + new Point(0, -1)))
+                                chance += 0.334;
+                            if (tiles.Contains(v + new Point(0, 1)))
+                                chance += 0.334;
+                            if(chance > 0 && chance < 1)
+                            {
+                                chance -= Vector2.Distance(v.ToVector2(), c.ToVector2()) / (openWorldChunkSize / 2);
+                            }
+                            if (r.NextDouble() < chance)
+                            {
+                                tiles.Add(v);
+                                idx++;
+                                if (idx >= maxTiles)
+                                    goto cont;
+                            }
+                        }
+                    }
+                    begin -= new Point(1, 1);
+                    end += new Point(1, 1);
+                    if (end.X > openWorldChunkSize / 2)
+                        break;
+                }
+                
+            cont:
+                foreach (var v in tiles)
+                {
+                    AddWaterTileToChunk(chunkPoint, v, tiles);
+                }
+
+            next:
+                continue;
+            }
+        }
+
+        private static void AddWaterTileToChunk(Point chunkPoint, Point v, List<Point> tiles)
+        {
+            var back = openWorldLocation.Map.GetLayer("Back");
+            var build = openWorldLocation.Map.GetLayer("Buildings");
+            var mainSheet = openWorldLocation.Map.GetTileSheet("outdoors");
+            AddTileToChunk(chunkPoint, "Back", v.X, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246));
+            if (!tiles.Contains(v + new Point(-1, 0)))
+            {
+                if (tiles.Contains(v + new Point(-1, 1)))
+                {
+                    AddTileToChunk(chunkPoint, "Back", v.X - 1, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1266));
+                    AddTileToChunk(chunkPoint, "Buildings", v.X - 1, v.Y - 1, animatedTiles["Buildings"][283]);
+                }
+                else if (tiles.Contains(v + new Point(-1, -1)))
+                {
+                    AddTileToChunk(chunkPoint, "Back", v.X - 1, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246));
+                }
+                else
+                {
+                    if (tiles.Contains(v + new Point(-1, 2)))
+                    {
+                        AddTileToChunk(chunkPoint, "Back", v.X - 1, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1241));
+                        AddTileToChunk(chunkPoint, "Buildings", v.X - 1, v.Y, animatedTiles["Buildings"][283]);
+                    }
+                    else
+                    {
+                        AddTileToChunk(chunkPoint, "Back", v.X - 1, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246));
+                        AddTileToChunk(chunkPoint, "Buildings", v.X - 1, v.Y, animatedTiles["Buildings"][208]);
+                    }
+                }
+            }
+            if (!tiles.Contains(v + new Point(1, 0)))
+            {
+                if (tiles.Contains(v + new Point(1, 1)))
+                {
+                    AddTileToChunk(chunkPoint, "Back", v.X + 1, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1267));
+                    AddTileToChunk(chunkPoint, "Buildings", v.X + 1, v.Y - 1, animatedTiles["Buildings"][284]);
+                }
+                else if (tiles.Contains(v + new Point(1, -1)))
+                {
+                    AddTileToChunk(chunkPoint, "Back", v.X + 1, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246));
+                }
+                else
+                {
+                    if (tiles.Contains(v + new Point(1, 2)))
+                    {
+                        AddTileToChunk(chunkPoint, "Back", v.X + 1, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1242));
+                        AddTileToChunk(chunkPoint, "Buildings", v.X + 1, v.Y, animatedTiles["Buildings"][284]);
+                    }
+                    else
+                    {
+                        AddTileToChunk(chunkPoint, "Back", v.X + 1, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246));
+                        AddTileToChunk(chunkPoint, "Buildings", v.X + 1, v.Y, animatedTiles["Buildings"][210]);
+                    }
+                }
+            }
+        }
+
+        private static void AddTileToChunk(Point chunkPoint, string layer, int x, int y, Tile tile)
+        {
+            Point offset = new();
+            if (x < 0)
+            {
+                offset += new Point(-1, 0);
+            }
+            else if (x >= openWorldChunkSize)
+            {
+                offset += new Point(1, 0);
+            }
+            if (y < 0)
+            {
+                offset += new Point(0, -1);
+            }
+            else if (y >= openWorldChunkSize)
+            {
+                offset += new Point(0, 1);
+            }
+            chunkPoint += offset;
+
+            if (!IsChunkInMap(chunkPoint))
+                return;
+            Point point = new Point(x - offset.X * openWorldChunkSize, y - offset.Y * openWorldChunkSize);
+            if (!cachedChunks.TryGetValue(chunkPoint, out var chunk))
+            {
+                chunk = CacheChunk(chunkPoint);
+            }
+            if (!chunk.tiles.ContainsKey(layer))
+            {
+                chunk.tiles[layer] = new Tile[openWorldChunkSize, openWorldChunkSize];
+            }
+            chunk.tiles[layer][point.X, point.Y] = tile;
+        }
+
+        private static void AddGrassToChunk(Point chunkPoint, WorldChunk chunk)
+        {
+            var layer = openWorldLocation.Map.GetLayer("Back");
+            Random r = Utility.CreateRandom(RandomSeed, chunkPoint.X * chunkPoint.Y + chunkPoint.X, 42);
+            var mainSheet = openWorldLocation.Map.GetTileSheet("outdoors");
+            for (int y = 0; y < openWorldChunkSize; y++)
+            {
+                for (int x = 0; x < openWorldChunkSize; x++)
+                {
+                    if (chunk.tiles["Back"][x, y] != null)
+                        continue;
+                    int idx = 351;
+                    var which = r.NextDouble();
+                    if (which < 0.025f)
+                    {
+                        idx = 304;
+                    }
+                    else if (which < 0.05f)
+                    {
+                        idx = 305;
+                    }
+                    else if (which < 0.15f)
+                    {
+                        idx = 300;
+                    }
+                    chunk.tiles["Back"][x, y] = new StaticTile(layer, mainSheet, BlendMode.Alpha, idx);
+                }
+            }
+        }
+
+        private static void AddBorderToChunk(Point chunkPoint, WorldChunk chunk)
+        {
+            Random r = Utility.CreateRandom(RandomSeed);
+
+            var grassTiles = new int[] { 150, 151, 152, 175, 175, 175, 175, 175, 175 };
+            var rightTiles = new int[] { 316, 341, 366, 391, 416 };
+            var leftTiles = new int[] { 319, 344, 369, 394, 419 };
+            var buildLayer = openWorldLocation.Map.GetLayer("Buildings");
+            var frontLayer = openWorldLocation.Map.GetLayer("Front");
+            var ts = openWorldLocation.Map.GetTileSheet("outdoors");
+            if (chunkPoint.X == 0)
+            {
+                for (int y = 0; y < openWorldChunkSize; y++)
+                {
+                    chunk.tiles["Buildings"][0, y] = new StaticTile(buildLayer, ts, BlendMode.Alpha, leftTiles[r.Next(leftTiles.Length)]);
+                }
+            }
+            else if (chunkPoint.X == Config.OpenWorldSize / openWorldChunkSize - 1)
+            {
+                for (int y = 0; y < openWorldChunkSize; y++)
+                {
+                    chunk.tiles["Buildings"][openWorldChunkSize - 1, y] = new StaticTile(buildLayer, ts, BlendMode.Alpha, rightTiles[r.Next(rightTiles.Length)]);
+                }
+            }
+            if (chunkPoint.Y == 0)
+            {
+                for (int x = 0; x < openWorldChunkSize; x++)
+                {
+                    chunk.tiles["Buildings"][x, 0] = new StaticTile(buildLayer, ts, BlendMode.Alpha, 217);
+                }
+            }
+            else if (chunkPoint.Y == Config.OpenWorldSize / openWorldChunkSize - 1)
+            {
+
+                for (int x = 0; x < openWorldChunkSize; x++)
+                {
+                    if (chunkPoint.X == Config.OpenWorldSize / openWorldChunkSize / 2)
+                    {
+                        var off = x - openWorldChunkSize / 2;
+                        if (off == 0 || off == 1)
+                        {
+                            continue;
+                        }
+                        else if (off == -1)
+                        {
+                            chunk.tiles["Front"][x, openWorldChunkSize - 2] = new StaticTile(frontLayer, ts, BlendMode.Alpha, 438);
+                            chunk.tiles["Buildings"][x, openWorldChunkSize - 1] = new StaticTile(buildLayer, ts, BlendMode.Alpha, 217);
+                            chunk.tiles["Front"][x, openWorldChunkSize - 1] = new StaticTile(frontLayer, ts, BlendMode.Alpha, leftTiles[r.Next(leftTiles.Length)]);
+                        }
+                        else if (off == 2)
+                        {
+                            chunk.tiles["Front"][x, openWorldChunkSize - 2] = new StaticTile(frontLayer, ts, BlendMode.Alpha, 439);
+                            chunk.tiles["Buildings"][x, openWorldChunkSize - 1] = new StaticTile(buildLayer, ts, BlendMode.Alpha, 217);
+                            chunk.tiles["Front"][x, openWorldChunkSize - 1] = new StaticTile(frontLayer, ts, BlendMode.Alpha, rightTiles[r.Next(rightTiles.Length)]);
+                        }
+                        else
+                        {
+                            chunk.tiles["Front"][x, openWorldChunkSize - 2] = new StaticTile(buildLayer, ts, BlendMode.Alpha, r.Next(413, 415));
+                            chunk.tiles["Buildings"][x, openWorldChunkSize - 1] = new StaticTile(buildLayer, ts, BlendMode.Alpha, 217);
+                            chunk.tiles["Front"][x, openWorldChunkSize - 1] = new StaticTile(frontLayer, ts, BlendMode.Alpha, grassTiles[r.Next(grassTiles.Length)]);
+                        }
+                    }
+                    else
+                    {
+                        chunk.tiles["Front"][x, openWorldChunkSize - 2] = new StaticTile(buildLayer, ts, BlendMode.Alpha, r.Next(413, 415));
+                        chunk.tiles["Buildings"][x, openWorldChunkSize - 1] = new StaticTile(buildLayer, ts, BlendMode.Alpha, 217);
+                        chunk.tiles["Front"][x, openWorldChunkSize - 1] = new StaticTile(frontLayer, ts, BlendMode.Alpha, grassTiles[r.Next(grassTiles.Length)]);
+                    }
+                }
+            }
+        }
+
 
         private static void AddRocksToChunk(Point chunkPoint, WorldChunk chunk)
         {
@@ -308,7 +592,9 @@ namespace StardewOpenWorld
                                     {
                                         var av = v + ocp.ToVector2() * openWorldChunkSize;
                                         if (!cachedChunks.ContainsKey(ocp))
-                                            cachedChunks[ocp] = new();
+                                        {
+                                           CacheChunk(ocp);
+                                        }
                                         if (!cachedChunks[ocp].objects.ContainsKey(av))
                                             cachedChunks[ocp].objects[av] = (Object)litter.Invoke(shaft, new object[] { 0.001, 5E-05, gemStoneChance, av });
                                     }
@@ -420,7 +706,9 @@ namespace StardewOpenWorld
                                     {
                                         var av = v + ocp.ToVector2() * openWorldChunkSize;
                                         if (!cachedChunks.ContainsKey(ocp))
-                                            cachedChunks[ocp] = new();
+                                        {
+                                            CacheChunk(ocp);
+                                        }
                                         if (!cachedChunks[ocp].terrainFeatures.ContainsKey(av))
                                             cachedChunks[ocp].terrainFeatures[av] = new Tree(GetRandomTree(av, r, c.Value), r.NextDouble() < 0.2 ? 4 : 5);
                                     }
@@ -524,6 +812,8 @@ namespace StardewOpenWorld
 
         private static string GetRandomMonsterSpawn(Vector2 p, Random r, string which = null)
         {
+            var monsterDict = SHelper.GameContent.Load<Dictionary<string, MonsterSpawnInfo>>(monsterDictPath);
+
             Dictionary<string, double> chances = new();
             double total = 0;
             foreach (var m in monsterDict)
@@ -544,6 +834,8 @@ namespace StardewOpenWorld
         }
         private static void AddMonstersToChunk(Point chunkPoint, WorldChunk chunk)
         {
+            var monsterDict = SHelper.GameContent.Load<Dictionary<string, MonsterSpawnInfo>>(monsterDictPath);
+
             Random r = Utility.CreateRandom(RandomSeed, chunkPoint.X * chunkPoint.Y + chunkPoint.X, 142);
 
             if (!monsterCenters.TryGetValue(chunkPoint, out var mcs))
@@ -612,7 +904,9 @@ namespace StardewOpenWorld
                                     {
                                         var av = v + ocp.ToVector2() * openWorldChunkSize;
                                         if (!cachedChunks.ContainsKey(ocp))
-                                            cachedChunks[ocp] = new();
+                                        {
+                                            CacheChunk(ocp);
+                                        }
                                         cachedChunks[ocp].monsters[av] = monsters[idx];
                                     }
                                 }
@@ -655,47 +949,58 @@ namespace StardewOpenWorld
             {
                 if (!keep.Contains(p))
                 {
-                    loadedChunks.Remove(p);
-
-                    for (int i = openWorldLocation.characters.Count - 1; i >= 0; i--)
-                    {
-                        Character c = openWorldLocation.characters[i];
-                        if (c.modData.TryGetValue(modKey, out var ps))
-                        {
-                            string[] sps = ps.Split(',');
-                            if (new Point(int.Parse(sps[0]), int.Parse(sps[1])) == p)
-                            {
-                                openWorldLocation.characters.RemoveAt(i);
-                            }
-                        }
-                    }
-                    for (int y = 0; y < openWorldChunkSize; y++)
-                    {
-                        for (int x = 0; x < openWorldChunkSize; x++)
-                        {
-                            int ax = x + p.X * openWorldChunkSize;
-                            int ay = y + p.Y * openWorldChunkSize;
-                            openWorldLocation.terrainFeatures.Remove(new(ax, ay));
-                            openWorldLocation.Objects.Remove(new(ax, ay));
-
-                        }
-                    }
+                    UnloadChunk(p);
                 }
             }
         }
 
+        private static void UnloadChunk(Point p)
+        {
+            if(!cachedChunks.TryGetValue(p, out var chunk))
+            {
+                TryLoadChunk(p);
+                chunk = cachedChunks[p];
+                if (chunk == null)
+                    return;
+            }
+            for (int i = openWorldLocation.characters.Count - 1; i >= 0; i--)
+            {
+                Character c = openWorldLocation.characters[i];
+                if (c.modData.TryGetValue(modKey, out var ps))
+                {
+                    string[] sps = ps.Split(',');
+                    if (new Point(int.Parse(sps[0]), int.Parse(sps[1])) == p)
+                    {
+                        openWorldLocation.characters.RemoveAt(i);
+                    }
+                }
+            }
+            foreach(var obj in chunk.objects)
+            {
+                openWorldLocation.objects.Remove(obj.Key);
+            }
+            foreach(var obj in chunk.overlayObjects)
+            {
+                openWorldLocation.overlayObjects.Remove(obj.Key);
+            }
+            foreach(var tf in chunk.terrainFeatures)
+            {
+                openWorldLocation.terrainFeatures.Remove(tf.Key);
+            }
+            loadedChunks.Remove(p);
+        }
+
         private static void TryLoadChunk(Point pc)
         {
-            if (pc.X < 0 || pc.Y < 0 || pc.X >= Config.OpenWorldSize / openWorldChunkSize || pc.Y >= Config.OpenWorldSize / openWorldChunkSize)
+            if (!IsChunkInMap(pc))
                 return;
-
             if (!loadedChunks.Contains(pc))
             {
-                loadedChunks.Add(pc);
                 BuildWorldChunk(pc);
                 AddTreesFromChunk(pc);
                 AddObjectsFromChunk(pc);
                 AddMonstersFromChunk(pc);
+                loadedChunks.Add(pc);
             }
         }
 

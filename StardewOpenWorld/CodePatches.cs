@@ -2,12 +2,9 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Netcode;
-using Newtonsoft.Json.Linq;
 using StardewValley;
-using StardewValley.GameData.WildTrees;
 using StardewValley.Locations;
 using StardewValley.Monsters;
-using StardewValley.TerrainFeatures;
 using StardewValley.Util;
 using System;
 using System.Collections.Generic;
@@ -19,7 +16,6 @@ using xTile.Dimensions;
 using xTile.Display;
 using xTile.Layers;
 using xTile.Tiles;
-using Object = StardewValley.Object;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace StardewOpenWorld
@@ -47,7 +43,7 @@ namespace StardewOpenWorld
             {
                 if (!Config.ModEnabled || !__instance.Name.Contains(locName))
                     return;
-                AccessTools.FieldRefAccess<Map, Size>(__instance.Map, "m_displaySize") = new Size(100000, 100000);
+                AccessTools.FieldRefAccess<Map, Size>(__instance.Map, "m_displaySize") = new Size(Config.OpenWorldSize, Config.OpenWorldSize);
                 AccessTools.FieldRefAccess<Map, string>(__instance.Map, "m_id") = locName;
             }
         }
@@ -86,7 +82,7 @@ namespace StardewOpenWorld
                 return false;
             }
         }
-        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.sinkDebris))]
+        //HarmonyPatch(typeof(GameLocation), nameof(GameLocation.sinkDebris))]
         public static class GameLocation_sinkDebris_Patch
         {
             public static void Postfix(GameLocation __instance, Debris debris, Vector2 chunkTile, Vector2 chunkPosition, bool __result)
@@ -117,7 +113,7 @@ namespace StardewOpenWorld
                 var x = Environment.StackTrace;
             }
         }
-        [HarmonyPatch(typeof(NetObjectShrinkList<Chunk>), nameof(NetObjectShrinkList<Chunk>.RemoveAt))]
+        //[HarmonyPatch(typeof(NetObjectShrinkList<Chunk>), nameof(NetObjectShrinkList<Chunk>.RemoveAt))]
         public static class RemoveAt_Patch
         {
             public static void Prefix(NetObjectShrinkList<Chunk> __instance, int index)
@@ -130,7 +126,7 @@ namespace StardewOpenWorld
                 }
             }
         }
-        [HarmonyPatch(typeof(Debris), nameof(Debris.updateChunks))]
+        //[HarmonyPatch(typeof(Debris), nameof(Debris.updateChunks))]
         public static class Debris_updateChunks_Patch
         {
             public static void Prefix(Debris __instance, ref bool __state)

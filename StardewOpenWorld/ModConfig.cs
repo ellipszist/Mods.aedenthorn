@@ -13,10 +13,14 @@ namespace StardewOpenWorld
         public int MaxOutcropLevel { get; set; } = 1000;
         public int TilesPerForestMin { get; set; } = 500;
         public int TilesPerForestMax { get; set; } = 1000;
+        public int TilesPerLakeMin { get; set; } = 2000;
+        public int TilesPerLakeMax { get; set; } = 4000;
         public int TilesPerOutcropMin { get; set; } = 600;
         public int TilesPerOutcropMax { get; set; } = 1200;
         public int TilesPerMonsterMin { get; set; } = 800;
         public int TilesPerMonsterMax { get; set; } = 1500;
+        public int MinLakeSize { get; set; } = 36;
+        public int MaxLakeSize { get; set; } = 300;
         public int MinTreesPerForest { get; set; } = 30;
         public int MaxTreesPerForest { get; set; } = 80;
         public int MinRocksPerOutcrop { get; set; } = 5;
