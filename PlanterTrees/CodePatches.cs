@@ -24,13 +24,6 @@ namespace PlanterTrees
         [HarmonyPatch(typeof(Tree), nameof(Tree.draw))]
         public class Tree_draw_Patch
         {
-            public static void Prefix(Tree __instance, SpriteBatch spriteBatch, ref Vector2 tileLocation)
-            {
-				isPlanterTree = false;
-				if (!Config.EnableMod || !Game1.currentLocation.objects.TryGetValue(tileLocation, out Object obj) || obj is not IndoorPot)
-                    return;
-				isPlanterTree = true;
-			}
 			public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
 			{
 				SMonitor.Log($"Transpiling Tree.draw");
@@ -41,15 +34,15 @@ namespace PlanterTrees
 					{
 						SMonitor.Log("replacing Y position with method");
 						codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, typeof(ModEntry).GetMethod(nameof(ModEntry.GetCurrentTreeY))));
-						i++;
-					}
-					if ( i < codes.Count - 1 && codes[i].opcode == OpCodes.Ldc_R4  && (float)codes[i].operand == 0.0001f && codes[i + 1].opcode == OpCodes.Callvirt && (MethodInfo)codes[i+1].operand == typeof(SpriteBatch).GetMethod(nameof(SpriteBatch.Draw), new Type[] { typeof(Texture2D), typeof(Vector2), typeof(Rectangle?), typeof(Color), typeof(float), typeof(Vector2), typeof(float), typeof(SpriteEffects), typeof(float) }) )
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                        i += 2;
+                    }
+                    if ( i < codes.Count - 1 && codes[i].opcode == OpCodes.Ldc_R4  && (float)codes[i].operand == 0.0001f && codes[i + 1].opcode == OpCodes.Callvirt && (MethodInfo)codes[i+1].operand == typeof(SpriteBatch).GetMethod(nameof(SpriteBatch.Draw), new Type[] { typeof(Texture2D), typeof(Vector2), typeof(Rectangle?), typeof(Color), typeof(float), typeof(Vector2), typeof(float), typeof(SpriteEffects), typeof(float) }) )
 					{
 						SMonitor.Log("replacing seed layerDepth with method");
-						codes[i].opcode = OpCodes.Ldarg_2;
-						codes[i].operand = null;
 						codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, typeof(ModEntry).GetMethod(nameof(ModEntry.GetCurrentTreeY))));
-						i++;
+						codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+						i+= 2;
 					}
 				}
 
@@ -59,10 +52,10 @@ namespace PlanterTrees
 		[HarmonyPatch(typeof(FruitTree), nameof(FruitTree.draw))]
         public class FruitTree_draw_Patch
 		{
-            public static void Prefix(FruitTree __instance, SpriteBatch spriteBatch, ref Vector2 tileLocation)
+            public static void Prefix(FruitTree __instance, SpriteBatch spriteBatch)
             {
 				isPlanterTree = false;
-				if (!Config.EnableMod || !Game1.currentLocation.objects.TryGetValue(tileLocation, out Object obj) || obj is not IndoorPot)
+				if (!Config.EnableMod || !Game1.currentLocation.objects.TryGetValue(__instance.Tile, out Object obj) || obj is not IndoorPot)
                     return;
 				isPlanterTree = true;
 			}
@@ -76,17 +69,20 @@ namespace PlanterTrees
 					{
 						SMonitor.Log("replacing Y position with method");
 						codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, typeof(ModEntry).GetMethod(nameof(ModEntry.GetCurrentTreeY))));
-						i++;
-					}
-				}
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                        i += 2;
+                    }
+                }
 
 				return codes.AsEnumerable();
 			}
 		}
 
-		public static float GetCurrentTreeY(float yTile)
+		public static float GetCurrentTreeY(float yTile, TerrainFeature tf)
         {
-			return isPlanterTree ? yTile -0.4f : yTile;
+            if (!Config.EnableMod || !tf.Location.objects.TryGetValue(tf.Tile, out Object obj) || obj is not IndoorPot)
+                return yTile;
+            return yTile -0.4f;
 		}
 		public static float GetSeedOffset(Vector2 tileLocation)
         {
@@ -136,42 +132,19 @@ namespace PlanterTrees
 				if (__instance.isSapling() && __instance.ParentSheetIndex != 251)
 				{
 					location.playSound("dirtyHit");
-					DelayedAction.playSoundAfterDelay("coin", 100, null, -1);
+					DelayedAction.playSoundAfterDelay("coin", 100);
 					bool actAsGreenhouse = location.IsGreenhouse || ((__instance.ParentSheetIndex == 69 || __instance.ParentSheetIndex == 835) && location is IslandWest);
-					location.terrainFeatures.Add(placementTile, new FruitTree(__instance.ParentSheetIndex)
+					location.terrainFeatures.Add(placementTile, new FruitTree(__instance.ItemId, 0)
 					{
-						GreenHouseTree = actAsGreenhouse,
-						GreenHouseTileTree = location.doesTileHavePropertyNoNull((int)placementTile.X, (int)placementTile.Y, "Type", "Back").Equals("Stone")
+						GreenHouseTileTree = location.IsGreenhouse && location.doesTileHavePropertyNoNull((int)placementTile.X, (int)placementTile.Y, "Type", "Back").Equals("Stone")
 					});
 					return false;
 					for (int i = 0; i < 29; i++)
 					{
-						location.terrainFeatures[placementTile].dayUpdate(location, placementTile);
+						//location.terrainFeatures[placementTile].dayUpdate(location, placementTile);
 					}
 				}
-				int whichTree;
-				switch (__instance.ParentSheetIndex)
-                {
-					case 309:
-						whichTree = 1;
-						break;
-					case 310:
-						whichTree = 2;
-						break;
-					case 311:
-						whichTree = 3;
-						break;
-					case 897:
-						whichTree = 7;
-						break;
-					case 292:
-						whichTree = 8;
-						break;
-					default:
-						return true;
-				}
-
-				location.terrainFeatures.Add(placementTile, new Tree(whichTree, 0));
+				location.terrainFeatures.Add(placementTile, new Tree(Tree.ResolveTreeTypeFromSeed(__instance.QualifiedItemId), 0));
 				location.playSound("dirtyHit");
 				__result = true;
 				return false;
@@ -180,24 +153,24 @@ namespace PlanterTrees
         [HarmonyPatch(typeof(Object), nameof(Object.performToolAction))]
         public class Object_performToolAction_Patch
 		{
-            public static bool Prefix(Object __instance, GameLocation location, ref bool __result)
+            public static bool Prefix(Object __instance, ref bool __result)
             {
-                if (!Config.EnableMod || __instance is not IndoorPot || !location.terrainFeatures.TryGetValue(__instance.TileLocation, out TerrainFeature f) || f is not Tree)
+                if (!Config.EnableMod || __instance is not IndoorPot || !__instance.Location.terrainFeatures.TryGetValue(__instance.TileLocation, out TerrainFeature f) || f is not Tree)
                     return true;
 				__result = false;
 				return false;
 			}
         }
         [HarmonyPatch(typeof(Tree), nameof(Tree.dayUpdate))]
-        public class GameLocation_CanPlantTreesHere_Patch
+        public class Tree_dayUpdate_Patch
 		{
-            public static void Postfix(Tree __instance, GameLocation environment, Vector2 tileLocation)
+            public static void Postfix(Tree __instance)
             {
                 if (!Config.EnableMod)
                     return;
-				if(CanPlaceTreeHere(environment, tileLocation))
+				if(CanPlaceTreeHere(__instance.Location, __instance.Tile))
                 {
-					if (__instance.treeType.Value == 8)
+					if (__instance.treeType.Value == "8")
 					{
 						if (Game1.random.NextDouble() < 0.15 || (__instance.fertilized.Value && Game1.random.NextDouble() < 0.6))
 						{

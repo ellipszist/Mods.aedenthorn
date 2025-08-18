@@ -11,7 +11,7 @@ namespace Quotes
         public int QuoteCharPerLine { get; set; } = 50;
         public int LineSpacing { get; set; } = 10;
         public float QuoteDurationPerLineMult { get; set; } = 1f;
-        public int QuoteFadeMult { get; set; } = 1;
+        public float QuoteFadeMult { get; set; } = 1f;
         public string AuthorPrefix { get; set; } = "-- ";
         public bool ClickToDispelQuote { get; set; } = true;
         public bool RandomQuote { get; set; } = false;

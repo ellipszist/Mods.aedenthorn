@@ -2,7 +2,9 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
+using StardewValley.ItemTypeDefinitions;
 using StardewValley.Menus;
+using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 using System;
 using System.Collections.Generic;
@@ -16,13 +18,12 @@ namespace SeedInfo
 
         public static ObjectInfo GetCrop(Object seed, int quality)
         {
-            Dictionary<int, string> cropData = Game1.content.Load<Dictionary<int, string>>("Data\\Crops");
-            if (!cropData.TryGetValue(seed.ParentSheetIndex, out string data))
+            
+            if (!Game1.cropData.TryGetValue(seed.ItemId, out var data))
                 return null;
             try
             {
-                int index = int.Parse(data.Split('/')[3]);
-                var obj = new Object(index, 1, false, -1, quality);
+                var obj = new Object(data.HarvestItemId, 1, false, -1, quality);
                 return new ObjectInfo(obj);
             }
             catch
@@ -35,37 +36,21 @@ namespace SeedInfo
             if (crop is null)
                 return null;
             Object obj;
-            if(crop.Category == Object.flowersCategory)
+            var odef = ItemRegistry.GetObjectTypeDefinition();
+            if (crop.Category == Object.flowersCategory)
             {
-                int honeyPriceAddition = Convert.ToInt32(Game1.objectInformation[crop.ParentSheetIndex].Split('/', StringSplitOptions.None)[1]) * 2;
-                
-                obj = new Object(Vector2.Zero, 340, crop.Name + " Honey", false, true, false, false)
-                {
-                    Price = Convert.ToInt32(Game1.objectInformation[340].Split('/', StringSplitOptions.None)[1]) + honeyPriceAddition,
-                    Quality = quality,
-                };
-                obj.preservedParentSheetIndex.Value = crop.ParentSheetIndex;
+                obj = odef.CreateFlavoredHoney(crop);
             }
             else if (crop.Category == Object.FruitsCategory)
             {
-                obj = new Object(Vector2.Zero, 344, crop.Name + " Jelly", false, true, false, false)
-                {
-                    Price = 50 + crop.Price * 2,
-                    Quality = quality
-                };
-                obj.preserve.Value = new Object.PreserveType?(Object.PreserveType.Jelly);
-                obj.preservedParentSheetIndex.Value = crop.ParentSheetIndex;
+                obj = odef.CreateFlavoredJelly(crop);
             }
             else
             {
-                obj = new Object(Vector2.Zero, 342, "Pickled " + crop.Name, false, true, false, false)
-                {
-                    Price = 50 + crop.Price * 2,
-                    Quality = quality
-                };
-                obj.preserve.Value = new Object.PreserveType?(Object.PreserveType.Pickle);
-                obj.preservedParentSheetIndex.Value = crop.ParentSheetIndex;
+                obj = odef.CreateFlavoredPickle(crop);
+
             }
+            obj.Quality = quality;
             return new ObjectInfo(obj);
         }
 
@@ -79,42 +64,32 @@ namespace SeedInfo
             switch (crop.ParentSheetIndex)
             {
                 case 262:
-                    obj = new Object(346, 1, false, -1, quality);
+                    obj = new Object("346", 1, false, -1, quality);
                     break;
                 case 304:
-                    obj = new Object(303, 1, false, -1, quality);
+                    obj = new Object("303", 1, false, -1, quality);
                     break;
                 case 433:
-                    obj = new Object(395, 1, false, -1, quality);
+                    obj = new Object("395", 1, false, -1, quality);
                     break;
                 case 815:
-                    obj = new Object(614, 1, false, -1, quality);
+                    obj = new Object("614", 1, false, -1, quality);
                     break;
             }
             if(obj is null)
             {
+                var odef = ItemRegistry.GetObjectTypeDefinition();
+
                 switch (crop.Category)
                 {
                     case -80:
-                        obj = new Object(459, 1, false, -1, quality);
+                        obj = new Object("459", 1, false, -1, quality);
                         break;
                     case -79:
-                        obj = new Object(Vector2.Zero, 348, crop.Name + " Wine", false, true, false, false)
-                        {
-                            Price = crop.Price * 3,
-                            Quality = quality
-                        };
-                        obj.preserve.Value = new Object.PreserveType?(Object.PreserveType.Wine);
-                        obj.preservedParentSheetIndex.Value = crop.ParentSheetIndex;
+                        obj = odef.CreateFlavoredWine(crop);
                         break;
                     case -75:
-                        obj = new Object(Vector2.Zero, 350, crop.Name + " Juice", false, true, false, false)
-                        {
-                            Price = (int)((double)crop.Price * 2.25),
-                            Quality = quality
-                        };
-                        obj.preserve.Value = new Object.PreserveType?(Object.PreserveType.Juice);
-                        obj.preservedParentSheetIndex.Value = crop.ParentSheetIndex;
+                        obj = odef.CreateFlavoredJuice(crop);
                         break;
                 }
             }
@@ -125,28 +100,28 @@ namespace SeedInfo
 
         public static int NeedFertilizer(Object seed)
         {
-            Crop c = new Crop(seed.ParentSheetIndex, 0, 0);
-
-            if (c.seasonsToGrowIn.Contains(seasons[(Utility.getSeasonNumber(Game1.currentSeason) + 1) % 4]))
+            Crop c = new Crop(seed.ItemId, 0, 0, Game1.getFarm());
+            
+            if (c.GetData()?.Seasons.Contains((Season)((Utility.getSeasonNumber(Game1.currentSeason) + 1) % 4)) == true)
                 return 0;
-            if (HasEnoughDaysLeft(c, 0))
+            if (HasEnoughDaysLeft(c, "0"))
                 return 0;
-            if(HasEnoughDaysLeft(c, 465))
+            if(HasEnoughDaysLeft(c, "465"))
                 return 465;
-            if(HasEnoughDaysLeft(c, 466))
+            if(HasEnoughDaysLeft(c, "466"))
                 return 466;
-            if(HasEnoughDaysLeft(c, 918))
+            if(HasEnoughDaysLeft(c, "918"))
                 return 918;
             return -1;
         }
 
-        public static bool HasEnoughDaysLeft(Crop c, int fertilizer)
+        public static bool HasEnoughDaysLeft(Crop c, string fertilizer)
         {
             HoeDirt d = new HoeDirt(1, c);
-            d.currentLocation = Game1.getFarm();
-            d.currentTileLocation = new Vector2(0,0);
+            d.Location = Game1.getFarm();
+            d.Tile = new Vector2(0,0);
             d.fertilizer.Value = fertilizer;
-            AccessTools.Method(typeof(HoeDirt), "applySpeedIncreases").Invoke(d, new object[] { Game1.player });
+            d.applySpeedIncreases(Game1.player);
             c = d.crop;
 
             int days = 0;
@@ -241,7 +216,7 @@ namespace SeedInfo
                 if (hoverObj is not null)
                 {
                     AccessTools.FieldRefAccess<ShopMenu, string>(shopMenu, "hoverText") = "";
-                    IClickableMenu.drawToolTip(b, hoverObj.desc, hoverObj.name, hoverObj.obj, false, -1, shopMenu.currency, -1, -1, null, hoverObj.price);
+                    IClickableMenu.drawToolTip(b, hoverObj.desc, hoverObj.name, hoverObj.obj, false, -1, shopMenu.currency, null, -1, null, hoverObj.price);
                 }
             }
         }
@@ -249,28 +224,27 @@ namespace SeedInfo
         private static Vector2 GetIconPosition(ShopMenu menu, int i, int which)
         {
             Vector2 offset = new Vector2(64, 64);
-            if (which > 0)
-                offset = new Vector2(512, 12);
-            if (which > 1)
-                offset = new Vector2(512, 40);
             if (which > 2)
                 offset = new Vector2(512, 68);
+            else if (which > 1)
+                offset = new Vector2(512, 40);
+            else if (which > 0)
+                offset = new Vector2(512, 12);
             return menu.forSaleButtons[i].bounds.Location.ToVector2() + offset;
         }
 
         private static bool DrawInfo(Point mousePos, SpriteBatch b, Vector2 pos, int j, ObjectInfo info, int quality, Rectangle qr)
         {
-            b.Draw(Game1.objectSpriteSheet, pos + new Vector2(j * 96, 0), Game1.getSourceRectForStandardTileSheet(Game1.objectSpriteSheet, info.obj.ParentSheetIndex, 16, 16), Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 1);
+            ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem(info.obj.ItemId);
+            Texture2D texture = itemData.GetTexture();
+
+            b.Draw(texture, pos + new Vector2(j * 96, 0), itemData.GetSourceRect(0, info.obj.ParentSheetIndex), Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 1);
             if (quality > 0)
             {
                 b.Draw(Game1.mouseCursors, pos + new Vector2(j * 96, 16), qr, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 1);
             }
             b.DrawString(Game1.smallFont, Utility.getNumberWithCommas(info.price), pos + new Vector2(32 + 96 * j, 4), Config.PriceColor);
-            if (new Rectangle(Utility.Vector2ToPoint(pos + new Vector2(j * 96, 0)), new Point(96, 28)).Contains(mousePos))
-            {
-                return true;
-            }
-            return false;
+            return new Rectangle(Utility.Vector2ToPoint(pos + new Vector2(j * 96, 0)), new Point(96, 28)).Contains(mousePos);
         }
     }
 }

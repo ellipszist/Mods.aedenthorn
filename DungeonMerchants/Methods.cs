@@ -37,7 +37,7 @@ namespace DungeonMerchants
             if (tile.X < 0)
                 return;
             mineShaft.modData[dwarfKey] = tile.X + "," + tile.Y;
-            mineShaft.addCharacter(new NPC(new AnimatedSprite("Characters\\Dwarf", 0, 16, 24), tile.ToVector2() * 64 + new Vector2(0, 64), "MineShaft", 2, "Dwarf", false, null, Game1.content.Load<Texture2D>("Portraits\\Dwarf"))
+            mineShaft.addCharacter(new NPC(new AnimatedSprite("Characters\\Dwarf", 0, 16, 24), tile.ToVector2() * 64 + new Vector2(0, 64), "MineShaft", 2, "Dwarf", false, Game1.content.Load<Texture2D>("Portraits\\Dwarf"))
             {
                 Breather = false
             });
@@ -67,14 +67,6 @@ namespace DungeonMerchants
                 }
             }
             return list.Any() ? list[Game1.random.Next(list.Count)] : new Point(-1,-1);
-        }
-        public static bool boughtTraderItem(ISalable s, Farmer f, int i)
-        {
-            if (s.Name == "Magic Rock Candy")
-            {
-                Desert.boughtMagicRockCandy = true;
-            }
-            return false;
         }
     }
 }

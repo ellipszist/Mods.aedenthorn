@@ -32,6 +32,8 @@ namespace Quotes
         public static IModHelper SHelper;
         public static IMonitor SMonitor { get; private set; }
 
+        public static bool startShowingQuote;
+
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
         public override void Entry(IModHelper helper)
@@ -114,6 +116,18 @@ namespace Quotes
                 getValue: () => Config.ClickToDispelQuote,
                 setValue: value => Config.ClickToDispelQuote = value
             );
+            configMenu.AddTextOption(
+                mod: ModManifest,
+                name: () => "Quote Duration Per Line Mult",
+                getValue: () => Math.Round(Config.QuoteDurationPerLineMult, 2).ToString(),
+                setValue: delegate(string value) { if (float.TryParse(value, out var val)){ Config.QuoteDurationPerLineMult = val; }  } 
+            );
+            configMenu.AddTextOption(
+                mod: ModManifest,
+                name: () => "Quote Duration Per Line Mult",
+                getValue: () => Math.Round(Config.QuoteFadeMult, 2).ToString(),
+                setValue: delegate(string value) { if (float.TryParse(value, out var val)){ Config.QuoteFadeMult = val; }  } 
+            );
             configMenu.AddBoolOption(
                 mod: ModManifest,
                 name: () => "Random Quote",
@@ -166,7 +180,9 @@ namespace Quotes
             if (!Config.EnableMod)
                 return;
             if (!clickedOnQuote)
+            {
                 clickedOnQuote = true;
+            }
         }
 
         private void GameLoop_DayStarted(object sender, StardewModdingAPI.Events.DayStartedEventArgs e)
@@ -179,22 +195,23 @@ namespace Quotes
             dailyQuote = GetAQuote(Config.RandomQuote);
             if (dailyQuote != null)
             {
+                Game1.fadeToBlackAlpha = 1f;
+                startShowingQuote = true;
                 Monitor.Log($"Today's quote: {dailyQuote.quote}\r\n\r\n-- {dailyQuote.author}", LogLevel.Debug);
                 Helper.Events.Display.Rendering += Display_Rendering;
-                Helper.Events.Display.Rendered += Display_Rendered;
+                Helper.Events.Display.RenderedStep += Display_RenderedStep;
             }
         }
-
 
         private void Display_Rendering(object sender, StardewModdingAPI.Events.RenderingEventArgs e)
         {
             if (!Config.EnableMod)
                 return;
-            if (Game1.fadeToBlackAlpha > 0)
+            if (Game1.fadeToBlackAlpha > 0 || startShowingQuote == true)
             {
+                startShowingQuote = false;
                 if ((Config.QuoteDurationPerLineMult < 0 || ++displayTicks < Config.QuoteDurationPerLineMult * dailyQuote.quoteLines.Count * 200) && !clickedOnQuote)
                 {
-
                     Game1.fadeToBlackAlpha = 1f;
                     return;
                 }
@@ -206,15 +223,17 @@ namespace Quotes
             {
                 Monitor.Log($"fade in completed");
                 Helper.Events.Display.Rendering -= Display_Rendering;
-                Helper.Events.Display.Rendered -= Display_Rendered;
+                Helper.Events.Display.RenderedStep -= Display_RenderedStep;
                 lastFadeAlpha = 1f;
                 displayTicks = 0;
                 clickedOnQuote = true;
             }
         }
-        private void Display_Rendered(object sender, StardewModdingAPI.Events.RenderedEventArgs e)
+
+        private void Display_RenderedStep(object sender, StardewModdingAPI.Events.RenderedStepEventArgs e)
         {
-            if (!Config.EnableMod)
+
+            if (!Config.EnableMod || e.Step != StardewValley.Mods.RenderSteps.Overlays)
                 return;
             Color thisColor = Config.QuoteColor;
             thisColor.A = (byte)Math.Round(255 * Game1.fadeToBlackAlpha);
@@ -227,9 +246,11 @@ namespace Quotes
             if (dailyQuote.author != null)
                 e.SpriteBatch.DrawString(Game1.dialogueFont, Config.AuthorPrefix + dailyQuote.author, new Vector2(Game1.viewport.Width / 2 + (Config.QuoteCharPerLine * 10) - (dailyQuote.author.Length * 20 + Config.AuthorPrefix.Length * 20), Game1.viewport.Height / 2 - (dailyQuote.quoteLines.Count / 2) * lineSpacing + lineSpacing * dailyQuote.quoteLines.Count), thisColor);
 
-
             //SpriteText.drawString(e.SpriteBatch, dailyQuote.quote, x, y, 999999, Config.QuoteWidth, 999999, Game1.fadeToBlackAlpha, 0.88f, false, -1, "", colorCode, SpriteText.ScrollTextAlignment.Left);
-            //SpriteText.drawString(e.SpriteBatch, Config.AuthorPrefix + dailyQuote.author, x, y + (int)Math.Ceiling(dailyQuote.quoteSize.X / Config.QuoteWidth) * Game1.dialogueFont.LineSpacing, 999999, Config.QuoteWidth, 999999, Game1.fadeToBlackAlpha, 0.88f, false, -1, "", colorCode, SpriteText.ScrollTextAlignment.Right);
+            //SpriteText.drawString(e.SpriteBatch, Config.AuthorPrefix + dailyQuote.author, x, y + (int)Math.Ceiling(dailyQuote.quoteSize.X / Config.QuoteWidth) * Game1.dialogueFont.LineSpacing, 999999, Config.QuoteWidth, 999999, Game1.fadeToBlackAlpha, 0.88f, false, -1, "", colorCode, SpriteText.ScrollTextAlignment.Right);        }
+        }
+        private void Display_Rendered(object sender, StardewModdingAPI.Events.RenderedEventArgs e)
+        {
         }
 
         private static void LoadQuotes()

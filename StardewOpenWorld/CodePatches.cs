@@ -1,21 +1,30 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Netcode;
 using StardewValley;
+using StardewValley.Extensions;
+using StardewValley.Locations;
+using StardewValley.Menus;
+using StardewValley.Monsters;
+using StardewValley.Util;
 using System;
-using System.Diagnostics;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using xTile;
 using xTile.Dimensions;
 using xTile.Display;
 using xTile.Layers;
 using xTile.Tiles;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace StardewOpenWorld
 {
     public partial class ModEntry
     {
-        [HarmonyPatch(typeof(Game1), nameof(Game1.loadForNewGame))]
+        //[HarmonyPatch(typeof(Game1), nameof(Game1.loadForNewGame))]
         public static class Game1_loadForNewGame_Patch
         {
             public static void Postfix()
@@ -23,35 +32,8 @@ namespace StardewOpenWorld
                 if (!Config.ModEnabled)
                     return;
 
-
                 openWorldLocation = new GameLocation(mapPath, locName) { IsOutdoors = true, IsFarm = true, IsGreenhouse = false };
                 SMonitor.Log("Created new game location");
-                var back = openWorldLocation.Map.GetLayer("Back");
-                var mainSheet = openWorldLocation.Map.GetTileSheet("outdoors");
-
-                grassTiles = new Tile[openWorldTileSize, openWorldTileSize];
-                SMonitor.Log($"creating grass tiles");
-                for (int y = 0; y < openWorldTileSize; y++)
-                {
-                    for (int x = 0; x < openWorldTileSize; x++)
-                    {
-                        int idx = 351;
-                        var which = Game1.random.NextDouble();
-                        if (which < 0.025f)
-                        {
-                            idx = 304;
-                        }
-                        else if (which < 0.05f)
-                        {
-                            idx = 305;
-                        }
-                        else if (which < 0.15f)
-                        {
-                            idx = 300;
-                        }
-                        grassTiles[x, y] = new StaticTile(back, mainSheet, BlendMode.Alpha, idx);
-                    }
-                }
 
                 Game1.locations.Add(openWorldLocation);
             }
@@ -63,7 +45,7 @@ namespace StardewOpenWorld
             {
                 if (!Config.ModEnabled || !__instance.Name.Contains(locName))
                     return;
-                AccessTools.FieldRefAccess<Map, Size>(__instance.Map, "m_displaySize") = new Size(100000, 100000);
+                AccessTools.FieldRefAccess<Map, Size>(__instance.Map, "m_displaySize") = new Size(Config.OpenWorldSize, Config.OpenWorldSize);
                 AccessTools.FieldRefAccess<Map, string>(__instance.Map, "m_id") = locName;
             }
         }
@@ -75,6 +57,140 @@ namespace StardewOpenWorld
                 if (!Config.ModEnabled || !___m_id.Contains(locName))
                     return true;
                 ___m_displaySize = new Size(100000, 100000);
+                return false;
+            }
+        }
+        [HarmonyPatch(typeof(Map), nameof(Map.DisplayWidth))]
+        [HarmonyPatch(MethodType.Getter)]
+        public static class Map_DisplayWidth_Patch
+        {
+            public static bool Prefix(Map __instance, ref int __result)
+            {
+                if (!Config.ModEnabled || !__instance.Id.Contains(locName))
+                    return true;
+                __result = Config.OpenWorldSize * 64;
+                return false;
+            }
+        }
+        [HarmonyPatch(typeof(Map), nameof(Map.DisplayHeight))]
+        [HarmonyPatch(MethodType.Getter)]
+        public static class Map_DisplayHeight_Patch
+        {
+            public static bool Prefix(Map __instance, ref int __result)
+            {
+                if (!Config.ModEnabled || !__instance.Id.Contains(locName))
+                    return true;
+                __result = Config.OpenWorldSize * 64;
+                return false;
+            }
+        }
+        //HarmonyPatch(typeof(GameLocation), nameof(GameLocation.sinkDebris))]
+        public static class GameLocation_sinkDebris_Patch
+        {
+            public static void Postfix(GameLocation __instance, Debris debris, Vector2 chunkTile, Vector2 chunkPosition, bool __result)
+            {
+                if (__result)
+                {
+                    var xx = true;
+                }
+                if (!Config.ModEnabled)
+                    return;
+
+                if (debris.isSinking.Value)
+                {
+                    var xx = true;
+                }
+                foreach (var chunk in debris.Chunks)
+                {
+
+                    if (__instance.doesTileSinkDebris((int)chunkTile.X, (int)chunkTile.Y, debris.debrisType.Value))
+                    {
+                        var xx = true;
+                    }
+                    if (chunk.position.X < -128f || chunk.position.Y < -64f || chunk.position.X >= (float)(__instance.map.DisplayWidth + 64) || chunk.position.Y >= (float)(__instance.map.DisplayHeight + 64))
+                    {
+                        var xx = true;
+                    }
+                }
+                var x = Environment.StackTrace;
+            }
+        }
+        //[HarmonyPatch(typeof(NetObjectShrinkList<Chunk>), nameof(NetObjectShrinkList<Chunk>.RemoveAt))]
+        public static class RemoveAt_Patch
+        {
+            public static void Prefix(NetObjectShrinkList<Chunk> __instance, int index)
+            {
+                var y = __instance[index];
+                if(y.netDebrisType.Value != (int)Debris.DebrisType.LETTERS)
+                {
+
+                    var x = Environment.StackTrace;
+                }
+            }
+        }
+        //[HarmonyPatch(typeof(Debris), nameof(Debris.updateChunks))]
+        public static class Debris_updateChunks_Patch
+        {
+            public static void Prefix(Debris __instance, ref bool __state)
+            {
+                if (!Config.ModEnabled )
+                    return;
+                __state = __instance.Chunks.Any();
+            }
+            public static void Postfix(Debris __instance, bool __state)
+            {
+                if (!Config.ModEnabled || !__state)
+                    return;
+                if (!__instance.Chunks.Any())
+                {
+                    var x = true;
+                }
+            }
+        }
+        [HarmonyPatch(typeof(Monster), nameof(Monster.update))]
+        public static class Monster_update_Patch
+        {
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling Monster.update");
+
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Callvirt && codes[i].operand is MethodInfo && (MethodInfo)codes[i].operand == AccessTools.Method(typeof(NetCollection<NPC>), "Remove", new Type[] { typeof(NPC) }))
+                    {
+                        SMonitor.Log("Preventing monster removal for out of bounds");
+
+                        codes[i].opcode = OpCodes.Call;
+                        codes[i].operand = AccessTools.Method(typeof(ModEntry), nameof(ModEntry.DontRemoveMonster));
+                        codes.RemoveAt(i + 1);
+                        codes.Insert(i, new CodeInstruction(OpCodes.Ldarg_2));
+                        break;
+                    }
+                }
+                return codes.AsEnumerable();
+            }
+        }
+
+        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.hasTileAt), new Type[] { typeof(int),typeof(int),typeof(string),typeof(string) })]
+        public static class GameLocation_hasTileAt_Patch1
+        {
+            public static bool Prefix(GameLocation __instance, int x, int y, string layer, string tilesheetId, ref bool __result)
+            {
+                if (!Config.ModEnabled || layer != "Back" || !__instance.Name.Contains(locName) || x < 0 || y < 0 || x >= Config.OpenWorldSize || y >= Config.OpenWorldSize)
+                    return true;
+                __result = true;
+                return false;
+            }
+        }
+        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.hasTileAt), new Type[] { typeof(Location),typeof(string),typeof(string) })]
+        public static class GameLocation_hasTileAt_Patch2
+        {
+            public static bool Prefix(GameLocation __instance, Location tile, string layer, string tilesheetId, ref bool __result)
+            {
+                if (!Config.ModEnabled || layer != "Back" || !__instance.Name.Contains(locName) || tile.X < 0 || tile.Y < 0 || tile.X >= Config.OpenWorldSize || tile.Y >= Config.OpenWorldSize)
+                    return true;
+                __result = true;
                 return false;
             }
         }
@@ -109,6 +225,140 @@ namespace StardewOpenWorld
                 __result = new MyTileArray(__instance, __result);
             }
         }
+        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.isCollidingPosition), new Type[] { typeof(Rectangle), typeof(xTile.Dimensions.Rectangle), typeof(bool), typeof(int), typeof(bool), typeof(Character), typeof(bool), typeof(bool), typeof(bool), typeof(bool) })]
+        public static class GameLocation_isCollidingPosition_Patch
+        {
+            public static bool Prefix(GameLocation __instance, Rectangle position, Rectangle viewport, bool isFarmer, bool projectile, Character character, ref bool __result)
+            {
+                if (!Config.ModEnabled || !__instance.Name.Contains(locName))
+                    return true;
+                BoundingBoxGroup passableTiles = null;
+                Farmer farmer = character as Farmer;
+                Rectangle? currentBounds;
+                if (farmer != null)
+                {
+                    isFarmer = true;
+                    var bb = farmer.GetBoundingBox();
+                    currentBounds = new Rectangle?(bb);
+                    
+                    passableTiles = farmer.TemporaryPassableTiles;
+                }
+                else
+                {
+                    farmer = null;
+                    isFarmer = false;
+                    currentBounds = null;
+                }
+                Vector2? currentTopRight = null;
+                Vector2? currentTopLeft = null;
+                Vector2? currentBottomRight = null;
+                Vector2? currentBottomLeft = null;
+                Vector2? currentBottomMid = null;
+                Vector2? currentTopMid = null;
+                if (currentBounds != null)
+                {
+                    currentTopRight = new Vector2?(new Vector2((float)((currentBounds.Value.Right - 1) / 64), (float)(currentBounds.Value.Top / 64)));
+                    currentTopLeft = new Vector2?(new Vector2((float)(currentBounds.Value.Left / 64), (float)(currentBounds.Value.Top / 64)));
+                    currentBottomRight = new Vector2?(new Vector2((float)((currentBounds.Value.Right - 1) / 64), (float)((currentBounds.Value.Bottom - 1) / 64)));
+                    currentBottomLeft = new Vector2?(new Vector2((float)(currentBounds.Value.Left / 64), (float)((currentBounds.Value.Bottom - 1) / 64)));
+                    currentBottomMid = new Vector2?(new Vector2((float)(currentBounds.Value.Center.X / 64), (float)((currentBounds.Value.Bottom - 1) / 64)));
+                    currentTopMid = new Vector2?(new Vector2((float)(currentBounds.Value.Center.X / 64), (float)(currentBounds.Value.Top / 64)));
+                }
+
+                Vector2 nextTopRight = new Vector2((float)(position.Right / 64), (float)(position.Top / 64));
+                Vector2 nextTopLeft = new Vector2((float)(position.Left / 64), (float)(position.Top / 64));
+                Vector2 nextBottomRight = new Vector2((float)(position.Right / 64), (float)(position.Bottom / 64));
+                Vector2 nextBottomLeft = new Vector2((float)(position.Left / 64), (float)(position.Bottom / 64));
+                bool nextLargerThanTile = position.Width > 64;
+                Vector2 nextBottomMid = new Vector2((float)(position.Center.X / 64), (float)(position.Bottom / 64));
+                Vector2 nextTopMid = new Vector2((float)(position.Center.X / 64), (float)(position.Top / 64));
+
+                Tile tmp;
+
+
+                if ((bool)AccessTools.Method(typeof(GameLocation), "_TestCornersTiles").Invoke(__instance, new object[]{nextTopRight, nextTopLeft, nextBottomRight, nextBottomLeft, nextTopMid, nextBottomMid, currentTopRight, currentTopLeft, currentBottomRight, currentBottomLeft, currentTopMid, currentBottomMid, nextLargerThanTile, delegate (Vector2 tile)
+                {
+                    if (__instance.terrainFeatures.TryGetValue(tile, out var tf))
+                    {
+                        var asdf = tf.getBoundingBox();
+                        var xxx= asdf.Intersects(position);
+                        var yyy = tf.isPassable(character);
+                        if(xxx && !yyy)
+                            return true;
+                    }
+                    if (__instance.Objects.TryGetValue(tile, out var obj))
+                    {
+                        var asdf = obj.GetBoundingBox();
+                        var xxx= asdf.Intersects(position);
+                        var yyy = obj.isPassable();
+                        if(xxx && !yyy)
+                            return true;
+                    }
+                    int cx = (int)tile.X / openWorldChunkSize;
+                    int cy = (int)tile.Y / openWorldChunkSize;
+                    int tx = (int)tile.X % openWorldChunkSize;
+                    int ty = (int)tile.Y % openWorldChunkSize;
+                    var backTiles = GetChunkTiles("Back", cx, cy);
+                    var buildingTiles = GetChunkTiles("Buildings", cx, cy);
+                    if(buildingTiles is null)
+                        return false;
+                    tmp = buildingTiles[tx,ty];
+                    if (tmp != null)
+                    {
+                        if (projectile && __instance is VolcanoDungeon)
+                        {
+                            Tile back_tile = backTiles[tx, ty];
+                            if (back_tile != null)
+                            {
+                                if (back_tile.TileIndexProperties.ContainsKey("Water"))
+                                {
+                                    return false;
+                                }
+                                if (back_tile.Properties.ContainsKey("Water"))
+                                {
+                                    return false;
+                                }
+                            }
+                        }
+                        bool flag3;
+                        if (!tmp.TileIndexProperties.ContainsKey("Shadow") && !tmp.TileIndexProperties.ContainsKey("Passable") && !tmp.Properties.ContainsKey("Passable") && (!projectile || (!tmp.TileIndexProperties.ContainsKey("ProjectilePassable") && !tmp.Properties.ContainsKey("ProjectilePassable"))))
+                        {
+                            if (!isFarmer)
+                            {
+                                if (!tmp.TileIndexProperties.ContainsKey("NPCPassable") && !tmp.Properties.ContainsKey("NPCPassable"))
+                                {
+                                    Character character3 = character;
+                                    bool? flag2 = ((character3 != null) ? new bool?(character3.canPassThroughActionTiles()) : null);
+                                    flag3 = flag2 != null && flag2.GetValueOrDefault() && tmp.Properties.ContainsKey("Action");
+                                }
+                                else
+                                {
+                                    flag3 = true;
+                                }
+                            }
+                            else
+                            {
+                                flag3 = false;
+                            }
+                        }
+                        else
+                        {
+                            flag3 = true;
+                        }
+                        if (!flag3)
+                        {
+                            return passableTiles == null || !passableTiles.Contains((int)tile.X, (int)tile.Y);
+                        }
+                    }
+                    return false;
+                } }))
+                {
+                    __result = true;
+                    return false;
+                }
+                return true;
+            }
+        }
         [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.isTileOnMap), new Type[] { typeof(Vector2) })]
         public static class GameLocation_isTileOnMap_Patch1
         {
@@ -116,7 +366,7 @@ namespace StardewOpenWorld
             {
                 if (!Config.ModEnabled || !__instance.Name.Contains(locName))
                     return true;
-                __result = position.X >= 0f && position.X < openWorldSize && position.Y >= 0f && position.Y < openWorldSize;
+                __result = position.X >= 0f && position.X < Config.OpenWorldSize && position.Y >= 0f && position.Y < Config.OpenWorldSize;
                 return false;
             }
         }
@@ -127,57 +377,125 @@ namespace StardewOpenWorld
             {
                 if (!Config.ModEnabled || !__instance.Name.Contains(locName))
                     return true;
-                __result = x >= 0f && x < openWorldSize && y >= 0f && y < openWorldSize;
+                __result = x >= 0f && x < Config.OpenWorldSize && y >= 0f && y < Config.OpenWorldSize;
                 return false;
             }
         }
+
+        [HarmonyPatch(typeof(FarmerRenderer), nameof(FarmerRenderer.drawHairAndAccesories))]
+        public static class FarmerRenderer_drawHairAndAccesories_Patch2
+        {
+            public static void Prefix(FarmerRenderer __instance, SpriteBatch b, int facingDirection, Farmer who, Vector2 position, Vector2 origin, float scale, int currentFrame, float rotation, Color overrideColor, ref float layerDepth)
+            {
+                if (!Config.ModEnabled)
+                    return;
+            }
+            public static void Postfix(FarmerRenderer __instance, SpriteBatch b, int facingDirection, Farmer who, Vector2 position, Vector2 origin, float scale, int currentFrame, float rotation, Color overrideColor, float layerDepth)
+            {
+                if (!Config.ModEnabled)
+                    return;
+            }
+        }
+
+
         [HarmonyPatch(typeof(Layer), nameof(Layer.Draw))]
         public static class Layer_Draw_Patch
         {
-            public static bool Prefix(Layer __instance, IDisplayDevice displayDevice, xTile.Dimensions.Rectangle mapViewport, Location displayOffset, int pixelZoom)
+            public static bool Prefix(Layer __instance, IDisplayDevice displayDevice, xTile.Dimensions.Rectangle mapViewport, Location displayOffset, int pixelZoom, float sort_offset)
             {
                 if (!Config.ModEnabled || !Game1.currentLocation.Name.Contains(locName))
                     return true;
-
+                Layer.zoom = pixelZoom;
                 int tileWidth = pixelZoom * 16;
                 int tileHeight = pixelZoom * 16;
+
                 Location tileInternalOffset = new Location(Wrap(mapViewport.X, tileWidth), Wrap(mapViewport.Y, tileHeight));
-                Location tileLocation = displayOffset - tileInternalOffset;
-                int xMin = (tileInternalOffset.X <= 32 ? 1 : 0);
-                int yMin = (tileInternalOffset.Y <= 32 ? 1 : 0);
-
-                int xMax = mapViewport.Width / tileWidth + 2;
-                int yMax = mapViewport.Height / tileHeight + 2;
-                if (__instance.Id == "Back")
+                int tileXMin = ((mapViewport.X >= 0) ? (mapViewport.X / tileWidth) : ((mapViewport.X - tileWidth + 1) / tileWidth));
+                int tileYMin = ((mapViewport.Y >= 0) ? (mapViewport.Y / tileHeight) : ((mapViewport.Y - tileHeight + 1) / tileHeight));
+                if (tileXMin < 0)
                 {
-                    Point loc = Game1.player.getTileLocationPoint();
-                    if (playerTileLocation != loc)
-                    {
-                        Point delta = loc - playerTileLocation;
-                        SetTiles(Game1.player.currentLocation, delta);
-                        playerTileLocation = loc;
-                    }
-                    for (int y = yMin; y < yMax; y++)
-                    {
-                        tileLocation.X = displayOffset.X - tileInternalOffset.X;
-                        for (int x = xMin; x < xMax; x++)
-                        {
-
-                            Tile tile = grassTiles[x, y];
-                            displayDevice.DrawTile(tile, tileLocation, (float)(y * (16 * pixelZoom) + 16 * pixelZoom) / 10000f);
-                            tileLocation.X += tileWidth;
-                        }
-                        tileLocation.Y += tileHeight;
-                    }
-
+                    displayOffset.X -= tileXMin * tileWidth;
+                    tileXMin = 0;
                 }
+                if (tileYMin < 0)
+                {
+                    displayOffset.Y -= tileYMin * tileHeight;
+                    tileYMin = 0;
+                }
+                int tileColumns = 1 + (mapViewport.Size.Width - 1) / tileWidth;
+                int tileRows = 1 + (mapViewport.Size.Height - 1) / tileHeight;
+                if (tileInternalOffset.X != 0)
+                {
+                    tileColumns++;
+                }
+                if (tileInternalOffset.Y != 0)
+                {
+                    tileRows++;
+                }
+                int tileXMax = Math.Min(tileXMin + tileColumns, Config.OpenWorldSize);
+                int tileYMax = Math.Min(tileYMin + tileRows, Config.OpenWorldSize);
 
+                Rectangle drawBounds = new(tileXMin, tileYMin, tileXMax - tileXMin, tileYMax - tileYMin);
+
+                Location tileLocation = displayOffset - tileInternalOffset;
+
+                Point loc = Game1.player.TilePoint;
+                Tile[,] tiles = new Tile[openWorldChunkSize, openWorldChunkSize];
+                Point playerChunk = new(loc.X / openWorldChunkSize, loc.Y / openWorldChunkSize);
+                Rectangle playerBox = new(loc.X - openWorldChunkSize / 2, loc.Y - openWorldChunkSize / 2, openWorldChunkSize, openWorldChunkSize);
+                Dictionary<Point, Tile[,]> surroundingChunkTiles = new();
+
+                for (int y = -1; y < 2; y++)
+                {
+                    for (int x = -1; x < 2; x++)
+                    {
+                        var cx = playerChunk.X + x;
+                        var cy = playerChunk.Y + y;
+                        if (!IsChunkInMap(cx, cy))
+                            continue;
+                        Rectangle chunkBounds = new(cx * openWorldChunkSize, cy * openWorldChunkSize, openWorldChunkSize, openWorldChunkSize);
+                        if (!chunkBounds.Intersects(drawBounds))
+                            continue;
+                        Tile[,] chunkTiles = GetChunkTiles(__instance.Id, cx, cy);
+                        surroundingChunkTiles.Add(new(cx, cy), chunkTiles);
+                    }
+                }
+                for (int ay = drawBounds.Y; ay < drawBounds.Bottom; ay++)
+                {
+                    tileLocation.X = displayOffset.X - tileInternalOffset.X;
+                    for (int ax = drawBounds.X; ax < drawBounds.Right; ax++)
+                    {
+                        foreach (var kvp in surroundingChunkTiles)
+                        {
+                            if (kvp.Value is null)
+                                continue;
+                            if (ax / openWorldChunkSize == kvp.Key.X && ay / openWorldChunkSize == kvp.Key.Y)
+                            {
+                                Tile tile = kvp.Value[ax % openWorldChunkSize, ay % openWorldChunkSize];
+                                if (tile is not null)
+                                {
+                                    float drawn_sort = 0f;
+                                    if (sort_offset >= 0f)
+                                    {
+                                        drawn_sort = (ay / openWorldChunkSize * (16 * pixelZoom) + 16 * pixelZoom + sort_offset) / 10000f;
+                                    }
+                                    displayDevice.DrawTile(tile, tileLocation, drawn_sort);
+
+                                }
+                                break;
+                            }
+                        }
+                        tileLocation.X += tileWidth;
+                    }
+                    tileLocation.Y += tileHeight;
+                }
                 return false;
             }
+
             private static int Wrap(int value, int span)
             {
                 value %= span;
-                if (value < 0)
+                if(value < 0)
                 {
                     value += span;
                 }

@@ -8,12 +8,14 @@ using StardewValley.Locations;
 using StardewValley.Network;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Object = StardewValley.Object;
 
 namespace CustomMonsterFloors
 {
@@ -36,6 +38,8 @@ namespace CustomMonsterFloors
                 return;
 
             helper.Events.GameLoop.DayStarted += OnDayStarted;
+            helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
+
 
             var harmony = new Harmony(this.ModManifest.UniqueID);
 
@@ -53,9 +57,9 @@ namespace CustomMonsterFloors
                    postfix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.adjustLevelChances_Postfix))
                 );
                 harmony.Patch(
-                   original: AccessTools.Method(typeof(MineShaft), "chooseStoneType"),
-                   prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.chooseStoneType_Prefix)),
-                   postfix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.chooseStoneType_Postfix))
+                   original: AccessTools.Method(typeof(MineShaft), "createLitterObject"),
+                   prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.createLitterObject_Prefix)),
+                   postfix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.createLitterObject_Postfix))
                 );
                 harmony.Patch(
                    original: AccessTools.Method(typeof(MineShaft), "checkStoneForItems"),
@@ -70,6 +74,73 @@ namespace CustomMonsterFloors
                    transpiler: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.MineShaft_populateLevel_Transpiler))
                 );
             }
+        }
+
+        private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
+        {
+
+            // get Generic Mod Config Menu's API (if it's installed)
+            var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+            if (configMenu is not null)
+            {
+
+                // register mod
+                configMenu.Register(
+                    mod: ModManifest,
+                    reset: () => Config = new ModConfig(),
+                    save: () => Helper.WriteConfig(Config)
+                );
+
+                foreach (var t in AccessTools.GetDeclaredProperties(typeof(ModConfig)))
+                {
+                    if (t.PropertyType.Equals(typeof(bool)))
+                    {
+                        configMenu.AddBoolOption(
+                            mod: ModManifest,
+                            name: () => t.Name,
+                            getValue: () => (bool)t.GetValue(Config),
+                            setValue: value => t.SetValue(Config, value)
+                        );
+                    }
+                    else if (t.PropertyType.Equals(typeof(int)))
+                    {
+                        configMenu.AddNumberOption(
+                            mod: ModManifest,
+                            name: () => t.Name,
+                            getValue: () => (int)t.GetValue(Config),
+                            setValue: value => t.SetValue(Config, value)
+                        );
+                    }
+                    else if (t.PropertyType.Equals(typeof(string)))
+                    {
+                        configMenu.AddTextOption(
+                            mod: ModManifest,
+                            name: () => t.Name,
+                            getValue: () => (string)t.GetValue(Config),
+                            setValue: value => t.SetValue(Config, value)
+                        );
+                    }
+                    else if (t.PropertyType.Equals(typeof(float)))
+                    {
+                        configMenu.AddTextOption(
+                            mod: ModManifest,
+                            name: () => t.Name,
+                            getValue: () => (float)t.GetValue(Config) + "",
+                            setValue: delegate (string value) { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out float f)) { t.SetValue(Config, f); } }
+                        );
+                    }
+                    else if (t.PropertyType.Equals(typeof(double)))
+                    {
+                        configMenu.AddTextOption(
+                            mod: ModManifest,
+                            name: () => t.Name,
+                            getValue: () => (double)t.GetValue(Config) + "",
+                            setValue: delegate (string value) { if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out double f)) { t.SetValue(Config, f); } }
+                        );
+                    }
+                }
+            }
+
         }
 
         private void OnDayStarted(object sender, DayStartedEventArgs e)
@@ -89,7 +160,7 @@ namespace CustomMonsterFloors
             {
                 return;
             }
-            if (___netIsTreasureRoom) // not sure about these
+            if (___netIsTreasureRoom.Value) // not sure about these
             {
                 treasureFloors.Add(level);
                 return;
@@ -107,7 +178,7 @@ namespace CustomMonsterFloors
                     treasureFloors.Add(level);
                     ___netIsTreasureRoom.Value = true;
                     __instance.loadedMapNumber = 10;
-                    if (___netIsSlimeArea || ___netIsDinoArea)
+                    if (___netIsSlimeArea.Value || ___netIsDinoArea.Value)
                     {
                         RevertMapImageSource(ref ___mapImageSource, ref ___loadedDarkArea, level, __instance.getMineArea(-1), __instance.getMineArea(level), __instance.loadedMapNumber);
                     }
@@ -122,7 +193,7 @@ namespace CustomMonsterFloors
 
                 if (IsBelowMinFloorsApart(level))
                 {
-                    if (___netIsSlimeArea || ___netIsDinoArea)
+                    if (___netIsSlimeArea.Value || ___netIsDinoArea.Value)
                     {
                         RevertMapImageSource(ref ___mapImageSource, ref ___loadedDarkArea, level, __instance.getMineArea(-1), __instance.getMineArea(level), __instance.loadedMapNumber);
                     }
@@ -134,7 +205,7 @@ namespace CustomMonsterFloors
 
                 monsterFloors.Add(level);
 
-                if (___netIsQuarryArea)
+                if (___netIsQuarryArea.Value)
                 {
                     ___netIsMonsterArea.Value = true;
                 }
@@ -161,7 +232,7 @@ namespace CustomMonsterFloors
                             ___netIsMonsterArea.Value = false;
                             ___mapImageSource.Value = "Maps\\Mines\\mine_dino";
                         }
-                        else if (___netIsSlimeArea || ___netIsDinoArea)
+                        else if (___netIsSlimeArea.Value || ___netIsDinoArea.Value)
                         {
                             RevertMapImageSource(ref ___mapImageSource, ref ___loadedDarkArea, level, __instance.getMineArea(-1), __instance.getMineArea(level), __instance.loadedMapNumber);
                         }
@@ -248,17 +319,17 @@ namespace CustomMonsterFloors
         }
         private static void adjustLevelChances_Postfix(NetBool ___netIsMonsterArea, NetBool ___netIsSlimeArea, NetBool ___netIsDinoArea, ref double stoneChance, ref double monsterChance, ref double itemChance, ref double gemStoneChance)
         {
-            if (___netIsDinoArea)
+            if (___netIsDinoArea.Value)
             {
                 monsterChance *= Config.MonsterMultiplierOnDinoFloors;
                 itemChance *= Config.ItemMultiplierOnDinoFloors;
             }
-            else if (___netIsSlimeArea)
+            else if (___netIsSlimeArea.Value)
             {
                 monsterChance *= Config.MonsterMultiplierOnSlimeFloors;
                 itemChance *= Config.ItemMultiplierOnSlimeFloors;
             }
-            else if (___netIsMonsterArea)
+            else if (___netIsMonsterArea.Value)
             {
                 monsterChance *= Config.MonsterMultiplierOnMonsterFloors;
                 itemChance *= Config.ItemMultiplierOnMonsterFloors;
@@ -271,12 +342,12 @@ namespace CustomMonsterFloors
                 gemStoneChance *= Config.GemstoneMultiplierOnRegularFloors;
             }
         }
-        private static void chooseStoneType_Prefix(ref double chanceForPurpleStone, ref double chanceForMysticStone)
+        private static void createLitterObject_Prefix(ref double chanceForPurpleStone, ref double chanceForMysticStone)
         {
             chanceForPurpleStone *= Config.PurpleStoneMultiplier;
             chanceForMysticStone *= Config.MysticStoneMultiplier;
         }
-        private static void chooseStoneType_Postfix(MineShaft __instance, ref StardewValley.Object __result, Vector2 tile)
+        private static void createLitterObject_Postfix(MineShaft __instance, ref StardewValley.Object __result, Vector2 tile)
         {
             if(__result == null)
             {
@@ -295,7 +366,7 @@ namespace CustomMonsterFloors
 
                 if (__instance.mineLevel != 1 && __instance.mineLevel % 5 != 0 && Game1.random.NextDouble() < chanceForOre)
                 {
-                    __result = new StardewValley.Object(tile, 751, "Stone", true, false, false, false)
+                    __result = new Object("751", 1, false, -1, 0)
                     {
                         MinutesUntilReady = 3
                     };
@@ -306,7 +377,7 @@ namespace CustomMonsterFloors
                 double chanceForOre = 0.029 * Config.ChanceForOresMultiplierInMines - 0.029;
                 if (__instance.mineLevel % 5 != 0 && Game1.random.NextDouble() < chanceForOre)
                 {
-                    __result = new StardewValley.Object(tile, 290, "Stone", true, false, false, false)
+                    __result = new Object("290", 1, false, -1, 0)
                     {
                         MinutesUntilReady = 4
                     };
@@ -317,7 +388,7 @@ namespace CustomMonsterFloors
                 double chanceForOre = 0.029 * Config.ChanceForOresMultiplierInMines - 0.029;
                 if (__instance.mineLevel % 5 != 0 && Game1.random.NextDouble() < chanceForOre)
                 {
-                    __result = new StardewValley.Object(tile, 764, "Stone", true, false, false, false)
+                    __result = new Object("764", 1, false, -1, 0)
                     {
                         MinutesUntilReady = 8
                     };
@@ -360,44 +431,34 @@ namespace CustomMonsterFloors
 
                     if (Game1.random.NextDouble() < chanceForIridium)
                     {
-                        __result = new StardewValley.Object(tile, 765, "Stone", true, false, false, false)
+                        __result = new Object("765", 1, false, -1, 0)
                         {
                             MinutesUntilReady = 16
                         };
                     }
                     else if (Game1.random.NextDouble() < chanceForGold)
                     {
-                        __result = new StardewValley.Object(tile, 764, "Stone", true, false, false, false)
+                        __result = new Object("764", 1, false, -1, 0)
                         {
                             MinutesUntilReady = 8
                         };
                     }
                     else if (Game1.random.NextDouble() < chanceForIron)
                     {
-                        __result = new StardewValley.Object(tile, 290, "Stone", true, false, false, false)
+                        __result = new Object("290", 1, false, -1, 0)
                         {
                             MinutesUntilReady = 4
                         };
                     }
                     else
                     {
-                        __result = new StardewValley.Object(tile, 751, "Stone", true, false, false, false)
+                        __result = new Object("751", 1, false, -1, 0)
                         {
                             MinutesUntilReady = 2
                         };
                     }
                 }
             }
-
-            /*
-            if (!ores.Contains(__result.ParentSheetIndex))
-            {
-                foreach(CustomOreNode node in CustomOreNodeData)
-                {
-
-                }
-            }
-            */
         }
 
 
@@ -407,7 +468,7 @@ namespace CustomMonsterFloors
         {
             if(!___createLadderDownEvent.ContainsKey(new Point(x, y)))
             {
-                double chanceForLadderDown = 0.02 + 1.0 / (double)Math.Max(1, ___netStonesLeftOnThisLevel) + (double)who.LuckLevel / 100.0 + Game1.player.DailyLuck / 5.0;
+                double chanceForLadderDown = 0.02 + 1.0 / (double)Math.Max(1, ___netStonesLeftOnThisLevel.Value) + (double)who.LuckLevel / 100.0 + Game1.player.DailyLuck / 5.0;
                 if (__instance.EnemyCount == 0)
                 {
                     chanceForLadderDown += 0.04;
@@ -415,7 +476,7 @@ namespace CustomMonsterFloors
 
                 chanceForLadderDown = chanceForLadderDown * Config.ChanceForLadderInStoneMultiplier - chanceForLadderDown;
 
-                if (!__instance.mustKillAllMonstersToAdvance() && (___netStonesLeftOnThisLevel == 0 || Game1.random.NextDouble() < chanceForLadderDown) && __instance.shouldCreateLadderOnThisLevel())
+                if (!__instance.mustKillAllMonstersToAdvance() && (___netStonesLeftOnThisLevel.Value == 0 || Game1.random.NextDouble() < chanceForLadderDown) && __instance.shouldCreateLadderOnThisLevel())
                 {
                     bool isShaft = !GotShaft && __instance.getMineArea(-1) == 121 && !__instance.mustKillAllMonstersToAdvance() && Game1.random.NextDouble() < 0.2 * Config.ChanceLadderIsShaftMultiplier;
                     if(isShaft || !___ladderHasSpawned)

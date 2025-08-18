@@ -62,17 +62,17 @@ namespace AdvancedMeleeFramework
             ctx.Monitor.VerboseLog($"Special move for {__instance.Name}, id {__instance.ItemId}");
             if (ctx.Config.RequireModKey && !ctx.Helper.Input.IsDown(ctx.Config.ModKey))
                 return true;
-            ctx.AdvancedWeaponAnimating = Utils.GetAdvancedMeleeWeapon(__instance, ___lastUser);
-            if (ctx.WeaponAnimationFrame > -1 || ctx.AdvancedWeaponAnimating == null || !ctx.AdvancedWeaponAnimating.frames.Any())
+            ctx.AdvancedWeaponAnimating.Value = Utils.GetAdvancedMeleeWeapon(__instance, ___lastUser);
+            if (ctx.WeaponAnimationFrame.Value > -1 || ctx.AdvancedWeaponAnimating.Value == null || !ctx.AdvancedWeaponAnimating.Value.frames.Any())
                 return true;
             if (___lastUser is null || ___lastUser.CurrentTool != __instance)
                 return false;
             ctx.Monitor.VerboseLog($"Animating {__instance.Name}");
             if (___lastUser.isEmoteAnimating)
                 ___lastUser.EndEmoteAnimation();
-            ctx.WeaponStartFacingDirection = ___lastUser.FacingDirection;
-            ctx.WeaponAnimationFrame = 0;
-            ctx.WeaponAnimating = __instance;
+            ctx.WeaponStartFacingDirection.Value = ___lastUser.FacingDirection;
+            ctx.WeaponAnimationFrame.Value = 0;
+            ctx.WeaponAnimating.Value = __instance;
             return false;
         }
 
