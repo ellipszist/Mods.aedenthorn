@@ -1,22 +1,10 @@
 ﻿{
   "Name": "Quest Time Limits",
   "Author": "aedenthorn",
-  "Version": "0.1.4",
+  "Version": "0.2.0",
   "Description": "Quest Time Limits.",
   "UniqueID": "aedenthorn.QuestTimeLimits",
   "EntryDll": "QuestTimeLimits.dll",
   "MinimumApiVersion": "4.0.0",
-  "ModUpdater": {
-    "Repository": "StardewValleyMods",
-    "User": "aedenthorn",
-    "Directory": "_releases",
-    "ModFolder": "QuestTimeLimits"
-  },
-  "Dependencies": [
-    {
-      "UniqueID": "Platonymous.ModUpdater",
-      "IsRequired": false
-    }
-  ],
   "UpdateKeys": [ "Nexus:16403" ]
 }
