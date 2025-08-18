@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using StardewModdingAPI;
 using StardewValley;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -101,12 +102,18 @@ namespace SoundTweaker
 
                                 if (File.Exists(filePathCombined))
                                 {
-                                    using (var stream = new FileStream(filePathCombined, FileMode.Open))
+                                    try
                                     {
-                                        audio = SoundEffect.FromStream(stream);
+                                        using (var stream = new FileStream(filePathCombined, FileMode.Open))
+                                        {
+                                            audio = SoundEffect.FromStream(stream, filePath.ToLower().EndsWith(".ogg"));
+                                        }
+                                        outsounds.Add(new XactSoundBankSound(new SoundEffect[] { audio }, s.category is null ? (int)oldSounds[0].categoryID : Game1.audioEngine.GetCategoryIndex(s.category), s.loop, s.reverb));
                                     }
-                                    outsounds.Add(new XactSoundBankSound(new SoundEffect[] { audio }, s.category is null ? (int)oldSounds[0].categoryID : Game1.audioEngine.GetCategoryIndex(s.category), s.loop, s.reverb));
-
+                                    catch(Exception ex)
+                                    {
+                                        SMonitor.Log(ex.Message, LogLevel.Error);
+                                    }
                                 }
                             }
                         }

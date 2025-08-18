@@ -133,7 +133,9 @@ namespace FreeLove
                     if (split[i].Length == 0)
                         continue;
 
-                    if (split[i][0] == 'O')
+                    var split2 = split[i].Split(' ');
+
+                    if (split2[0] == "O")
                     {
                         string name = split[i].Substring(2);
                         if (Game1.player.spouse != name && spouses.ContainsKey(name))
@@ -142,13 +144,31 @@ namespace FreeLove
                             split[i] = $"o {name}";
                         }
                     }
-                    else if (split[i][0] == 'o')
+                    else if (split2[0] == "o")
                     {
                         string name = split[i].Substring(2);
                         if (Game1.player.spouse != name && spouses.ContainsKey(name))
                         {
                             Monitor.Log($"Got unofficial spouse barrier to event: {name}, switching event condition to notSpouse o");
                             split[i] = $"O {name}";
+                        }
+                    }
+                    else if (split2[0] == "Spouse" && split2.Length > 1)
+                    {
+                        string name = split2[1];
+                        if (Game1.player.spouse != name && spouses.ContainsKey(name))
+                        {
+                            Monitor.Log($"Got unofficial spouse requirement for event: {name}, switching event condition to !Spouse");
+                            split[i] = $"!Spouse {name}";
+                        }
+                    }
+                    else if (split2[0] == "!Spouse" && split2.Length > 1)
+                    {
+                        string name = split2[1];
+                        if (Game1.player.spouse != name && spouses.ContainsKey(name))
+                        {
+                            Monitor.Log($"Got unofficial spouse barrier to event: {name}, switching event condition to Spouse");
+                            split[i] = $"Spouse {name}";
                         }
                     }
                 }

@@ -19,7 +19,7 @@ namespace ResourceStorage
         {
             public static bool Prefix(Farmer __instance, int index, ref int quantity)
             {
-                if (!Config.ModEnabled || !Config.AutoUse || !Game1.objectInformation.TryGetValue(index, out string data))
+                if (!Config.ModEnabled || !Config.AutoUse || !Game1.objectData.TryGetValue(index, out string data))
                     return true;
 
                 quantity += (int)ModifyResourceLevel(__instance, GetIdString(data), -quantity);

@@ -40,6 +40,9 @@ namespace CustomSpouseRooms
         public static Dictionary<string, SpouseRoomData> currentRoomData = new Dictionary<string, SpouseRoomData>();
         public static Dictionary<string, SpouseRoomData> currentIslandRoomData = new Dictionary<string, SpouseRoomData>();
 
+        public static bool justLoadedSave = true;
+        public static bool loadingSpouseRooms = false;
+
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
         public override void Entry(IModHelper helper)
@@ -69,7 +72,8 @@ namespace CustomSpouseRooms
             );
             harmony.Patch(
                original: AccessTools.Method(typeof(FarmHouse), nameof(FarmHouse.updateFarmLayout)),
-               prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.FarmHouse_updateFarmLayout_Prefix))
+               prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.FarmHouse_updateFarmLayout_Prefix)),
+               postfix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.FarmHouse_updateFarmLayout_Postfix))
             );
             harmony.Patch(
                original: AccessTools.Method(typeof(DecoratableLocation), nameof(DecoratableLocation.MakeMapModifications)),
@@ -92,6 +96,7 @@ namespace CustomSpouseRooms
             SHelper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
             SHelper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
             SHelper.Events.Content.AssetRequested += Content_AssetRequested;
+            SHelper.Events.GameLoop.ReturnedToTitle += GameLoop_ReturnedToTitle;
         }
 
         private void Content_AssetRequested(object sender, StardewModdingAPI.Events.AssetRequestedEventArgs e)
@@ -104,6 +109,11 @@ namespace CustomSpouseRooms
             {
                 e.LoadFrom(() => new Dictionary<string, SpouseRoomData>(), StardewModdingAPI.Events.AssetLoadPriority.Exclusive);
             }
+        }
+
+        private void GameLoop_ReturnedToTitle(object sender, StardewModdingAPI.Events.ReturnedToTitleEventArgs e)
+        {
+            justLoadedSave = true;
         }
 
         private void GameLoop_SaveLoaded(object sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)

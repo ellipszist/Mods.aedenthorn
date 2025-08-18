@@ -1,8 +1,5 @@
-﻿using HarmonyLib;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using StardewValley;
-using System.IO;
-using xTile;
 using xTile.Layers;
 using xTile.Tiles;
 
@@ -14,7 +11,6 @@ namespace MapEdit
         {
             pastedTileLoc.Value = new Vector2(-1, -1);
             SaveMapTile(Game1.player.currentLocation.mapPath.Value.Replace("Maps\\", ""), Game1.currentCursorTile, null);
-            UpdateCurrentMap(true);
         }
         
         public static void CopyCurrentTile()
@@ -49,8 +45,6 @@ namespace MapEdit
             string mapName = Game1.player.currentLocation.mapPath.Value.Replace("Maps\\", "");
 
             SaveMapTile(mapName, Game1.currentCursorTile, new TileLayers(currentTileDict.Value));
-            cleanMaps.Remove(mapName);
-            UpdateCurrentMap(false);
             pastedTileLoc.Value = Game1.currentCursorTile;
             Game1.playSound(Config.PasteSound);
             SMonitor.Log($"Pasted tile to {Game1.currentCursorTile}");

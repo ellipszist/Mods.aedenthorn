@@ -29,36 +29,22 @@ namespace FreeLove
 
                 if (answerKey == "danceAsk" && !who.HasPartnerForDance && Game1.player.friendshipData[who.Name].IsMarried())
                 {
-                    string accept = "";
-                    int gender = who.Gender;
-                    if (gender != 0)
-                    {
-                        if (gender == 1)
-                        {
-                            accept = Game1.content.LoadString("Strings\\StringsFromCSFiles:Event.cs.1634");
-                        }
-                    }
-                    else
-                    {
-                        accept = Game1.content.LoadString("Strings\\StringsFromCSFiles:Event.cs.1633");
-                    }
-                    try
-                    {
-                        Game1.player.changeFriendship(250, Game1.getCharacterFromName(who.Name, true));
-                    }
-                    catch
-                    {
-                    }
                     Game1.player.dancePartner.Value = who;
-                    who.setNewDialogue(accept, false, false);
+                    Dialogue dialogue2;
+                    if ((dialogue2 = who.TryGetDialogue("FlowerDance_Accept_" + (Game1.player.isRoommate(who.Name) ? "Roommate" : "Spouse"))) == null)
+                    {
+                        dialogue2 = who.TryGetDialogue("FlowerDance_Accept") ?? new Dialogue(who, "Strings\\StringsFromCSFiles:Event.cs.1632", false);
+                    }
+                    who.setNewDialogue(dialogue2, false, false);
                     using (List<NPC>.Enumerator enumerator = __instance.actors.GetEnumerator())
                     {
                         while (enumerator.MoveNext())
                         {
-                            NPC j = enumerator.Current;
-                            if (j.CurrentDialogue != null && j.CurrentDialogue.Count > 0 && j.CurrentDialogue.Peek().getCurrentDialogue().Equals("..."))
+                            NPC i = enumerator.Current;
+                            Stack<Dialogue> currentDialogue = i.CurrentDialogue;
+                            if (currentDialogue != null && currentDialogue.Count > 0 && i.CurrentDialogue.Peek().getCurrentDialogue().Equals("..."))
                             {
-                                j.CurrentDialogue.Clear();
+                                i.CurrentDialogue.Clear();
                             }
                         }
                     }
