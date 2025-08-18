@@ -3,7 +3,9 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Netcode;
 using StardewValley;
+using StardewValley.Extensions;
 using StardewValley.Locations;
+using StardewValley.Menus;
 using StardewValley.Monsters;
 using StardewValley.Util;
 using System;
@@ -394,6 +396,7 @@ namespace StardewOpenWorld
                     return;
             }
         }
+
 
         [HarmonyPatch(typeof(Layer), nameof(Layer.Draw))]
         public static class Layer_Draw_Patch

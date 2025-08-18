@@ -1,18 +1,22 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Netcode;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
+using StardewValley.Extensions;
 using StardewValley.GameData;
 using StardewValley.GameData.Locations;
+using StardewValley.Menus;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using xTile;
+using xTile.Display;
 using xTile.Tiles;
 
 namespace StardewOpenWorld
@@ -57,7 +61,7 @@ namespace StardewOpenWorld
 
         public static Dictionary<string, Landmark> landmarkDict;
         public static int RandomSeed = -1;
-        public static List<int> grassTiles = new List<int>() { 351, 304, 305, 300 };
+        public static List<int> grassTiles = new List<int>() { 150, 151, 152, 175 };
 
         private static IAdvancedLootFrameworkApi advancedLootFrameworkApi;
         private static List<object> treasuresList = new();
@@ -88,16 +92,34 @@ namespace StardewOpenWorld
             helper.Events.GameLoop.DayEnding += GameLoop_DayEnding;
             helper.Events.Content.AssetRequested += Content_AssetRequested;
             helper.Events.Input.ButtonPressed += Input_ButtonPressed;
+            helper.Events.Display.RenderedActiveMenu += Display_RenderedActiveMenu;
+            helper.Events.Display.MenuChanged += Display_MenuChanged;
 
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
         }
 
+        private void Display_MenuChanged(object sender, MenuChangedEventArgs e)
+        {
+            renderTarget = null;
+        }
+
+        public static RenderTarget2D renderTarget;
+        private void Display_RenderedActiveMenu(object sender, RenderedActiveMenuEventArgs e)
+        {
+            if (!Config.ModEnabled || !Context.IsWorldReady || !Config.DrawMap || !Game1.currentLocation.Name.Contains(locName) || Game1.activeClickableMenu is not GameMenu || (Game1.activeClickableMenu as GameMenu).GetCurrentPage() is not MapPage)
+                return;
+            DrawMap(e);
+        }
+
         private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
         {
             if(Config.Debug && e.Button == SButton.L)
             {
+                ReloadOpenWorld(true);
+                PlayerTileChanged();
+
             }
         }
 

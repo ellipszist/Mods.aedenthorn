@@ -43,12 +43,12 @@ namespace StardewOpenWorld
             }
             return true;
         }
-        public static bool IsOpenTile(WorldChunk chunk, Vector2 t)
+        public static bool IsOpenTile(WorldChunk chunk, Vector2 av)
         {
-            if (!IsVectorInMap(t))
+            if (!IsVectorInMap(av))
                 return false;
-            Tile? tile = chunk.tiles["Back"][(int)t.X % openWorldChunkSize, (int)t.Y % openWorldChunkSize];
-            return tile is not null && grassTiles.Contains(tile.TileIndex) && !openWorldLocation.terrainFeatures.ContainsKey(t) && !openWorldLocation.Objects.ContainsKey(t) && !openWorldLocation.overlayObjects.ContainsKey(t);
+            Tile? tile = chunk.tiles["Back"][(int)av.X % openWorldChunkSize, (int)av.Y % openWorldChunkSize];
+            return tile is not null && grassTiles.Contains(tile.TileIndex) && !openWorldLocation.terrainFeatures.ContainsKey(av) && !openWorldLocation.Objects.ContainsKey(av) && !openWorldLocation.overlayObjects.ContainsKey(av);
         }
 
         private static Point GetPlayerChunk(Farmer f)
@@ -62,6 +62,68 @@ namespace StardewOpenWorld
 
         public static void SetTile(Layer layer, int x, int y, Tile value)
         {
+        }
+        public static Point[] GetSurroundingTileLocationsArray(Point tileLocation, bool include)
+        {
+            if (include)
+            {
+                return new Point[]
+                {
+                    tileLocation,
+                    new Point(-1, 0) + tileLocation,
+                    new Point(1, 0) + tileLocation,
+                    new Point(0, 1) + tileLocation,
+                    new Point(0, -1) + tileLocation,
+                    new Point(-1, -1) + tileLocation,
+                    new Point(1, -1) + tileLocation,
+                    new Point(1, 1) + tileLocation,
+                    new Point(-1, 1) + tileLocation
+                };
+            }
+            return new Point[]
+            {
+                new Point(-1, 0) + tileLocation,
+                new Point(1, 0) + tileLocation,
+                new Point(0, 1) + tileLocation,
+                new Point(0, -1) + tileLocation,
+                new Point(-1, -1) + tileLocation,
+                new Point(1, -1) + tileLocation,
+                new Point(1, 1) + tileLocation,
+                new Point(-1, 1) + tileLocation
+            };
+        }
+        public static Point[] GetSurroundingPointArray(bool include)
+        {
+            if (include)
+            {
+                return new Point[]
+                {
+                    new Point(0, 0),
+                    new Point(-1, 0),
+                    new Point(1, 0),
+                    new Point(0, 1),
+                    new Point(0, -1),
+                    new Point(-1, -1),
+                    new Point(1, -1),
+                    new Point(1, 1),
+                    new Point(-1, 1)
+                };
+            }
+            return new Point[]
+            {
+                new Point(-1, 0),
+                new Point(1, 0),
+                new Point(0, 1),
+                new Point(0, -1),
+                new Point(-1, -1),
+                new Point(1, -1),
+                new Point(1, 1),
+                new Point(-1, 1)
+            };
+        }
+        public static Point GetAbsolutePosition(Point cp, int x, int y)
+        {
+            return new Point(cp.X * openWorldChunkSize + x, cp.Y * openWorldChunkSize + y);
         }
 
     }

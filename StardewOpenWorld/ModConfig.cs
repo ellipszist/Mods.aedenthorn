@@ -9,6 +9,7 @@ namespace StardewOpenWorld
         public bool Debug { get; set; } = false;
         public bool CreateEntrance { get; set; } = true;
         public bool NewMapDaily { get; set; } = false;
+        public bool DrawMap { get; set; } = true;
         public int OpenWorldSize { get; set; } = 10000;
         public int MaxOutcropLevel { get; set; } = 1000;
         public int TilesPerForestMin { get; set; } = 500;
