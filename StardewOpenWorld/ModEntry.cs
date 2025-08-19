@@ -59,7 +59,8 @@ namespace StardewOpenWorld
         public static Dictionary<Point, WorldChunk> cachedChunks = new();
         public static List<Point> loadedChunks = new();
 
-        public static Dictionary<string, Landmark> landmarkDict;
+        public static Dictionary<string, Landmark> landmarkDict = new();
+        public static List<Rectangle> landmarkRects = new();
         public static int RandomSeed = -1;
         public static List<int> grassTiles = new List<int>() { 150, 151, 152, 175 };
 
@@ -74,6 +75,9 @@ namespace StardewOpenWorld
             Color.Gold,
             Color.Purple,
         };
+
+        private static bool showingMap;
+        private static Rectangle mapRect;
 
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
@@ -94,17 +98,25 @@ namespace StardewOpenWorld
             helper.Events.Input.ButtonPressed += Input_ButtonPressed;
             helper.Events.Display.RenderedActiveMenu += Display_RenderedActiveMenu;
             helper.Events.Display.MenuChanged += Display_MenuChanged;
+            helper.Events.Display.WindowResized += Display_WindowResized;
 
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
         }
 
-        private void Display_MenuChanged(object sender, MenuChangedEventArgs e)
+        private void Display_WindowResized(object sender, WindowResizedEventArgs e)
         {
             renderTarget = null;
         }
 
+        private void Display_MenuChanged(object sender, MenuChangedEventArgs e)
+        {
+            renderTarget = null;
+            showingMap = true;
+        }
+
+        private static ClickableTextureComponent upperRightCloseButton;
         public static RenderTarget2D renderTarget;
         private void Display_RenderedActiveMenu(object sender, RenderedActiveMenuEventArgs e)
         {
@@ -115,11 +127,25 @@ namespace StardewOpenWorld
 
         private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
         {
+            if (!Config.ModEnabled)
+                return;
             if(Config.Debug && e.Button == SButton.L)
             {
                 ReloadOpenWorld(true);
                 PlayerTileChanged();
+            }
+            if(Config.DrawMap && showingMap && e.Button == SButton.MouseLeft && renderTarget != null)
+            {
+                if (upperRightCloseButton.containsPoint(Game1.getMouseX(), Game1.getMouseY()))
+                {
+                    Game1.playSound("bigDeSelect");
+                    showingMap = false;
+                }
+                else if (Config.Debug && mapRect.Contains(Game1.getMousePosition()))
+                {
 
+                }
+                SHelper.Input.Suppress(e.Button);
             }
         }
 
@@ -159,8 +185,8 @@ namespace StardewOpenWorld
                 for (int y = 0; y < num; y++)
                 {
                     if(y == 0)
-                        SMonitor.Log($"Caching {(x * num)/(num*num)} chunks");
-                    BuildWorldChunk(new Point(x, y));
+                        SMonitor.Log($"Caching {(x * num)}/{(num*num)} chunks");
+                    CacheChunk(new Point(x, y));
                 }
             s.Stop();
             SMonitor.Log($"Cached {num} chunks in {s.Elapsed.TotalSeconds}s");
@@ -283,9 +309,6 @@ namespace StardewOpenWorld
             if(Game1.player.currentLocation == openWorldLocation)
             {
                 var cs = Game1.player.currentLocation.characters.Count;
-                //SMonitor.Log(Utility.playerCanPlaceItemHere(Game1.player.currentLocation, ItemRegistry.Create("(BC)146"), (int)Game1.currentCursorTile.X, (int)Game1.currentCursorTile.Y, Game1.player)+"");
-                //SMonitor.Log(Utility.isPlacementForbiddenHere(Game1.currentLocation) + "");
-                //SMonitor.Log(Utility.isWithinTileWithLeeway(Game1.getMouseX() + Game1.viewport.X, Game1.getMouseY() + Game1.viewport.Y, ItemRegistry.Create("(BC)146"), Game1.player)+"");
                 if (Game1.player.TilePoint != playerTilePoint.Value)
                 {
                     var newChunk = GetPlayerChunk(Game1.player);
@@ -295,10 +318,6 @@ namespace StardewOpenWorld
                         playerChunk.Value = newChunk;
                     }
                     playerTilePoint.Value = Game1.player.TilePoint;
-                }
-                if(openWorldLocation.characters.Count == 0)
-                {
-                    var asdf = 1;
                 }
                 return;
             }

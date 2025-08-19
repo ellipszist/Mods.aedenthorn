@@ -27,7 +27,7 @@ namespace CropHarvestBubbles
 
 		private static void DrawHarvestBubble(Crop __instance, SpriteBatch b, Vector2 tileLocation, int offset = 0)
 		{
-			if (!Config.ModEnabled || (Config.RequireKeyPress && !Config.PressKeys.IsDown()) || __instance.forageCrop.Value || __instance.dead.Value || __instance.currentPhase.Value < __instance.phaseDays.Count - 1 || (__instance.fullyGrown.Value && __instance.dayOfCurrentPhase.Value > 0) || !Game1.objectData.TryGetValue(__instance.indexOfHarvest.Value, out var value) || (Config.IgnoreFlowers && value.ContextTags.Contains("flower_item")))
+			if (!Config.ModEnabled || (Config.RequireKeyPress && !Config.PressKeys.IsDown()) || __instance.forageCrop.Value || __instance.dead.Value || __instance.currentPhase.Value < __instance.phaseDays.Count - 1 || (__instance.fullyGrown.Value && __instance.dayOfCurrentPhase.Value > 0) || !Game1.objectData.TryGetValue(__instance.indexOfHarvest.Value, out var value) || (Config.IgnoreFlowers && value.ContextTags?.Contains("flower_item") == true))
 				return;
 
 			ParsedItemData item = ItemRegistry.GetDataOrErrorItem(__instance.indexOfHarvest.Value);

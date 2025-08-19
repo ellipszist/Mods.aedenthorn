@@ -43,10 +43,15 @@ namespace StardewOpenWorld
             }
             return true;
         }
-        public static bool IsOpenTile(WorldChunk chunk, Vector2 av)
+        public static bool IsOpenTile(Vector2 av)
         {
             if (!IsVectorInMap(av))
                 return false;
+            var cp = new Point((int)av.X / openWorldChunkSize, (int)av.Y / openWorldChunkSize);
+            if (!cachedChunks.TryGetValue(cp, out var chunk))
+            {
+                chunk = CacheChunk(cp);
+            }
             Tile? tile = chunk.tiles["Back"][(int)av.X % openWorldChunkSize, (int)av.Y % openWorldChunkSize];
             return tile is not null && grassTiles.Contains(tile.TileIndex) && !openWorldLocation.terrainFeatures.ContainsKey(av) && !openWorldLocation.Objects.ContainsKey(av) && !openWorldLocation.overlayObjects.ContainsKey(av);
         }

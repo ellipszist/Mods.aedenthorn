@@ -7,6 +7,7 @@ using StardewValley;
 using StardewValley.Extensions;
 using StardewValley.ItemTypeDefinitions;
 using StardewValley.Locations;
+using StardewValley.Menus;
 using StardewValley.Monsters;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
@@ -27,6 +28,8 @@ namespace StardewOpenWorld
 {
     public partial class ModEntry
     {
+        
+
         public static void CreateAnimatedTiles()
         {
             animatedTiles.Clear();
@@ -74,12 +77,19 @@ namespace StardewOpenWorld
 
         private void ReloadOpenWorld(bool force)
         {
-
             for (int i = loadedChunks.Count - 1; i >= 0; i--)
             {
                 UnloadChunk(loadedChunks[i]);
             }
-            loadedChunks = new();
+            loadedChunks.Clear();
+            landmarkRects.Clear();
+            landmarkDict = SHelper.GameContent.Load<Dictionary<string, Landmark>>(landmarkDictPath);
+            foreach (var landmark in landmarkDict.Values)
+            {
+                var map = SHelper.GameContent.Load<Map>(landmark.MapPath);
+                Rectangle mapBox = new(landmark.MapPosition, new(map.Layers[0].LayerWidth, map.Layers[0].LayerHeight));
+                landmarkRects.Add(mapBox);
+            }
 
             if (force)
             {
@@ -117,7 +127,8 @@ namespace StardewOpenWorld
                     {
                         lakeCenters[cp] = new();
                     }
-                    lakeCenters[cp].Add(rp);
+                    if (!lakeCenters[cp].Exists(c => Vector2.Distance(c.ToVector2(), rp.ToVector2()) < openWorldChunkSize))
+                        lakeCenters[cp].Add(rp);
                 }
                 for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesPerOutcropMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesPerOutcropMin * Config.OpenWorldSize + 1); i++)
                 {
@@ -151,53 +162,48 @@ namespace StardewOpenWorld
             }
 
         }
-        public static void BuildWorldChunk(Point cp)
+        public static void BuildWorldChunks(List<Point> chunks)
         {
-            int size = Config.OpenWorldSize / openWorldChunkSize;
-            if (cp.X < 0 || cp.Y < 0 || cp.X >= size || cp.Y >= size)
-                return;
-            WorldChunk chunk;
-            if (!cachedChunks.TryGetValue(cp, out chunk))
+            for (int i = chunks.Count - 1; i >= 0; i--)
             {
-                chunk = CacheChunk(cp);
+                if (!IsChunkInMap(chunks[i]))
+                    chunks.RemoveAt(i);
             }
-            else if (chunk.initialized)
-            {
-                return;
-            }
-            //    await Task.Factory.StartNew(() => PreloadWorldChunkAsync(point, chunk));
-            //}
 
-            //private static void PreloadWorldChunkAsync(Point point, WorldChunk chunk)
-            //{
-            Stopwatch s = new();
-            //s.Start();
-            AddLandmarksToChunk(cp, chunk);
-            //SMonitor.Log($"Landmarks in {s.ElapsedMilliseconds}");
-            //s.Restart();
-            AddLakesToChunk(cp, chunk);
-            //SMonitor.Log($"grass in {s.ElapsedMilliseconds}");
-            //s.Restart();
-            AddGrassToChunk(cp, chunk);
-            //SMonitor.Log($"grass in {s.ElapsedMilliseconds}");
-            //s.Restart();
-            AddBorderToChunk(cp, chunk);
-            //SMonitor.Log($"border in {s.ElapsedMilliseconds}");
-            //s.Restart();
-            AddChestsToChunk(cp, chunk);
-            //SMonitor.Log($"chests in {s.ElapsedMilliseconds}");
-            //s.Restart();
-            AddTreesToChunk(cp, chunk);
-            //SMonitor.Log($"trees in {s.ElapsedMilliseconds}");
-            //s.Restart();
-            AddRocksToChunk(cp, chunk);
-            //SMonitor.Log($"Rocks in {s.ElapsedMilliseconds}");
-            //s.Restart();
-            AddMonstersToChunk(cp, chunk);
-            //SMonitor.Log($"Monsters {s.ElapsedMilliseconds}");
-            s.Stop();
-            SMonitor.Log($"Loaded chunk in {s.ElapsedMilliseconds}ms");
-            cachedChunks[cp].initialized = true;
+            for (int i = chunks.Count - 1; i >= 0; i--)
+            {
+                var cp = chunks[i];
+                WorldChunk chunk;
+                if (!cachedChunks.TryGetValue(cp, out chunk))
+                {
+                    CacheChunk(cp);
+                }
+                else if (chunk.initialized)
+                {
+                    chunks.RemoveAt(i);
+                }
+            }
+
+            foreach (var cp in chunks)
+            {
+                AddChestsToChunk(cp, cachedChunks[cp]);
+            }
+            foreach (var cp in chunks)
+            {
+                AddTreesToChunk(cp, cachedChunks[cp]);
+            }
+            foreach (var cp in chunks)
+            {
+                AddRocksToChunk(cp, cachedChunks[cp]);
+            }
+            foreach (var cp in chunks)
+            {
+                AddMonstersToChunk(cp, cachedChunks[cp]);
+            }
+            foreach (var cp in chunks)
+            {
+                cachedChunks[cp].initialized = true;
+            }
         }
 
         private static WorldChunk CacheChunk(Point cp)
@@ -207,13 +213,17 @@ namespace StardewOpenWorld
             chunk.tiles["Back"] = new Tile[openWorldChunkSize, openWorldChunkSize];
             chunk.tiles["Buildings"] = new Tile[openWorldChunkSize, openWorldChunkSize];
             chunk.tiles["Front"] = new Tile[openWorldChunkSize, openWorldChunkSize];
+
+            AddLandmarksToChunk(cp, chunk);
+            AddLakesToChunk(cp, chunk);
+            AddGrassToChunk(cp, chunk);
+            AddBorderToChunk(cp, chunk);
+
             return chunk;
         }
 
         public static void AddLandmarksToChunk(Point point, WorldChunk chunk)
         {
-            landmarkDict = SHelper.GameContent.Load<Dictionary<string, Landmark>>(landmarkDictPath);
-
             var chunkBox = new Rectangle(point.X * openWorldChunkSize, point.Y * openWorldChunkSize, openWorldChunkSize, openWorldChunkSize);
             foreach (var landmark in landmarkDict.Values)
             {
@@ -282,112 +292,202 @@ namespace StardewOpenWorld
         private static void AddLakesToChunk(Point chunkPoint, WorldChunk chunk)
         {
             Random r = Utility.CreateRandom(RandomSeed, chunkPoint.X * chunkPoint.Y + chunkPoint.X, "lakes".GetHashCode());
-            List<Rectangle> landmarks = new List<Rectangle>();
-            foreach (var landmark in landmarkDict.Values)
-            {
-                var map = SHelper.GameContent.Load<Map>(landmark.MapPath);
-                Rectangle mapBox = new(landmark.MapPosition, new(map.Layers[0].LayerWidth, map.Layers[0].LayerHeight));
-                landmarks.Add(mapBox);
-            }
             if (!lakeCenters.TryGetValue(chunkPoint, out var centers))
                 return;
             foreach (var c in centers)
             {
-                Point begin = new(0, 0);
-                Point end = new(0, 0);
-                int idx = 0;
-                int maxTiles = r.Next(Config.MinLakeSize, Config.MaxLakeSize + 1);
-                List<Point> tiles = new List<Point>();
-                while (idx < maxTiles)
+                int maxTiles = r.Next(Config.MinLakeSize * 2, Config.MaxLakeSize * 2 + 1);
+                List<Point> tiles = GetBlob(c, r, maxTiles);
+                if(tiles != null)
                 {
-                    foreach (var rect in landmarks)
+                    foreach (var v in tiles)
                     {
-                        var bounds = new Rectangle(c + begin - new Point(1, 1), (c + end + new Point(1, 1)) - (c + begin - new Point(1, 1)));
-                        if (rect.Intersects(bounds))
-                            goto nextCenter;
+                        AddWaterTileToChunk(chunkPoint, v, tiles);
                     }
-                    for (int x = begin.X; x <= end.X; x++)
+                }
+            }
+        }
+
+        private static List<Point> GetBlob(Point c, Random r, int maxTiles)
+        {
+
+            List<Point> tiles = new List<Point>();
+            int maxSize = (int)Math.Round(Math.Sqrt(maxTiles));
+            int maxVariation = (int)Math.Round(maxSize / 2f);
+            int height = maxSize - r.Next(maxVariation);
+            int width = maxSize - r.Next(maxVariation);
+            double ratio = (double)height / (double)width;
+            int leftTop = (maxSize - height) / 2;
+            int leftBot = maxSize - leftTop;
+            int rightTop = (maxSize - height) / 2;
+            int rightBot = maxSize - rightTop;
+            for (int x = width / 2; x >= 0; x--)
+            {
+                double chance = (width / 2 - x) / (double)width;
+                if(r.NextDouble() < chance)
+                {
+                    leftTop++;
+                }
+                if(r.NextDouble() < chance)
+                {
+                    leftBot--;
+                }
+                if(leftBot <= leftTop)
+                {
+                    break;
+                }
+                for(int y = leftTop; y < leftBot; y++)
+                {
+                    tiles.Add(c + new Point(x, y));
+                }
+            }
+            for(int x = width / 2 + 1; x < width; x++)
+            {
+                double chance = (x - width / 2) / (double)width;
+                if (r.NextDouble() < chance)
+                {
+                    rightTop++;
+                }
+                if (r.NextDouble() < chance)
+                {
+                    rightTop++;
+                }
+                if (r.NextDouble() < chance)
+                {
+                    rightBot--;
+                }
+                if (r.NextDouble() < chance)
+                {
+                    rightBot--;
+                }
+                if (rightBot <= rightTop)
+                {
+                    break;
+                }
+                for (int y = rightTop; y < rightBot; y++)
+                {
+                    tiles.Add(c + new Point(x, y));
+                }
+
+            }
+            return tiles;
+
+
+            /*
+            Point begin = new(0, 0);
+            Point end = new(0, 0);
+            int idx = 0;
+            List<Point> tiles = new List<Point>();
+            while (idx < maxTiles)
+            {
+                foreach (var rect in landmarkRects)
+                {
+                    var bounds = new Rectangle(c + begin - new Point(1, 1), (c + end + new Point(1, 1)) - (c + begin - new Point(1, 1)));
+                    if (rect.Intersects(bounds))
+                        return null;
+                }
+                for (int x = begin.X; x <= end.X; x++)
+                {
+                    for (int y = begin.Y; y <= end.Y; y++)
                     {
-                        for (int y = begin.Y; y <= end.Y; y++)
+                        Point v = c + new Point(x, y);
+                        if (tiles.Contains(v))
+                            continue;
+                        if (x != begin.X && x != end.X && y != begin.Y && y != end.Y)
+                            continue;
+                        if (v == c)
                         {
-                            Point v = c + new Point(x, y);
-                            if (tiles.Contains(v))
-                                continue;
-                            double chance = v == c ? 1 : 0;
-                            if (tiles.Contains(v + new Point(-1, 0)))
-                                chance += 0.334;
-                            if (tiles.Contains(v + new Point(1, 0)))
-                                chance += 0.334;
-                            if (tiles.Contains(v + new Point(0, -1)))
-                                chance += 0.334;
-                            if (tiles.Contains(v + new Point(0, 1)))
-                                chance += 0.334;
-                            if(chance >= 1)
+                            tiles.Add(v);
+                            idx++;
+                            if (idx >= maxTiles)
+                                goto cont;
+                            goto next;
+                        }
+
+                        int surround = 0;
+                        foreach (var s in Utility.getSurroundingTileLocationsArray(v.ToVector2()))
+                        {
+                            if (tiles.Contains(s.ToPoint()))
                             {
-                                tiles.Add(v);
-                                idx++; 
-                                if (idx >= maxTiles)
-                                    goto cont;
-                                goto next;
-                            }
-                            if(chance > 0)
-                            {
-                                chance -= Vector2.Distance(v.ToVector2(), c.ToVector2()) / (openWorldChunkSize / 2);
-                            }
-                            if (r.NextDouble() < chance)
-                            {
-                                tiles.Add(v);
-                                idx++;
-                                if (idx >= maxTiles)
-                                    goto cont;
+                                surround++;
+                                break;
                             }
                         }
+                        if (surround == 0)
+                        {
+                            //continue;
+                        }
+                        //var distance = ((v.X - c.X) + (v.Y - c.Y)) / 2f;
+                        var distance = Vector2.Distance(v.ToVector2(), c.ToVector2());
+
+                        double chance = 1 - distance / (maxTiles / 48);
+                        if (r.NextDouble() < chance)
+                        {
+                            tiles.Add(v);
+                            idx++;
+                            if (idx >= maxTiles)
+                                goto cont;
+                        }
                     }
-                    begin -= new Point(1, 1);
-                    end += new Point(1, 1);
-                    if (end.X > openWorldChunkSize / 2)
-                        break;
+                }
+                begin -= new Point(1, 1);
+                end += new Point(1, 1);
+                if (end.X > openWorldChunkSize / 2)
+                    break;
                 next:
-                    continue;
-                }
-            cont:
-                bool found = true;
-                while (found) // prevent tiles surrounded by 3+ water tiles
-                {
-                    found = false;
-                    for (int x = begin.X; x <= end.X; x++)
-                    {
-                        for (int y = begin.Y; y <= end.Y; y++)
-                        {
-                            Point v = c + new Point(x, y);
-                            if (tiles.Contains(v))
-                                continue;
-                            double chance = 0;
-
-                            if (tiles.Contains(v + new Point(-1, 0)))
-                                chance += 0.334;
-                            if (tiles.Contains(v + new Point(1, 0)))
-                                chance += 0.334;
-                            if (tiles.Contains(v + new Point(0, -1)))
-                                chance += 0.334;
-                            if (tiles.Contains(v + new Point(0, 1)))
-                                chance += 0.334;
-                            if(chance >= 1)
-                            {
-                                tiles.Add(v);
-                                found = true;
-                            }
-                        }
-                    }
-                }
-                foreach (var v in tiles)
-                {
-                    AddWaterTileToChunk(chunkPoint, v, tiles);
-                }
-
-            nextCenter:
                 continue;
             }
+        cont:
+            // fill holes
+            for (int x = begin.X; x <= end.X; x++)
+            {
+                for (int y = begin.Y; y <= end.Y; y++)
+                {
+                    Point v = c + new Point(x, y);
+                    if (tiles.Contains(v))
+                    {
+                        bool fill = false;
+                        for (int y2 = end.Y; y2 > y; y2--)
+                        {
+                            Point v2 = c + new Point(x, y2);
+                            if (tiles.Contains(v2))
+                            {
+                                fill = true;
+                            }
+                            else if (fill)
+                            {
+                                tiles.Add(v2);
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+            for (int y = begin.Y; y <= end.Y; y++)
+            {
+                for (int x = begin.X; x <= end.X; x++)
+                {
+                    Point v = c + new Point(x, y);
+                    if (tiles.Contains(v))
+                    {
+                        bool fill = false;
+                        for (int x2 = end.X; x2 > x; x2--)
+                        {
+                            Point v2 = c + new Point(x2, y);
+                            if (tiles.Contains(v2))
+                            {
+                                fill = true;
+                            }
+                            else if (fill)
+                            {
+                                tiles.Add(v2);
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+            */
         }
 
         private static void AddWaterTileToChunk(Point chunkPoint, Point v, List<Point> tiles)
@@ -396,29 +496,81 @@ namespace StardewOpenWorld
             var build = openWorldLocation.Map.GetLayer("Buildings");
             var mainSheet = openWorldLocation.Map.GetTileSheet("outdoors");
             AddTileToChunk(chunkPoint, "Back", v.X, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246));
+            //return;
             if (!tiles.Contains(v + new Point(-1, 0)))
             {
+
                 if (tiles.Contains(v + new Point(-1, 1)))
                 {
                     AddTileToChunk(chunkPoint, "Back", v.X - 1, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1266));
-                    AddTileToChunk(chunkPoint, "Buildings", v.X - 1, v.Y - 1, animatedTiles[mainSheet.Id][283]);
+                    if (!tiles.Contains(v + new Point(0, -1)))
+                    {
+                        AddTileToChunk(chunkPoint, "Back", v.X - 1, v.Y - 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 1268));
+                        AddTileToChunk(chunkPoint, "Buildings", v.X - 1, v.Y - 1, animatedTiles[mainSheet.Id][283]);
+                        AddTileToChunk(chunkPoint, "Back", v.X - 1, v.Y - 2, new StaticTile(back, mainSheet, BlendMode.Alpha, 1243));
+                        AddTileToChunk(chunkPoint, "Buildings", v.X - 1, v.Y - 2, animatedTiles[mainSheet.Id][183]);
+                    }
                 }
-                else if (tiles.Contains(v + new Point(-1, -1)))
+                else if (tiles.Contains(v + new Point(-1, 2)))
                 {
-                    AddTileToChunk(chunkPoint, "Back", v.X - 1, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246));
-                }
-                else
-                {
-                    if (tiles.Contains(v + new Point(-1, 2)))
+                    AddTileToChunk(chunkPoint, "Buildings", v.X - 1, v.Y, animatedTiles[mainSheet.Id][283]);
+                    if (tiles.Contains(v + new Point(0, -1)))
                     {
                         AddTileToChunk(chunkPoint, "Back", v.X - 1, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1241));
-                        AddTileToChunk(chunkPoint, "Buildings", v.X - 1, v.Y, animatedTiles[mainSheet.Id][283]);
                     }
                     else
                     {
-                        AddTileToChunk(chunkPoint, "Back", v.X - 1, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246));
-                        AddTileToChunk(chunkPoint, "Buildings", v.X - 1, v.Y, animatedTiles[mainSheet.Id][208]);
+                        AddTileToChunk(chunkPoint, "Back", v.X - 1, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1268));
+                        AddTileToChunk(chunkPoint, "Back", v.X - 1, v.Y - 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 1243));
+                        AddTileToChunk(chunkPoint, "Buildings", v.X - 1, v.Y - 1, animatedTiles[mainSheet.Id][183]);
                     }
+
+                }
+                else
+                {
+                    AddTileToChunk(chunkPoint, "Back", v.X - 1, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246));
+                    AddTileToChunk(chunkPoint, "Buildings", v.X - 1, v.Y, animatedTiles[mainSheet.Id][208]);
+                    if (!tiles.Contains(v + new Point(0, -1)))
+                    {
+                        AddTileToChunk(chunkPoint, "Back", v.X - 1, v.Y - 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 1268));
+                        AddTileToChunk(chunkPoint, "Buildings", v.X - 1, v.Y - 1, animatedTiles[mainSheet.Id][208]);
+                        AddTileToChunk(chunkPoint, "Back", v.X - 1, v.Y - 2, new StaticTile(back, mainSheet, BlendMode.Alpha, 1243));
+                        AddTileToChunk(chunkPoint, "Buildings", v.X - 1, v.Y - 2, animatedTiles[mainSheet.Id][183]);
+                    }
+                }
+                if (false)
+                {
+                    if (tiles.Contains(v + new Point(-1, 1)))
+                    {
+                        AddTileToChunk(chunkPoint, "Back", v.X - 1, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1266));
+                        AddTileToChunk(chunkPoint, "Back", v.X - 1, v.Y - 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 1241));
+                        AddTileToChunk(chunkPoint, "Buildings", v.X - 1, v.Y - 1, animatedTiles[mainSheet.Id][283]);
+                    }
+                    if (tiles.Contains(v + new Point(-1, -1)))
+                    {
+                        if (tiles.Contains(v + new Point(-1, 2)))
+                        {
+
+                        }
+                        else
+                        {
+                            AddTileToChunk(chunkPoint, "Back", v.X - 1, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246));
+                        }
+                    }
+                    if (!tiles.Contains(v + new Point(-1, 1)) && !tiles.Contains(v + new Point(-1, -1)))
+                    {
+                        if (tiles.Contains(v + new Point(-1, 2)))
+                        {
+                            AddTileToChunk(chunkPoint, "Back", v.X - 1, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1241));
+                            AddTileToChunk(chunkPoint, "Buildings", v.X - 1, v.Y, animatedTiles[mainSheet.Id][283]);
+                        }
+                        else
+                        {
+                            AddTileToChunk(chunkPoint, "Back", v.X - 1, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246));
+                            AddTileToChunk(chunkPoint, "Buildings", v.X - 1, v.Y, animatedTiles[mainSheet.Id][208]);
+                        }
+                    }
+
                 }
             }
             if (!tiles.Contains(v + new Point(1, 0)))
@@ -441,6 +593,11 @@ namespace StardewOpenWorld
                         AddTileToChunk(chunkPoint, "Back", v.X + 1, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1242));
                         AddTileToChunk(chunkPoint, "Buildings", v.X + 1, v.Y, animatedTiles[mainSheet.Id][284]);
                     }
+                    else if (tiles.Contains(v + new Point(1, -2)))
+                    {
+                        AddTileToChunk(chunkPoint, "Back", v.X + 1, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246));
+                        AddTileToChunk(chunkPoint, "Buildings", v.X + 1, v.Y, animatedTiles[mainSheet.Id][210]);
+                    }
                     else
                     {
                         AddTileToChunk(chunkPoint, "Back", v.X + 1, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246));
@@ -448,28 +605,13 @@ namespace StardewOpenWorld
                     }
                 }
             }
-            if (!tiles.Contains(v + new Point(0, 1)))
+            if (!tiles.Contains(v + new Point(0, -1)))
             {
-                if (tiles.Contains(v + new Point(1, 1)))
+                if(!tiles.Contains(v + new Point(1, -1)) && !tiles.Contains(v + new Point(-1, -1)))
                 {
-                }
-                else if (tiles.Contains(v + new Point(-1, 1)))
-                {
-                }
-                else
-                {
-                    AddTileToChunk(chunkPoint, "Back", v.X, v.Y + 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246));
-                    AddTileToChunk(chunkPoint, "Buildings", v.X, v.Y + 1, new StaticTile(build, mainSheet, BlendMode.Alpha, 259));
-                    if (!tiles.Contains(v + new Point(-1, 0)))
-                    {
-                        AddTileToChunk(chunkPoint, "Back", v.X - 1, v.Y + 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246));
-                        AddTileToChunk(chunkPoint, "Buildings", v.X - 1, v.Y + 1, animatedTiles[mainSheet.Id][258]);
-                    }
-                    if (!tiles.Contains(v + new Point(1, 0)))
-                    {
-                        AddTileToChunk(chunkPoint, "Back", v.X + 1, v.Y + 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246));
-                        AddTileToChunk(chunkPoint, "Buildings", v.X + 1, v.Y + 1, animatedTiles[mainSheet.Id][260]);
-                    }
+                    AddTileToChunk(chunkPoint, "Back", v.X, v.Y - 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 1269));
+                    AddTileToChunk(chunkPoint, "Back", v.X, v.Y - 2, new StaticTile(back, mainSheet, BlendMode.Alpha, 1244));
+                    AddTileToChunk(chunkPoint, "Buildings", v.X, v.Y - 2, animatedTiles[mainSheet.Id][184]);
                 }
             }
         }
@@ -642,7 +784,7 @@ namespace StardewOpenWorld
                             if (x != begin.X && x != end.X && y != begin.Y && y != end.Y)
                                 continue;
                             Vector2 v = c + new Vector2(x, y);
-                            if (r.NextDouble() < Math.Pow(Config.TreeDensity, Vector2.Distance(v, c) / 3f))
+                            if (r.NextDouble() < Math.Pow(Config.RockDensity, Vector2.Distance(v, c) / 3f))
                             {
                                 Point offset = new();
                                 if (v.X < 0)
@@ -664,7 +806,8 @@ namespace StardewOpenWorld
                                 if (offset.X == 0 && offset.Y == 0)
                                 {
                                     var av = v + chunkPoint.ToVector2() * openWorldChunkSize;
-                                    if (!IsOpenTile(chunk, av))
+
+                                    if (!IsOpenTile(av))
                                         continue;
                                     if (!chunk.objects.ContainsKey(av))
                                         chunk.objects[av] = (Object)litter.Invoke(shaft, new object[] { 0.001, 5E-05, gemStoneChance, av });
@@ -679,7 +822,13 @@ namespace StardewOpenWorld
                                         {
                                            CacheChunk(ocp);
                                         }
-                                        if (!IsOpenTile(cachedChunks[ocp], av))
+                                        var rect = new Rectangle(5106, 9886, 20, 20);
+                                        if (rect.Contains(av.ToPoint()))
+                                        {
+                                            var asdf = true;
+                                        }
+
+                                        if (!IsOpenTile(av))
                                             continue;
                                         if (!cachedChunks[ocp].objects.ContainsKey(av))
                                             cachedChunks[ocp].objects[av] = (Object)litter.Invoke(shaft, new object[] { 0.001, 5E-05, gemStoneChance, av });
@@ -703,7 +852,7 @@ namespace StardewOpenWorld
         public static void AddChestsToChunk(Point chunkPoint, WorldChunk chunk)
         {
             Random r = Utility.CreateRandom(RandomSeed, 942);
-            int freeTiles = Enumerable.Range(0, openWorldChunkSize * openWorldChunkSize).Count(i => IsOpenTile(chunk, new Vector2(i % openWorldChunkSize + chunkPoint.X * openWorldChunkSize, i / openWorldChunkSize + chunkPoint.Y * openWorldChunkSize)));
+            int freeTiles = Enumerable.Range(0, openWorldChunkSize * openWorldChunkSize).Count(i => IsOpenTile(new Vector2(i % openWorldChunkSize + chunkPoint.X * openWorldChunkSize, i / openWorldChunkSize + chunkPoint.Y * openWorldChunkSize)));
             float chestCount = freeTiles / (float)(Config.TilesPerChestMin + ((Config.TilesPerChestMax - Config.TilesPerChestMin) * r.NextDouble() * chunkPoint.Y * openWorldChunkSize / Config.OpenWorldSize )); 
             int spawnedChestCount = Math.Min(freeTiles, (int)Math.Floor(chestCount));
             int i = 0;
@@ -712,7 +861,7 @@ namespace StardewOpenWorld
             {
                 Vector2 freeTile = new(r.Next(openWorldChunkSize), r.Next(openWorldChunkSize));
                 var av = ToGlobalTile(chunkPoint, freeTile);
-                if (IsOpenTile(chunk, av))
+                if (IsOpenTile(av))
                 {
                     double fraction = Math.Pow(r.NextDouble(), 1 / Config.RarityChance);
                     int level = (int)Math.Ceiling(fraction * chunkPoint.Y * openWorldChunkSize / Config.OpenWorldSize);
@@ -746,13 +895,18 @@ namespace StardewOpenWorld
                 return;
             foreach (var c in centers)
             {
-
                 Point begin = new(0, 0);
                 Point end = new(0, 0);
                 int idx = 0;
                 int trees = r.Next(Config.MinTreesPerForest, Config.MaxTreesPerForest + 1);
                 while (idx < trees)
                 {
+                    foreach (var rect in landmarkRects)
+                    {
+                        var bounds = new Rectangle(c.Key.ToPoint() + begin - new Point(1, 1), (c.Key.ToPoint() + end + new Point(1, 1)) - (c.Key.ToPoint() + begin - new Point(1, 1)));
+                        if (rect.Intersects(bounds))
+                            goto next;
+                    }
                     for (int x = begin.X; x <= end.X; x++)
                     {
                         for (int y = begin.Y; y <= end.Y; y++)
@@ -782,7 +936,7 @@ namespace StardewOpenWorld
                                 if (offset.X == 0 && offset.Y == 0)
                                 {
                                     var av = v + chunkPoint.ToVector2() * openWorldChunkSize;
-                                    if (!IsOpenTile(chunk, av))
+                                    if (!IsOpenTile(av))
                                         continue;
                                     if (!chunk.terrainFeatures.ContainsKey(av))
                                         chunk.terrainFeatures[av] = new Tree(GetRandomTree(av, r, c.Value), r.NextDouble() < 0.2 ? 4 : 5);
@@ -797,7 +951,7 @@ namespace StardewOpenWorld
                                         {
                                             CacheChunk(ocp);
                                         }
-                                        if (!IsOpenTile(cachedChunks[ocp], av))
+                                        if (!IsOpenTile(av))
                                             continue;
                                         if (!cachedChunks[ocp].terrainFeatures.ContainsKey(av))
                                             cachedChunks[ocp].terrainFeatures[av] = new Tree(GetRandomTree(av, r, c.Value), r.NextDouble() < 0.2 ? 4 : 5);
@@ -811,7 +965,7 @@ namespace StardewOpenWorld
                     }
                     begin -= new Point(1, 1);
                     end += new Point(1, 1);
-                    if (end.X > openWorldChunkSize / 10)
+                    if (end.X > openWorldChunkSize / 5)
                         break;
                 }
             next:
@@ -1027,34 +1181,33 @@ namespace StardewOpenWorld
                 if (f.currentLocation.Name.Contains(locName))
                 {
                     var pc = GetPlayerChunk(f);
-                    TryLoadChunk(pc);
-                    keep.Add(new(pc.X, pc.Y));
+                    if(!keep.Contains(pc))
+                        keep.Add(pc);
                     foreach (var v in Utility.getSurroundingTileLocationsArray(pc.ToVector2()))
                     {
                         var p = v.ToPoint();
-                        TryLoadChunk(p);
-                        keep.Add(p);
+                        if (!keep.Contains(p))
+                            keep.Add(p);
                     }
                 }
             }
-            foreach (var p in cachedChunks.Keys.ToArray())
+            for(int i = loadedChunks.Count - 1; i >= 0; i--)
             {
-                if (!keep.Contains(p))
+                var cp = loadedChunks[i];
+                if (!keep.Contains(cp))
                 {
-                    UnloadChunk(p);
+                    UnloadChunk(cp);
                 }
+            }
+            BuildWorldChunks(keep);
+            foreach (var cp in keep)
+            {
+                TryLoadChunk(cp);
             }
         }
 
         private static void UnloadChunk(Point p)
         {
-            if(!cachedChunks.TryGetValue(p, out var chunk))
-            {
-                TryLoadChunk(p);
-                chunk = cachedChunks[p];
-                if (chunk == null)
-                    return;
-            }
             for (int i = openWorldLocation.characters.Count - 1; i >= 0; i--)
             {
                 Character c = openWorldLocation.characters[i];
@@ -1066,6 +1219,10 @@ namespace StardewOpenWorld
                         openWorldLocation.characters.RemoveAt(i);
                     }
                 }
+            }
+            if (!cachedChunks.TryGetValue(p, out var chunk))
+            {
+                return;
             }
             foreach(var obj in chunk.objects)
             {
@@ -1088,7 +1245,6 @@ namespace StardewOpenWorld
                 return;
             if (!loadedChunks.Contains(pc))
             {
-                BuildWorldChunk(pc);
                 AddTreesFromChunk(pc);
                 AddObjectsFromChunk(pc);
                 AddMonstersFromChunk(pc);
@@ -1101,7 +1257,7 @@ namespace StardewOpenWorld
             var chunk = cachedChunks[pc];
             foreach (var t in chunk.terrainFeatures)
             {
-                if (IsOpenTile(chunk, t.Key))
+                if (IsOpenTile(t.Key))
                 {
                     openWorldLocation.terrainFeatures[t.Key] = t.Value;
                 }
@@ -1112,14 +1268,14 @@ namespace StardewOpenWorld
             var chunk = cachedChunks[pc];
             foreach (var t in chunk.objects)
             {
-                if (IsOpenTile(chunk, t.Key))
+                if (IsOpenTile(t.Key))
                 {
                     openWorldLocation.objects[t.Key] = t.Value;
                 }
             }
             foreach (var t in chunk.overlayObjects)
             {
-                if (IsOpenTile(chunk, t.Key))
+                if (IsOpenTile(t.Key))
                 {
                     openWorldLocation.overlayObjects[t.Key] = t.Value;
                 }
@@ -1131,7 +1287,7 @@ namespace StardewOpenWorld
             var chunk = cachedChunks[pc];
             foreach (var t in chunk.monsters)
             {
-                if (IsOpenTile(chunk, t.Key))
+                if (IsOpenTile(t.Key))
                 {
                     Monster m = null;
                     switch (t.Value.Type)
@@ -1174,15 +1330,17 @@ namespace StardewOpenWorld
 
         public static void DrawMap(RenderedActiveMenuEventArgs e)
         {
-
+            if (!showingMap)
+                return;
             int mapSize = openWorldChunkSize;
             int tileSize = 16;
+            mapSize = Math.Min(Math.Min(Game1.viewport.Height - 32, Game1.viewport.Width - 32) / 16, mapSize);
+
+            Point playerChunk = GetPlayerChunk(Game1.player);
+            Rectangle playerBox = new Rectangle(Game1.player.TilePoint.X - mapSize / 2, Game1.player.TilePoint.Y - mapSize / 2, mapSize, mapSize);
 
             if (renderTarget is null)
             {
-                Point playerChunk = GetPlayerChunk(Game1.player);
-                Rectangle playerBox = new Rectangle(Game1.player.TilePoint.X - mapSize / 2, Game1.player.TilePoint.Y - mapSize / 2, mapSize, mapSize);
-
                 renderTarget = new RenderTarget2D(Game1.graphics.GraphicsDevice, mapSize * tileSize, mapSize * tileSize);
                 Game1.graphics.GraphicsDevice.SetRenderTarget(renderTarget);
 
@@ -1246,9 +1404,28 @@ namespace StardewOpenWorld
                 }
                 renderBatch.End();
                 Game1.graphics.GraphicsDevice.SetRenderTarget(null);
+                upperRightCloseButton = new ClickableTextureComponent(new Rectangle(Math.Max(0, Game1.viewport.Width / 2 - mapSize / 2 * tileSize - 32) + Math.Min(Game1.viewport.Width -8, mapSize * tileSize - 16), Math.Max(16, Game1.viewport.Height / 2 - mapSize / 2 * tileSize), 48, 48), Game1.mouseCursors, new Rectangle(337, 494, 12, 12), 4f, false);
             }
+            Game1.drawDialogueBox(Math.Max(0, Game1.viewport.Width / 2 - mapSize / 2 * tileSize - 32), Math.Max(-82,Game1.viewport.Height / 2 - mapSize / 2 * tileSize - 96), Math.Min(Game1.viewport.Width, mapSize * tileSize + 64), Math.Min(Game1.viewport.Height + 98, mapSize * tileSize + 128), false, true);
+
+            mapRect = new Rectangle(Game1.viewport.Width / 2 - mapSize / 2 * tileSize, Game1.viewport.Height / 2 - mapSize / 2 * tileSize, mapSize * tileSize, mapSize * tileSize);
+
             e.SpriteBatch.Draw(renderTarget, new Vector2(Game1.viewport.Width / 2 - mapSize / 2 * tileSize, Game1.viewport.Height / 2 - mapSize / 2 * tileSize), Color.White);
+            foreach (Farmer player in Game1.getOnlineFarmers())
+            {
+                if (!player.currentLocation.Name.Equals(locName))
+                    continue;
+                float alpha = player == Game1.player ? 1 : 0.75f;
+                if (!playerBox.Contains(player.Tile))
+                    continue;
+                Vector2 pos = Game1.player.Position - player.Position + new Vector2(Game1.viewport.Width / 2, Game1.viewport.Height / 2 - 16);
+                player.FarmerRenderer.drawMiniPortrat(e.SpriteBatch, pos, 0.00011f, 2f, 2, player, alpha);
+            }
+            if(upperRightCloseButton is not null)
+                upperRightCloseButton.draw(e.SpriteBatch);
             Game1.activeClickableMenu.drawMouse(e.SpriteBatch);
+
+
         }
     }
 }

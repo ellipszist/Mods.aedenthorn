@@ -28,6 +28,7 @@ namespace StardewOpenWorld
         public int MaxRocksPerOutcrop { get; set; } = 40;
         public double MonsterDensity { get; set; } = 0.2;
         public double TreeDensity { get; set; } = 0.3;
+        public double RockDensity { get; set; } = 0.3;
         public string BackgroundMusic { get; set; } = "desolate";
 
         public int TilesPerChestMin { get; set; } = 1000;
