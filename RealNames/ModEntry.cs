@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Characters;
 using StardewValley.Menus;
 using StardewValley.Network;
 using System;
@@ -124,23 +125,16 @@ namespace RealNames
             }
         }
 
-        private bool NamingMenu_Prefix(ref NamingMenu.doneNamingBehavior b, string title, string defaultName)
-        {
-            string gender = "trans";
 
-            lastRandomGender = gender;
-            return false;
-        }
-
-        private static string GetRandomName(string gender)
+        private static string GetRandomName(Gender gender)
         {
-            if(gender == "female")
+            if(gender == Gender.Female)
             {
                 if (femaleNames.Length == 0)
                     return "error";
                 return femaleNames[myRand.Next(femaleNames.Length)];
             }
-            else if(gender == "male")
+            else if(gender == Gender.Male)
             {
                 if (maleNames.Length == 0)
                     return "error";
@@ -156,20 +150,32 @@ namespace RealNames
 
         private static bool Dialogue_randomName_Prefix(ref string __result)
         {
-            string gender = Config.NeutralNameGender;
-            if(Game1.activeClickableMenu is NamingMenu) 
+            Gender gender = Gender.Undefined;
+            if(Game1.activeClickableMenu is NamingMenu namingMenu) 
             {
-                string title = (string)typeof(NamingMenu).GetField("title", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(Game1.activeClickableMenu as NamingMenu);
+                string title = AccessTools.FieldRefAccess<NamingMenu, string>(namingMenu, "title");
                 if (title == Game1.content.LoadString("Strings\\Events:BabyNamingTitle_Female"))
                 {
                     PMonitor.Log("Baby is female.");
-                    gender = "female";
+                    gender = Gender.Female;
                 }
                 else if (title == Game1.content.LoadString("Strings\\Events:BabyNamingTitle_Male"))
                 {
                     PMonitor.Log("Baby is male.");
-                    gender = "male";
+                    gender = Gender.Male;
                 }
+                else if(Config.RealNamesForAnimals && title == Game1.content.LoadString("Strings\\StringsFromCSFiles:Event.cs.1236"))
+                {
+                    
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            else if(Config.RealNamesForAnimals && Game1.activeClickableMenu is PurchaseAnimalsMenu pamenu && pamenu.animalBeingPurchased != null)
+            {
+                gender = pamenu.animalBeingPurchased.Gender;
             }
             else if (!Config.RealNamesForAnimals)
             {

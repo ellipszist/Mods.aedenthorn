@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using StardewValley;
+using System;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using xTile.Layers;
@@ -131,5 +132,230 @@ namespace StardewOpenWorld
             return new Point(cp.X * openWorldChunkSize + x, cp.Y * openWorldChunkSize + y);
         }
 
+        private static List<Point> GetBlob(Point c, Random r, int maxTiles)
+        {
+
+            List<Point> tiles = new List<Point>();
+            int maxSize = (int)Math.Round(Math.Sqrt(maxTiles));
+            int maxVariation = (int)Math.Round(maxSize / 2f);
+            int height = maxSize - r.Next(maxVariation);
+            int width = maxSize - r.Next(maxVariation);
+            double ratio = (double)height / (double)width;
+            int leftTop = (maxSize - height) / 2;
+            int leftBot = maxSize - leftTop;
+            int rightTop = (maxSize - height) / 2;
+            int rightBot = maxSize - rightTop;
+            for (int x = width / 2; x >= 0; x--)
+            {
+
+                double chance = Math.Pow((width / 2 - x) / (double)width, 2) * 4;
+                while (leftTop < height / 2)
+                {
+                    if (r.NextDouble() < chance)
+                    {
+                        leftTop++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                while (leftBot > height / 2)
+                {
+                    if (r.NextDouble() < chance)
+                    {
+                        leftBot--;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                for (int y = leftTop; y < leftBot; y++)
+                {
+                    tiles.Add(c + new Point(x, y));
+                }
+            }
+            for (int x = width / 2 + 1; x < width; x++)
+            {
+                double chance = Math.Pow((x - width / 2) / (double)width, 2) * 4;
+                while (rightTop < height / 2)
+                {
+                    if (r.NextDouble() < chance)
+                    {
+                        rightTop++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                while (rightBot > height / 2)
+                {
+                    if (r.NextDouble() < chance)
+                    {
+                        rightBot--;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                if (rightBot <= rightTop)
+                {
+                    break;
+                }
+                for (int y = rightTop; y < rightBot; y++)
+                {
+                    tiles.Add(c + new Point(x, y));
+                }
+
+            }
+            return tiles;
+
+
+            /*
+            Point begin = new(0, 0);
+            Point end = new(0, 0);
+            int idx = 0;
+            List<Point> tiles = new List<Point>();
+            while (idx < maxTiles)
+            {
+                foreach (var rect in landmarkRects)
+                {
+                    var bounds = new Rectangle(c + begin - new Point(1, 1), (c + end + new Point(1, 1)) - (c + begin - new Point(1, 1)));
+                    if (rect.Intersects(bounds))
+                        return null;
+                }
+                for (int x = begin.X; x <= end.X; x++)
+                {
+                    for (int y = begin.Y; y <= end.Y; y++)
+                    {
+                        Point v = c + new Point(x, y);
+                        if (tiles.Contains(v))
+                            continue;
+                        if (x != begin.X && x != end.X && y != begin.Y && y != end.Y)
+                            continue;
+                        if (v == c)
+                        {
+                            tiles.Add(v);
+                            idx++;
+                            if (idx >= maxTiles)
+                                goto cont;
+                            goto next;
+                        }
+
+                        int surround = 0;
+                        foreach (var s in Utility.getSurroundingTileLocationsArray(v.ToVector2()))
+                        {
+                            if (tiles.Contains(s.ToPoint()))
+                            {
+                                surround++;
+                                break;
+                            }
+                        }
+                        if (surround == 0)
+                        {
+                            //continue;
+                        }
+                        //var distance = ((v.X - c.X) + (v.Y - c.Y)) / 2f;
+                        var distance = Vector2.Distance(v.ToVector2(), c.ToVector2());
+
+                        double chance = 1 - distance / (maxTiles / 48);
+                        if (r.NextDouble() < chance)
+                        {
+                            tiles.Add(v);
+                            idx++;
+                            if (idx >= maxTiles)
+                                goto cont;
+                        }
+                    }
+                }
+                begin -= new Point(1, 1);
+                end += new Point(1, 1);
+                if (end.X > openWorldChunkSize / 2)
+                    break;
+                next:
+                continue;
+            }
+        cont:
+            // fill holes
+            for (int x = begin.X; x <= end.X; x++)
+            {
+                for (int y = begin.Y; y <= end.Y; y++)
+                {
+                    Point v = c + new Point(x, y);
+                    if (tiles.Contains(v))
+                    {
+                        bool fill = false;
+                        for (int y2 = end.Y; y2 > y; y2--)
+                        {
+                            Point v2 = c + new Point(x, y2);
+                            if (tiles.Contains(v2))
+                            {
+                                fill = true;
+                            }
+                            else if (fill)
+                            {
+                                tiles.Add(v2);
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+            for (int y = begin.Y; y <= end.Y; y++)
+            {
+                for (int x = begin.X; x <= end.X; x++)
+                {
+                    Point v = c + new Point(x, y);
+                    if (tiles.Contains(v))
+                    {
+                        bool fill = false;
+                        for (int x2 = end.X; x2 > x; x2--)
+                        {
+                            Point v2 = c + new Point(x2, y);
+                            if (tiles.Contains(v2))
+                            {
+                                fill = true;
+                            }
+                            else if (fill)
+                            {
+                                tiles.Add(v2);
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+            */
+        }
+        private static List<Point> GetBlobPadding(List<Point> tiles, int amount, bool include)
+        {
+            List<Point> temp = new(tiles);
+            List<Point> newTiles = new();
+            for(int i = 0; i < amount; i++)
+            {
+                foreach (var t in temp)
+                {
+                    for(int x = -1; x < 2; x++)
+                    {
+                        for (int y = -1; y < 2; y++)
+                        {
+                            var np = t + new Point(x, y);
+                            if (!temp.Contains(np) && !newTiles.Contains(np))
+                            {
+                                newTiles.Add(np);
+                            }
+                        }
+                    }
+                    temp = new(tiles);
+                    temp.AddRange(newTiles);
+                }
+            }
+            if (include)
+                newTiles.AddRange(tiles);
+            return newTiles;
+        }
     }
 }

@@ -62,7 +62,7 @@ namespace StardewOpenWorld
         public static Dictionary<string, Landmark> landmarkDict = new();
         public static List<Rectangle> landmarkRects = new();
         public static int RandomSeed = -1;
-        public static List<int> grassTiles = new List<int>() { 150, 151, 152, 175 };
+        public static List<int> grassTiles = new List<int>() { 300, 304, 305, 351, 150, 151, 152, 175 };
 
         private static IAdvancedLootFrameworkApi advancedLootFrameworkApi;
         private static List<object> treasuresList = new();

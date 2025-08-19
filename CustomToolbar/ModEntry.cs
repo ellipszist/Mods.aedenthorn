@@ -63,7 +63,7 @@ namespace CustomToolbar
 
 		private void Input_ButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
 		{
-			if (e.Button == Config.RotateKey)
+			if (Context.IsPlayerFree && e.Button == Config.RotateKey)
 			{
 				foreach (var menu in Game1.onScreenMenus)
 				{

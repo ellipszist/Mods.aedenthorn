@@ -1,7 +1,7 @@
 ﻿{
 	"Name": "Custom Toolbar",
 	"Author": "aedenthorn",
-	"Version": "0.1.2",
+	"Version": "0.1.3",
 	"Description": "Lets you change the positioning and the orientation of the toolbar.",
 	"UniqueID": "aedenthorn.CustomToolbar",
 	"EntryDll": "CustomToolbar.dll",

@@ -40,7 +40,7 @@ namespace HugsAndKisses
             }
             if(Config.CustomHugSound.Length > 0)
             {
-                string filePath = Path.Combine(Helper.DirectoryPath, "assets", $"{Config.CustomKissSound}.wav");
+                string filePath = Path.Combine(Helper.DirectoryPath, "assets", $"{Config.CustomHugSound}.wav");
                 Monitor.Log("Hug audio path: " + filePath);
                 if (File.Exists(filePath))
                 {
