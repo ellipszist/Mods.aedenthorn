@@ -40,9 +40,8 @@ namespace StardewOpenWorld
                     if (codes[i].opcode == OpCodes.Ldfld && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(Point), nameof(Point.Y)))
                     {
                         SMonitor.Log("Adding method to adjust draw layer");
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetGlobalCharacterInt))));
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
-                        i += 2;
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.IntToLocalY))));
+                        i++;
                     }
                 }
 
@@ -62,9 +61,8 @@ namespace StardewOpenWorld
                     if (codes[i].opcode == OpCodes.Ldfld && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(Point), nameof(Point.Y)) && codes[i - 1].opcode == OpCodes.Call && codes[i - 1].operand is MethodInfo && (MethodInfo)codes[i - 1].operand == AccessTools.PropertyGetter(typeof(Character), nameof(Character.StandingPixel)))
                     {
                         SMonitor.Log("Adding method to adjust draw layer");
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetGlobalCharacterInt))));
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
-                        i += 2;
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.IntToLocalY))));
+                        i++;
                     }
                 }
 
@@ -84,9 +82,8 @@ namespace StardewOpenWorld
                     if (codes[i].opcode == OpCodes.Ldfld && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(Point), nameof(Point.Y)) && codes[i - 1].opcode == OpCodes.Call && codes[i - 1].operand is MethodInfo && (MethodInfo)codes[i - 1].operand == AccessTools.PropertyGetter(typeof(Character), nameof(Character.StandingPixel)))
                     {
                         SMonitor.Log("Adding method to adjust draw layer");
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetGlobalCharacterInt))));
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
-                        i += 2;
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.IntToLocalY))));
+                        i++;
                     }
                 }
 
@@ -106,8 +103,7 @@ namespace StardewOpenWorld
                     if (codes[i].opcode == OpCodes.Ldfld && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(Point), nameof(Point.Y)) && codes[i - 1].opcode == OpCodes.Call && codes[i - 1].operand is MethodInfo && (MethodInfo)codes[i - 1].operand == AccessTools.PropertyGetter(typeof(Character), nameof(Character.StandingPixel)))
                     {
                         SMonitor.Log("Adding method to adjust draw layer");
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetGlobalCharacterInt))));
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.IntToLocalY))));
                         i += 2;
                     }
                 }
@@ -116,6 +112,33 @@ namespace StardewOpenWorld
             }
         }
 
+        [HarmonyPatch(typeof(Grass), nameof(Grass.draw))]
+        public static class Grass_draw_Patch
+        {
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling Grass.draw");
+
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Ldfld && codes[i].operand is FieldInfo && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(Vector2), nameof(Vector2.X)))
+                    {
+                        SMonitor.Log("Adding method to adjust draw layer");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.FloatToLocalX))));
+                        i++;
+                    }
+                    else if (codes[i].opcode == OpCodes.Ldfld && codes[i].operand is FieldInfo && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(Vector2), nameof(Vector2.Y)))
+                    {
+                        SMonitor.Log("Adding method to adjust draw layer");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.FloatToLocalY))));
+                        i++;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
         [HarmonyPatch(typeof(Tree), nameof(Tree.draw))]
         public static class Tree_draw_Patch
         {
@@ -129,16 +152,14 @@ namespace StardewOpenWorld
                     if (codes[i].opcode == OpCodes.Call && codes[i].operand is MethodInfo && (MethodInfo)codes[i].operand == AccessTools.PropertyGetter(typeof(Rectangle), nameof(Rectangle.Bottom)))
                     {
                         SMonitor.Log("Adding method to adjust draw layer");
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetGlobalTreeInt))));
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
-                        i += 2;
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.IntToLocalY))));
+                        i++;
                     }
                     else if (codes[i].opcode == OpCodes.Ldfld && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(Vector2), nameof(Vector2.X)) && codes[i + 1].opcode == OpCodes.Ldc_R4 && codes[i + 2].opcode == OpCodes.Div)
                     {
                         SMonitor.Log("Adding method to adjust draw layer");
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetGlobalTreeFloat))));
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
-                        i += 2;
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.FloatToLocalXTile))));
+                        i++;
                     }
                 }
 

@@ -19,37 +19,42 @@ namespace StardewOpenWorld
             if (!Config.ModEnabled || location != openWorldLocation || monster.Position.X < 0f || monster.Position.X > Config.OpenWorldSize * 64 || monster.Position.Y < 0f || monster.Position.Y > Config.OpenWorldSize * 64)
                 npcs.Remove(monster);
         }
-        public static int GetGlobalCharacterInt(int value, Character character)
+        public static int IntToLocalX(int value)
         {
-            if (!Config.ModEnabled || character.currentLocation?.Name.Contains(locName) != true)
+            if (!Config.ModEnabled || Game1.currentLocation?.Name.Contains(locName) != true)
                 return value;
             int v = value % (openWorldChunkSize * 64) + ChunkDisplayOffset(value);
             return v;
         }
-        public static float GetGlobalCharacterFloat(float value, Character character)
+        public static int IntToLocalY(int value)
         {
-            if (!Config.ModEnabled || character.currentLocation?.Name.Contains(locName) != true)
+            if (!Config.ModEnabled || Game1.currentLocation?.Name.Contains(locName) != true)
+                return value;
+            int v = value % (openWorldChunkSize * 64) + ChunkDisplayOffset(value);
+            return v;
+        }
+        
+        public static float FloatToLocalX(float value)
+        {
+            if (!Config.ModEnabled || Game1.currentLocation?.Name.Contains(locName) != true)
+                return value;
+            float v = value % (openWorldChunkSize * 64);
+            return v;
+        }
+        public static float FloatToLocalXTile(float value)
+        {
+            if (!Config.ModEnabled || Game1.currentLocation?.Name.Contains(locName) != true)
+                return value;
+            float v = value % openWorldChunkSize;
+            return v;
+        }
+        public static float FloatToLocalY(float value)
+        {
+            if (!Config.ModEnabled || Game1.currentLocation?.Name.Contains(locName) != true)
                 return value;
             float v = value % (openWorldChunkSize * 64) + ChunkDisplayOffset(value);
             return v;
         }
-        public static int GetGlobalTreeInt(int value, Tree tree)
-        {
-            if (!Config.ModEnabled || tree.Location?.Name.Contains(locName) != true)
-                return value;
-            int v = value % (openWorldChunkSize * 64) + ChunkDisplayOffset(value);
-            return v;
-        }
-
-
-        public static float GetGlobalTreeFloat(float value, Tree tree)
-        {
-            if (!Config.ModEnabled || tree.Location?.Name.Contains(locName) != true)
-                return value;
-            float v = value % openWorldChunkSize + ChunkDisplayOffset(value);
-            return v;
-        }
-
 
         public static float GetChestDrawLayer(float value, Chest chest, int x, int y)
         {

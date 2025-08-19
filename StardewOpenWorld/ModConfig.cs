@@ -26,13 +26,17 @@ namespace StardewOpenWorld
         public int MaxTreesPerForest { get; set; } = 80;
         public int MinRocksPerOutcrop { get; set; } = 5;
         public int MaxRocksPerOutcrop { get; set; } = 40;
+        public int MinGrassPerField { get; set; } = 5;
+        public int MaxGrassPerField { get; set; } = 40;
         public double MonsterDensity { get; set; } = 0.2;
         public double TreeDensity { get; set; } = 0.3;
         public double RockDensity { get; set; } = 0.3;
+        public double GrassDensity { get; set; } = 0.3;
         public string BackgroundMusic { get; set; } = "desolate";
-
         public int TilesPerChestMin { get; set; } = 1000;
         public int TilesPerChestMax { get; set; } = 10000;
+        public int TilesPerGrassMin { get; set; } = 500;
+        public int TilesPerGrassMax { get; set; } = 1000;
         public int MaxItems { get; set; } = 5;
         public int ItemsBaseMaxValue { get; set; } = 100;
         public int MinItemValue { get; set; } = 20;

@@ -145,6 +145,20 @@ namespace StardewOpenWorld
                     }
                     rockCenters[cp].Add(rp);
                 }
+                for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesPerGrassMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesPerGrassMin * Config.OpenWorldSize + 1); i++)
+                {
+                    Point ap = new(
+                            r.Next(10, Config.OpenWorldSize - 10),
+                            r.Next(10, Config.OpenWorldSize - 10)
+                        );
+                    Point cp = new(ap.X / openWorldChunkSize, ap.Y / openWorldChunkSize);
+                    Vector2 rp = new(ap.X % openWorldChunkSize, ap.Y % openWorldChunkSize);
+                    if (!grassCenters.ContainsKey(cp))
+                    {
+                        grassCenters[cp] = new();
+                    }
+                    grassCenters[cp].Add(rp);
+                }
                 for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesPerMonsterMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesPerMonsterMin * Config.OpenWorldSize + 1); i++)
                 {
                     Point ap = new(
@@ -187,19 +201,23 @@ namespace StardewOpenWorld
 
             foreach (var cp in chunks)
             {
-                AddChestsToChunk(cp, cachedChunks[cp]);
+                AddChestsToChunk(cp);
             }
             foreach (var cp in chunks)
             {
-                AddTreesToChunk(cp, cachedChunks[cp]);
+                AddTreesToChunk(cp);
             }
             foreach (var cp in chunks)
             {
-                AddRocksToChunk(cp, cachedChunks[cp]);
+                AddRocksToChunk(cp);
             }
             foreach (var cp in chunks)
             {
-                AddMonstersToChunk(cp, cachedChunks[cp]);
+                AddGrassToChunk(cp);
+            }
+            foreach (var cp in chunks)
+            {
+                AddMonstersToChunk(cp);
             }
             foreach (var cp in chunks)
             {
@@ -217,7 +235,7 @@ namespace StardewOpenWorld
 
             AddLandmarksToChunk(cp);
             AddLakesToChunk(cp);
-            AddGrassToChunk(cp);
+            AddGrassTilesToChunk(cp);
             AddBorderToChunk(cp);
 
             return chunk;
@@ -765,7 +783,7 @@ namespace StardewOpenWorld
             chunk.tiles[layer][point.X, point.Y] = tile;
         }
 
-        private static void AddGrassToChunk(Point cp)
+        private static void AddGrassTilesToChunk(Point cp)
         {
             var layer = openWorldLocation.Map.GetLayer("Back");
             Random r = Utility.CreateRandom(RandomSeed, cp.X * cp.Y + cp.X, 42);
@@ -870,18 +888,18 @@ namespace StardewOpenWorld
         }
 
 
-        private static void AddRocksToChunk(Point chunkPoint, WorldChunk chunk)
+        private static void AddRocksToChunk(Point cp)
         {
 
-            Random r = Utility.CreateRandom(RandomSeed, chunkPoint.X * chunkPoint.Y + chunkPoint.X, 42);
-            if (!rockCenters.TryGetValue(chunkPoint, out var centers))
+            Random r = Utility.CreateRandom(RandomSeed, cp.X * cp.Y + cp.X, 42);
+            if (!rockCenters.TryGetValue(cp, out var centers))
                 return;
             MethodInfo litter = typeof(MineShaft).GetMethod("createLitterObject", BindingFlags.NonPublic | BindingFlags.Instance);
             foreach (var c in centers)
             {
                 Point begin = new(0, 0);
                 Point end = new(0, 0);
-                var level = (int)((Config.OpenWorldSize - c.Y - chunkPoint.Y * openWorldChunkSize) / Config.OpenWorldSize * Config.MaxOutcropLevel);
+                var level = (int)((Config.OpenWorldSize - c.Y - cp.Y * openWorldChunkSize) / Config.OpenWorldSize * Config.MaxOutcropLevel);
                 MineShaft shaft = new(level);
                 double gemStoneChance = 0.0015 + 0.0015 * shaft.mineLevel / 10;
                 int idx = 0;
@@ -916,16 +934,16 @@ namespace StardewOpenWorld
                                 }
                                 if (offset.X == 0 && offset.Y == 0)
                                 {
-                                    var av = v + chunkPoint.ToVector2() * openWorldChunkSize;
+                                    var av = v + cp.ToVector2() * openWorldChunkSize;
 
                                     if (!IsOpenTile(av))
                                         continue;
-                                    if (!chunk.objects.ContainsKey(av))
-                                        chunk.objects[av] = (Object)litter.Invoke(shaft, new object[] { 0.001, 5E-05, gemStoneChance, av });
+                                    if (!cachedChunks[cp].objects.ContainsKey(av))
+                                        cachedChunks[cp].objects[av] = (Object)litter.Invoke(shaft, new object[] { 0.001, 5E-05, gemStoneChance, av });
                                 }
                                 else
                                 {
-                                    Point ocp = chunkPoint + offset;
+                                    Point ocp = cp + offset;
                                     if (IsChunkInMap(ocp))
                                     {
                                         var av = v + ocp.ToVector2() * openWorldChunkSize;
@@ -960,28 +978,115 @@ namespace StardewOpenWorld
                 continue;
             }
         }
-        public static void AddChestsToChunk(Point chunkPoint, WorldChunk chunk)
+        private static void AddGrassToChunk(Point cp)
+        {
+
+            Random r = Utility.CreateRandom(RandomSeed, cp.X * cp.Y + cp.X, 42);
+            if (!grassCenters.TryGetValue(cp, out var centers))
+                return;
+            foreach (var c in centers)
+            {
+                Point begin = new(0, 0);
+                Point end = new(0, 0);
+                int idx = 0;
+                int grass = r.Next(Config.MinGrassPerField, Config.MaxGrassPerField + 1);
+                while (idx < grass)
+                {
+                    for (int x = begin.X; x <= end.X; x++)
+                    {
+                        for (int y = begin.Y; y <= end.Y; y++)
+                        {
+                            if (x != begin.X && x != end.X && y != begin.Y && y != end.Y)
+                                continue;
+                            Vector2 v = c + new Vector2(x, y);
+                            if (r.NextDouble() < Math.Pow(Config.GrassDensity, Vector2.Distance(v, c) / 3f))
+                            {
+                                Point offset = new();
+                                if (v.X < 0)
+                                {
+                                    offset += new Point(-1, 0);
+                                }
+                                else if (v.X >= openWorldChunkSize)
+                                {
+                                    offset += new Point(1, 0);
+                                }
+                                if (v.Y < 0)
+                                {
+                                    offset += new Point(0, -1);
+                                }
+                                else if (v.Y >= openWorldChunkSize)
+                                {
+                                    offset += new Point(0, 1);
+                                }
+                                if (offset.X == 0 && offset.Y == 0)
+                                {
+                                    var av = v + cp.ToVector2() * openWorldChunkSize;
+
+                                    if (!IsOpenTile(av))
+                                        continue;
+                                    if (!cachedChunks[cp].terrainFeatures.ContainsKey(av))
+                                        cachedChunks[cp].terrainFeatures[av] = new Grass(1, 3);
+                                }
+                                else
+                                {
+                                    Point ocp = cp + offset;
+                                    if (IsChunkInMap(ocp))
+                                    {
+                                        var av = v + ocp.ToVector2() * openWorldChunkSize;
+                                        if (!cachedChunks.ContainsKey(ocp))
+                                        {
+                                           CacheChunk(ocp);
+                                        }
+                                        var rect = new Rectangle(5106, 9886, 20, 20);
+                                        if (rect.Contains(av.ToPoint()))
+                                        {
+                                            var asdf = true;
+                                        }
+
+                                        if (!IsOpenTile(av))
+                                            continue;
+                                        if (!cachedChunks[ocp].terrainFeatures.ContainsKey(av))
+                                            cachedChunks[ocp].terrainFeatures[av] = new Grass(1, 3);
+                                    }
+                                }
+                                idx++;
+                                if (idx >= grass)
+                                    goto next;
+                            }
+                        }
+                    }
+                    begin -= new Point(1, 1);
+                    end += new Point(1, 1);
+                    if (end.X > openWorldChunkSize / 10)
+                        break;
+                }
+            next:
+                continue;
+            }
+        }
+
+        public static void AddChestsToChunk(Point cp)
         {
             Random r = Utility.CreateRandom(RandomSeed, 942);
-            int freeTiles = Enumerable.Range(0, openWorldChunkSize * openWorldChunkSize).Count(i => IsOpenTile(new Vector2(i % openWorldChunkSize + chunkPoint.X * openWorldChunkSize, i / openWorldChunkSize + chunkPoint.Y * openWorldChunkSize)));
-            float chestCount = freeTiles / (float)(Config.TilesPerChestMin + ((Config.TilesPerChestMax - Config.TilesPerChestMin) * r.NextDouble() * chunkPoint.Y * openWorldChunkSize / Config.OpenWorldSize )); 
+            int freeTiles = Enumerable.Range(0, openWorldChunkSize * openWorldChunkSize).Count(i => IsOpenTile(new Vector2(i % openWorldChunkSize + cp.X * openWorldChunkSize, i / openWorldChunkSize + cp.Y * openWorldChunkSize)));
+            float chestCount = freeTiles / (float)(Config.TilesPerChestMin + ((Config.TilesPerChestMax - Config.TilesPerChestMin) * r.NextDouble() * cp.Y * openWorldChunkSize / Config.OpenWorldSize )); 
             int spawnedChestCount = Math.Min(freeTiles, (int)Math.Floor(chestCount));
             int i = 0;
             int attempt = 0;
             while (i < spawnedChestCount && attempt < spawnedChestCount * 10)
             {
                 Vector2 freeTile = new(r.Next(openWorldChunkSize), r.Next(openWorldChunkSize));
-                var av = ToGlobalTile(chunkPoint, freeTile);
+                var av = ToGlobalTile(cp, freeTile);
                 if (IsOpenTile(av))
                 {
                     double fraction = Math.Pow(r.NextDouble(), 1 / Config.RarityChance);
-                    int level = (int)Math.Ceiling(fraction * chunkPoint.Y * openWorldChunkSize / Config.OpenWorldSize);
+                    int level = (int)Math.Ceiling(fraction * cp.Y * openWorldChunkSize / Config.OpenWorldSize);
                     Chest chest = advancedLootFrameworkApi.MakeChest(treasuresList, Config.ItemListChances, Config.MaxItems, Config.MinItemValue, Config.MaxItemValue, level, Config.IncreaseRate, Config.ItemsBaseMaxValue, freeTile);
                     chest.CanBeGrabbed = false;
                     chest.playerChoiceColor.Value = MakeTint(fraction);
                     chest.modData.Add(modKey, "T");
                     chest.modData.Add(modCoinKey, advancedLootFrameworkApi.GetChestCoins(level, Config.IncreaseRate, Config.CoinBaseMin, Config.CoinBaseMax).ToString());
-                    chunk.overlayObjects[av] = chest;
+                    cachedChunks[cp].overlayObjects[av] = chest;
                     i++;
                 }
                 attempt++;
@@ -998,11 +1103,11 @@ namespace StardewOpenWorld
             return tile + new Vector2(p.X * openWorldChunkSize, p.Y * openWorldChunkSize);
         }
 
-        private static void AddTreesToChunk(Point chunkPoint, WorldChunk chunk)
+        private static void AddTreesToChunk(Point cp)
         {
 
-            Random r = Utility.CreateRandom(RandomSeed, chunkPoint.X * chunkPoint.Y + chunkPoint.X, 42);
-            if (!treeCenters.TryGetValue(chunkPoint, out var centers))
+            Random r = Utility.CreateRandom(RandomSeed, cp.X * cp.Y + cp.X, 42);
+            if (!treeCenters.TryGetValue(cp, out var centers))
                 return;
             foreach (var c in centers)
             {
@@ -1046,15 +1151,15 @@ namespace StardewOpenWorld
                                 }
                                 if (offset.X == 0 && offset.Y == 0)
                                 {
-                                    var av = v + chunkPoint.ToVector2() * openWorldChunkSize;
+                                    var av = v + cp.ToVector2() * openWorldChunkSize;
                                     if (!IsOpenTile(av))
                                         continue;
-                                    if (!chunk.terrainFeatures.ContainsKey(av))
-                                        chunk.terrainFeatures[av] = new Tree(GetRandomTree(av, r, c.Value), r.NextDouble() < 0.2 ? 4 : 5);
+                                    if (!cachedChunks[cp].terrainFeatures.ContainsKey(av))
+                                        cachedChunks[cp].terrainFeatures[av] = new Tree(GetRandomTree(av, r, c.Value), r.NextDouble() < 0.2 ? 4 : 5);
                                 }
                                 else
                                 {
-                                    Point ocp = chunkPoint + offset;
+                                    Point ocp = cp + offset;
                                     if (IsChunkInMap(ocp))
                                     {
                                         var av = v + ocp.ToVector2() * openWorldChunkSize;
@@ -1189,13 +1294,13 @@ namespace StardewOpenWorld
             }
             return null;
         }
-        private static void AddMonstersToChunk(Point chunkPoint, WorldChunk chunk)
+        private static void AddMonstersToChunk(Point cp)
         {
             var monsterDict = SHelper.GameContent.Load<Dictionary<string, MonsterSpawnInfo>>(monsterDictPath);
 
-            Random r = Utility.CreateRandom(RandomSeed, chunkPoint.X * chunkPoint.Y + chunkPoint.X, 142);
+            Random r = Utility.CreateRandom(RandomSeed, cp.X * cp.Y + cp.X, 142);
 
-            if (!monsterCenters.TryGetValue(chunkPoint, out var mcs))
+            if (!monsterCenters.TryGetValue(cp, out var mcs))
                 return;
             foreach (var mc in mcs)
             {
@@ -1250,13 +1355,13 @@ namespace StardewOpenWorld
                                 }
                                 if (offset.X == 0 && offset.Y == 0)
                                 {
-                                    var av = v + chunkPoint.ToVector2() * openWorldChunkSize;
-                                    chunk.monsters[av] = monsters[idx];
+                                    var av = v + cp.ToVector2() * openWorldChunkSize;
+                                    cachedChunks[cp].monsters[av] = monsters[idx];
                                 }
                                 else
                                 {
                                     int num = Config.OpenWorldSize / openWorldChunkSize;
-                                    Point ocp = chunkPoint + offset;
+                                    Point ocp = cp + offset;
                                     if (ocp.X >= 0 && ocp.X < num && ocp.Y >= 0 && ocp.Y < num)
                                     {
                                         var av = v + ocp.ToVector2() * openWorldChunkSize;

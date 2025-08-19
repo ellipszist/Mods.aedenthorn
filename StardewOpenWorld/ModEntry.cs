@@ -49,6 +49,7 @@ namespace StardewOpenWorld
         
         public static Dictionary<Point, Dictionary<Vector2, string>> treeCenters = new();
         public static Dictionary<Point, List<Vector2>> rockCenters = new();
+        public static Dictionary<Point, List<Vector2>> grassCenters = new();
         public static Dictionary<Point, List<Point>> lakeCenters = new();
         public static Dictionary<Point, Dictionary<Vector2, string>> monsterCenters = new();
 
@@ -169,6 +170,7 @@ namespace StardewOpenWorld
 
             treeCenters = new();
             rockCenters = new();
+            grassCenters = new();
             monsterCenters = new();
             ReloadOpenWorld(true);
 
