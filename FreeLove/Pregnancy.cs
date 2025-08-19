@@ -19,6 +19,10 @@ namespace FreeLove
         {
             if (!Config.EnableMod || __result is QuestionEvent || __result is BirthingEvent)
                 return;
+
+            lastBirthingSpouse = null;
+            lastPregnantSpouse = null;
+
             SMonitor.Log("picking event");
             if (Game1.weddingToday)
             {
@@ -58,9 +62,6 @@ namespace FreeLove
                 return;
             }
 
-            lastBirthingSpouse = null;
-            lastPregnantSpouse = null;
-
             foreach (NPC spouse in allSpouses)
             {
                 if (spouse == null)
@@ -81,7 +82,7 @@ namespace FreeLove
         }
 
         public static NPC lastPregnantSpouse;
-        private static NPC lastBirthingSpouse;
+        public static NPC lastBirthingSpouse;
 
         public static bool QuestionEvent_setUp_Prefix(int ___whichQuestion, ref bool __result)
         {
