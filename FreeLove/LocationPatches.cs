@@ -180,7 +180,7 @@ namespace FreeLove
             }
         }
 
-        public static bool ManorHouse_performAction_Prefix(ManorHouse __instance, string action, Farmer who, ref bool __result)
+        public static bool ManorHouse_performAction_Prefix(ManorHouse __instance, string[] action, Farmer who, ref bool __result)
         {
             try
             {
@@ -188,10 +188,8 @@ namespace FreeLove
                 Dictionary<string, NPC> spouses = ModEntry.GetSpouses(who, true);
                 if (action != null && who.IsLocalPlayer && !Game1.player.divorceTonight.Value && (Game1.player.isMarriedOrRoommates() || spouses.Count > 0))
                 {
-                    string a = action.Split(new char[]
-                    {
-                    ' '
-                    })[0];
+                    string a = ArgUtility.Get(action, 0, null, true);
+
                     if (a == "DivorceBook")
                     {
                         string str = Helper.Translation.Get("divorce_who");

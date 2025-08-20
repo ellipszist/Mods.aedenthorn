@@ -169,21 +169,28 @@ namespace CustomSpouseRooms
             }
         }
 
+        public static void _RebakeRow_Prefix(Layer __instance, int y, ref int[,] ____skipMap)
+        {
+            int current_skip = -1;
+            for (int x = __instance.LayerWidth - 1; x >= 0; x--)
+            {
+                if (current_skip >= 0)
+                {
+                    current_skip++;
+                }
+                ____skipMap[x, y] = current_skip;
+                if (__instance.Tiles[x, y] != null)
+                {
+                    current_skip = 0;
+                }
+            }
+        }
+
         public static bool FarmHouse_loadSpouseRoom_Prefix(FarmHouse __instance, HashSet<string> ____appliedMapOverrides, ref bool __state)
         {
             if (!Config.EnableMod)
                 return true;
 
-            // For some reason this method crashes the game when it is ran during the day and you add another room
-            // Like if you propose to someone and then come home, but it works just fine with adding new rooms when loading the save.
-            // This simply prevents this method from running except immediately upon the opening of a save; ModEntry.justLoadedSave is
-            // reset when you return to the title screen.
-            if (!ModEntry.justLoadedSave)
-            {
-                return false;
-            }
-
-            ModEntry.justLoadedSave = false;
             try
             {
                 var allSpouses = GetSpouses(__instance.owner, -1).Keys.ToList();

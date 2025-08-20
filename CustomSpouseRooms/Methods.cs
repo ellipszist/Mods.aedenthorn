@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Sickhead.Engine.Util;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
@@ -44,7 +45,7 @@ namespace CustomSpouseRooms
 				if (!pair.Value.IsMarried())
 					continue;
 				long id = pair.Key.Farmer1 == farmer.UniqueMultiplayerID ? pair.Key.Farmer2 : pair.Key.Farmer1;
-				Farmer spouse = Game1.getFarmer(id);
+				Farmer spouse = Game1.GetPlayer(id);
 				if (spouse != null)
                 {
 					spouses[spouse.Name] = spouse;
@@ -83,12 +84,16 @@ namespace CustomSpouseRooms
                 }
                 AccessTools.Field(typeof(Layer), "m_tiles").SetValue(layers[i], newTiles);
                 AccessTools.Field(typeof(Layer), "m_tileArray").SetValue(layers[i], new TileArray(layers[i], newTiles));
+                AccessTools.Field(typeof(Layer), "_skipMap").SetValue(layers[i], null);
 
+                Size displaySize = layers[i].DisplaySize;
+				Size oldSize = AccessTools.FieldRefAccess<Map, Size>(location.Map, "m_displaySize");
+                AccessTools.FieldRefAccess<Map, Size>(location.Map, "m_displaySize") = new Size(Math.Max(oldSize.Width, displaySize.Width), Math.Max(oldSize.Height, displaySize.Height));
             }
             AccessTools.Field(typeof(Map), "m_layers").SetValue(location.map, layers);
         }
 
-		public static void CheckSpouseThing(FarmHouse fh, SpouseRoomData srd)
+        public static void CheckSpouseThing(FarmHouse fh, SpouseRoomData srd)
 		{
 			SMonitor.Log($"Checking spouse thing for {srd.name}");
 			if (srd.name == "Emily" && (srd.templateName == "Emily" || srd.templateName == null || srd.templateName == ""))

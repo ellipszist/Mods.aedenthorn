@@ -8,6 +8,7 @@ namespace PlaceShaft
 {
     public class ModConfig
     {
+        public bool EnableMod { get; set; } = true;
         public string ShaftCost { get; set; } = "390 200";
         public string SkillReq { get; set; } = "Mining 6";
         public int PercentDamage { get; set; } = 100;

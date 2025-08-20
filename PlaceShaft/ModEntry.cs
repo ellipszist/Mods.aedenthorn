@@ -1,19 +1,13 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.GameData.BigCraftables;
-using StardewValley.GameData.Objects;
 using StardewValley.Locations;
-using StardewValley.Network;
+using StardewValley.SDKs;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using System.Threading;
-using xTile;
 
 namespace PlaceShaft
 {
@@ -34,7 +28,10 @@ namespace PlaceShaft
             itemName = ModManifest.UniqueID + "_MineShaft";
             context = this;
             Config = Helper.ReadConfig<ModConfig>();
+            if (!Config.EnableMod)
+                return;
             helper.Events.Content.AssetRequested += Content_AssetRequested;
+            helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
 
             Harmony harmony = new(ModManifest.UniqueID);
 
@@ -50,11 +47,74 @@ namespace PlaceShaft
                original: AccessTools.Method(typeof(MineShaft), nameof(MineShaft.checkAction)),
                prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.MineShaft_checkAction_prefix))
             );
-            harmony.Patch(
-               original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.createQuestionDialogue),new Type[] { typeof(string),typeof (Response[]), typeof(string) }),
-               prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.createQuestionDialogue_prefix))
+        }
+
+
+        private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
+        {
+            // get Generic Mod Config Menu's API (if it's installed)
+            var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+            if (configMenu is null)
+                return;
+
+            // register mod
+            configMenu.Register(
+                mod: ModManifest,
+                reset: () => Config = new ModConfig(),
+                save: () => Helper.WriteConfig(Config)
+            );
+
+            configMenu.AddBoolOption(
+                mod: ModManifest,
+                name: () => Helper.Translation.Get("GMCM.EnableMod"),
+                getValue: () => Config.EnableMod,
+                setValue: value => Config.EnableMod = value
+            );
+            configMenu.AddBoolOption(
+                mod: ModManifest,
+                name: () => Helper.Translation.Get("GMCM.PreventGoingToSkullCave"),
+                getValue: () => Config.PreventGoingToSkullCave,
+                setValue: value => Config.PreventGoingToSkullCave = value
+            );
+            configMenu.AddBoolOption(
+                mod: ModManifest,
+                name: () => Helper.Translation.Get("GMCM.SkipConfirmOnShaftJump"),
+                getValue: () => Config.SkipConfirmOnShaftJump,
+                setValue: value => Config.SkipConfirmOnShaftJump = value
+            );
+            configMenu.AddTextOption(
+                mod: ModManifest,
+                name: () => Helper.Translation.Get("GMCM.ShaftCost"),
+                tooltip: () => Helper.Translation.Get("GMCM.ShaftCost.TT"),
+                getValue: () => Config.ShaftCost,
+                setValue: value => Config.ShaftCost = value
+            );
+            configMenu.AddTextOption(
+                mod: ModManifest,
+                name: () => Helper.Translation.Get("GMCM.SkillReq"),
+                getValue: () => Config.SkillReq,
+                setValue: value => Config.SkillReq = value
+            );
+            configMenu.AddNumberOption(
+                mod: ModManifest,
+                name: () => Helper.Translation.Get("GMCM.MinLevels"),
+                getValue: () => Config.MinLevels,
+                setValue: value => Config.MinLevels = value
+            );
+            configMenu.AddNumberOption(
+                mod: ModManifest,
+                name: () => Helper.Translation.Get("GMCM.MinLevels"),
+                getValue: () => Config.MaxLevels,
+                setValue: value => Config.MaxLevels = value
+            );
+            configMenu.AddNumberOption(
+                mod: ModManifest,
+                name: () => Helper.Translation.Get("GMCM.PercentDamage"),
+                getValue: () => Config.PercentDamage,
+                setValue: value => Config.PercentDamage = value
             );
         }
+
         private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
         {
             if (e.NameWithoutLocale.IsEquivalentTo("Data/BigCraftables"))
@@ -96,25 +156,25 @@ namespace PlaceShaft
             }
         }
 
-        private static bool createQuestionDialogue_prefix(GameLocation __instance, string dialogKey)
+
+        private static bool MineShaft_checkAction_prefix(MineShaft __instance, xTile.Dimensions.Location tileLocation, Farmer who)
         {
-            if (dialogKey == "Shaft" && Config.SkipConfirmOnShaftJump) 
+            if (who.IsLocalPlayer)
             {
-                (__instance as MineShaft).enterMineShaft();
-                return false;
+                int tileIndexAt = __instance.getTileIndexAt(tileLocation, "Buildings", "mine");
+
+                if (tileIndexAt == 174)
+                {
+                    playerLocation = Game1.player.position.Value;
+                    jumpLocation = new Vector2(tileLocation.X * 64, tileLocation.Y * 64);
+                    if (Config.SkipConfirmOnShaftJump)
+                    {
+                        __instance.enterMineShaft();
+                        return false;
+                    }
+                }
             }
             return true;
-        }
-        
-        private static void MineShaft_checkAction_prefix(MineShaft __instance, xTile.Dimensions.Location tileLocation)
-        {
-            int tileIndexAt = __instance.getTileIndexAt(tileLocation, "Buildings", "mine");
-
-            if (tileIndexAt == 174)
-            {
-                playerLocation = Game1.player.position.Value;
-                jumpLocation = new Vector2(tileLocation.X * 64, tileLocation.Y * 64);
-            }
         }
 
         private static bool enterMineShaft_prefix(MineShaft __instance, ref bool ___isFallingDownShaft, ref int ___lastLevelsDownFallen, int ___deepestLevelOnCurrentDesertFestivalRun)
@@ -137,6 +197,7 @@ namespace PlaceShaft
             {
                 levelsDown = 220 - __instance.mineLevel;
             }
+            levelsFallen = levelsDown;
             ___lastLevelsDownFallen = levelsDown;
             Game1.player.health = Math.Max(1, Game1.player.health - levelsDown * (int)Math.Round(3f * Config.PercentDamage / 100f));
             ___isFallingDownShaft = true;
@@ -164,7 +225,7 @@ namespace PlaceShaft
                 return;
             }
             ticks++;
-            context.Monitor.Log($"{ticks}: {playerLocation}, {jumpLocation}, {Game1.player.position.Value}");
+            //context.Monitor.Log($"{ticks}: {playerLocation}, {jumpLocation}, {Game1.player.position.Value}");
             Game1.player.position.Value = Vector2.Lerp(playerLocation, jumpLocation, 1f / 30f * ticks);
             lastYJumpVelocity = Game1.player.yJumpVelocity;
         }

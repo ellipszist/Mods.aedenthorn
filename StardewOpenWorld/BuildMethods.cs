@@ -542,40 +542,7 @@ namespace StardewOpenWorld
         {
             var back = openWorldLocation.Map.GetLayer("Back");
             var mainSheet = openWorldLocation.Map.GetTileSheet("outdoors");
-
-            var which = r.NextDouble();
-            if (which < 0.01f)
-            {
-                AddTileToChunk(chunkPoint, "Back", v.X, v.Y, animatedTiles[mainSheet.Id][150]);
-            }
-            else if (which < 0.02f)
-            {
-                AddTileToChunk(chunkPoint, "Back", v.X, v.Y, animatedTiles[mainSheet.Id][151]);
-            }
-            else if (which < 0.03f)
-            {
-                AddTileToChunk(chunkPoint, "Back", v.X, v.Y, animatedTiles[mainSheet.Id][152]);
-            }
-            else if (which < 0.04f)
-            {
-                AddTileToChunk(chunkPoint, "Back", v.X, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 400));
-            }
-            else if (which < 0.05f)
-            {
-                AddTileToChunk(chunkPoint, "Back", v.X, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 401));
-            }
-            else if (which < 0.05f)
-            {
-                AddTileToChunk(chunkPoint, "Back", v.X, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 254));
-            }
-            else if (which < 0.06f)
-            {
-                AddTileToChunk(chunkPoint, "Back", v.X, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 255));
-            }
-            else
-            {
-                AddTileToChunk(chunkPoint, "Back", v.X, v.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 175));
-            }
+            AddTileToChunk(chunkPoint, "Back", v.X, v.Y, GetRandomMeadowTile(r, back, mainSheet));
             return;
             if (!tiles.Contains(v + new Point(-1, 0)))
             {
@@ -745,6 +712,44 @@ namespace StardewOpenWorld
                 {
                     AddTileToChunk(chunkPoint, "Buildings", v.X, v.Y + 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 259));
                 }
+            }
+        }
+
+        private static Tile GetRandomMeadowTile(Random r, Layer back, TileSheet mainSheet)
+        {
+            var which = r.NextDouble();
+
+            if (which < 0.01f)
+            {
+                return animatedTiles[mainSheet.Id][150];
+            }
+            else if (which < 0.02f)
+            {
+                return animatedTiles[mainSheet.Id][151];
+            }
+            else if (which < 0.03f)
+            {
+                return animatedTiles[mainSheet.Id][152];
+            }
+            else if (which < 0.04f)
+            {
+                return new StaticTile(back, mainSheet, BlendMode.Alpha, 400);
+            }
+            else if (which < 0.05f)
+            {
+                return new StaticTile(back, mainSheet, BlendMode.Alpha, 401);
+            }
+            else if (which < 0.05f)
+            {
+                return new StaticTile(back, mainSheet, BlendMode.Alpha, 254);
+            }
+            else if (which < 0.06f)
+            {
+                return new StaticTile(back, mainSheet, BlendMode.Alpha, 255);
+            }
+            else
+            {
+                return new StaticTile(back, mainSheet, BlendMode.Alpha, 175);
             }
         }
 

@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Locations;
@@ -7,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using xTile;
+using xTile.Layers;
 
 namespace CustomSpouseRooms
 {
@@ -67,6 +69,10 @@ namespace CustomSpouseRooms
             );
 
             harmony.Patch(
+               original: AccessTools.Method(typeof(Layer), "_RebakeRow"),
+               prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry._RebakeRow_Prefix))
+            );
+            harmony.Patch(
                original: AccessTools.Method(typeof(FarmHouse), nameof(FarmHouse.loadSpouseRoom)),
                prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.FarmHouse_loadSpouseRoom_Prefix))
             );
@@ -103,7 +109,7 @@ namespace CustomSpouseRooms
         {
             if (!Config.EnableMod)
                 return;
-            if(e.NameWithoutLocale.BaseName.Contains("custom_spouse_room_"))
+            if (e.NameWithoutLocale.BaseName.Contains("custom_spouse_room_"))
                 e.LoadFromModFile<Map>(e.NameWithoutLocale.BaseName + ".tmx", StardewModdingAPI.Events.AssetLoadPriority.Exclusive);
             else if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
             {
