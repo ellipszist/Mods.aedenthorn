@@ -84,67 +84,11 @@ namespace StardewOpenWorld
                 return false;
             }
         }
-        //HarmonyPatch(typeof(GameLocation), nameof(GameLocation.sinkDebris))]
-        public static class GameLocation_sinkDebris_Patch
-        {
-            public static void Postfix(GameLocation __instance, Debris debris, Vector2 chunkTile, Vector2 chunkPosition, bool __result)
-            {
-                if (__result)
-                {
-                    var xx = true;
-                }
-                if (!Config.ModEnabled)
-                    return;
-
-                if (debris.isSinking.Value)
-                {
-                    var xx = true;
-                }
-                foreach (var chunk in debris.Chunks)
-                {
-
-                    if (__instance.doesTileSinkDebris((int)chunkTile.X, (int)chunkTile.Y, debris.debrisType.Value))
-                    {
-                        var xx = true;
-                    }
-                    if (chunk.position.X < -128f || chunk.position.Y < -64f || chunk.position.X >= (float)(__instance.map.DisplayWidth + 64) || chunk.position.Y >= (float)(__instance.map.DisplayHeight + 64))
-                    {
-                        var xx = true;
-                    }
-                }
-                var x = Environment.StackTrace;
-            }
-        }
-        //[HarmonyPatch(typeof(NetObjectShrinkList<Chunk>), nameof(NetObjectShrinkList<Chunk>.RemoveAt))]
-        public static class RemoveAt_Patch
-        {
-            public static void Prefix(NetObjectShrinkList<Chunk> __instance, int index)
-            {
-                var y = __instance[index];
-                if(y.netDebrisType.Value != (int)Debris.DebrisType.LETTERS)
-                {
-
-                    var x = Environment.StackTrace;
-                }
-            }
-        }
-        //[HarmonyPatch(typeof(Debris), nameof(Debris.updateChunks))]
+        [HarmonyPatch(typeof(Debris), nameof(Debris.updateChunks))]
         public static class Debris_updateChunks_Patch
         {
-            public static void Prefix(Debris __instance, ref bool __state)
+            public static void Postfix()
             {
-                if (!Config.ModEnabled )
-                    return;
-                __state = __instance.Chunks.Any();
-            }
-            public static void Postfix(Debris __instance, bool __state)
-            {
-                if (!Config.ModEnabled || !__state)
-                    return;
-                if (!__instance.Chunks.Any())
-                {
-                    var x = true;
-                }
             }
         }
         [HarmonyPatch(typeof(Monster), nameof(Monster.update))]

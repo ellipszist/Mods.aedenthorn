@@ -138,20 +138,62 @@ namespace StardewOpenWorld
         {
             return new Point(cp.X * openWorldChunkSize + x, cp.Y * openWorldChunkSize + y);
         }
+        public static Point GetLocalPosition(Point cp, int x, int y, out Point ocp)
+        {
+            var point = new Point(x - cp.X * openWorldChunkSize,  y - cp.Y * openWorldChunkSize);
+            var offset = GetPointOffset(point);
+            ocp = cp + offset;
+            point -= new Point(offset.X * openWorldChunkSize, offset.Y * openWorldChunkSize);
+            return point;
+        }
+        public static Point GetLocalPosition(Point p)
+        {
+            return new Point(p.X % openWorldChunkSize,  p.Y % openWorldChunkSize);
+        }
 
+        private static Point GetPointOffset(Point p)
+        {
+
+            Point offset = new();
+            if (p.X < 0)
+            {
+                offset += new Point(-1, 0);
+            }
+            else if (p.X >= openWorldChunkSize)
+            {
+                offset += new Point(1, 0);
+            }
+            if (p.Y < 0)
+            {
+                offset += new Point(0, -1);
+            }
+            else if (p.Y >= openWorldChunkSize)
+            {
+                offset += new Point(0, 1);
+            }
+            return offset;
+        }
         private static List<Point> GetBlob(Point c, Random r, int maxTiles)
         {
 
-            List<Point> tiles = new List<Point>();
             int maxSize = (int)Math.Round(Math.Sqrt(maxTiles));
             int maxVariation = (int)Math.Round(maxSize / 2f);
             int height = maxSize - r.Next(maxVariation);
             int width = maxSize - r.Next(maxVariation);
-            double ratio = (double)height / (double)width;
+
+            List<Point> tiles = MakeBlob(c, r, height, width, maxSize);
+            return tiles;
+
+        }
+
+        private static List<Point> MakeBlob(Point c, Random r, int height, int width, int maxSize)
+        {
+            List<Point> tiles = new List<Point>();
+
             int leftTop = (maxSize - height) / 2;
+            int rightTop = leftTop;
             int leftBot = maxSize - leftTop;
-            int rightTop = (maxSize - height) / 2;
-            int rightBot = maxSize - rightTop;
+            int rightBot = leftBot;
             for (int x = width / 2; x >= 0; x--)
             {
 
@@ -219,123 +261,35 @@ namespace StardewOpenWorld
 
             }
             return tiles;
+        }
 
-
-            /*
-            Point begin = new(0, 0);
-            Point end = new(0, 0);
-            int idx = 0;
-            List<Point> tiles = new List<Point>();
-            while (idx < maxTiles)
+        private static List<Point> MakeBlobFromTiles(Random rand, List<Point> tiles)
+        {
+            int l = int.MaxValue;
+            int t = int.MaxValue;
+            int r = -1;
+            int b = -1;
+            foreach(var tile in tiles)
             {
-                foreach (var rect in landmarkRects)
+                if(tile.X < l)
                 {
-                    var bounds = new Rectangle(c + begin - new Point(1, 1), (c + end + new Point(1, 1)) - (c + begin - new Point(1, 1)));
-                    if (rect.Intersects(bounds))
-                        return null;
+                    l = tile.X;
                 }
-                for (int x = begin.X; x <= end.X; x++)
+                if(tile.X > r)
                 {
-                    for (int y = begin.Y; y <= end.Y; y++)
-                    {
-                        Point v = c + new Point(x, y);
-                        if (tiles.Contains(v))
-                            continue;
-                        if (x != begin.X && x != end.X && y != begin.Y && y != end.Y)
-                            continue;
-                        if (v == c)
-                        {
-                            tiles.Add(v);
-                            idx++;
-                            if (idx >= maxTiles)
-                                goto cont;
-                            goto next;
-                        }
-
-                        int surround = 0;
-                        foreach (var s in Utility.getSurroundingTileLocationsArray(v.ToVector2()))
-                        {
-                            if (tiles.Contains(s.ToPoint()))
-                            {
-                                surround++;
-                                break;
-                            }
-                        }
-                        if (surround == 0)
-                        {
-                            //continue;
-                        }
-                        //var distance = ((v.X - c.X) + (v.Y - c.Y)) / 2f;
-                        var distance = Vector2.Distance(v.ToVector2(), c.ToVector2());
-
-                        double chance = 1 - distance / (maxTiles / 48);
-                        if (r.NextDouble() < chance)
-                        {
-                            tiles.Add(v);
-                            idx++;
-                            if (idx >= maxTiles)
-                                goto cont;
-                        }
-                    }
+                    r = tile.X;
                 }
-                begin -= new Point(1, 1);
-                end += new Point(1, 1);
-                if (end.X > openWorldChunkSize / 2)
-                    break;
-                next:
-                continue;
-            }
-        cont:
-            // fill holes
-            for (int x = begin.X; x <= end.X; x++)
-            {
-                for (int y = begin.Y; y <= end.Y; y++)
+                if (tile.Y < t)
                 {
-                    Point v = c + new Point(x, y);
-                    if (tiles.Contains(v))
-                    {
-                        bool fill = false;
-                        for (int y2 = end.Y; y2 > y; y2--)
-                        {
-                            Point v2 = c + new Point(x, y2);
-                            if (tiles.Contains(v2))
-                            {
-                                fill = true;
-                            }
-                            else if (fill)
-                            {
-                                tiles.Add(v2);
-                            }
-                        }
-                        break;
-                    }
+                    t = tile.Y;
+                }
+                if (tile.Y > b)
+                {
+                    b = tile.Y;
                 }
             }
-            for (int y = begin.Y; y <= end.Y; y++)
-            {
-                for (int x = begin.X; x <= end.X; x++)
-                {
-                    Point v = c + new Point(x, y);
-                    if (tiles.Contains(v))
-                    {
-                        bool fill = false;
-                        for (int x2 = end.X; x2 > x; x2--)
-                        {
-                            Point v2 = c + new Point(x2, y);
-                            if (tiles.Contains(v2))
-                            {
-                                fill = true;
-                            }
-                            else if (fill)
-                            {
-                                tiles.Add(v2);
-                            }
-                        }
-                        break;
-                    }
-                }
-            }
-            */
+            var c = new Point(l + (r - l) / 2, t + (b - t) / 2);
+            return MakeBlob(c, rand, b - t + 2, r - l + 2, r - l + 2);
         }
         private static List<Point> GetBlobPadding(List<Point> tiles, int amount, bool include)
         {

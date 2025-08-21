@@ -552,7 +552,6 @@ namespace DMT
                                     layer.Tiles[x, y].Properties[CreatePropertyKey(action)] = action.Value;
                                 }
                             }
-                            //Context.Monitor.Log($"Added {count} properties from {key}{(count2 > 0 ? $" (Including {count2} new format properties)" : "")} to {l.Name}");
                         }
                     }
                 }
