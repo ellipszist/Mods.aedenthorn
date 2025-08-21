@@ -4,8 +4,10 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Graphics.PackedVector;
 using Netcode;
 using StardewValley;
+using StardewValley.Characters;
 using StardewValley.Locations;
 using StardewValley.Monsters;
+using StardewValley.Network;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 using StardewValley.Util;
@@ -40,7 +42,82 @@ namespace StardewOpenWorld
                     if (codes[i].opcode == OpCodes.Ldfld && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(Point), nameof(Point.Y)))
                     {
                         SMonitor.Log("Adding method to adjust draw layer");
-                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.IntToLocalY))));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(IntToLocalY))));
+                        i++;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+        [HarmonyPatch(typeof(NPC), nameof(NPC.draw), new Type[] { typeof(SpriteBatch), typeof(float) })]
+        public static class NPC_draw_Patch
+        {
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling NPC.draw");
+
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Ldfld && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(Point), nameof(Point.Y)) && codes[i - 1].opcode == OpCodes.Call && codes[i - 1].operand is MethodInfo && (MethodInfo)codes[i - 1].operand == AccessTools.PropertyGetter(typeof(Character), nameof(Character.StandingPixel)))
+                    {
+                        SMonitor.Log("Adding method to adjust draw layer");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(IntToLocalY))));
+                        i++;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+        [HarmonyPatch(typeof(NPC), nameof(NPC.DrawBreathing), new Type[] { typeof(SpriteBatch), typeof(float) })]
+        public static class NPC_DrawBreathing_Patch
+        {
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling NPC.DrawBreathing");
+
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Ldfld && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(Point), nameof(Point.Y)) && codes[i - 1].opcode == OpCodes.Call && codes[i - 1].operand is MethodInfo && (MethodInfo)codes[i - 1].operand == AccessTools.PropertyGetter(typeof(Character), nameof(Character.StandingPixel)))
+                    {
+                        SMonitor.Log("Adding method to adjust draw layer");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(IntToLocalY))));
+                        i++;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+        [HarmonyPatch(typeof(Horse), nameof(Horse.draw), new Type[] { typeof(SpriteBatch)})]
+        public static class Horse_draw_Patch
+        {
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling Horse.draw");
+
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Ldfld && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(Point), nameof(Point.Y)))
+                    {
+                        SMonitor.Log("Adding method to adjust draw layer");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(IntToLocalY))));
+                        i++;
+                    }
+                    else if (codes[i].opcode == OpCodes.Ldfld && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(Character), nameof(Character.position)) && codes[i + 1].opcode == OpCodes.Callvirt && codes[i + 1].operand is MethodInfo && (MethodInfo)codes[i + 1].operand == AccessTools.PropertyGetter(typeof(NetPosition), nameof(NetPosition.Y)))
+                    {
+                        SMonitor.Log("Adding method to adjust draw layer");
+                        codes.Insert(i + 2, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(FloatToLocalY))));
+                        i += 2;
+                    }
+                    else if (i > 0 && codes[i].opcode == OpCodes.Ldfld && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(Vector2), nameof(Vector2.Y)) && codes[i - 1].opcode == OpCodes.Call && codes[i - 1].operand is MethodInfo && (MethodInfo)codes[i - 1].operand == AccessTools.PropertyGetter(typeof(Character), nameof(Character.Position)))
+                    {
+                        SMonitor.Log("Adding method to adjust draw layer");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(FloatToLocalY))));
                         i++;
                     }
                 }

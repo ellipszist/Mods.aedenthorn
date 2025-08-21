@@ -7,6 +7,7 @@ namespace StardewOpenWorld
     {
         public double Chance = 1;
         public Rectangle? SpawnRange;
+        public float Difficulty;
         public List<MonsterInfo> Monsters = new();
     }
 

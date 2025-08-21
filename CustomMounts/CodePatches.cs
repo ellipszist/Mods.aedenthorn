@@ -8,6 +8,7 @@ using StardewValley.Buildings;
 using StardewValley.Characters;
 using StardewValley.Menus;
 using StardewValley.Objects;
+using StardewValley.Tools;
 using System.Reflection;
 using System.Reflection.Emit;
 using static StardewValley.Minigames.CraneGame;
@@ -156,7 +157,7 @@ namespace CustomMounts
         {
             //___munchingCarrotTimer = 10;
 
-            if (!Config.ModEnabled || ___munchingCarrotTimer <= 0|| (__instance.Sprite.SpriteWidth == 32 && __instance.Sprite.SpriteHeight == 32))
+            if (!Config.ModEnabled || !CheckModData(__instance, out var data) || ___munchingCarrotTimer <= 0|| (__instance.Sprite.SpriteWidth == 32 && __instance.Sprite.SpriteHeight == 32))
                 return;
             
             __state = ___munchingCarrotTimer;
@@ -164,13 +165,20 @@ namespace CustomMounts
         }
         public static void Horse_draw_Postfix(Horse __instance, SpriteBatch b, ref int ___munchingCarrotTimer, int __state)
         {
-            if (!Config.ModEnabled)
+            if (!Config.ModEnabled || !CheckModData(__instance, out var data))
                 return;
             /*
             if (++toggle < 60)
                 return;
             toggle %= 120;
             */
+            var posy = __instance.Position.Y;
+            if(Game1.currentLocation.Name == "StardewOpenWorld")
+            {
+                
+                posy %= 6400 + (Game1.viewport.Y / 6400 < (int)posy / (6400) ? 6400 : 0);
+            }
+                
             if (__state > 0)
             {
 
@@ -180,13 +188,13 @@ namespace CustomMounts
                 switch (__instance.FacingDirection)
                 {
                     case 1:
-                        b.Draw(__instance.Sprite.Texture, __instance.getLocalPosition(Game1.viewport) + new Vector2(80f * xScale, -56f * yScale - yDiff), new Rectangle?(new Rectangle((int)Math.Round(179 * xScale) + (int)(Game1.currentGameTime.TotalGameTime.TotalMilliseconds % 600.0) / 300 * (int)Math.Round(16 * xScale), (int)Math.Round(97 * yScale), (int)Math.Round(16 * xScale), (int)Math.Round(14 * yScale))), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, (__instance.Position.Y + 64f) / 10000f + 1E-07f);
+                        b.Draw(__instance.Sprite.Texture, __instance.getLocalPosition(Game1.viewport) + new Vector2(80f * xScale, -56f * yScale - yDiff), new Rectangle?(new Rectangle((int)Math.Round(179 * xScale) + (int)(Game1.currentGameTime.TotalGameTime.TotalMilliseconds % 600.0) / 300 * (int)Math.Round(16 * xScale), (int)Math.Round(97 * yScale), (int)Math.Round(16 * xScale), (int)Math.Round(14 * yScale))), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, (posy + 64f) / 10000f + 1E-07f);
                         return;
                     case 2:
-                        b.Draw(__instance.Sprite.Texture, __instance.getLocalPosition(Game1.viewport) + new Vector2(24f * xScale, -24f * yScale - yDiff), new Rectangle?(new Rectangle((int)Math.Round(170 * xScale) + (int)(Game1.currentGameTime.TotalGameTime.TotalMilliseconds % 600.0) / 300 * (int)Math.Round(16 * xScale), (int)Math.Round(112 * yScale), (int)Math.Round(16 * xScale), (int)Math.Round(16 * yScale))), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, (__instance.Position.Y + 64f) / 10000f + 1E-07f);
+                        b.Draw(__instance.Sprite.Texture, __instance.getLocalPosition(Game1.viewport) + new Vector2(24f * xScale, -24f * yScale - yDiff), new Rectangle?(new Rectangle((int)Math.Round(170 * xScale) + (int)(Game1.currentGameTime.TotalGameTime.TotalMilliseconds % 600.0) / 300 * (int)Math.Round(16 * xScale), (int)Math.Round(112 * yScale), (int)Math.Round(16 * xScale), (int)Math.Round(16 * yScale))), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, (posy + 64f) / 10000f + 1E-07f);
                         return;
                     case 3:
-                        b.Draw(__instance.Sprite.Texture, __instance.getLocalPosition(Game1.viewport) + new Vector2(-16f * xScale, -56f * yScale - yDiff), new Rectangle?(new Rectangle((int)Math.Round(179 * xScale) + (int)(Game1.currentGameTime.TotalGameTime.TotalMilliseconds % 600.0) / 300 * (int)Math.Round(16 * xScale), (int)Math.Round(97 * yScale), (int)Math.Round(16 * xScale), (int)Math.Round(14 * yScale))), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.FlipHorizontally, (__instance.Position.Y + 64f) / 10000f + 1E-07f);
+                        b.Draw(__instance.Sprite.Texture, __instance.getLocalPosition(Game1.viewport) + new Vector2(-16f * xScale, -56f * yScale - yDiff), new Rectangle?(new Rectangle((int)Math.Round(179 * xScale) + (int)(Game1.currentGameTime.TotalGameTime.TotalMilliseconds % 600.0) / 300 * (int)Math.Round(16 * xScale), (int)Math.Round(97 * yScale), (int)Math.Round(16 * xScale), (int)Math.Round(14 * yScale))), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.FlipHorizontally, (posy + 64f) / 10000f + 1E-07f);
                         break;
                     default:
                         return;

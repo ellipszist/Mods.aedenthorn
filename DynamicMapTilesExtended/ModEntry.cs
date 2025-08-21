@@ -13,6 +13,7 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
+using System.Diagnostics;
 
 namespace DMT
 {
@@ -28,7 +29,6 @@ namespace DMT
 
         public static int animationCounter = 0;
 
-        public static Dictionary<GameLocation, Dictionary<string, List<Point>>> DMTPropertyDict { get; } = [];
         public Dictionary<GameLocation, List<PushedTile>> PushTileDict { get; } = [];
 
         public Dictionary<string, List<Animation>> animationsDict;

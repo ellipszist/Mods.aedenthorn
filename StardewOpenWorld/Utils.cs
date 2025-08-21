@@ -53,8 +53,15 @@ namespace StardewOpenWorld
             {
                 chunk = CacheChunk(cp);
             }
-            Tile? tile = chunk.tiles["Back"][(int)av.X % openWorldChunkSize, (int)av.Y % openWorldChunkSize];
-            return tile is not null && grassTiles.Contains(tile.TileIndex) && !openWorldLocation.terrainFeatures.ContainsKey(av) && !openWorldLocation.Objects.ContainsKey(av) && !openWorldLocation.overlayObjects.ContainsKey(av);
+
+            if (chunk.tiles["Buildings"][(int)av.X % openWorldChunkSize, (int)av.Y % openWorldChunkSize] != null)
+                return false;
+
+            var back = chunk.tiles["Back"][(int)av.X % openWorldChunkSize, (int)av.Y % openWorldChunkSize];
+            if (back != null && back.Properties.ContainsKey("Water"))
+                return false;
+
+            return !openWorldLocation.terrainFeatures.ContainsKey(av) && !openWorldLocation.Objects.ContainsKey(av) && !openWorldLocation.overlayObjects.ContainsKey(av);
         }
 
         private static Point GetPlayerChunk(Farmer f)
@@ -173,7 +180,7 @@ namespace StardewOpenWorld
                 }
                 for (int y = leftTop; y < leftBot; y++)
                 {
-                    tiles.Add(c + new Point(x, y));
+                    tiles.Add(c + new Point(x - width / 2, y - height / 2));
                 }
             }
             for (int x = width / 2 + 1; x < width; x++)
@@ -207,7 +214,7 @@ namespace StardewOpenWorld
                 }
                 for (int y = rightTop; y < rightBot; y++)
                 {
-                    tiles.Add(c + new Point(x, y));
+                    tiles.Add(c + new Point(x - width / 2, y - height / 2));
                 }
 
             }

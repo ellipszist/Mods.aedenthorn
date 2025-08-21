@@ -5,6 +5,7 @@ using StardewValley.Monsters;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 using System;
+using System.Threading;
 using xTile.Tiles;
 using Object = StardewValley.Object;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
@@ -29,7 +30,7 @@ namespace StardewOpenWorld
         public static int IntToLocalY(int value)
         {
             if (!Config.ModEnabled || Game1.currentLocation?.Name.Contains(locName) != true)
-                return value;
+                return value; 
             int v = value % (openWorldChunkSize * 64) + ChunkDisplayOffset(value);
             return v;
         }

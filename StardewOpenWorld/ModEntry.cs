@@ -10,6 +10,7 @@ using StardewValley.Extensions;
 using StardewValley.GameData;
 using StardewValley.GameData.Locations;
 using StardewValley.Menus;
+using StardewValley.Monsters;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -119,6 +120,8 @@ namespace StardewOpenWorld
 
         private static ClickableTextureComponent upperRightCloseButton;
         public static RenderTarget2D renderTarget;
+        private ShadowGirl shadowGirl;
+
         private void Display_RenderedActiveMenu(object sender, RenderedActiveMenuEventArgs e)
         {
             if (!Config.ModEnabled || !Context.IsWorldReady || !Config.DrawMap || !Game1.currentLocation.Name.Contains(locName) || Game1.activeClickableMenu is not GameMenu || (Game1.activeClickableMenu as GameMenu).GetCurrentPage() is not MapPage)
@@ -134,6 +137,13 @@ namespace StardewOpenWorld
             {
                 ReloadOpenWorld(true);
                 PlayerTileChanged();
+            }
+            if(Config.Debug && e.Button == SButton.N)
+            {
+                //var sm = new ShadowGuy(Game1.player.StandingPixel.ToVector2() + new Vector2(64, 64));
+                //var sf = new ShadowGirl(Game1.player.StandingPixel.ToVector2() + new Vector2(-64, 64));
+                //Game1.currentLocation.characters.Add(sm);
+                //Game1.currentLocation.characters.Add(sf);
             }
             if(Config.DrawMap && showingMap && e.Button == SButton.MouseLeft && renderTarget != null)
             {
@@ -252,6 +262,25 @@ namespace StardewOpenWorld
             else if (e.NameWithoutLocale.IsEquivalentTo(codeBiomePath))
             {
                 e.LoadFrom(() => new Dictionary<string, Func<ulong, int, int, WorldChunk>>(), AssetLoadPriority.Exclusive);
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo("Characters/Monsters/Shadow Guy"))
+            {
+                e.LoadFrom(() => SHelper.GameContent.Load<Texture2D>("Characters/Monsters/Shadow Brute"), AssetLoadPriority.High);
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo("Data/Monsters"))
+            {
+                e.Edit(asset =>
+                {
+                    var dict = asset.AsDictionary<string, string>().Data;
+                    if(!dict.ContainsKey("Shadow Guy"))
+                    {
+                        dict["Shadow Guy"] = dict["Shadow Brute"].Replace("Brute", "Guy");
+                    }
+                    if(!dict.ContainsKey("Shadow Girl"))
+                    {
+                        dict["Shadow Girl"] = dict["Shadow Brute"].Replace("Brute", "Girl");
+                    }
+                });
             }
             else if (e.NameWithoutLocale.IsEquivalentTo(landmarkDictPath))
             {

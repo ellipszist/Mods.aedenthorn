@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StardewValley;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Metrics;
 using System.Linq;
@@ -493,11 +494,12 @@ namespace DMT
         /// <param name="l">The location to load properties to</param>
         internal static void LoadLocation(GameLocation l)
         {
+            Stopwatch s = new();
+            s.Start();
             if (!Context.Config.Enabled)
                 return;
             var dict = Context.Helper.GameContent.Load<Dictionary<string, DynamicTile>>(Context.TileDataDictPath);
             var keys = dict.Keys.ToList();
-            DMTPropertyDict[l] = new();
             for(int i = keys.Count - 1; i >= 0 ; i--)
             {
                 if (!IsValidLocation(dict[keys[i]], l))
@@ -508,7 +510,6 @@ namespace DMT
 
             foreach (var layer in l.Map.Layers)
             {
-                DMTPropertyDict[l][layer.Id] = new();
                 for (int i = keys.Count - 1; i >= 0; i--)
                 {
                     if (!(dict[keys[i]].Layers?.Contains(layer.Id) ?? true))
@@ -551,11 +552,12 @@ namespace DMT
                                     layer.Tiles[x, y].Properties[CreatePropertyKey(action)] = action.Value;
                                 }
                             }
-                            Context.Monitor.Log($"Added {count} properties from {key}{(count2 > 0 ? $" (Including {count2} new format properties)" : "")} to {l.Name}");
+                            //Context.Monitor.Log($"Added {count} properties from {key}{(count2 > 0 ? $" (Including {count2} new format properties)" : "")} to {l.Name}");
                         }
                     }
                 }
             }
+            Context.Monitor.Log($"Load location {l.DisplayName} took {s.ElapsedMilliseconds}ms");
         }
 
         internal static bool HasProperty(this Tile t, string key, [NotNullWhen(true)] out string? propertyValue)

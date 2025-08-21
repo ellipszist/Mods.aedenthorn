@@ -34,11 +34,7 @@ namespace CustomMounts
 
         private static void DrawHat(Hat hat, SpriteBatch spriteBatch, Vector2 location, float scaleSize, float transparency, float layerDepth, int direction, bool useAnimalTexture, Horse horse)
         {
-            if (!CheckModData(horse, out var data))
-            {
-
-            }
-            else
+            if (CheckModData(horse, out var data))
             {
                 scaleSize = (int)Math.Round(scaleSize * data.HatScale);
 
