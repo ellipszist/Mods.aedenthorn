@@ -3,6 +3,7 @@ using HarmonyLib;
 using Microsoft.Xna.Framework;
 using StardewModdingAPI.Utilities;
 using StardewValley;
+using StardewValley.Characters;
 using StardewValley.Monsters;
 using System.Diagnostics;
 using System.Globalization;
@@ -83,6 +84,12 @@ namespace DMT
                 original: AccessTools.Method(typeof(Object), nameof(Object.checkForAction)),
                 postfix: new(typeof(Patches), nameof(Object_checkForAction_Postfix))
             );
+
+            //Lags the game for some clients or just doesn't fire the attached actions
+            //harmony.Patch(
+            //    original: AccessTools.Method(typeof(Farmer), "setMount"),
+            //    prefix: new(typeof(Patches), nameof(Farmer_SetMount_Prefix))
+            //);
         }
 
         internal static void GameLocation_Explode_Prefix(Farmer who)
@@ -300,6 +307,13 @@ namespace DMT
             if (!Enabled || who is null || justCheckingForActivity)
                 return;
             TriggerActions([.. __instance.Location.Map.Layers], who, __instance.Location, __instance.TileLocation.ToPoint(), [string.Format(Triggers.ObjectClicked, Utils.BuildFormattedTrigger(__instance.QualifiedItemId))]);
+        }
+
+        internal static void Farmer_SetMount_Prefix(Farmer __instance, Horse mount)
+        {
+            if (!Enabled || !SContext.IsWorldReady || (!Context.Config.TriggerDuringEvents && Game1.eventUp))
+                return;
+            TriggerActions([.. __instance.currentLocation.Map.Layers], __instance, __instance.currentLocation, __instance.TilePoint, [string.Format(mount != null ? Triggers.Mount : Triggers.Dismount, ""), string.Format(mount != null ? Triggers.Mount : Triggers.Dismount, Utils.BuildFormattedTrigger((__instance.mount ?? mount)?.Name)), string.Format(mount != null ? Triggers.Mount : Triggers.Dismount, Utils.BuildFormattedTrigger((__instance.mount ?? mount)?.GetType()?.Name))]);
         }
     }
 }

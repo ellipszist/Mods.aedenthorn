@@ -541,6 +541,20 @@ A decimal number in string form representing the speed at which to slide the pla
 
 ---
 
+## Friendship
+Increase or decrease friendship with an npc or animal type
+
+### Key
+"DMT/friends"
+
+### Accepted Value
+A string with pairs of the NPC's internal name or the animal type, and the amount by which to change friendship, separated by a bar ('|'). To change multiple values at once repeat this pattern separated by commas (',')
+
+### Example
+"DMT/friends": "Marnie|50,Cow|15,Chicken|15"
+
+---
+
 ## Animation (Experimental)
 Yea, if only it was that easy. Animations are such complex objects (even with the new format), that they deserve their own file, which you can find [here]()...  
 Hey! did I mention I completely re-wrote the animation format!  

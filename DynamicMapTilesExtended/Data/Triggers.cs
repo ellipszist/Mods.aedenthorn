@@ -17,7 +17,9 @@
         public const string TalkToNPC = "Talk{0}";
         public const string UseItem = "Item{0}";
         public const string UseTool = "Tool{0}";
-        
+        public const string Mount = "Mount{0}";
+        public const string Dismount = "Dismount{0}";
+
         public const string UseToolRegex = @"Tool(\([A-z]{1,}\)){0,1}";
         public const string UseItemRegex = @"Item(\([\(\)_A-z0-9]{1,}(\-[0-9]{1,}){0,2}\)){0,1}"; //Item(\([\(\)_A-z0-9]{1,}((\-[0-9]{1,}){0,1}(\-[0-9]{1,}(\+{0,1}|\-{0,1}){0,1}){0,1}){0,1}\)){0,1}
         public const string TalkToNPCRegex = @"Talk(\([A-z]{1,}\)){0,1}";
@@ -25,6 +27,8 @@
         public const string CropGrownRegex = @"CropGrown(\([A-z]{1,}\)){0,1}";
         public const string ObjectPlacedRegex = @"ObjectPlaced(\(\([A-z]+\)[A-z0-9]+\))?";
         public const string ObjectClickedRegex = @"ObjectClicked(\(\([A-z]+\)[A-z0-9]+\))?";
+        public const string MountRegex = @"Mount(\([A-z]{1,}\)){0,1}";
+        public const string DismountRegex = @"Dismount(\([A-z]{1,}\)){0,1}";
 
         public static readonly HashSet<string> Regexes = [
             Action,
@@ -40,13 +44,17 @@
             StepOn,
             TalkToNPCRegex,
             UseItemRegex,
-            UseToolRegex
+            UseToolRegex,
+            MountRegex,
+            DismountRegex
         ];
 
         public static readonly HashSet<string> GlobalTriggers = [
             EnterLocation,
             TalkToNPCRegex,
-            MonsterSlainRegex
+            MonsterSlainRegex,
+            MountRegex,
+            DismountRegex
         ];
     }
 }
