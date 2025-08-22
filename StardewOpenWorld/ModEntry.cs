@@ -195,18 +195,18 @@ namespace StardewOpenWorld
             if (!Config.ModEnabled)
                 return;
 
-            if (Config.Debug && e.Button == SButton.L)
-            {
-                ReloadOpenWorld(true);
-                playerTilePoints.Clear();
-                playerChunks.Clear();
-            }
-            if(Config.Debug && e.Button == SButton.N)
-            {
+            //if (Config.Debug && e.Button == SButton.L)
+            //{
+            //    ReloadOpenWorld(true);
+            //    playerTilePoints.Clear();
+            //    playerChunks.Clear();
+            //}
+            //if(Config.Debug && e.Button == SButton.N)
+            //{
                 
-                Game1.currentLocation.debris.Add(new Debris(ItemRegistry.Create("(BC)29", 1), Game1.player.Position + new Vector2(128, 128)));
-                Game1.currentLocation.characters.Add(new Serpent(Game1.player.Position + new Vector2(128, 128)));
-            }
+            //    Game1.currentLocation.debris.Add(new Debris(ItemRegistry.Create("(BC)29", 1), Game1.player.Position + new Vector2(128, 128)));
+            //    Game1.currentLocation.characters.Add(new Serpent(Game1.player.Position + new Vector2(128, 128)));
+            //}
             if(Config.DrawMap && showingMap && e.Button == SButton.MouseLeft && renderTarget != null)
             {
                 if (upperRightCloseButton.containsPoint(Game1.getMouseX(), Game1.getMouseY()))
