@@ -3,9 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Netcode;
 using StardewValley;
-using StardewValley.Extensions;
 using StardewValley.Locations;
-using StardewValley.Menus;
 using StardewValley.Monsters;
 using StardewValley.Util;
 using System;
@@ -18,6 +16,7 @@ using xTile.Dimensions;
 using xTile.Display;
 using xTile.Layers;
 using xTile.Tiles;
+using Object = StardewValley.Object;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace StardewOpenWorld
@@ -91,6 +90,69 @@ namespace StardewOpenWorld
             {
             }
         }
+        [HarmonyPatch(typeof(Object), nameof(Object.placementAction))]
+        public static class Object_placementAction_Patch
+        {
+            public static void Postfix(Object __instance, GameLocation location)
+            {
+                if(!Config.ModEnabled || location != openWorldLocation) 
+                    return;
+                __instance.modData[modPlacedKey] = "True";
+            }
+        }
+        [HarmonyPatch(typeof(Serpent), nameof(Serpent.behaviorAtGameTick))]
+        public static class Serpent_behaviorAtGameTick_Patch
+        {
+            public static bool Prefix(Serpent __instance, GameTime time)
+            {
+                if (!Config.ModEnabled || __instance.currentLocation != openWorldLocation)
+                    return true;
+                var method = typeof(Monster).GetMethod(nameof(Monster.behaviorAtGameTick));
+                var ftn = method.MethodHandle.GetFunctionPointer();
+                var func = (Action<GameTime>)Activator.CreateInstance(typeof(Action<GameTime>), __instance, ftn);
+                func(time);
+
+                if (double.IsNaN((double)__instance.xVelocity) || double.IsNaN((double)__instance.yVelocity))
+                {
+                    __instance.Health = -500;
+                }
+                if (__instance.Position.X <= -640f || __instance.Position.Y <= -640f || __instance.Position.X >= Config.OpenWorldSize * 64 + 640 || __instance.Position.Y >= Config.OpenWorldSize * 64 + 640)
+                {
+                    __instance.Health = -500;
+                }
+                if (__instance.withinPlayerThreshold() && __instance.invincibleCountdown <= 0)
+                {
+                    __instance.faceDirection(2);
+                }
+                return false;
+            }
+        }
+        [HarmonyPatch(typeof(Monster), nameof(Monster.updateMovement))]
+        public static class Monster_updateMovement_Patch
+        {
+
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling Monster.updateMovement");
+
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Stloc_0)
+                    {
+                        SMonitor.Log("Overriding player tile check");
+
+                        codes.Insert(i, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetMonsterPlayerTile))));
+                        codes.Insert(i, new CodeInstruction(OpCodes.Ldarg_1));
+                        codes.Insert(i, new CodeInstruction(OpCodes.Ldarg_0));
+                        break;
+                    }
+                }
+                return codes.AsEnumerable();
+            }
+        }
+
+
         [HarmonyPatch(typeof(Monster), nameof(Monster.update))]
         public static class Monster_update_Patch
         {
@@ -169,12 +231,27 @@ namespace StardewOpenWorld
                 __result = new MyTileArray(__instance, __result);
             }
         }
+        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.IsOutOfBounds))]
+        public static class GameLocation_IsOutOfBounds_Patch
+        {            
+            public static bool Prefix(GameLocation __instance, Rectangle pixelPosition, ref bool __result)
+            {
+                if (!Config.ModEnabled || __instance != openWorldLocation)
+                    return true;
+                if (pixelPosition.Right < 0 || pixelPosition.Bottom < 0)
+                {
+                    __result = true;
+                }
+                __result = pixelPosition.X > Config.OpenWorldSize * 64 || pixelPosition.Top > Config.OpenWorldSize * 64;
+                return false;
+            }
+        }
         [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.isCollidingPosition), new Type[] { typeof(Rectangle), typeof(xTile.Dimensions.Rectangle), typeof(bool), typeof(int), typeof(bool), typeof(Character), typeof(bool), typeof(bool), typeof(bool), typeof(bool) })]
         public static class GameLocation_isCollidingPosition_Patch
         {
             public static bool Prefix(GameLocation __instance, Rectangle position, Rectangle viewport, bool isFarmer, bool projectile, Character character, ref bool __result)
             {
-                if (!Config.ModEnabled || !__instance.Name.Contains(locName))
+                if (!Config.ModEnabled || __instance != openWorldLocation)
                     return true;
                 BoundingBoxGroup passableTiles = null;
                 Farmer farmer = character as Farmer;
@@ -222,22 +299,30 @@ namespace StardewOpenWorld
 
                 if ((bool)AccessTools.Method(typeof(GameLocation), "_TestCornersTiles").Invoke(__instance, new object[]{nextTopRight, nextTopLeft, nextBottomRight, nextBottomLeft, nextTopMid, nextBottomMid, currentTopRight, currentTopLeft, currentBottomRight, currentBottomLeft, currentTopMid, currentBottomMid, nextLargerThanTile, delegate (Vector2 tile)
                 {
-                    if (__instance.terrainFeatures.TryGetValue(tile, out var tf))
-                    {
-                        var asdf = tf.getBoundingBox();
-                        var xxx= asdf.Intersects(position);
-                        var yyy = tf.isPassable(character);
-                        if(xxx && !yyy)
-                            return true;
-                    }
-                    if (__instance.Objects.TryGetValue(tile, out var obj))
-                    {
-                        var asdf = obj.GetBoundingBox();
-                        var xxx= asdf.Intersects(position);
-                        var yyy = obj.isPassable();
-                        if(xxx && !yyy)
-                            return true;
-                    }
+                    //if (isFarmer && __instance.terrainFeatures.TryGetValue(tile, out var tf))
+                    //{
+                    //    var asdf = tf.getBoundingBox();
+                    //    var xxx= asdf.Intersects(position);
+                    //    var yyy = tf.isPassable(character);
+                    //    if(xxx && !yyy)
+                    //    {
+                    //        if(tf is Bush)
+                    //        {
+                    //            var asdfjkl = tf.getBoundingBox();
+                    //            var asdfjklsdaf = Game1.player.GetBoundingBox();
+                    //            var wqeopiuqwer = true;
+                    //        }
+                    //        return true;
+                    //    }
+                    //}
+                    //if (__instance.Objects.TryGetValue(tile, out var obj))
+                    //{
+                    //    var asdf = obj.GetBoundingBox();
+                    //    var xxx= asdf.Intersects(position);
+                    //    var yyy = obj.isPassable();
+                    //    if(xxx && !yyy)
+                    //        return true;
+                    //}
                     int cx = (int)tile.X / openWorldChunkSize;
                     int cy = (int)tile.Y / openWorldChunkSize;
                     int tx = (int)tile.X % openWorldChunkSize;

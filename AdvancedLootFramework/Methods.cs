@@ -220,7 +220,7 @@ namespace AdvancedLootFramework
 				if (maxValue - currentValue < minItemValue || chestItems.Count >= maxItems)
 					break;
 			}
-			SMonitor.Log($"chest contains {chestItems.Count} items valued at {currentValue}");
+			//SMonitor.Log($"chest contains {chestItems.Count} items valued at {currentValue}");
 			return chestItems;
 		}
 
@@ -228,7 +228,7 @@ namespace AdvancedLootFramework
 		{
 			int coins = (int)Math.Round(Math.Pow(mult, increaseRate) * myRand.Next(baseMin, baseMax));
 
-			SMonitor.Log($"chest contains {coins} coins");
+			//SMonitor.Log($"chest contains {coins} coins");
 			return coins;
 		}
 

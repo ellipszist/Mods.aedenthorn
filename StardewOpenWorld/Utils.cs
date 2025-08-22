@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using StardewValley;
+using StardewValley.Monsters;
 using System;
 using System.Collections.Generic;
 using System.Reflection.Emit;
@@ -51,7 +52,7 @@ namespace StardewOpenWorld
             var cp = new Point((int)av.X / openWorldChunkSize, (int)av.Y / openWorldChunkSize);
             if (!cachedChunks.TryGetValue(cp, out var chunk))
             {
-                chunk = CacheChunk(cp);
+                chunk = CacheChunk(cp, true);
             }
 
             if (chunk.tiles["Buildings"][(int)av.X % openWorldChunkSize, (int)av.Y % openWorldChunkSize] != null)
@@ -60,7 +61,14 @@ namespace StardewOpenWorld
             var back = chunk.tiles["Back"][(int)av.X % openWorldChunkSize, (int)av.Y % openWorldChunkSize];
             if (back != null && back.Properties.ContainsKey("Water"))
                 return false;
-
+            var pos = av * 64.5f;
+            foreach(var ltf in openWorldLocation.largeTerrainFeatures)
+            {
+                if (ltf.getBoundingBox().Contains(pos.ToPoint()))
+                {
+                    return false;
+                }
+            }
             return !openWorldLocation.terrainFeatures.ContainsKey(av) && !openWorldLocation.Objects.ContainsKey(av) && !openWorldLocation.overlayObjects.ContainsKey(av);
         }
 

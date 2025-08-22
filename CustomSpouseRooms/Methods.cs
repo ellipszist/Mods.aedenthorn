@@ -6,6 +6,7 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.Locations;
+using StardewValley.Monsters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +21,8 @@ namespace CustomSpouseRooms
     /// <summary>The mod entry point.</summary>
     public partial class ModEntry
     {
-        private static Dictionary<string, int> topOfHeadOffsets = new Dictionary<string, int>();
+
+        public static Dictionary<string, int> topOfHeadOffsets = new Dictionary<string, int>();
 
         public static Dictionary<string, object> GetSpouses(Farmer farmer, int all)
         {

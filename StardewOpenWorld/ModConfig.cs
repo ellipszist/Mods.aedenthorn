@@ -20,6 +20,14 @@ namespace StardewOpenWorld
         public int TilesPerOutcropMax { get; set; } = 1200;
         public int TilesPerMonsterMin { get; set; } = 800;
         public int TilesPerMonsterMax { get; set; } = 1500;
+        public int TilesPerChestMin { get; set; } = 1000;
+        public int TilesPerChestMax { get; set; } = 10000;
+        public int TilesPerGrassMin { get; set; } = 500;
+        public int TilesPerGrassMax { get; set; } = 1000;
+        public int TilesPerBushMin { get; set; } = 600;
+        public int TilesPerBushMax { get; set; } = 1200;
+        public int TilesPerForageMin { get; set; } = 500;
+        public int TilesPerForageMax { get; set; } = 1000;
         public int MinLakeSize { get; set; } = 36;
         public int MaxLakeSize { get; set; } = 300;
         public int MinTreesPerForest { get; set; } = 30;
@@ -33,10 +41,6 @@ namespace StardewOpenWorld
         public double RockDensity { get; set; } = 0.3;
         public double GrassDensity { get; set; } = 0.3;
         public string BackgroundMusic { get; set; } = "desolate";
-        public int TilesPerChestMin { get; set; } = 1000;
-        public int TilesPerChestMax { get; set; } = 10000;
-        public int TilesPerGrassMin { get; set; } = 500;
-        public int TilesPerGrassMax { get; set; } = 1000;
         public int MaxItems { get; set; } = 5;
         public int ItemsBaseMaxValue { get; set; } = 100;
         public int MinItemValue { get; set; } = 20;

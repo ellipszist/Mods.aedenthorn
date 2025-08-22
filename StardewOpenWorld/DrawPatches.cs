@@ -243,6 +243,30 @@ namespace StardewOpenWorld
                 return codes.AsEnumerable();
             }
         }
+        
+        [HarmonyPatch(typeof(Bush), nameof(Bush.draw), new Type[] { typeof(SpriteBatch) })]
+        public static class Bush_draw_Patch
+        {
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling Bush.draw");
+
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (CodesCompare(codes, i, new OpCode[] { OpCodes.Ldfld, OpCodes.Ldc_I4_S, OpCodes.Add, OpCodes.Conv_R4, OpCodes.Ldc_R4, OpCodes.Div, OpCodes.Ldloc_0, OpCodes.Ldfld, OpCodes.Ldc_R4, OpCodes.Div, OpCodes.Sub }))
+                    {
+                        SMonitor.Log("Adding method to adjust draw layer");
+
+                        codes.Insert(i + 11, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetBushDrawLayer))));
+                        codes.Insert(i + 11, new CodeInstruction(OpCodes.Ldarg_0));
+                        break;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
         [HarmonyPatch(typeof(Chest), nameof(Chest.draw), new Type[] { typeof(SpriteBatch), typeof(int), typeof(int), typeof(float) })]
         public static class Chest_draw_Patch
         {

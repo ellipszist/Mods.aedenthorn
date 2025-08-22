@@ -5,7 +5,6 @@ using StardewValley.Monsters;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 using System;
-using System.Threading;
 using xTile.Tiles;
 using Object = StardewValley.Object;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
@@ -15,6 +14,18 @@ namespace StardewOpenWorld
     public partial class ModEntry
     {
 
+        public static Tile GetMonsterPlayerTile(Tile tile, Monster m, GameLocation location)
+        {
+            if (!Config.ModEnabled || location != openWorldLocation)
+                return tile;
+            var cp = GetPlayerChunk(m.Player);
+            if (!cachedChunks.TryGetValue(cp, out var chunk))
+            {
+                chunk = CacheChunk(cp, false);
+            }
+            var pp = m.Player.TilePoint;
+            return chunk.tiles["Back"][ToLocalTileX(pp.X), ToLocalTileX(pp.Y)];
+        }
         private static void DontRemoveMonster(NetCollection<NPC> npcs, Monster monster, GameLocation location)
         {
             if (!Config.ModEnabled || location != openWorldLocation || monster.Position.X < 0f || monster.Position.X > Config.OpenWorldSize * 64 || monster.Position.Y < 0f || monster.Position.Y > Config.OpenWorldSize * 64)
@@ -24,7 +35,12 @@ namespace StardewOpenWorld
         {
             if (!Config.ModEnabled || Game1.currentLocation?.Name.Contains(locName) != true)
                 return value;
-            int v = value % (openWorldChunkSize * 64) + ChunkDisplayOffset(value);
+            int v = value % (openWorldChunkSize * 64);
+            return v;
+        }
+        public static int ToLocalTileX(int value)
+        {
+            int v = value % (openWorldChunkSize);
             return v;
         }
         public static int IntToLocalY(int value)
@@ -57,6 +73,12 @@ namespace StardewOpenWorld
             return v;
         }
 
+        public static float GetBushDrawLayer(float value, Bush bush)
+        {
+            if (!Config.ModEnabled || bush.Location != openWorldLocation)
+                return value;
+            return (IntToLocalY(bush.getBoundingBox().Center.Y) + 48) / 10000f - FloatToLocalX(bush.Tile.X) / 1000000f;
+        }
         public static float GetChestDrawLayer(float value, Chest chest, int x, int y)
         {
             if (!Config.ModEnabled || chest.Location?.Name.Contains(locName) != true)

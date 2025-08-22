@@ -1,7 +1,7 @@
 ﻿{
 	"Name": "Advanced Loot Framework",
 	"Author": "aedenthorn",
-	"Version": "0.4.2",
+	"Version": "0.4.3",
 	"Description": "A modder's resource that provides an API for creating custom chests and loot lists.",
 	"UniqueID": "aedenthorn.AdvancedLootFramework",
 	"EntryDll": "AdvancedLootFramework.dll",

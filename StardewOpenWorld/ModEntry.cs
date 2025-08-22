@@ -1,12 +1,9 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Netcode;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
-using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.Extensions;
 using StardewValley.GameData;
 using StardewValley.GameData.Locations;
 using StardewValley.Menus;
@@ -14,10 +11,8 @@ using StardewValley.Monsters;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using xTile;
-using xTile.Display;
 using xTile.Tiles;
 
 namespace StardewOpenWorld
@@ -33,6 +28,8 @@ namespace StardewOpenWorld
 
         public static string modKey = "aedenthorn.StardewOpenWorld";
         private const string modCoinKey = "aedenthorn.StardewOpenWorld/Coin";
+        private const string modChunkKey = "aedenthorn.StardewOpenWorld/Chunk";
+        private const string modPlacedKey = "aedenthorn.StardewOpenWorld/Placed";
         public static string codeBiomePath = "aedenthorn.StardewOpenWorld/code_biomes";
         public static string landmarkDictPath = "aedenthorn.StardewOpenWorld/biomes";
         public static string monsterDictPath = "aedenthorn.StardewOpenWorld/monsters";
@@ -43,8 +40,8 @@ namespace StardewOpenWorld
         public static int openWorldChunkSize = 100;
         public static bool warping = false;
 
-        public static PerScreen<Point> playerTilePoint = new(() => new Point(-1, -1));
-        public static PerScreen<Point> playerChunk = new(() => new Point(-1,-1));
+        public static Dictionary<long, Point> playerTilePoints = new();
+        public static Dictionary<long, Point> playerChunks = new();
 
         public static Dictionary<string, Dictionary<int, AnimatedTile>> animatedTiles = new();
         
@@ -63,12 +60,12 @@ namespace StardewOpenWorld
 
         public static Dictionary<string, Landmark> landmarkDict = new();
         public static List<Rectangle> landmarkRects = new();
+        
         public static int RandomSeed = -1;
         public static List<int> grassTiles = new List<int>() { 300, 304, 305, 351, 150, 151, 152, 175 };
 
         private static IAdvancedLootFrameworkApi advancedLootFrameworkApi;
         private static List<object> treasuresList = new();
-        private static Debris debris;
         private static readonly Color[] tintColors = new Color[]
         {
             Color.DarkGray,
@@ -77,6 +74,44 @@ namespace StardewOpenWorld
             Color.Gold,
             Color.Purple,
         };
+
+        public enum BuildStage
+        {
+            Begin,
+            Landmarks,
+            Lakes,
+            GrassTiles,
+            Border,
+            Chests,
+            Trees,
+            Bushes,
+            Forage,
+            Rocks,
+            Grass,
+            Monsters,
+            Done
+        }
+        public enum LoadStage
+        {
+            TerrainFeatures,
+            Objects,
+            Monsters,
+            Done
+        }
+
+        public static List<Point> chunksUnloading = new List<Point>();
+        public static List<Point> chunksWaitingToCache = new List<Point>();
+        public static List<Point> chunksCaching = new List<Point>();
+        public static List<Point> chunksWaitingToBuild = new List<Point>();
+        public static List<Point> chunksBuilding = new List<Point>();
+        public static List<Point> chunksWaitingToLoad = new List<Point>();
+        public static List<Point> chunksLoading = new List<Point>();
+        public static BuildStage currentBuildStage;
+        public static LoadStage currentLoadStage;
+
+        private static ClickableTextureComponent upperRightCloseButton;
+        public static RenderTarget2D renderTarget;
+        public static bool playerTileChanged;
 
         private static bool showingMap;
         private static Rectangle mapRect;
@@ -94,8 +129,10 @@ namespace StardewOpenWorld
 
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
             helper.Events.GameLoop.UpdateTicked += GameLoop_UpdateTicked;
+            helper.Events.GameLoop.OneSecondUpdateTicked += GameLoop_OneSecondUpdateTicked;
             helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
             helper.Events.GameLoop.DayEnding += GameLoop_DayEnding;
+
             helper.Events.Content.AssetRequested += Content_AssetRequested;
             helper.Events.Input.ButtonPressed += Input_ButtonPressed;
             helper.Events.Display.RenderedActiveMenu += Display_RenderedActiveMenu;
@@ -105,6 +142,33 @@ namespace StardewOpenWorld
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
+        }
+
+        private void GameLoop_OneSecondUpdateTicked(object sender, OneSecondUpdateTickedEventArgs e)
+        {
+            foreach (var cp in loadedChunks)
+            {
+                foreach(var ocv in GetSurroundingTileLocationsArray(cp, false))
+                {
+                    if (!cachedChunks.TryGetValue(ocv, out var chunk) || !chunk.cached)
+                    {
+                        chunksWaitingToCache.Add(ocv);
+                        return;
+                    }
+                }
+            }
+            foreach (var cp in loadedChunks)
+            {
+                foreach(var ocv in GetSurroundingTileLocationsArray(cp, false))
+                {
+                    if (!cachedChunks.TryGetValue(ocv, out var chunk) || !chunk.built)
+                    {
+                        chunksWaitingToBuild.Add(ocv);
+                        return;
+                    }
+
+                }
+            }
         }
 
         private void Display_WindowResized(object sender, WindowResizedEventArgs e)
@@ -118,9 +182,6 @@ namespace StardewOpenWorld
             showingMap = true;
         }
 
-        private static ClickableTextureComponent upperRightCloseButton;
-        public static RenderTarget2D renderTarget;
-        private ShadowGirl shadowGirl;
 
         private void Display_RenderedActiveMenu(object sender, RenderedActiveMenuEventArgs e)
         {
@@ -137,13 +198,14 @@ namespace StardewOpenWorld
             if (Config.Debug && e.Button == SButton.L)
             {
                 ReloadOpenWorld(true);
-                PlayerTileChanged();
+                playerTilePoints.Clear();
+                playerChunks.Clear();
             }
             if(Config.Debug && e.Button == SButton.N)
             {
                 
                 Game1.currentLocation.debris.Add(new Debris(ItemRegistry.Create("(BC)29", 1), Game1.player.Position + new Vector2(128, 128)));
-                //Game1.currentLocation.characters.Add(sf);
+                Game1.currentLocation.characters.Add(new Serpent(Game1.player.Position + new Vector2(128, 128)));
             }
             if(Config.DrawMap && showingMap && e.Button == SButton.MouseLeft && renderTarget != null)
             {
@@ -184,7 +246,7 @@ namespace StardewOpenWorld
             monsterCenters = new();
             ReloadOpenWorld(true);
 
-            //CacheAllChunks();
+            CacheAllChunks();
         }
 
 
@@ -193,15 +255,16 @@ namespace StardewOpenWorld
             Stopwatch s = new();
             s.Start();
             int num = Config.OpenWorldSize / openWorldChunkSize;
+            SMonitor.Log($"Caching {num * num} chunks");
             for (int x = 0; x < num; x++)
                 for (int y = 0; y < num; y++)
                 {
-                    if(y == 0)
-                        SMonitor.Log($"Caching {(x * num)}/{(num*num)} chunks");
-                    CacheChunk(new Point(x, y));
+                    //if(y == 0)
+                    //    SMonitor.Log($"Caching {(x * num)}/{(num*num)} chunks");
+                    CacheChunk(new Point(x, y), false);
                 }
             s.Stop();
-            SMonitor.Log($"Cached {num} chunks in {s.Elapsed.TotalSeconds}s");
+            SMonitor.Log($"Cached {num * num} chunks in {s.Elapsed.TotalSeconds}s");
         }
 
         private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
@@ -337,35 +400,18 @@ namespace StardewOpenWorld
         {
             if (!Config.ModEnabled || !Context.IsWorldReady)
                 return;
-            if(Game1.player.currentLocation == openWorldLocation)
-            {
-                var cs = Game1.player.currentLocation.characters.Count;
-                if (Game1.player.TilePoint != playerTilePoint.Value)
-                {
-                    var newChunk = GetPlayerChunk(Game1.player);
-                    if (newChunk != playerChunk.Value)
-                    {
-                        PlayerTileChanged();
-                        playerChunk.Value = newChunk;
-                    }
-                    playerTilePoint.Value = Game1.player.TilePoint;
-                }
-                return;
-            }
-            else if (playerChunk.Value.X != -1)
-            {
-                PlayerTileChanged();
-                playerTilePoint.Value = new(-1, -1);
-                playerChunk.Value = new(-1, -1);
-            }
-            if (!Game1.isWarping && Game1.player.currentLocation.Name.Equals("Backwoods"))
+
+            CheckForChunkLoading();
+            CheckForChunkChange();
+            if (Config.Debug && !Game1.isWarping && Game1.player.currentLocation.Name.Equals("Backwoods"))
             {
                 Game1.warpFarmer(locName, Config.OpenWorldSize / 2 + openWorldChunkSize / 2 + 1, Config.OpenWorldSize - 2, 0);
             }
         }
 
         private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
-        {           // Get Advanced Loot Framework's API
+        {   
+            // Get Advanced Loot Framework's API
             advancedLootFrameworkApi = Helper.ModRegistry.GetApi<IAdvancedLootFrameworkApi>("aedenthorn.AdvancedLootFramework");
             if (advancedLootFrameworkApi is not null)
             {
