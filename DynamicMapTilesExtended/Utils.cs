@@ -205,9 +205,9 @@ namespace DMT
             return filtered;
         }
 
-        internal static string BuildFormattedTrigger(params object[]? parts)
+        internal static string BuildFormattedTrigger(params object?[]? parts)
         {
-            if (!(parts?.Any() ?? false))
+            if (!(parts?.Any() ?? false) || (parts?.FirstOrDefault() is null && parts.Length == 1))
                 return "";
 
             StringBuilder sb = new();
@@ -379,6 +379,9 @@ namespace DMT
                             break;
                         case Keys.WarpKey:
                             Actions.DoWarp(who, value);
+                            break;
+                        case Keys.FriendsKey:
+                            Actions.DoFriendshipChange(who, value);
                             break;
                         default:
                             if (Keys.ModKeys.Contains(item.prop.key))

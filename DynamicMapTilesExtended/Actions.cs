@@ -119,7 +119,7 @@ namespace DMT
                 var pair = prop.Split('=');
                 if (pair.Length == 2)
                     tile.Properties[pair[0]] = pair[1];
-                else if (tile.Properties.Count > 2)
+                else if (pair.Length == 1)
                     tile.Properties.Remove(pair[0]);
             }
         }
@@ -367,7 +367,7 @@ namespace DMT
             var split = value.Split('|');
             if (!int.TryParse(split[0], out int loops) || !float.TryParse(split[1], out var number))
                 return;
-            Context.SecondUpdateFiredLoops.Value.Add(new() { Loops = loops, Value = number, type = SecondUpdateData.SecondUpdateType.Health, Who = who });
+            Context.SecondUpdateFiredLoops.Value.Add(new() { Loops = loops, Value = number, type = SecondUpdateData.SecondUpdateType.Stamina, Who = who });
         }
         
 
@@ -499,6 +499,33 @@ namespace DMT
             y = int.Parse(split[2]);
 
             who.warpFarmer(new(who.TilePoint.X, who.TilePoint.Y, location, x, y, false));
+        }
+
+        public static void DoFriendshipChange(Farmer who, string value)
+        {
+            var split = value.Split(',');
+            foreach (var item in split)
+            {
+                var kv = item.Split('|');
+                if (kv.Length < 2)
+                {
+                    Context.Monitor.Log($"[{nameof(Actions)}.{nameof(DoFriendshipChange)}] Missing argument for {item}");
+                    continue;
+                }
+                string name = kv[0].Trim();
+                if (!int.TryParse(kv[1].Trim(), out int amount))
+                    continue;
+                var npc = Game1.getCharacterFromName<NPC>(name, false);
+                if (npc is not null)
+                {
+                    who.changeFriendship(amount, npc);
+                    continue;
+                }
+                var farm = Game1.RequireLocation<Farm>("Farm");
+                foreach (var animal in farm.Animals.Values)
+                    if (animal.type.Value == name)
+                        animal.friendshipTowardFarmer.Add(amount);
+            }
         }
     }
 }

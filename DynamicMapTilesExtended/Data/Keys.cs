@@ -44,6 +44,7 @@ namespace DMT.Data
         public const string AnimationOffKey = "DMT/animationOff";
         public const string SlipperyKey = "DMT/slippery";
         public const string WarpKey = "DMT/warp";
+        public const string FriendsKey = "DMT/friends";
 
         private static List<string?> allKeys;
 
