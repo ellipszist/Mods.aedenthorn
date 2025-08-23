@@ -90,6 +90,28 @@ namespace StardewOpenWorld
             {
             }
         }
+        [HarmonyPatch(typeof(Game1), nameof(Game1.CanTakeScreenshots))]
+        public static class Game1_CanTakeScreenshots_Patch
+        {
+            public static void Postfix(ref bool __result)
+            {
+                if(Config.ModEnabled && __result && Game1.currentLocation == openWorldLocation)
+                    __result = true;
+            }
+        }
+        [HarmonyPatch(typeof(Game1), "GetScreenshotRegion")]
+        public static class Game1_GetScreenshotRegion_Patch
+        {
+            public static void Postfix(GameLocation screenshotLocation, ref int startX, ref int startY, ref int width, ref int height)
+            {
+                if (!Config.ModEnabled || Game1.currentLocation != openWorldLocation)
+                    return;
+                startX = (int)Game1.player.Position.X - openWorldChunkSize * 64;
+                startY = (int)Game1.player.Position.Y - openWorldChunkSize * 64;
+                width = openWorldChunkSize * 128;
+                height = openWorldChunkSize * 128;
+            }
+        }
         [HarmonyPatch(typeof(Object), nameof(Object.placementAction))]
         public static class Object_placementAction_Patch
         {

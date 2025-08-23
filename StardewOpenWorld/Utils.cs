@@ -33,6 +33,10 @@ namespace StardewOpenWorld
         {
             return (Game1.viewport.Y / (openWorldChunkSize * 64) < (int)value / (openWorldChunkSize * 64) ? openWorldChunkSize * 64 : 0);
         }
+        private static float ChunkDisplayOffsetTile(float value)
+        {
+            return (Game1.viewport.Y / (openWorldChunkSize * 64) < (int)value / openWorldChunkSize ? openWorldChunkSize : 0);
+        }
 
         public static bool CodesCompare(List<CodeInstruction> codes, int i, OpCode[] opCodes)
         {
@@ -45,6 +49,25 @@ namespace StardewOpenWorld
             }
             return true;
         }
+        private static bool ConflictsRect(Rectangle r)
+        {
+            foreach (var rect in landmarkRects)
+            {
+                if (rect.Intersects(r))
+                    return true;
+            }
+            foreach (var rect in lakeRects)
+            {
+                if (rect.Intersects(r))
+                    return true;
+            }
+            foreach (var rect in outcropRects)
+            {
+                if (rect.Intersects(r))
+                    return true;
+            }
+            return false;
+        }
         public static bool IsOpenTile(Vector2 av)
         {
             if (!IsVectorInMap(av))
@@ -52,7 +75,7 @@ namespace StardewOpenWorld
             var cp = new Point((int)av.X / openWorldChunkSize, (int)av.Y / openWorldChunkSize);
             if (!cachedChunks.TryGetValue(cp, out var chunk))
             {
-                chunk = CacheChunk(cp, true);
+                chunk = CacheChunk(cp, false);
             }
 
             if (chunk.tiles["Buildings"][(int)av.X % openWorldChunkSize, (int)av.Y % openWorldChunkSize] != null)
@@ -69,9 +92,34 @@ namespace StardewOpenWorld
                     return false;
                 }
             }
+            foreach(var rc in openWorldLocation.resourceClumps)
+            {
+                if (rc.getBoundingBox().Contains(pos.ToPoint()))
+                {
+                    return false;
+                }
+            }
             return !openWorldLocation.terrainFeatures.ContainsKey(av) && !openWorldLocation.Objects.ContainsKey(av) && !openWorldLocation.overlayObjects.ContainsKey(av);
         }
 
+        public static Color MakeTint(double fraction)
+        {
+            return tintColors[(int)Math.Floor(fraction * tintColors.Length)];
+        }
+
+        public static Vector2 ToGlobalTile(Point p, Vector2 tile)
+        {
+            return tile + new Vector2(p.X * openWorldChunkSize, p.Y * openWorldChunkSize);
+        }
+        public static Point ToGlobalTile(Point p, Point tile)
+        {
+            return tile + new Point(p.X * openWorldChunkSize, p.Y * openWorldChunkSize);
+        }
+
+        private static Rectangle ToGlobalRect(Point cp, Rectangle r)
+        {
+            return new Rectangle(ToGlobalTile(cp, r.Location), r.Size);
+        }
         private static Point GetPlayerChunk(Farmer f)
         {
             return new Point(f.TilePoint.X / openWorldChunkSize, f.TilePoint.Y / openWorldChunkSize);

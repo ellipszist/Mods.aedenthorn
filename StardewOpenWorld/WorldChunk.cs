@@ -13,6 +13,7 @@ namespace StardewOpenWorld
         public Dictionary<Vector2, MonsterSpawn> monsters = new();
         public Dictionary<Vector2,TerrainFeature> terrainFeatures = new();
         public Dictionary<Vector2,LargeTerrainFeature> largeTerrainFeatures = new();
+        public Dictionary<Vector2,ResourceClump> resourceClumps = new();
         public Dictionary<string, Tile[,]> tiles = new();
         public int priority;
         public bool cached;

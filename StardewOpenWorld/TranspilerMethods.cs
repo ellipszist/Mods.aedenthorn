@@ -24,7 +24,7 @@ namespace StardewOpenWorld
                 chunk = CacheChunk(cp, false);
             }
             var pp = m.Player.TilePoint;
-            return chunk.tiles["Back"][ToLocalTileX(pp.X), ToLocalTileX(pp.Y)];
+            return chunk.tiles["Back"][IntToLocalTileXNoDrawCheck(pp.X), IntToLocalTileXNoDrawCheck(pp.Y)];
         }
         private static void DontRemoveMonster(NetCollection<NPC> npcs, Monster monster, GameLocation location)
         {
@@ -38,7 +38,7 @@ namespace StardewOpenWorld
             int v = value % (openWorldChunkSize * 64);
             return v;
         }
-        public static int ToLocalTileX(int value)
+        public static int IntToLocalTileXNoDrawCheck(int value)
         {
             int v = value % (openWorldChunkSize);
             return v;
@@ -53,21 +53,28 @@ namespace StardewOpenWorld
         
         public static float FloatToLocalX(float value)
         {
-            if (!Config.ModEnabled || Game1.currentLocation?.Name.Contains(locName) != true)
+            if (!Config.ModEnabled || Game1.currentLocation != openWorldLocation)
                 return value;
             float v = value % (openWorldChunkSize * 64);
             return v;
         }
         public static float FloatToLocalXTile(float value)
         {
-            if (!Config.ModEnabled || Game1.currentLocation?.Name.Contains(locName) != true)
+            if (!Config.ModEnabled || Game1.currentLocation != openWorldLocation)
                 return value;
             float v = value % openWorldChunkSize;
             return v;
         }
+        public static float FloatToLocalYTile(float value)
+        {
+            if (!Config.ModEnabled || Game1.currentLocation != openWorldLocation)
+                return value;
+            float v = value % openWorldChunkSize + ChunkDisplayOffsetTile(value);
+            return v;
+        }
         public static float FloatToLocalY(float value)
         {
-            if (!Config.ModEnabled || Game1.currentLocation?.Name.Contains(locName) != true)
+            if (!Config.ModEnabled || Game1.currentLocation != openWorldLocation)
                 return value;
             float v = value % (openWorldChunkSize * 64) + ChunkDisplayOffset(value);
             return v;

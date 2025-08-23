@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using StardewValley;
+using StardewValley.Extensions;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -10,6 +11,30 @@ namespace StardewOpenWorld
     public partial class ModEntry
     {
 
+        private void DoCachePoll()
+        {
+            HashSet<Point> points = new HashSet<Point>();
+            foreach (var cp in loadedChunks)
+            {
+                points.AddRange(GetSurroundingTileLocationsArray(cp, true));
+            }
+            foreach (var cp in points)
+            {
+                if (!cachedChunks.TryGetValue(cp, out var chunk) || !chunk.cached)
+                {
+                    chunksWaitingToCache.Add(cp);
+                    return;
+                }
+            }
+            foreach (var cp in points)
+            {
+                if (!cachedChunks[cp].built)
+                {
+                    chunksWaitingToBuild.Add(cp);
+                    return;
+                }
+            }
+        }
         private void CheckForChunkChange()
         {
 
@@ -33,8 +58,13 @@ namespace StardewOpenWorld
                 }
                 else
                 {
-                    playerTilePoints.Remove(f.UniqueMultiplayerID);
-                    playerChunks.Remove(f.UniqueMultiplayerID);
+                    if(playerChunks.TryGetValue(f.UniqueMultiplayerID, out var pc))
+                    {
+                        playerChunks.Remove(f.UniqueMultiplayerID);
+                        playerTilePoints.Remove(f.UniqueMultiplayerID);
+                        PlayerChunkChanged(points);
+                        return;
+                    }
                 }
             }
             if (points.Any())
@@ -191,6 +221,7 @@ namespace StardewOpenWorld
             {
                 return chunk;
             }
+            AddLandmarksToChunk(cp);
             AddLakesToChunk(cp);
             AddGrassTilesToChunk(cp);
             AddBorderToChunk(cp);
@@ -228,6 +259,12 @@ namespace StardewOpenWorld
                     foreach (var cp in chunks)
                     {
                         AddBushesToChunk(cp);
+                    }
+                    break;
+                case BuildStage.Chunks:
+                    foreach (var cp in chunks)
+                    {
+                        AddClumpsToChunk(cp);
                     }
                     break;
                 case BuildStage.Forage:

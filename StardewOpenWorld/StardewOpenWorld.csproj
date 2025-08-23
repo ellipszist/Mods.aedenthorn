@@ -4,6 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
 	<EnableHarmony>true</EnableHarmony>
 	<Platforms>AnyCPU;x64</Platforms>
+	<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="i18n\**" />
@@ -16,6 +17,12 @@
     <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
     <PackageReference Include="System.Data.SQLite" Version="1.0.119" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="SkiaSharp">
+      <HintPath>SkiaSharp.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>

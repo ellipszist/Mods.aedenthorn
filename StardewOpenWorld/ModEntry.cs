@@ -31,7 +31,7 @@ namespace StardewOpenWorld
         private const string modChunkKey = "aedenthorn.StardewOpenWorld/Chunk";
         private const string modPlacedKey = "aedenthorn.StardewOpenWorld/Placed";
         public static string codeBiomePath = "aedenthorn.StardewOpenWorld/code_biomes";
-        public static string landmarkDictPath = "aedenthorn.StardewOpenWorld/biomes";
+        public static string landmarkDictPath = "aedenthorn.StardewOpenWorld/landmarks";
         public static string monsterDictPath = "aedenthorn.StardewOpenWorld/monsters";
         public static string seedKey = "aedenthorn_StardewOpenWorld_seed";
         public static string mapPath = "aedenthorn_StardewOpenWorld_Map";
@@ -51,6 +51,10 @@ namespace StardewOpenWorld
         public static Dictionary<Point, List<Point>> lakeCenters = new();
         public static Dictionary<Point, Dictionary<Vector2, string>> monsterCenters = new();
 
+        public static HashSet<Rectangle> landmarkRects = new();
+        public static HashSet<Rectangle> lakeRects = new();
+        public static HashSet<Rectangle> outcropRects = new();
+
         public static GameLocation openWorldLocation;
         //private static Dictionary<string, Biome> biomes = new Dictionary<string, Biome>();
         public static Dictionary<string, Func<ulong, int, int, WorldChunk>> biomeCodeDict;
@@ -59,7 +63,6 @@ namespace StardewOpenWorld
         public static List<Point> loadedChunks = new();
 
         public static Dictionary<string, Landmark> landmarkDict = new();
-        public static List<Rectangle> landmarkRects = new();
         
         public static int RandomSeed = -1;
         public static List<int> grassTiles = new List<int>() { 300, 304, 305, 351, 150, 151, 152, 175 };
@@ -85,6 +88,7 @@ namespace StardewOpenWorld
             Chests,
             Trees,
             Bushes,
+            Chunks,
             Forage,
             Rocks,
             Grass,
@@ -110,11 +114,16 @@ namespace StardewOpenWorld
         public static LoadStage currentLoadStage;
 
         private static ClickableTextureComponent upperRightCloseButton;
-        public static RenderTarget2D renderTarget;
+        private static ClickableTextureComponent northButton;
+        private static ClickableTextureComponent westButton;
+        private static ClickableTextureComponent eastButton;
+        private static ClickableTextureComponent southButton;
+        public static Texture2D renderTarget;
         public static bool playerTileChanged;
 
         private static bool showingMap;
         private static Rectangle mapRect;
+        public static Point mapOffset;
 
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
@@ -132,6 +141,7 @@ namespace StardewOpenWorld
             helper.Events.GameLoop.OneSecondUpdateTicked += GameLoop_OneSecondUpdateTicked;
             helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
             helper.Events.GameLoop.DayEnding += GameLoop_DayEnding;
+            helper.Events.GameLoop.ReturnedToTitle += GameLoop_ReturnedToTitle;
 
             helper.Events.Content.AssetRequested += Content_AssetRequested;
             helper.Events.Input.ButtonPressed += Input_ButtonPressed;
@@ -144,32 +154,36 @@ namespace StardewOpenWorld
             harmony.PatchAll();
         }
 
+        private void GameLoop_ReturnedToTitle(object sender, ReturnedToTitleEventArgs e)
+        {
+            openWorldLocation = null;
+            renderTarget = null;
+
+            cachedChunks.Clear();
+            loadedChunks.Clear();
+
+            chunksUnloading.Clear();
+            chunksWaitingToCache.Clear();
+            chunksCaching.Clear();
+            chunksWaitingToBuild.Clear();
+            chunksBuilding.Clear();
+            chunksWaitingToLoad.Clear();
+            chunksLoading.Clear();
+
+            currentBuildStage = 0;
+            currentLoadStage = 0;
+            
+
+            lakeRects.Clear();
+            outcropRects.Clear();
+            landmarkRects.Clear();
+        }
+
         private void GameLoop_OneSecondUpdateTicked(object sender, OneSecondUpdateTickedEventArgs e)
         {
-            foreach (var cp in loadedChunks)
-            {
-                foreach(var ocv in GetSurroundingTileLocationsArray(cp, false))
-                {
-                    if (!cachedChunks.TryGetValue(ocv, out var chunk) || !chunk.cached)
-                    {
-                        chunksWaitingToCache.Add(ocv);
-                        return;
-                    }
-                }
-            }
-            foreach (var cp in loadedChunks)
-            {
-                foreach(var ocv in GetSurroundingTileLocationsArray(cp, false))
-                {
-                    if (!cachedChunks.TryGetValue(ocv, out var chunk) || !chunk.built)
-                    {
-                        chunksWaitingToBuild.Add(ocv);
-                        return;
-                    }
-
-                }
-            }
+            DoCachePoll();
         }
+
 
         private void Display_WindowResized(object sender, WindowResizedEventArgs e)
         {
@@ -179,7 +193,12 @@ namespace StardewOpenWorld
         private void Display_MenuChanged(object sender, MenuChangedEventArgs e)
         {
             renderTarget = null;
+            upperRightCloseButton = null;
             showingMap = true;
+            if (!Config.ModEnabled || !Context.IsWorldReady || !Config.DrawMap || !Game1.currentLocation.Name.Contains(locName) || Game1.activeClickableMenu is not GameMenu || (Game1.activeClickableMenu as GameMenu).GetCurrentPage() is not MapPage)
+                return;
+            TakeMapScreenshot(openWorldLocation, 0.25f);
+
         }
 
 
@@ -209,11 +228,35 @@ namespace StardewOpenWorld
             //}
             if(Config.DrawMap && showingMap && e.Button == SButton.MouseLeft && renderTarget != null)
             {
-                if (upperRightCloseButton.containsPoint(Game1.getMouseX(), Game1.getMouseY()))
+                if (upperRightCloseButton.containsPoint(Game1.getMouseX(true), Game1.getMouseY(true)))
                 {
                     Game1.playSound("bigDeSelect");
                     showingMap = false;
                 }
+                //else if (westButton.containsPoint(Game1.getMouseX(true), Game1.getMouseY(true)))
+                //{
+                //    //Game1.playSound("bigDeSelect");
+                //    mapOffset += new Point(-1, 0);
+                //    TakeMapScreenshot(openWorldLocation, 0.25f);
+                //}
+                //else if (eastButton.containsPoint(Game1.getMouseX(true), Game1.getMouseY(true)))
+                //{
+                //    //Game1.playSound("bigDeSelect");
+                //    mapOffset += new Point(1, 0);
+                //    renderTarget = null;
+                //}
+                //else if (northButton.containsPoint(Game1.getMouseX(true), Game1.getMouseY(true)))
+                //{
+                //    //Game1.playSound("bigDeSelect");
+                //    mapOffset += new Point(0, -1);
+                //    renderTarget = null;
+                //}
+                //else if (southButton.containsPoint(Game1.getMouseX(true), Game1.getMouseY(true)))
+                //{
+                //    //Game1.playSound("bigDeSelect");
+                //    mapOffset += new Point(0, 1);
+                //    renderTarget = null;
+                //}
                 else if (Config.Debug && mapRect.Contains(Game1.getMousePosition()))
                 {
 
@@ -246,7 +289,7 @@ namespace StardewOpenWorld
             monsterCenters = new();
             ReloadOpenWorld(true);
 
-            CacheAllChunks();
+            //CacheAllChunks();
         }
 
 
@@ -403,9 +446,10 @@ namespace StardewOpenWorld
 
             CheckForChunkLoading();
             CheckForChunkChange();
+
             if (Config.Debug && !Game1.isWarping && Game1.player.currentLocation.Name.Equals("Backwoods"))
             {
-                Game1.warpFarmer(locName, Config.OpenWorldSize / 2 + openWorldChunkSize / 2 + 1, Config.OpenWorldSize - 2, 0);
+                Game1.warpFarmer(locName, Config.OpenWorldSize / 2, Config.OpenWorldSize / 2, 0);
             }
         }
 
