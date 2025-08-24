@@ -9,6 +9,7 @@ using StardewValley.Objects;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Reflection;
 using Object = StardewValley.Object;
 
 namespace FoodOnTheTable
@@ -126,7 +127,7 @@ namespace FoodOnTheTable
 
 		private static bool TryToEatFood(NPC __instance, PlacedFoodData food)
 		{
-			if (food != null && Vector2.Distance(food.foodTile, __instance.getTileLocation()) < Config.MaxDistanceToEat)
+			if (food != null && Vector2.Distance(food.foodTile, __instance.Tile) < Config.MaxDistanceToEat)
 			{
 				SMonitor.Log($"eating {food.foodObject.Name} at {food.foodTile}");
 				using (IEnumerator<Furniture> enumerator = __instance.currentLocation.furniture.GetEnumerator())
@@ -261,26 +262,16 @@ namespace FoodOnTheTable
 				var compare = b.value.CompareTo(a.value);
 				if (compare != 0)
 					return compare;
-				return (Vector2.Distance(a.foodTile, npc.getTileLocation()).CompareTo(Vector2.Distance(b.foodTile, npc.getTileLocation())));
+				return (Vector2.Distance(a.foodTile, npc.Tile).CompareTo(Vector2.Distance(b.foodTile, npc.Tile)));
 			});
 
 			SMonitor.Log($"Got {foodList.Count} possible food for {npc.Name}; best: {foodList[0].foodObject.Name} at {foodList[0].foodTile}, value {foodList[0].value}");
 			return foodList[0];
 		}
-		private static Object GetObjectFromID(string id, int amount, int quality)
+		private static Item GetObjectFromID(string id, int amount, int quality)
 		{
-			if (int.TryParse(id, out int index))
-			{
-				//SMonitor.Log($"Spawning object with index {id}");
-				return new Object(index, amount, false, -1, quality);
-			}
-			foreach (var kvp in Game1.objectInformation)
-			{
-				if (kvp.Value.StartsWith(id + "/"))
-					return new Object(kvp.Key, amount, false, -1, quality);
-			}
-			return null;
-		}
+            return ItemRegistry.Create(id, amount, quality, true);
+        }
         private static bool WantsToEat(NPC spouse)
 		{
 			if (!spouse.modData.ContainsKey("aedenthorn.FoodOnTheTable/LastFood") || spouse.modData["aedenthorn.FoodOnTheTable/LastFood"].Length == 0)

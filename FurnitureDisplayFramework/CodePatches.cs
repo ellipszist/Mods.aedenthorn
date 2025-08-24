@@ -8,7 +8,6 @@ using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace FurnitureDisplayFramework
 {
-    /// <summary>The mod entry point.</summary>
     public partial class ModEntry
     {
         private static void GameLocation_draw_Postfix(GameLocation __instance, SpriteBatch b)
@@ -56,11 +55,5 @@ namespace FurnitureDisplayFramework
                 }
             }
         } 
-        private static void Furniture_placementAction_Postfix(Furniture __instance)
-        {
-            if (!Config.EnableMod)
-                return;
-            SMonitor.Log($"furniture name {__instance.Name}");
-        }
     }
 }

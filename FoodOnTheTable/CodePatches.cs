@@ -2,6 +2,7 @@
 using StardewValley;
 using StardewValley.Locations;
 using StardewValley.Objects;
+using StardewValley.Pathfinding;
 using System.Collections.Generic;
 using Object = StardewValley.Object;
 
@@ -33,7 +34,7 @@ namespace FoodOnTheTable
 				if (npc.isVillager())
 				{
 					NPC villager = npc;
-					if (villager != null && WantsToEat(villager) && Game1.random.NextDouble() < Config.MoveToFoodChance / 100f && villager.controller == null && villager.Schedule == null && !villager.getTileLocation().Equals(Utility.PointToVector2(__instance.getSpouseBedSpot(villager.Name))) && __instance.furniture.Count > 0)
+					if (villager != null && WantsToEat(villager) && Game1.random.NextDouble() < Config.MoveToFoodChance / 100f && villager.controller == null && villager.Schedule == null && !villager.Tile.Equals(Utility.PointToVector2(__instance.getSpouseBedSpot(villager.Name))) && __instance.furniture.Count > 0)
 					{
 						PlacedFoodData food = GetClosestFood(npc, __instance);
 						if (food == null)
@@ -69,7 +70,7 @@ namespace FoodOnTheTable
 							{
 								facingDirection = 0;
 							}
-							if (__instance.isTileLocationTotallyClearAndPlaceable(possibleLocation))
+							if (__instance.isTilePlaceable(possibleLocation))
 							{
 								break;
 							}
@@ -79,7 +80,7 @@ namespace FoodOnTheTable
 						{
 							SMonitor.Log($"Moving to {possibleLocation}");
 
-							villager.controller = new PathFindController(villager, __instance, new Point((int)possibleLocation.X, (int)possibleLocation.Y), facingDirection, false, false);
+							villager.controller = new PathFindController(villager, __instance, new Point((int)possibleLocation.X, (int)possibleLocation.Y), facingDirection);
 						}
 					}
 				}

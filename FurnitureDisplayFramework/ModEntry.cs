@@ -21,7 +21,6 @@ namespace FurnitureDisplayFramework
         public static ModConfig Config;
 
         public static ModEntry context;
-        private static IJsonAssetsApi apiJA;
         public static Dictionary<string, FurnitureDisplayData> furnitureDisplayDict = new Dictionary<string, FurnitureDisplayData>();
         public static readonly string frameworkPath = "Mods/aedenthorn.FurnitureDisplayFramework/dictionary";
 
@@ -274,23 +273,8 @@ namespace FurnitureDisplayFramework
 
         public static Object GetObjectFromSlot(string slotString)
         {
-            try
-            {
-                if (slotString.Contains("{"))
-                {
-                    return JsonConvert.DeserializeObject<Object>(slotString, new JsonSerializerSettings
-                    {
-                        Error = HandleDeserializationError
-                    });
-                }
-                else
-                {
-                    var currentItem = slotString.Split(',');
-                    return GetObjectFromID(currentItem[0], int.Parse(currentItem[1]), int.Parse(currentItem[2]));
-                }
-            }
-            catch { }
-            return null;
+            var currentItem = slotString.Split(',');
+            return GetObjectFromID(currentItem[0], int.Parse(currentItem[1]), int.Parse(currentItem[2]));
         }
     }
 }
