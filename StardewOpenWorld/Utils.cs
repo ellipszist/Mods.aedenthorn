@@ -49,22 +49,46 @@ namespace StardewOpenWorld
             }
             return true;
         }
-        private static bool ConflictsRect(Rectangle r)
+        private static bool ConflictsRect(Point cp, Rectangle r)
         {
-            foreach (var rect in landmarkRects)
+            foreach(var p in GetSurroundingPointArrayAbs(cp, true))
             {
-                if (rect.Intersects(r))
+                if (ConflictsRect(p, r, landmarkRects))
+                    return true;
+                if (ConflictsRect(p, r, lakeRects))
+                    return true;
+                if (ConflictsRect(p, r, outcropRects))
                     return true;
             }
-            foreach (var rect in lakeRects)
+            return false;
+        }
+        public static void AddRectToList(Rectangle rect, Dictionary<Point, HashSet<Rectangle>> dict)
+        {
+            foreach (var point in new Point[] { rect.Location, rect.Location + new Point(rect.Width, 0), rect.Location + new Point(0, rect.Height), rect.Location + rect.Size })
             {
-                if (rect.Intersects(r))
-                    return true;
+                Point cp = GetTileChunk(point);
+                if (!dict.TryGetValue(cp, out var list))
+                {
+                    list = new HashSet<Rectangle>();
+                    dict[cp] = list;
+                }
+                list.Add(rect);
             }
-            foreach (var rect in outcropRects)
+        }
+
+        public static Point GetTileChunk(Point point)
+        {
+            return new Point(point.X / openWorldChunkSize, point.Y / openWorldChunkSize);
+        }
+        private static bool ConflictsRect(Point cp, Rectangle ar, Dictionary<Point, HashSet<Rectangle>> dict)
+        {
+            if (dict.TryGetValue(cp, out var rhs))
             {
-                if (rect.Intersects(r))
-                    return true;
+                foreach (var rect in rhs)
+                {
+                    if (rect.Intersects(ar))
+                        return true;
+                }
             }
             return false;
         }
@@ -132,36 +156,36 @@ namespace StardewOpenWorld
         public static void SetTile(Layer layer, int x, int y, Tile value)
         {
         }
-        public static Point[] GetSurroundingTileLocationsArray(Point tileLocation, bool include)
+        public static Point[] GetSurroundingPointArrayAbs(Point center, bool include)
         {
             if (include)
             {
                 return new Point[]
                 {
-                    tileLocation,
-                    new Point(-1, 0) + tileLocation,
-                    new Point(1, 0) + tileLocation,
-                    new Point(0, 1) + tileLocation,
-                    new Point(0, -1) + tileLocation,
-                    new Point(-1, -1) + tileLocation,
-                    new Point(1, -1) + tileLocation,
-                    new Point(1, 1) + tileLocation,
-                    new Point(-1, 1) + tileLocation
+                    center,
+                    new Point(-1, 0) + center,
+                    new Point(1, 0) + center,
+                    new Point(0, 1) + center,
+                    new Point(0, -1) + center,
+                    new Point(-1, -1) + center,
+                    new Point(1, -1) + center,
+                    new Point(1, 1) + center,
+                    new Point(-1, 1) + center
                 };
             }
             return new Point[]
             {
-                new Point(-1, 0) + tileLocation,
-                new Point(1, 0) + tileLocation,
-                new Point(0, 1) + tileLocation,
-                new Point(0, -1) + tileLocation,
-                new Point(-1, -1) + tileLocation,
-                new Point(1, -1) + tileLocation,
-                new Point(1, 1) + tileLocation,
-                new Point(-1, 1) + tileLocation
+                new Point(-1, 0) + center,
+                new Point(1, 0) + center,
+                new Point(0, 1) + center,
+                new Point(0, -1) + center,
+                new Point(-1, -1) + center,
+                new Point(1, -1) + center,
+                new Point(1, 1) + center,
+                new Point(-1, 1) + center
             };
         }
-        public static Point[] GetSurroundingPointArray(bool include)
+        public static Point[] GetSurroundingPointArrayRel(bool include)
         {
             if (include)
             {
@@ -229,6 +253,21 @@ namespace StardewOpenWorld
             }
             return offset;
         }
+        private static bool IsInsideRect(Point cp, Vector2 av, Dictionary<Point, HashSet<Rectangle>> dict)
+        {
+            foreach (var p in GetSurroundingPointArrayAbs(cp, true))
+            {
+                if (dict.TryGetValue(p, out var rhs))
+                {
+                    foreach (var rect in rhs)
+                    {
+                        if (rect.Contains(av.ToPoint()))
+                            return true;
+                    }
+                }
+            }
+            return false;
+        }
         private static List<Point> GetBlob(Point c, Random r, int maxTiles)
         {
 
@@ -253,7 +292,7 @@ namespace StardewOpenWorld
             for (int x = width / 2; x >= 0; x--)
             {
 
-                double chance = Math.Pow((width / 2 - x) / (double)width, 2) * 4;
+                double chance = (width / 2 - x) / ((width + 1) / 2.0);
                 while (leftTop < height / 2)
                 {
                     if (r.NextDouble() < chance)
@@ -283,7 +322,7 @@ namespace StardewOpenWorld
             }
             for (int x = width / 2 + 1; x < width; x++)
             {
-                double chance = Math.Pow((x - width / 2) / (double)width, 2) * 4;
+                double chance = (x - width / 2) / ((width + 1) / 2.0);
                 while (rightTop < height / 2)
                 {
                     if (r.NextDouble() < chance)

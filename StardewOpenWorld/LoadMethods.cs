@@ -16,21 +16,13 @@ namespace StardewOpenWorld
             HashSet<Point> points = new HashSet<Point>();
             foreach (var cp in loadedChunks)
             {
-                points.AddRange(GetSurroundingTileLocationsArray(cp, true));
+                points.AddRange(GetSurroundingPointArrayAbs(cp, true));
             }
             foreach (var cp in points)
             {
                 if (!cachedChunks.TryGetValue(cp, out var chunk) || !chunk.cached)
                 {
                     chunksWaitingToCache.Add(cp);
-                    return;
-                }
-            }
-            foreach (var cp in points)
-            {
-                if (!cachedChunks[cp].built)
-                {
-                    chunksWaitingToBuild.Add(cp);
                     return;
                 }
             }

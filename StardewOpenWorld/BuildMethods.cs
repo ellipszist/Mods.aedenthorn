@@ -10,6 +10,7 @@ using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -83,8 +84,8 @@ namespace StardewOpenWorld
             foreach (var landmark in landmarkDict.Values)
             {
                 var map = SHelper.GameContent.Load<Map>(landmark.MapPath);
-                Rectangle mapBox = new(landmark.MapPosition, new(map.Layers[0].LayerWidth, map.Layers[0].LayerHeight));
-                landmarkRects.Add(mapBox);
+                Rectangle mapBox = new(landmark.MapPosition - new Point(1, 1), new(map.Layers[0].LayerWidth + 1, map.Layers[0].LayerHeight + 1));
+                AddRectToList(mapBox, landmarkRects);
             }
 
             if (force)
@@ -176,6 +177,7 @@ namespace StardewOpenWorld
             }
         }
 
+
         public static void AddLandmarksToChunk(Point cp)
         {
             var chunkBox = new Rectangle(cp.X * openWorldChunkSize, cp.Y * openWorldChunkSize, openWorldChunkSize, openWorldChunkSize);
@@ -232,7 +234,10 @@ namespace StardewOpenWorld
                                 {
                                     tile = new StaticTile(nl, nts, ot.BlendMode, ot.TileIndex);
                                 }
-
+                                foreach(var prop in ot.Properties)
+                                {
+                                    tile.Properties.Add(prop);
+                                }
                                 cachedChunks[cp].tiles[l.Id][rx, ry] = tile;
                             }
                         }
@@ -268,10 +273,10 @@ namespace StardewOpenWorld
                         if (p.Y < y) y = p.Y;
                         if (p.Y > h) h = p.Y;
                     }
-                    var begin = new Point(x - 2, y - 2);
-                    var end = new Point(w + 2, h + 2);
-                    var ar = new Rectangle(ToGlobalTile(cp, c + begin), end - begin + new Point(1, 1));
-                    if (ConflictsRect(ar))
+                    var begin = new Point(x - 5, y - 5);
+                    var end = new Point(w + 6, h + 6);
+                    var ar = new Rectangle(ToGlobalTile(cp, c + begin), end - begin);
+                    if (ConflictsRect(cp, ar))
                         continue;
                     foreach (var p in padding)
                     {
@@ -290,7 +295,7 @@ namespace StardewOpenWorld
                     {
                         AddWaterTileToChunk(cp, p, tiles, r);
                     }
-                    lakeRects.Add(ar);
+                    AddRectToList(ar, lakeRects);
                 }
             }
         }
@@ -827,7 +832,7 @@ namespace StardewOpenWorld
                 while (idx < rocks)
                 {
                     ar = new Rectangle(ToGlobalTile(cp, c.ToPoint() + begin - new Point(8, 8)), end - begin + new Point(9, 9));
-                    if (ConflictsRect(ar))
+                    if (ConflictsRect(cp, ar))
                     {
                         goto next;
                     }
@@ -890,7 +895,7 @@ namespace StardewOpenWorld
                     {
                         AddBlobTileToChunk(BorderTiles.dirt, GetRandomDirtTile(r, back, mainSheet), back, mainSheet, cp, rp, newTiles, r);
                     }
-                    outcropRects.Add(ar);
+                    AddRectToList(ar, outcropRects);
                 }
             next:
                 continue;
@@ -912,7 +917,7 @@ namespace StardewOpenWorld
                 int grass = r.Next(Config.MinGrassPerField, Config.MaxGrassPerField + 1);
                 while (idx < grass)
                 {
-                    if (ConflictsRect(new Rectangle(ToGlobalTile(cp, c + begin.ToVector2()).ToPoint(), end - begin + new Point(1, 1))))
+                    if (ConflictsRect(cp, new Rectangle(ToGlobalTile(cp, c + begin.ToVector2()).ToPoint(), end - begin + new Point(1, 1))))
                     {
                         goto next;
                     }
@@ -981,22 +986,21 @@ namespace StardewOpenWorld
 
         public static void AddChestsToChunk(Point cp)
         {
+            Stopwatch s = Stopwatch.StartNew();
             if (advancedLootFrameworkApi is null)
                 return;
             Random r = Utility.CreateRandom(RandomSeed, 942);
-            int freeTiles = Enumerable.Range(0, openWorldChunkSize * openWorldChunkSize).Count(i => IsOpenTile(new Vector2(i % openWorldChunkSize + cp.X * openWorldChunkSize, i / openWorldChunkSize + cp.Y * openWorldChunkSize)));
-            float chestCount = freeTiles / (float)(Config.TilesPerChestMin + ((Config.TilesPerChestMax - Config.TilesPerChestMin) * r.NextDouble() * cp.Y * openWorldChunkSize / Config.OpenWorldSize )); 
-            int spawnedChestCount = Math.Min(freeTiles, (int)Math.Floor(chestCount));
+
+            int count = (int)Math.Floor(openWorldChunkSize * openWorldChunkSize / (float)(Config.TilesPerChestMin + ((Config.TilesPerChestMax - Config.TilesPerChestMin) * r.NextDouble() * cp.Y * openWorldChunkSize / Config.OpenWorldSize ))); 
             int i = 0;
             int attempt = 0;
-            while (i < spawnedChestCount && attempt < spawnedChestCount * 10)
+            while (i < count && attempt < count * 10)
             {
                 Vector2 freeTile = new(r.Next(openWorldChunkSize), r.Next(openWorldChunkSize));
                 var av = ToGlobalTile(cp, freeTile);
-                foreach (var rect in landmarkRects)
+                if (IsInsideRect(cp, av, landmarkRects))
                 {
-                    if (rect.Contains(av.ToPoint()))
-                        goto next;
+                    goto next;
                 }
                 if (IsOpenTile(av))
                 {
@@ -1017,20 +1021,16 @@ namespace StardewOpenWorld
         public static void AddBushesToChunk(Point cp)
         {
             Random r = Utility.CreateRandom(RandomSeed, "bush".GetHashCode());
-            int freeTiles = Enumerable.Range(0, openWorldChunkSize * openWorldChunkSize).Count(i => IsOpenTile(new Vector2(i % openWorldChunkSize + cp.X * openWorldChunkSize, i / openWorldChunkSize + cp.Y * openWorldChunkSize)));
-            float bushCount = freeTiles / (float)(Config.TilesPerBushMin + ((Config.TilesPerBushMax - Config.TilesPerBushMin) * r.NextDouble() * cp.Y * openWorldChunkSize / Config.OpenWorldSize )); 
-            int spawnedBushCount = Math.Min(freeTiles, (int)Math.Floor(bushCount));
+            int count = (int)Math.Floor(openWorldChunkSize * openWorldChunkSize / (float)(Config.TilesPerBushMin + ((Config.TilesPerBushMax - Config.TilesPerBushMin) * r.NextDouble() * cp.Y * openWorldChunkSize / Config.OpenWorldSize ))); 
             int i = 0;
             int attempt = 0;
-            while (i < spawnedBushCount && attempt < spawnedBushCount * 10)
+            while (i < count && attempt < count * 10)
             {
                 Vector2 freeTile = new(r.Next(openWorldChunkSize), r.Next(openWorldChunkSize));
                 var av = ToGlobalTile(cp, freeTile);
-
-                foreach (var rect in landmarkRects)
+                if (IsInsideRect(cp, av, landmarkRects))
                 {
-                    if (rect.Contains(av.ToPoint()))
-                        goto next;
+                    goto next;
                 }
                 if (IsOpenTile(av))
                 {
@@ -1046,9 +1046,7 @@ namespace StardewOpenWorld
         public static void AddForageToChunk(Point cp)
         {
             Random r = Utility.CreateRandom(RandomSeed, "forage".GetHashCode());
-            int freeTiles = Enumerable.Range(0, openWorldChunkSize * openWorldChunkSize).Count(i => IsOpenTile(new Vector2(i % openWorldChunkSize + cp.X * openWorldChunkSize, i / openWorldChunkSize + cp.Y * openWorldChunkSize)));
-            float maxCount = freeTiles / (float)(Config.TilesPerForageMin + ((Config.TilesPerForageMax - Config.TilesPerForageMin) * r.NextDouble() * cp.Y * openWorldChunkSize / Config.OpenWorldSize )); 
-            int spawnCount = Math.Min(freeTiles, (int)Math.Floor(maxCount));
+            int count = (int)Math.Floor(openWorldChunkSize * openWorldChunkSize / (float)(Config.TilesPerForageMin + ((Config.TilesPerForageMax - Config.TilesPerForageMin) * r.NextDouble() * cp.Y * openWorldChunkSize / Config.OpenWorldSize ))); 
             int i = 0;
             int attempt = 0;
             var forest = Game1.getLocationFromName("Forest");
@@ -1074,14 +1072,13 @@ namespace StardewOpenWorld
                 return;
             ItemQueryContext itemQueryContext = new ItemQueryContext(forest, null, r, "location '" + forest.NameOrUniqueName + "' > forage");
 
-            while (i < spawnCount && attempt < spawnCount * 10)
+            while (i < count && attempt < count * 10)
             {
                 Vector2 freeTile = new(r.Next(openWorldChunkSize), r.Next(openWorldChunkSize));
                 var av = ToGlobalTile(cp, freeTile);
-                foreach (var rect in landmarkRects)
+                if(IsInsideRect(cp, av, landmarkRects))
                 {
-                    if (rect.Contains(av.ToPoint()))
-                        goto next;
+                    goto next;
                 }
                 if (IsOpenTile(av))
                 {
@@ -1104,22 +1101,21 @@ namespace StardewOpenWorld
                 attempt++;
             }
         }
+
+
         public static void AddClumpsToChunk(Point cp)
         {
             Random r = Utility.CreateRandom(RandomSeed, "clump".GetHashCode());
-            int freeTiles = Enumerable.Range(0, openWorldChunkSize * openWorldChunkSize).Count(i => IsOpenTile(new Vector2(i % openWorldChunkSize + cp.X * openWorldChunkSize, i / openWorldChunkSize + cp.Y * openWorldChunkSize)));
-            float maxCount = freeTiles / (float)(Config.TilesPerClumpMin + ((Config.TilesPerClumpMax - Config.TilesPerClumpMin) * r.NextDouble() * cp.Y * openWorldChunkSize / Config.OpenWorldSize )); 
-            int spawnCount = Math.Min(freeTiles, (int)Math.Floor(maxCount));
+            int count = (int)Math.Floor(openWorldChunkSize * openWorldChunkSize / (float)(Config.TilesPerClumpMin + ((Config.TilesPerClumpMax - Config.TilesPerClumpMin) * r.NextDouble() * cp.Y * openWorldChunkSize / Config.OpenWorldSize ))); 
             int i = 0;
             int attempt = 0;
-            while (i < spawnCount && attempt < spawnCount * 10)
+            while (i < count && attempt < count * 10)
             {
                 Vector2 freeTile = new(r.Next(openWorldChunkSize), r.Next(openWorldChunkSize));
                 var av = ToGlobalTile(cp, freeTile);
-                foreach (var rect in landmarkRects)
+                if (IsInsideRect(cp, av, landmarkRects))
                 {
-                    if (rect.Contains(av.ToPoint()))
-                        goto next;
+                    goto next;
                 }
                 if (IsOpenTile(av) && IsOpenTile(av + new Vector2(0, 1)) && IsOpenTile(av + new Vector2(1, 0)) && IsOpenTile(av + new Vector2(1, 1)))
                 {
@@ -1171,7 +1167,7 @@ namespace StardewOpenWorld
                 int trees = r.Next(Config.MinTreesPerForest, Config.MaxTreesPerForest + 1);
                 while (idx < trees)
                 {
-                    if (ConflictsRect(new Rectangle(ToGlobalTile(cp, c.Key.ToPoint() + begin), end - begin + new Point(1, 1))))
+                    if (ConflictsRect(cp, new Rectangle(ToGlobalTile(cp, c.Key.ToPoint() + begin), end - begin + new Point(1, 1))))
                     {
                         goto next;
                     }
@@ -1476,7 +1472,7 @@ namespace StardewOpenWorld
                 while (idx < monsters.Count)
                 {
                     var ar = ToGlobalRect(cp, new Rectangle(begin, end - begin + new Point(1, 1)));
-                    if (ConflictsRect(ar))
+                    if (ConflictsRect(cp, ar))
                     {
                         goto next;
                     }

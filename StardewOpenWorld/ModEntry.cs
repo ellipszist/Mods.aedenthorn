@@ -46,14 +46,14 @@ namespace StardewOpenWorld
         public static Dictionary<string, Dictionary<int, AnimatedTile>> animatedTiles = new();
         
         public static Dictionary<Point, Dictionary<Vector2, string>> treeCenters = new();
-        public static Dictionary<Point, List<Vector2>> rockCenters = new();
-        public static Dictionary<Point, List<Vector2>> grassCenters = new();
+        public static Dictionary<Point, HashSet<Vector2>> rockCenters = new();
+        public static Dictionary<Point, HashSet<Vector2>> grassCenters = new();
         public static Dictionary<Point, List<Point>> lakeCenters = new();
         public static Dictionary<Point, Dictionary<Vector2, string>> monsterCenters = new();
 
-        public static HashSet<Rectangle> landmarkRects = new();
-        public static HashSet<Rectangle> lakeRects = new();
-        public static HashSet<Rectangle> outcropRects = new();
+        public static Dictionary<Point, HashSet<Rectangle>> landmarkRects = new();
+        public static Dictionary<Point ,HashSet<Rectangle>> lakeRects = new();
+        public static Dictionary<Point, HashSet<Rectangle>> outcropRects = new();
 
         public static GameLocation openWorldLocation;
         //private static Dictionary<string, Biome> biomes = new Dictionary<string, Biome>();
