@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
+using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Enchantments;
 using StardewValley.Monsters;
@@ -29,11 +30,11 @@ namespace AdvancedMeleeFramework
         public Dictionary<string, int> EnchantmentTriggers = [];
         public Dictionary<string, Action<Farmer, MeleeWeapon, Monster?, Dictionary<string, string>>> AdvancedEnchantmentCallbacks = [];
         public Dictionary<string, Action<Farmer, MeleeWeapon, Dictionary<string, string>>> SpecialEffectCallbacks = [];
-        public int WeaponAnimationFrame = -1;
-        public int WeaponAnimationTicks = 0;
-        public int WeaponStartFacingDirection = 0;
-        public MeleeWeapon WeaponAnimating;
-        public AdvancedMeleeWeapon AdvancedWeaponAnimating;
+        public PerScreen<int> WeaponAnimationFrame = new(() => -1);
+        public PerScreen<int> WeaponAnimationTicks = new(() => 0);
+        public PerScreen<int> WeaponStartFacingDirection = new(() => 0);
+        public PerScreen<MeleeWeapon> WeaponAnimating = new(() => null);
+        public PerScreen<AdvancedMeleeWeapon> AdvancedWeaponAnimating = new(() => null);
         public IJsonAssetsApi? JsonAssetsApi;
 
         public override void Entry(IModHelper helper)
@@ -92,29 +93,29 @@ namespace AdvancedMeleeFramework
 
         private void onUpdateTicking(object sender, UpdateTickingEventArgs e)
         {
-            if (WeaponAnimationFrame < 0 || AdvancedWeaponAnimating is null)
+            if (WeaponAnimationFrame.Value < 0 || AdvancedWeaponAnimating.Value is null)
                 return;
-            MeleeActionFrame frame = AdvancedWeaponAnimating.frames[WeaponAnimationFrame];
-            Farmer who = WeaponAnimating.getLastFarmerToUse();
+            MeleeActionFrame frame = AdvancedWeaponAnimating.Value.frames[WeaponAnimationFrame.Value];
+            Farmer who = WeaponAnimating.Value.getLastFarmerToUse();
 
-            if (WeaponAnimationFrame == 0 && WeaponAnimationTicks == 0)
-                WeaponStartFacingDirection = who.FacingDirection;
+            if (WeaponAnimationFrame.Value == 0 && WeaponAnimationTicks.Value == 0)
+                WeaponStartFacingDirection.Value = who.FacingDirection;
 
-            if (who.CurrentTool != WeaponAnimating)
+            if (who.CurrentTool != WeaponAnimating.Value)
             {
-                WeaponAnimating = null;
-                WeaponAnimationTicks = 0;
-                WeaponAnimationFrame = -1;
-                AdvancedWeaponAnimating = null;
+                WeaponAnimating.Value = null;
+                WeaponAnimationTicks.Value = 0;
+                WeaponAnimationFrame.Value = -1;
+                AdvancedWeaponAnimating.Value = null;
                 return;
             }
 
             if (frame.invincible is { } invincible)
                 who.temporarilyInvincible = invincible;
 
-            if (WeaponAnimationTicks == 0)
+            if (WeaponAnimationTicks.Value == 0)
             {
-                who.faceDirection((WeaponStartFacingDirection + frame.relativeFacingDirection) % 4);
+                who.faceDirection((WeaponStartFacingDirection.Value + frame.relativeFacingDirection) % 4);
 
                 if (frame.special is { } special)
                 {
@@ -122,7 +123,7 @@ namespace AdvancedMeleeFramework
                     {
                         if (!SpecialEffectCallbacks.TryGetValue(special.name, out var callback))
                             throw new($"No special effect found with name {special.name}");
-                        callback.Invoke(who, WeaponAnimating, special.parameters);
+                        callback.Invoke(who, WeaponAnimating.Value, special.parameters);
                     }
                     catch (Exception ex)
                     {
@@ -136,10 +137,10 @@ namespace AdvancedMeleeFramework
                     who.CanMove = false;
                     who.UsingTool = true;
                     who.canReleaseTool = true;
-                    WeaponAnimating.setFarmerAnimating(who);
+                    WeaponAnimating.Value.setFarmerAnimating(who);
                 }
                 else if (frame.action == WeaponAction.SPECIAL)
-                    WeaponAnimating.animateSpecialMove(who);
+                    WeaponAnimating.Value.animateSpecialMove(who);
 
                 if (frame.trajectoryX != 0 || frame.trajectoryY != 0)
                 {
@@ -155,7 +156,7 @@ namespace AdvancedMeleeFramework
                     Vector2 velocity = Utils.TranslateVector(new(p.xVelocity, p.yVelocity), who.FacingDirection);
                     Vector2 startPos = Utils.TranslateVector(new(p.startingPositionX, p.startingPositionY), who.FacingDirection);
 
-                    int damage = AdvancedWeaponAnimating.type > 0 ? p.damage * Random.Next(WeaponAnimating.minDamage.Value, WeaponAnimating.maxDamage.Value) : p.damage;
+                    int damage = AdvancedWeaponAnimating.Value.type > 0 ? p.damage * Random.Next(WeaponAnimating.Value.minDamage.Value, WeaponAnimating.Value.maxDamage.Value) : p.damage;
 
                     who.currentLocation.projectiles.Add(new BasicProjectile(damage,
                                                                             p.parentSheetIndex,
@@ -177,13 +178,13 @@ namespace AdvancedMeleeFramework
                 }
             }
 
-            if (++WeaponAnimationTicks >= frame.frameTicks)
+            if (++WeaponAnimationTicks.Value >= frame.frameTicks)
             {
-                WeaponAnimationFrame++;
-                WeaponAnimationTicks = 0;
+                WeaponAnimationFrame.Value++;
+                WeaponAnimationTicks.Value = 0;
             }
 
-            if (WeaponAnimationFrame < AdvancedWeaponAnimating.frames.Count)
+            if (WeaponAnimationFrame.Value < AdvancedWeaponAnimating.Value.frames.Count)
                 return;
             who.completelyStopAnimatingOrDoingAction();
             who.CanMove = true;
@@ -192,13 +193,13 @@ namespace AdvancedMeleeFramework
 
             if (who.IsLocalPlayer)
             {
-                int cd = AdvancedWeaponAnimating.cooldown;
+                int cd = AdvancedWeaponAnimating.Value.cooldown;
                 if (who.professions.Contains(28))
                     cd /= 2;
-                if (WeaponAnimating.hasEnchantmentOfType<ArtfulEnchantment>())
+                if (WeaponAnimating.Value.hasEnchantmentOfType<ArtfulEnchantment>())
                     cd /= 2;
 
-                switch (WeaponAnimating.type.Value)
+                switch (WeaponAnimating.Value.type.Value)
                 {
                     case 1:
                         MeleeWeapon.daggerCooldown = cd;
@@ -212,10 +213,10 @@ namespace AdvancedMeleeFramework
                 }
             }
 
-            WeaponAnimationFrame = -1;
-            WeaponAnimating = null;
-            AdvancedWeaponAnimating = null;
-            WeaponAnimationTicks = 0;
+            WeaponAnimationFrame.Value = -1;
+            WeaponAnimating.Value = null;
+            AdvancedWeaponAnimating.Value = null;
+            WeaponAnimationTicks.Value = 0;
         }
 
         private void onButtonPressed(object sender, ButtonPressedEventArgs e)

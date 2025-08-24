@@ -1,22 +1,9 @@
 ﻿{
   "Name": "Hugs and Kisses",
   "Author": "aedenthorn",
-  "Version": "0.4.0",
+  "Version": "0.5.4",
   "Description": "Hugs and kisses.",
   "UniqueID": "aedenthorn.HugsAndKisses",
   "EntryDll": "HugsAndKisses.dll",
-  "MinimumApiVersion": "3.15.0",
-  "ModUpdater": {
-    "Repository": "StardewValleyMods",
-    "User": "aedenthorn",
-    "Directory": "_releases",
-    "ModFolder": "HugsAndKisses"
-  },
-  "UpdateKeys": [ "Nexus:10062" ],
-  "Dependencies": [
-    {
-      "UniqueID": "Platonymous.ModUpdater",
-      "IsRequired": false
-    }
-  ]
+  "MinimumApiVersion": "4.0.0"
 }

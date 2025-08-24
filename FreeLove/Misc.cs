@@ -198,8 +198,15 @@ namespace FreeLove
                     spouse.setSpouseRoomMarriageDialogue();
                 }
                 else 
-                { 
-                    spouse.setTilePosition(farmHouse.getRandomOpenPointInHouse(myRand));
+                {
+                    Point point = new(-1, -1);
+                    for(int i = 0; i < 100; i++)
+                    {
+                        point = farmHouse.getRandomOpenPointInHouse(myRand);
+                        if (!IsTileOccupied(farmHouse, point, spouse.Name))
+                            break;
+                    }
+                    spouse.setTilePosition(point);
                     spouse.faceDirection(myRand.Next(0, 4));
                     SMonitor.Log($"{spouse.Name} spouse random loc {spouse.TilePoint}");
                     spouse.setRandomAfternoonMarriageDialogue(Game1.timeOfDay, farmHouse, false);

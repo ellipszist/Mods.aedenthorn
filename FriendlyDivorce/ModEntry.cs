@@ -1,4 +1,4 @@
-﻿using Harmony;
+﻿using HarmonyLib;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using static System.Collections.Specialized.BitVector32;
+using xTile.Dimensions;
 
 namespace FriendlyDivorce
 {
@@ -36,14 +38,13 @@ namespace FriendlyDivorce
                 return;
 
             PHelper = Helper;
-            var harmony = HarmonyInstance.Create(this.ModManifest.UniqueID);
+            var harmony = new Harmony(ModManifest.UniqueID);
             ObjectPatches.Initialize(Monitor);
             mp = helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
-
             if (Config.ComplexDivorce)
             {
                 harmony.Patch(
-                   original: AccessTools.Method(typeof(ManorHouse), nameof(ManorHouse.performAction)),
+                   original: AccessTools.Method(typeof(ManorHouse), nameof(ManorHouse.performAction), new Type[] { typeof(string[]), typeof(Farmer), typeof(Location) }),
                    prefix: new HarmonyMethod(typeof(ObjectPatches), nameof(ObjectPatches.ManorHouse_performAction_Prefix))
                 );
                 harmony.Patch(

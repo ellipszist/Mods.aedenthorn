@@ -1,12 +1,15 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Sickhead.Engine.Util;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.Locations;
+using StardewValley.Monsters;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using xTile;
 using xTile.Dimensions;
 using xTile.Layers;
@@ -18,7 +21,8 @@ namespace CustomSpouseRooms
     /// <summary>The mod entry point.</summary>
     public partial class ModEntry
     {
-        private static Dictionary<string, int> topOfHeadOffsets = new Dictionary<string, int>();
+
+        public static Dictionary<string, int> topOfHeadOffsets = new Dictionary<string, int>();
 
         public static Dictionary<string, object> GetSpouses(Farmer farmer, int all)
         {
@@ -43,7 +47,7 @@ namespace CustomSpouseRooms
 				if (!pair.Value.IsMarried())
 					continue;
 				long id = pair.Key.Farmer1 == farmer.UniqueMultiplayerID ? pair.Key.Farmer2 : pair.Key.Farmer1;
-				Farmer spouse = Game1.getFarmer(id);
+				Farmer spouse = Game1.GetPlayer(id);
 				if (spouse != null)
                 {
 					spouses[spouse.Name] = spouse;
@@ -82,18 +86,30 @@ namespace CustomSpouseRooms
                 }
                 AccessTools.Field(typeof(Layer), "m_tiles").SetValue(layers[i], newTiles);
                 AccessTools.Field(typeof(Layer), "m_tileArray").SetValue(layers[i], new TileArray(layers[i], newTiles));
+                AccessTools.Field(typeof(Layer), "_skipMap").SetValue(layers[i], null);
 
+                Size displaySize = layers[i].DisplaySize;
+				Size oldSize = AccessTools.FieldRefAccess<Map, Size>(location.Map, "m_displaySize");
+                AccessTools.FieldRefAccess<Map, Size>(location.Map, "m_displaySize") = new Size(Math.Max(oldSize.Width, displaySize.Width), Math.Max(oldSize.Height, displaySize.Height));
             }
             AccessTools.Field(typeof(Map), "m_layers").SetValue(location.map, layers);
         }
 
-		public static void CheckSpouseThing(FarmHouse fh, SpouseRoomData srd)
+        public static void CheckSpouseThing(FarmHouse fh, SpouseRoomData srd)
 		{
 			SMonitor.Log($"Checking spouse thing for {srd.name}");
 			if (srd.name == "Emily" && (srd.templateName == "Emily" || srd.templateName == null || srd.templateName == ""))
 			{
-				fh.temporarySprites.RemoveAll((s) => s is EmilysParrot);
+				List<TemporaryAnimatedSprite> emilyParrot = new List<TemporaryAnimatedSprite>();
+				foreach(TemporaryAnimatedSprite sprite in fh.TemporarySprites.Where<TemporaryAnimatedSprite>((x) => x is EmilysParrot))
+				{
+					emilyParrot.Add(sprite);
+				}
 
+				foreach(TemporaryAnimatedSprite sprite in emilyParrot)
+				{
+					fh.TemporarySprites.Remove(sprite);
+				}
 				Vector2 spot = Utility.PointToVector2(srd.startPos + new Point(4, 2)) * 64;
 				spot += new Vector2(16, 32);
 				SMonitor.Log($"Building Emily's parrot at {spot}");

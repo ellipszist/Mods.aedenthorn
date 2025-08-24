@@ -4,14 +4,17 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Utilities;
 using StardewValley;
+using StardewValley.GameData;
 using StardewValley.Menus;
 using StardewValley.TerrainFeatures;
 using System;
+using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace LongerSeasons
 {
     /// <summary>The mod entry point.</summary>
-    public partial class ModEntry : Mod, IAssetEditor
+    public partial class ModEntry : Mod
     {
 
         public static IMonitor SMonitor;
@@ -36,6 +39,7 @@ namespace LongerSeasons
 
             Helper.Events.GameLoop.DayStarted += GameLoop_DayStarted;
             Helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
+            Helper.Events.Content.AssetRequested += Content_AssetRequested;
 
             var harmony = new Harmony(ModManifest.UniqueID);
 
@@ -47,7 +51,7 @@ namespace LongerSeasons
             );
             
             harmony.Patch(
-               original: AccessTools.Method(typeof(Game1), "newSeason"),
+               original: AccessTools.Method(typeof(Game1), "OnNewSeason"),
                prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.Game1_newSeason_Prefix))
             );
 
@@ -124,6 +128,51 @@ namespace LongerSeasons
             );
         }
 
+        private void Content_AssetRequested(object sender, StardewModdingAPI.Events.AssetRequestedEventArgs e)
+        {
+            if (!Config.EnableMod)
+                return;
+            if (Config.SpreadFestivals && e.NameWithoutLocale.IsEquivalentTo("Data/PassiveFestivals"))
+            {
+                e.Edit(delegate (IAssetData data)
+                {
+                    var editor = data.AsDictionary<string, PassiveFestivalData>();
+                    foreach(var k in editor.Data.Keys)
+                    {
+                        editor.Data[k].StartDay = (int)Math.Round(editor.Data[k].StartDay * 28f / (float)Config.DaysPerMonth);
+                        editor.Data[k].EndDay = (int)Math.Round(editor.Data[k].EndDay * 28f / (float)Config.DaysPerMonth);
+                    }
+                });
+
+            }
+            else if (Game1.dayOfMonth > 28 && e.NameWithoutLocale.IsEquivalentTo("LooseSprites/Billboard"))
+            {
+                e.Edit(delegate (IAssetData data)
+                {
+                    var editor = data.AsImage();
+
+                    Texture2D sourceImage = Helper.ModContent.Load<Texture2D>("assets/numbers.png");
+
+                    int startDay = 28 * (Game1.dayOfMonth / 28) + 1;
+
+                    for (int i = startDay; i < startDay + 28; i++)
+                    {
+                        int cents = i / 100;
+                        int tens = (i - cents * 100) / 10;
+                        int ones = i - cents * 100 - tens * 10;
+                        int xOff = 7;
+                        if (cents > 0)
+                        {
+                            xOff = 14;
+                            editor.PatchImage(sourceImage, new Rectangle(6 * cents, 0, 7, 11), new Rectangle(39 + (i - 1) % 7 * 32, 248 + (i - startDay) / 7 * 32, 7, 11), PatchMode.Overlay);
+                        }
+                        editor.PatchImage(sourceImage, new Rectangle(6 * tens, 0, 7, 11), new Rectangle(32 + xOff + (i - 1) % 7 * 32, 248 + (i - startDay) / 7 * 32, 7, 11), PatchMode.Overlay);
+                        editor.PatchImage(sourceImage, new Rectangle(6 * ones, 0, 7, 11), new Rectangle(39 + xOff + (i - 1) % 7 * 32, 248 + (i - startDay) / 7 * 32, 7, 11), PatchMode.Overlay);
+                    }
+                });
+            }
+        }
+
         private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
         {
             // get Generic Mod Config Menu's API (if it's installed)
@@ -166,43 +215,7 @@ namespace LongerSeasons
 
         private void GameLoop_DayStarted(object sender, StardewModdingAPI.Events.DayStartedEventArgs e)
         {
-            Helper.Content.InvalidateCache("LooseSprites/Billboard");
-        }
-
-        /// <summary>Get whether this instance can load the initial version of the given asset.</summary>
-        /// <param name="asset">Basic metadata about the asset being loaded.</param>
-        public bool CanEdit<T>(IAssetInfo asset)
-        {
-            if (!Config.EnableMod)
-                return false;
-
-            return Game1.dayOfMonth > 28 && asset.AssetNameEquals("LooseSprites/Billboard");
-        }
-
-        /// <summary>Load a matched asset.</summary>
-        /// <param name="asset">Basic metadata about the asset being loaded.</param>
-        public void Edit<T>(IAssetData asset)
-        {
-            var editor = asset.AsImage();
-            
-            Texture2D sourceImage = Helper.Content.Load<Texture2D>("assets/numbers.png");
-
-            int startDay = 28 * (Game1.dayOfMonth / 28) + 1;
-
-            for(int i = startDay; i < startDay + 28; i++)
-            {
-                int cents = i / 100;
-                int tens = (i - cents * 100) / 10;
-                int ones = i - cents * 100 - tens * 10;
-                int xOff = 7;
-                if(cents > 0)
-                {
-                    xOff = 14;
-                    editor.PatchImage(sourceImage, new Rectangle(6 * cents, 0, 7, 11), new Rectangle(39 + (i - 1) % 7 * 32, 248 + (i - startDay) / 7 * 32, 7, 11), PatchMode.Overlay);
-                }
-                editor.PatchImage(sourceImage, new Rectangle(6 * tens, 0, 7, 11), new Rectangle(32 + xOff + (i - 1) % 7 * 32, 248 + (i - startDay) / 7 * 32, 7, 11), PatchMode.Overlay);
-                editor.PatchImage(sourceImage, new Rectangle(6 * ones, 0, 7, 11), new Rectangle(39 + xOff + (i - 1) % 7 * 32, 248 + (i - startDay) / 7 * 32, 7, 11), PatchMode.Overlay);
-            }
+            Helper.GameContent.InvalidateCache("LooseSprites/Billboard");
         }
     }
 

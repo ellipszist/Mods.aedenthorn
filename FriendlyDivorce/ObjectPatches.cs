@@ -21,7 +21,7 @@ namespace FriendlyDivorce
             {
                 if (__instance.spouse != null)
                 {
-                    __state = __instance.getSpouse().name;
+                    __state = __instance.getSpouse().Name;
                 }
                 else if (__instance.team.GetSpouse(__instance.UniqueMultiplayerID) != null)
                 {
@@ -43,7 +43,7 @@ namespace FriendlyDivorce
                 points -= ModEntry.heartsLost * 250;
                 if (long.TryParse(__state,out long result))
                 {
-                    Friendship f = __instance.team.GetFriendship(__instance.uniqueMultiplayerID,result);
+                    Friendship f = __instance.team.GetFriendship(__instance.UniqueMultiplayerID,result);
                     f.Points = Math.Max(0, points);
                     f.Status = points < 1000 ? FriendshipStatus.Divorced : FriendshipStatus.Friendly;
 
@@ -68,7 +68,7 @@ namespace FriendlyDivorce
         {
             try
             {
-                if (action != null && who.IsLocalPlayer && Game1.player.isMarried())
+                if (action != null && who.IsLocalPlayer && Game1.player.isMarriedOrRoommates())
                 {
                     string a = action.Split(new char[]
                     {

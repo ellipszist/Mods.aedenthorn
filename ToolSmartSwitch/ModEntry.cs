@@ -9,7 +9,7 @@ namespace ToolSmartSwitch
     {
 
         public static IMonitor SMonitor;
-        public static IModHelper SHelper;
+        public static IModHelper SHelper; 
         public static ModConfig Config;
 
         public static ModEntry context;

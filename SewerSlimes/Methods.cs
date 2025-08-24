@@ -78,7 +78,14 @@ namespace SewerSlimes
                     m = MakeSlime(pos, BaseSlimes);
                     if (Game1.random.NextDouble() < 0.5)
                         (m as GreenSlime).color.Value = new Color(255, 255, 50);
-                    m.coinsToDrop.Value = 10;
+
+                    m.objectsToDrop.Add("GoldCoin");
+                    double extraChance = (double)(Game1.stats.DaysPlayed / 28U) * 0.08;
+                    extraChance = Math.Min(extraChance, 0.55);
+                    while (Game1.random.NextDouble() < 0.1 + extraChance)
+                    {
+                        m.objectsToDrop.Add("GoldCoin");
+                    }
                     break;
                 case "Black Slime":
                     m = MakeSlime(pos, BaseSlimes);
@@ -90,7 +97,7 @@ namespace SewerSlimes
                     (m as GreenSlime).color.Value = new Color(red, red / 2, red / 4);
                     while (Game1.random.NextDouble() < 0.33)
                     {
-                        m.objectsToDrop.Add(378);
+                        m.objectsToDrop.Add("378");
                     }
                     m.Health = (int)((float)m.Health * 0.5f);
                     m.Speed += 2;
@@ -101,7 +108,7 @@ namespace SewerSlimes
                     (m as GreenSlime).color.Value = new Color(colorBase, colorBase, colorBase);
                     while (Game1.random.NextDouble() < 0.33)
                     {
-                        m.objectsToDrop.Add(380);
+                        m.objectsToDrop.Add("380");
                     }
                     m.Speed = 1;
                     break;

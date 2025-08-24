@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
+using StardewValley.ItemTypeDefinitions;
 using StardewValley.Locations;
 using StardewValley.Menus;
 using StardewValley.Objects;
@@ -59,7 +60,8 @@ namespace FarmerPortraits
                 if (!Config.EnableMod || !__instance.transitionInitialized ||  __instance.transitioning || (!Config.ShowWithQuestions && __instance.isQuestion) ||  (!Config.ShowWithNPCPortrait && __instance.isPortraitBox()) || (!Config.ShowWithEvents && Game1.eventUp) || (!Config.ShowMisc && !__instance.isQuestion && !__instance.isPortraitBox()))
                     return;
                 int boxHeight = 384;
-                drawBox(b, __instance.x - 448 - 32, __instance.y + __instance.height - boxHeight, 448, boxHeight);
+                int boxWidth = 448;
+                drawBox(b, __instance.x - boxWidth - 32, __instance.y + __instance.height - boxHeight, boxWidth, boxHeight);
             }
 
             private static void drawBox(SpriteBatch b, int xPos, int yPos, int boxWidth, int boxHeight)
@@ -73,17 +75,17 @@ namespace FarmerPortraits
                 b.Draw(Game1.mouseCursors, new Vector2(xPos + boxWidth - 8, yPos - 28), new Rectangle?(new Rectangle(291, 311, 12, 11)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.87f);
                 b.Draw(Game1.mouseCursors, new Vector2(xPos + boxWidth - 8, yPos + boxHeight - 8), new Rectangle?(new Rectangle(291, 326, 12, 12)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.87f);
 
-                if (backgroundTexture != null && Config.UseCustomBackground)
-                    b.Draw(backgroundTexture, new Rectangle(xPos - 4, yPos, boxWidth + 12, boxHeight + 4), null, Color.White);
+                if (backgroundTexture.Value != null && Config.UseCustomBackground)
+                    b.Draw(backgroundTexture.Value, new Rectangle(xPos - 4, yPos, boxWidth + 12, boxHeight + 4), null, Color.White);
                 else
                     b.Draw(Game1.mouseCursors, new Vector2(xPos - 4, yPos), new Rectangle?(new Rectangle(583, 411, 115, 97)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.88f); // background
 
                 int portraitBoxX = xPos + 76;
                 int portraitBoxY = yPos + boxHeight / 2 - 148 - 36;
                 int frame = Config.FacingFront ? 0 : 6;
-                if (portraitTexture != null && Config.UseCustomPortrait)
+                if (portraitTexture.Value != null && Config.UseCustomPortrait)
                 {
-                    b.Draw(portraitTexture, new Rectangle(portraitBoxX + 20, portraitBoxY + 24, 256, 256), null, Color.White, 0f, Vector2.Zero, SpriteEffects.None, 0.88f);
+                    b.Draw(portraitTexture.Value, new Rectangle(portraitBoxX + 20, portraitBoxY + 24, 256, 256), null, Color.White, 0f, Vector2.Zero, SpriteEffects.None, 0.88f);
                 }
                 else
                 {
@@ -95,7 +97,7 @@ namespace FarmerPortraits
                     }
                     FarmerRenderer.isDrawingForUI = false;
                 }
-                SpriteText.drawStringHorizontallyCenteredAt(b, Game1.player.Name, xPos + boxWidth / 2, portraitBoxY + 296 + 16, 999999, -1, 999999, 1f, 0.88f, false, -1, 99999);
+                SpriteText.drawStringHorizontallyCenteredAt(b, Game1.player.Name, xPos + boxWidth / 2, portraitBoxY + 296 + 16, 999999, -1, 999999, 1f, 0.88f, false, null, 99999);
 
             }
 
@@ -105,8 +107,10 @@ namespace FarmerPortraits
 				var who = Game1.player;
                 float layerDepth = 0.8f;
                 float scale = 4f;
+                int frameXOffset = FarmerRenderer.featureXOffsetPerFrame[currentFrame];
+                int frameYOffset = FarmerRenderer.featureYOffsetPerFrame[currentFrame];
 
-				AccessTools.Method(typeof(FarmerRenderer), "executeRecolorActions").Invoke(Game1.player.FarmerRenderer, new object[] { who });
+                AccessTools.Method(typeof(FarmerRenderer), "executeRecolorActions").Invoke(Game1.player.FarmerRenderer, new object[] { who });
 
 				position = new Vector2((float)Math.Floor(position.X), (float)Math.Floor(position.Y));
 
@@ -149,10 +153,28 @@ namespace FarmerPortraits
 
                 int hatCutoff = 4;
                 int shirtCutoff = 4;
-                var shirtSourceRect = new Rectangle(Game1.player.FarmerRenderer.ClampShirt(who.GetShirtIndex()) * 8 % 128, Game1.player.FarmerRenderer.ClampShirt(who.GetShirtIndex()) * 8 / 128 * 32, 8, 8 - shirtCutoff);
+                Texture2D shirtTexture;
+                int shirtIndex;
+                who.GetDisplayShirt(out shirtTexture, out shirtIndex);
+                Color hairColor = (who.prismaticHair.Value ? Utility.GetPrismaticColor(0, 1f) : who.hairstyleColor.Value);
+                var shirtSourceRect =  new Rectangle(shirtIndex * 8 % 128, shirtIndex * 8 / 128 * 32, 8, 8 - shirtCutoff);
                 Texture2D hair_texture = FarmerRenderer.hairStylesTexture;
                 var hairstyleSourceRect = new Rectangle(hair_style * 16 % FarmerRenderer.hairStylesTexture.Width, hair_style * 16 / FarmerRenderer.hairStylesTexture.Width * 96, 16, 32);
-                Rectangle hatSourceRect = who.hat.Value != null ? new Rectangle(20 * who.hat.Value.which.Value % FarmerRenderer.hatsTexture.Width, 20 * who.hat.Value.which.Value / FarmerRenderer.hatsTexture.Width * 20 * 4 + hatCutoff, 20, 20 - hatCutoff) : new Rectangle();
+                Texture2D hatTexture = FarmerRenderer.hatsTexture;
+                bool isErrorHat = false;
+                Rectangle hatSourceRect = new();
+                if (who.hat.Value != null)
+                {
+                    ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem(who.hat.Value.QualifiedItemId);
+                    int spriteIndex = itemData.SpriteIndex;
+                    hatTexture = itemData.GetTexture();
+                    hatSourceRect = new Rectangle(20 * spriteIndex % hatTexture.Width, 20 * spriteIndex / hatTexture.Width * 20 * 4, 20, 20 - hatCutoff);
+                    if (itemData.IsErrorItem)
+                    {
+                        hatSourceRect = itemData.GetSourceRect(0, null);
+                        isErrorHat = true;
+                    }
+                }
                 var accessorySourceRect = who.accessory.Value >= 0 ? new Rectangle(who.accessory.Value * 16 % FarmerRenderer.accessoriesTexture.Width, who.accessory.Value * 16 / FarmerRenderer.accessoriesTexture.Width * 32, 16, 16) : new Rectangle();
 
                 if (hair_metadata != null)
@@ -230,11 +252,15 @@ namespace FarmerPortraits
                 if (who.hat.Value != null && !who.bathingClothes.Value)
                 {
                     float layer_offset = 3.9E-05f;
-                    b.Draw(FarmerRenderer.hatsTexture, position + positionOffset * scale + new Vector2(-9 * FarmerRenderer.featureXOffsetPerFrame[currentFrame] * 4 - 8, -16 + FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + (who.hat.Value.ignoreHairstyleOffset.Value ? 0 : FarmerRenderer.hairstyleHatOffset[who.hair.Value % 16]) + 8 + heightOffset + 4 * hatCutoff) * scale, new Rectangle?(hatSourceRect), who.hat.Value.isPrismatic.Value ? Utility.GetPrismaticColor(0, 1f) : Color.White, 0, Vector2.Zero, 16, SpriteEffects.None, 0.8f + layer_offset);
+
+                    bool flip2 = who.FarmerSprite.CurrentAnimationFrame.flip;
+                    int hatOffset = (who.hat.Value.ignoreHairstyleOffset.Value ? 0 : FarmerRenderer.hairstyleHatOffset[who.hair.Value % 16]);
+                    Vector2 hatPosition = new Vector2(-8f + (float)((flip2 ? (-1) : 1) * frameXOffset), -12f + (float)(frameYOffset * 4) + (float)hatOffset + 4f + (float)heightOffset) * scale;
+                    Color hatColor = (who.hat.Value.isPrismatic.Value ? Utility.GetPrismaticColor(0, 1f) : overrideColor);
+                    b.Draw(FarmerRenderer.hatsTexture, position + positionOffset + hatPosition, new Rectangle?(hatSourceRect), who.hat.Value.isPrismatic.Value ? Utility.GetPrismaticColor(0, 1f) : Color.White, 0, Vector2.Zero, 16, SpriteEffects.None, 0.8f + layer_offset);
                 }
-                float arm_layer_offset = 4.9E-05f;
-                sourceRect.Offset(-288 + (animationFrame.secondaryArm ? 192 : 96), 0);
-                b.Draw(baseTexture, position + positionOffset + who.armOffset, new Rectangle?(sourceRect), overrideColor, 0, Vector2.Zero, 4f * scale, SpriteEffects.None, layerDepth + arm_layer_offset);
+                sourceRect.Offset(-288 + animationFrame.armOffset * 16, 0);
+                b.Draw(baseTexture, position + positionOffset + who.armOffset, new Rectangle?(sourceRect), overrideColor, 0, Vector2.Zero, 4f * scale, SpriteEffects.None, FarmerRenderer.GetLayerDepth(layerDepth, FarmerRenderer.FarmerSpriteLayers.Arms, false));
             }
         }
     }

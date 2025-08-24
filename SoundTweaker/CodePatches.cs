@@ -8,8 +8,8 @@ namespace SoundTweaker
     public partial class ModEntry
     {
 
-        [HarmonyPatch(typeof(AudioEmitter))]
-        [HarmonyPatch(MethodType.Constructor)]
+        //[HarmonyPatch(typeof(AudioEmitter))]
+        //[HarmonyPatch(MethodType.Constructor)]
         public class AudioEmitter_Patch
         {
             public static void Postfix(AudioEmitter __instance)
@@ -18,8 +18,8 @@ namespace SoundTweaker
                     return;
             }
         }
-        [HarmonyPatch(typeof(AudioEmitter), nameof(AudioEmitter.Position))]
-        [HarmonyPatch(MethodType.Getter)]
+        //[HarmonyPatch(typeof(AudioEmitter), nameof(AudioEmitter.Position))]
+        //[HarmonyPatch(MethodType.Getter)]
         public class AudioEmitter_Position_Patch
         {
             public static void Postfix(ref Vector3 __result)
@@ -29,7 +29,7 @@ namespace SoundTweaker
                 __result = new Vector3(Game1.random.Next(0, 2) - 1, Game1.random.Next(0, 2) - 1, Game1.random.Next(0, 2) - 1);
             }
         }
-        [HarmonyPatch(typeof(Cue), nameof(Cue.Apply3D))]
+        //[HarmonyPatch(typeof(Cue), nameof(Cue.Apply3D))]
         public class Cue_Apply3D_Patch
         {
             public static void Postfix(AudioListener listener, AudioEmitter emitter)
@@ -39,7 +39,7 @@ namespace SoundTweaker
                 var x = 1;
             }
         }
-        [HarmonyPatch(typeof(Cue), "PlaySoundInstance")]
+        //[HarmonyPatch(typeof(Cue), "PlaySoundInstance")]
         public class Cue_PlaySoundInstance_Patch
         {
             public static void Prefix(SoundEffectInstance sound_instance, int variant_index)
@@ -49,7 +49,7 @@ namespace SoundTweaker
                 var x = 1;
             }
         }
-        [HarmonyPatch(typeof(Cue), "UpdateRpcCurves")]
+        //[HarmonyPatch(typeof(Cue), "UpdateRpcCurves")]
         public class Cue_UpdateRpcCurves_Patch
         {
             public static void Postfix(Cue __instance, XactSoundBankSound ____currentXactSound)

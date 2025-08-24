@@ -34,7 +34,7 @@ namespace SoundTweaker
             Helper.Events.Content.AssetRequested += Content_AssetRequested;
             //Helper.Events.Input.ButtonPressed += Input_ButtonPressed;
 
-            var harmony = new Harmony(ModManifest.UniqueID);
+            //var harmony = new Harmony(ModManifest.UniqueID);
             //harmony.PatchAll();
             
             var data = new TweakData()
@@ -59,7 +59,7 @@ namespace SoundTweaker
         {
             if (e.Button == SButton.Delete)
             {
-                Game1.stopMusicTrack(Game1.MusicContext.Default);
+                Game1.stopMusicTrack(StardewValley.GameData.MusicContext.Default);
                 ReloadSounds();
 
                 Game1.playSound("snowyStep");
