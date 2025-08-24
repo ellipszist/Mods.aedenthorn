@@ -5,6 +5,7 @@ using Netcode;
 using StardewValley;
 using StardewValley.Locations;
 using StardewValley.Monsters;
+using StardewValley.Tools;
 using StardewValley.Util;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,7 @@ namespace StardewOpenWorld
 {
     public partial class ModEntry
     {
+
         //[HarmonyPatch(typeof(Game1), nameof(Game1.loadForNewGame))]
         public static class Game1_loadForNewGame_Patch
         {
@@ -318,7 +320,6 @@ namespace StardewOpenWorld
 
                 Tile tmp;
 
-
                 if ((bool)AccessTools.Method(typeof(GameLocation), "_TestCornersTiles").Invoke(__instance, new object[]{nextTopRight, nextTopLeft, nextBottomRight, nextBottomLeft, nextTopMid, nextBottomMid, currentTopRight, currentTopLeft, currentBottomRight, currentBottomLeft, currentTopMid, currentBottomMid, nextLargerThanTile, delegate (Vector2 tile)
                 {
                     //if (isFarmer && __instance.terrainFeatures.TryGetValue(tile, out var tf))
@@ -356,21 +357,6 @@ namespace StardewOpenWorld
                     tmp = buildingTiles[tx,ty];
                     if (tmp != null)
                     {
-                        if (projectile && __instance is VolcanoDungeon)
-                        {
-                            Tile back_tile = backTiles[tx, ty];
-                            if (back_tile != null)
-                            {
-                                if (back_tile.TileIndexProperties.ContainsKey("Water"))
-                                {
-                                    return false;
-                                }
-                                if (back_tile.Properties.ContainsKey("Water"))
-                                {
-                                    return false;
-                                }
-                            }
-                        }
                         bool flag3;
                         if (!tmp.TileIndexProperties.ContainsKey("Shadow") && !tmp.TileIndexProperties.ContainsKey("Passable") && !tmp.Properties.ContainsKey("Passable") && (!projectile || (!tmp.TileIndexProperties.ContainsKey("ProjectilePassable") && !tmp.Properties.ContainsKey("ProjectilePassable"))))
                         {
@@ -448,110 +434,5 @@ namespace StardewOpenWorld
             }
         }
 
-
-        [HarmonyPatch(typeof(Layer), nameof(Layer.Draw))]
-        public static class Layer_Draw_Patch
-        {
-            public static bool Prefix(Layer __instance, IDisplayDevice displayDevice, xTile.Dimensions.Rectangle mapViewport, Location displayOffset, int pixelZoom, float sort_offset)
-            {
-                if (!Config.ModEnabled || !Game1.currentLocation.Name.Contains(locName))
-                    return true;
-                Layer.zoom = pixelZoom;
-                int tileWidth = pixelZoom * 16;
-                int tileHeight = pixelZoom * 16;
-
-                Location tileInternalOffset = new Location(Wrap(mapViewport.X, tileWidth), Wrap(mapViewport.Y, tileHeight));
-                int tileXMin = ((mapViewport.X >= 0) ? (mapViewport.X / tileWidth) : ((mapViewport.X - tileWidth + 1) / tileWidth));
-                int tileYMin = ((mapViewport.Y >= 0) ? (mapViewport.Y / tileHeight) : ((mapViewport.Y - tileHeight + 1) / tileHeight));
-                if (tileXMin < 0)
-                {
-                    displayOffset.X -= tileXMin * tileWidth;
-                    tileXMin = 0;
-                }
-                if (tileYMin < 0)
-                {
-                    displayOffset.Y -= tileYMin * tileHeight;
-                    tileYMin = 0;
-                }
-                int tileColumns = 1 + (mapViewport.Size.Width - 1) / tileWidth;
-                int tileRows = 1 + (mapViewport.Size.Height - 1) / tileHeight;
-                if (tileInternalOffset.X != 0)
-                {
-                    tileColumns++;
-                }
-                if (tileInternalOffset.Y != 0)
-                {
-                    tileRows++;
-                }
-                int tileXMax = Math.Min(tileXMin + tileColumns, Config.OpenWorldSize);
-                int tileYMax = Math.Min(tileYMin + tileRows, Config.OpenWorldSize);
-
-                Rectangle drawBounds = new(tileXMin, tileYMin, tileXMax - tileXMin, tileYMax - tileYMin);
-
-                Location tileLocation = displayOffset - tileInternalOffset;
-
-                Point loc = Game1.player.TilePoint;
-                Tile[,] tiles = new Tile[openWorldChunkSize, openWorldChunkSize];
-                Point playerChunk = new(loc.X / openWorldChunkSize, loc.Y / openWorldChunkSize);
-                Rectangle playerBox = new(loc.X - openWorldChunkSize / 2, loc.Y - openWorldChunkSize / 2, openWorldChunkSize, openWorldChunkSize);
-                Dictionary<Point, Tile[,]> surroundingChunkTiles = new();
-
-                for (int y = -1; y < 2; y++)
-                {
-                    for (int x = -1; x < 2; x++)
-                    {
-                        var cx = playerChunk.X + x;
-                        var cy = playerChunk.Y + y;
-                        if (!IsChunkInMap(cx, cy))
-                            continue;
-                        Rectangle chunkBounds = new(cx * openWorldChunkSize, cy * openWorldChunkSize, openWorldChunkSize, openWorldChunkSize);
-                        if (!chunkBounds.Intersects(drawBounds))
-                            continue;
-                        Tile[,] chunkTiles = GetChunkTiles(__instance.Id, cx, cy);
-                        surroundingChunkTiles.Add(new(cx, cy), chunkTiles);
-                    }
-                }
-                for (int ay = drawBounds.Y; ay < drawBounds.Bottom; ay++)
-                {
-                    tileLocation.X = displayOffset.X - tileInternalOffset.X;
-                    for (int ax = drawBounds.X; ax < drawBounds.Right; ax++)
-                    {
-                        foreach (var kvp in surroundingChunkTiles)
-                        {
-                            if (kvp.Value is null)
-                                continue;
-                            if (ax / openWorldChunkSize == kvp.Key.X && ay / openWorldChunkSize == kvp.Key.Y)
-                            {
-                                Tile tile = kvp.Value[ax % openWorldChunkSize, ay % openWorldChunkSize];
-                                if (tile is not null)
-                                {
-                                    float drawn_sort = 0f;
-                                    if (sort_offset >= 0f)
-                                    {
-                                        drawn_sort = (ay / openWorldChunkSize * (16 * pixelZoom) + 16 * pixelZoom + sort_offset) / 10000f;
-                                    }
-                                    displayDevice.DrawTile(tile, tileLocation, drawn_sort);
-
-                                }
-                                break;
-                            }
-                        }
-                        tileLocation.X += tileWidth;
-                    }
-                    tileLocation.Y += tileHeight;
-                }
-                return false;
-            }
-
-            private static int Wrap(int value, int span)
-            {
-                value %= span;
-                if(value < 0)
-                {
-                    value += span;
-                }
-                return value;
-            }
-        }
     }
 }

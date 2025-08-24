@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Graphics.PackedVector;
 using Netcode;
+using Newtonsoft.Json.Linq;
 using StardewValley;
 using StardewValley.Characters;
 using StardewValley.Locations;
@@ -390,6 +391,155 @@ namespace StardewOpenWorld
                 else
                     __result = rsp / 10000f + __instance.drawLayerDisambiguator;
                 return false;
+            }
+        }
+
+
+
+        [HarmonyPatch(typeof(Layer), nameof(Layer.Draw))]
+        public static class Layer_Draw_Patch
+        {
+            public static bool Prefix(Layer __instance, IDisplayDevice displayDevice, xTile.Dimensions.Rectangle mapViewport, Location displayOffset, int pixelZoom, float sort_offset)
+            {
+                if (!Config.ModEnabled || Game1.currentLocation != openWorldLocation)
+                    return true;
+                Layer.zoom = pixelZoom;
+                int tileWidth = pixelZoom * 16;
+                int tileHeight = pixelZoom * 16;
+
+                Location tileInternalOffset = new Location(Wrap(mapViewport.X, tileWidth), Wrap(mapViewport.Y, tileHeight));
+                int tileXMin = ((mapViewport.X >= 0) ? (mapViewport.X / tileWidth) : ((mapViewport.X - tileWidth + 1) / tileWidth));
+                int tileYMin = ((mapViewport.Y >= 0) ? (mapViewport.Y / tileHeight) : ((mapViewport.Y - tileHeight + 1) / tileHeight));
+                if (tileXMin < 0)
+                {
+                    displayOffset.X -= tileXMin * tileWidth;
+                    tileXMin = 0;
+                }
+                if (tileYMin < 0)
+                {
+                    displayOffset.Y -= tileYMin * tileHeight;
+                    tileYMin = 0;
+                }
+                int tileColumns = 1 + (mapViewport.Size.Width - 1) / tileWidth;
+                int tileRows = 1 + (mapViewport.Size.Height - 1) / tileHeight;
+                if (tileInternalOffset.X != 0)
+                {
+                    tileColumns++;
+                }
+                if (tileInternalOffset.Y != 0)
+                {
+                    tileRows++;
+                }
+                int tileXMax = Math.Min(tileXMin + tileColumns, Config.OpenWorldSize);
+                int tileYMax = Math.Min(tileYMin + tileRows, Config.OpenWorldSize);
+
+                Rectangle drawBounds = new(tileXMin, tileYMin, tileXMax - tileXMin, tileYMax - tileYMin);
+
+                Location tileLocation = displayOffset - tileInternalOffset;
+
+                Point loc = Game1.player.TilePoint;
+                Tile[,] tiles = new Tile[openWorldChunkSize, openWorldChunkSize];
+                Point playerChunk = new(loc.X / openWorldChunkSize, loc.Y / openWorldChunkSize);
+                Rectangle playerBox = new(loc.X - openWorldChunkSize / 2, loc.Y - openWorldChunkSize / 2, openWorldChunkSize, openWorldChunkSize);
+                Dictionary<Point, Tile[,]> surroundingChunkTiles = new();
+
+                for (int y = -1; y < 2; y++)
+                {
+                    for (int x = -1; x < 2; x++)
+                    {
+                        var cx = playerChunk.X + x;
+                        var cy = playerChunk.Y + y;
+                        if (!IsChunkInMap(cx, cy))
+                            continue;
+                        Rectangle chunkBounds = new(cx * openWorldChunkSize, cy * openWorldChunkSize, openWorldChunkSize, openWorldChunkSize);
+                        if (!chunkBounds.Intersects(drawBounds))
+                            continue;
+                        Tile[,] chunkTiles = GetChunkTiles(__instance.Id, cx, cy);
+                        surroundingChunkTiles.Add(new(cx, cy), chunkTiles);
+                    }
+                }
+                for (int ay = drawBounds.Y; ay < drawBounds.Bottom; ay++)
+                {
+                    tileLocation.X = displayOffset.X - tileInternalOffset.X;
+                    for (int ax = drawBounds.X; ax < drawBounds.Right; ax++)
+                    {
+                        foreach (var kvp in surroundingChunkTiles)
+                        {
+                            if (kvp.Value is null)
+                                continue;
+                            if (ax / openWorldChunkSize == kvp.Key.X && ay / openWorldChunkSize == kvp.Key.Y)
+                            {
+                                var ry = ay % openWorldChunkSize;
+                                Tile tile = kvp.Value[ax % openWorldChunkSize, ry];
+                                if (tile is not null)
+                                {
+                                    float drawn_sort = 0f;
+                                    if (sort_offset >= 0f)
+                                    {
+                                        
+                                        drawn_sort = (ay * (16 * pixelZoom) + 16 * pixelZoom + sort_offset + ChunkDisplayOffset(ay)) / 10000f;
+                                        if(Game1.player.Tile.X == ax && Game1.player.Tile.Y == ay)
+                                        {
+                                            var asdf = drawn_sort;
+                                        }
+                                    }
+                                    displayDevice.DrawTile(tile, tileLocation, drawn_sort);
+                                }
+                                break;
+                            }
+                        }
+                        tileLocation.X += tileWidth;
+                    }
+                    tileLocation.Y += tileHeight;
+                }
+                return false;
+            }
+
+            private static int Wrap(int value, int span)
+            {
+                value %= span;
+                if (value < 0)
+                {
+                    value += span;
+                }
+                return value;
+            }
+        }
+        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.drawWater))]
+        public static class GameLocation_drawWater_Patch
+        {
+            public static bool Prefix(GameLocation __instance, SpriteBatch b)
+            {
+                if (!Config.ModEnabled || __instance != openWorldLocation)
+                    return true;
+                int sx = Game1.viewport.X / 64 - 1;
+                int sy = Game1.viewport.Y / 64 - 1;
+                int ex = sx + Game1.viewport.Width / 64 + 3;
+                int ey = sy + Game1.viewport.Height / 64 + 3;
+                for(int x = sx; x < ex; x++)
+                {
+                    for (int y = sy; y < ey; y++)
+                    {
+                        var cp = GetTileChunk(new Point(x, y));
+                        if (cachedChunks.TryGetValue(cp, out var chunk) && chunk.tiles["Back"][x % openWorldChunkSize, y % openWorldChunkSize]?.Properties.ContainsKey("Water") == true)
+                        {
+                            drawWaterTile(b, x, y);
+                        }
+                    }
+                }
+                return false;
+            }
+        }
+
+
+        public static void drawWaterTile(SpriteBatch b, int x, int y)
+        {
+            bool waterSouth = waterTiles.Contains(new Point(x, y + 1));
+            bool topY = y == 0 || !waterTiles.Contains(new Point(x, y - 1));
+            b.Draw(Game1.mouseCursors, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(x * 64), (float)(y * 64 - (int)((!topY) ? Game1.currentLocation.waterPosition : 0f)))), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(Game1.currentLocation.waterAnimationIndex * 64, 2064 + (((x + y) % 2 == 0) ? (Game1.currentLocation.waterTileFlip ? 128 : 0) : (Game1.currentLocation.waterTileFlip ? 0 : 128)) + (topY ? ((int)Game1.currentLocation.waterPosition) : 0), 64, 64 + (topY ? ((int)(-(int)Game1.currentLocation.waterPosition)) : 0))), Game1.currentLocation.waterColor.Value, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.56f);
+            if (!waterSouth)
+            {
+                b.Draw(Game1.mouseCursors, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(x * 64), (float)((y + 1) * 64 - (int)Game1.currentLocation.waterPosition))), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(Game1.currentLocation.waterAnimationIndex * 64, 2064 + (((x + (y + 1)) % 2 == 0) ? (Game1.currentLocation.waterTileFlip ? 128 : 0) : (Game1.currentLocation.waterTileFlip ? 0 : 128)), 64, 64 - (int)(64f - Game1.currentLocation.waterPosition) - 1)), Game1.currentLocation.waterColor.Value, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.56f);
             }
         }
     }

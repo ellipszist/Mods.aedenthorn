@@ -243,16 +243,16 @@ namespace StardewOpenWorld
             mapRect = new Rectangle(vpCenter.X - mapSize / 2 * tileSize, vpCenter.Y - mapSize / 2 * tileSize, (int)(mapSize * tileSize), (int)(mapSize * tileSize));
 
             e.SpriteBatch.Draw(renderTarget, new Rectangle((int)(vpCenter.X - mapSize / 2 * tileSize), (int)(vpCenter.Y - mapSize / 2 * tileSize), mapSize * tileSize, mapSize * tileSize), null, Color.White, 0, Vector2.Zero, SpriteEffects.None, 1);
-            //foreach (Farmer player in Game1.getOnlineFarmers())
-            //{
-            //    if (!player.currentLocation.Name.Equals(locName))
-            //        continue;
-            //    float alpha = player == Game1.player ? 1 : 0.75f;
-            //    if (!playerBox.Contains(player.Tile))
-            //        continue;
-            //    Vector2 pos = player.Position - Game1.player.Position + new Vector2(vpWidth / 2, vpHeight / 2 - 16);
-            //    player.FarmerRenderer.drawMiniPortrat(e.SpriteBatch, pos, 0.00011f, 2f, 2, player, alpha);
-            //}
+            foreach (Farmer player in Game1.getOnlineFarmers())
+            {
+                if (!player.currentLocation.Name.Equals(locName))
+                    continue;
+                float alpha = player == Game1.player ? 1f : 0.75f;
+                if (!playerBox.Contains(player.Tile))
+                    continue;
+                Vector2 pos = player.Position - Game1.player.Position + new Vector2(vpWidth / 2 - 4, vpHeight / 2 - 16);
+                player.FarmerRenderer.drawMiniPortrat(e.SpriteBatch, pos, 0.00011f, 2f, 2, player, alpha);
+            }
             if(upperRightCloseButton is null)
             {
                 int space = 32;

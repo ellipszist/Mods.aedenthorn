@@ -27,15 +27,15 @@ namespace StardewOpenWorld
         }
         private static int ChunkDisplayOffset(int value)
         {
-            return (Game1.viewport.Y / (openWorldChunkSize * 64) < value / (openWorldChunkSize * 64) ? openWorldChunkSize * 64 : 0);
+            return (Game1.viewport.Y % (openWorldChunkSize * 64) < value / (openWorldChunkSize * 64) ? openWorldChunkSize * 64 : 0);
         }
         private static float ChunkDisplayOffset(float value)
         {
-            return (Game1.viewport.Y / (openWorldChunkSize * 64) < (int)value / (openWorldChunkSize * 64) ? openWorldChunkSize * 64 : 0);
+            return (Game1.viewport.Y % (openWorldChunkSize * 64) < (int)value / (openWorldChunkSize * 64) ? openWorldChunkSize * 64 : 0);
         }
         private static float ChunkDisplayOffsetTile(float value)
         {
-            return (Game1.viewport.Y / (openWorldChunkSize * 64) < (int)value / openWorldChunkSize ? openWorldChunkSize : 0);
+            return (Game1.viewport.Y % (openWorldChunkSize * 64) < (int)value / openWorldChunkSize ? openWorldChunkSize : 0);
         }
 
         public static bool CodesCompare(List<CodeInstruction> codes, int i, OpCode[] opCodes)
@@ -64,15 +64,19 @@ namespace StardewOpenWorld
         }
         public static void AddRectToList(Rectangle rect, Dictionary<Point, HashSet<Rectangle>> dict)
         {
-            foreach (var point in new Point[] { rect.Location, rect.Location + new Point(rect.Width, 0), rect.Location + new Point(0, rect.Height), rect.Location + rect.Size })
+            for (int x = 0; x < rect.Width + openWorldChunkSize; x += openWorldChunkSize)
             {
-                Point cp = GetTileChunk(point);
-                if (!dict.TryGetValue(cp, out var list))
+                for (int y = 0; y < rect.Height + openWorldChunkSize; y += openWorldChunkSize)
                 {
-                    list = new HashSet<Rectangle>();
-                    dict[cp] = list;
+                    var point = new Point(rect.Left + x, rect.Top + y);
+                    Point cp = GetTileChunk(point);
+                    if (!dict.TryGetValue(cp, out var list))
+                    {
+                        list = new HashSet<Rectangle>();
+                        dict[cp] = list;
+                    }
+                    list.Add(rect);
                 }
-                list.Add(rect);
             }
         }
 
@@ -218,7 +222,7 @@ namespace StardewOpenWorld
         {
             return new Point(cp.X * openWorldChunkSize + x, cp.Y * openWorldChunkSize + y);
         }
-        public static Point GetLocalPosition(Point cp, int x, int y, out Point ocp)
+        public static Point GetLocalTile(Point cp, int x, int y, out Point ocp)
         {
             var point = new Point(x - cp.X * openWorldChunkSize,  y - cp.Y * openWorldChunkSize);
             var offset = GetPointOffset(point);
@@ -226,11 +230,22 @@ namespace StardewOpenWorld
             point -= new Point(offset.X * openWorldChunkSize, offset.Y * openWorldChunkSize);
             return point;
         }
-        public static Point GetLocalPosition(Point p)
+        public static Point GetLocalTile(Point p)
         {
             return new Point(p.X % openWorldChunkSize,  p.Y % openWorldChunkSize);
         }
-
+        public static Point GetLocalTile(int x, int y)
+        {
+            return new Point(x % openWorldChunkSize,  y % openWorldChunkSize);
+        }
+        private static Point GetGlobalTile(Point cp, int rx, int ry)
+        {
+            return new Point(rx + openWorldChunkSize * cp.X, ry + openWorldChunkSize * cp.Y);
+        }
+        private static Point GetGlobalTile(Point cp, Point p)
+        {
+            return new Point(p.X + openWorldChunkSize * cp.X, p.Y + openWorldChunkSize * cp.Y);
+        }
         private static Point GetPointOffset(Point p)
         {
 

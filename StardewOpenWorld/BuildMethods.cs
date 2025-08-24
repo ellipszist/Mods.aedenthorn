@@ -80,6 +80,8 @@ namespace StardewOpenWorld
             }
             loadedChunks.Clear();
             landmarkRects.Clear();
+            lakeRects.Clear();
+            outcropRects.Clear();
             landmarkDict = SHelper.GameContent.Load<Dictionary<string, Landmark>>(landmarkDictPath);
             foreach (var landmark in landmarkDict.Values)
             {
@@ -275,15 +277,11 @@ namespace StardewOpenWorld
                     }
                     var begin = new Point(x - 5, y - 5);
                     var end = new Point(w + 6, h + 6);
-                    var ar = new Rectangle(ToGlobalTile(cp, c + begin), end - begin);
+                    var ar = new Rectangle(ToGlobalTile(cp, begin), end - begin);
                     if (ConflictsRect(cp, ar))
                         continue;
                     foreach (var p in padding)
                     {
-                        if (p.X < x) x = p.X;
-                        if (p.X > w) w = p.X;
-                        if (p.Y < y) y = p.Y;
-                        if (p.Y > h) h = p.Y;
                         AddBlobTileToChunk(BorderTiles.meadow, GetRandomMeadowTile(r, back, mainSheet), back, mainSheet, cp, p, padding, r);
                     }
                     padding = GetBlobPadding(tiles, 3, true);
@@ -296,6 +294,7 @@ namespace StardewOpenWorld
                         AddWaterTileToChunk(cp, p, tiles, r);
                     }
                     AddRectToList(ar, lakeRects);
+                    SMonitor.Log($"Added lake {ar}");
                 }
             }
         }
@@ -671,6 +670,7 @@ namespace StardewOpenWorld
             if (water)
             {
                 tile.Properties["Water"] = "T";
+                waterTiles.Add(GetGlobalTile(cp, rx, ry));
             }
             Point offset = new();
             if (rx < 0)
