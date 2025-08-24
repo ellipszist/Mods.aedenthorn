@@ -133,7 +133,9 @@ namespace FreeLove
                     if (split[i].Length == 0)
                         continue;
 
-                    if (split[i][0] == 'O')
+                    var split2 = split[i].Split(' ');
+
+                    if (split2[0] == "O")
                     {
                         string name = split[i].Substring(2);
                         if (Game1.player.spouse != name && spouses.ContainsKey(name))
@@ -142,13 +144,31 @@ namespace FreeLove
                             split[i] = $"o {name}";
                         }
                     }
-                    else if (split[i][0] == 'o')
+                    else if (split2[0] == "o")
                     {
                         string name = split[i].Substring(2);
                         if (Game1.player.spouse != name && spouses.ContainsKey(name))
                         {
                             Monitor.Log($"Got unofficial spouse barrier to event: {name}, switching event condition to notSpouse o");
                             split[i] = $"O {name}";
+                        }
+                    }
+                    else if (split2[0] == "Spouse" && split2.Length > 1)
+                    {
+                        string name = split2[1];
+                        if (Game1.player.spouse != name && spouses.ContainsKey(name))
+                        {
+                            Monitor.Log($"Got unofficial spouse requirement for event: {name}, switching event condition to !Spouse");
+                            split[i] = $"!Spouse {name}";
+                        }
+                    }
+                    else if (split2[0] == "!Spouse" && split2.Length > 1)
+                    {
+                        string name = split2[1];
+                        if (Game1.player.spouse != name && spouses.ContainsKey(name))
+                        {
+                            Monitor.Log($"Got unofficial spouse barrier to event: {name}, switching event condition to Spouse");
+                            split[i] = $"Spouse {name}";
                         }
                     }
                 }
@@ -160,7 +180,7 @@ namespace FreeLove
             }
         }
 
-        public static bool ManorHouse_performAction_Prefix(ManorHouse __instance, string action, Farmer who, ref bool __result)
+        public static bool ManorHouse_performAction_Prefix(ManorHouse __instance, string[] action, Farmer who, ref bool __result)
         {
             try
             {
@@ -168,10 +188,8 @@ namespace FreeLove
                 Dictionary<string, NPC> spouses = ModEntry.GetSpouses(who, true);
                 if (action != null && who.IsLocalPlayer && !Game1.player.divorceTonight.Value && (Game1.player.isMarriedOrRoommates() || spouses.Count > 0))
                 {
-                    string a = action.Split(new char[]
-                    {
-                    ' '
-                    })[0];
+                    string a = ArgUtility.Get(action, 0, null, true);
+
                     if (a == "DivorceBook")
                     {
                         string str = Helper.Translation.Get("divorce_who");

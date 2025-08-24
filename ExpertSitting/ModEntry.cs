@@ -1,4 +1,4 @@
-﻿using Harmony;
+﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
@@ -26,7 +26,7 @@ namespace ExpertSitting
             context = this;
             Config = this.Helper.ReadConfig<ModConfig>();
             SMonitor = this.Monitor;
-            var harmony = HarmonyInstance.Create(this.ModManifest.UniqueID);
+            Harmony harmony = new(ModManifest.UniqueID);
 
             harmony.Patch(
                original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.checkAction)),

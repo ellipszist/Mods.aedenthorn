@@ -2,13 +2,9 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
-using StardewValley.Locations;
 using StardewValley.Menus;
-using StardewValley.Objects;
-using StardewValley.SDKs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -517,9 +513,9 @@ namespace MapEdit
             foreach (var l in Game1.locations)
             {
                 AddSheets(l.Map.TileSheets);
-                if (l is BuildableGameLocation)
+                if (l.IsBuildableLocation())
                 {
-                    foreach(var b in (l as BuildableGameLocation).buildings)
+                    foreach(var b in l.buildings)
                     {
                         if(b.indoors.Value is not null)
                         {

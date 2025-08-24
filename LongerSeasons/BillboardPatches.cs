@@ -16,108 +16,31 @@ namespace LongerSeasons
     public partial class ModEntry
     {
 
-        private static void Billboard_Postfix(Billboard __instance, bool dailyQuest, Dictionary<ClickableTextureComponent, List<string>> ____upcomingWeddings)
+        private static void Billboard_Postfix(Billboard __instance, bool dailyQuest)
         {
             if (dailyQuest || Game1.dayOfMonth < 29)
                 return;
             __instance.calendarDays = new List<ClickableTextureComponent>();
-            Dictionary<int, NPC> birthdays = new Dictionary<int, NPC>();
-            foreach (NPC i in Utility.getAllCharacters())
-            {
-                if (i.isVillager() && i.Birthday_Season != null && i.Birthday_Season.Equals(Game1.currentSeason) && !birthdays.ContainsKey(i.Birthday_Day) && (Game1.player.friendshipData.ContainsKey(i.Name) || (!i.Name.Equals("Dwarf") && !i.Name.Equals("Sandy") && !i.Name.Equals("Krobus"))))
-                {
-                    birthdays.Add(i.Birthday_Day, i);
-                }
-            }
+            Dictionary<int, List<NPC>> birthdays = __instance.GetBirthdays();
+
             int startDate = (Game1.dayOfMonth - 1) / 28 * 28 + 1;
-            for (int j = startDate; j <= startDate + 27; j++)
+            for (int day = startDate; day <= startDate + 27; day++)
             {
-                int l = (j - 1) % 28 + 1;
-                string festival = "";
-                string birthday = "";
-                NPC npc = birthdays.ContainsKey(j) ? birthdays[j] : null;
-                if (Utility.isFestivalDay(j, Game1.currentSeason))
+                int l = (day - 1) % 28 + 1;
+                List<Billboard.BillboardEvent> curEvents = __instance.GetEventsForDay(day, birthdays);
+                if (curEvents.Count > 0)
                 {
-                    festival = Game1.temporaryContent.Load<Dictionary<string, string>>("Data\\Festivals\\" + Game1.currentSeason + j.ToString())["name"];
+                    __instance.calendarDayData[day] = new Billboard.BillboardDay(curEvents.ToArray());
                 }
-                else if (npc != null)
+                int index = day - 1;
+                __instance.calendarDays.Add(new ClickableTextureComponent(day.ToString(), new Rectangle(__instance.xPositionOnScreen + 152 + index % 7 * 32 * 4, __instance.yPositionOnScreen + 200 + index / 7 * 32 * 4, 124, 124), string.Empty, string.Empty, null, Rectangle.Empty, 1f, false)
                 {
-                    if (npc.displayName.Last<char>() == 's' || (LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.de && (npc.displayName.Last<char>() == 'x' || npc.displayName.Last<char>() == 'ß' || npc.displayName.Last<char>() == 'z')))
-                    {
-                        birthday = Game1.content.LoadString("Strings\\UI:Billboard_SBirthday", npc.displayName);
-                    }
-                    else
-                    {
-                        birthday = Game1.content.LoadString("Strings\\UI:Billboard_Birthday", npc.displayName);
-                    }
-                }
-                Texture2D character_texture = null;
-                if (npc != null)
-                {
-                    try
-                    {
-                        character_texture = Game1.content.Load<Texture2D>("Characters\\" + npc.getTextureName());
-                    }
-                    catch (Exception)
-                    {
-                        character_texture = npc.Sprite.Texture;
-                    }
-                }
-                ClickableTextureComponent calendar_day = new ClickableTextureComponent(festival, new Rectangle(__instance.xPositionOnScreen + 152 + (l - 1) % 7 * 32 * 4, __instance.yPositionOnScreen + 200 + (l - 1) / 7 * 32 * 4, 124, 124), festival, birthday, character_texture, (npc != null) ? new Rectangle(0, 0, 16, 24) : Rectangle.Empty, 1f, false)
-                {
-                    myID = l,
-                    rightNeighborID = ((l % 7 != 0) ? (l + 1) : -1),
-                    leftNeighborID = ((l % 7 != 1) ? (l - 1) : -1),
-                    downNeighborID = l + 7,
-                    upNeighborID = ((l > 7) ? (l - 7) : -1)
-                };
-                HashSet<Farmer> traversed_farmers = new HashSet<Farmer>();
-                foreach (Farmer farmer in Game1.getOnlineFarmers())
-                {
-                    if (!traversed_farmers.Contains(farmer) && farmer.isEngaged() && !farmer.hasCurrentOrPendingRoommate())
-                    {
-                        string spouse_name = null;
-                        WorldDate wedding_date = null;
-                        if (Game1.getCharacterFromName(farmer.spouse, true, false) != null)
-                        {
-                            wedding_date = farmer.friendshipData[farmer.spouse].WeddingDate;
-                            spouse_name = Game1.getCharacterFromName(farmer.spouse, true, false).displayName;
-                        }
-                        else
-                        {
-                            long? spouse = farmer.team.GetSpouse(farmer.UniqueMultiplayerID);
-                            if (spouse != null)
-                            {
-                                Farmer spouse_farmer = Game1.getFarmerMaybeOffline(spouse.Value);
-                                if (spouse_farmer != null && Game1.getOnlineFarmers().Contains(spouse_farmer))
-                                {
-                                    wedding_date = farmer.team.GetFriendship(farmer.UniqueMultiplayerID, spouse.Value).WeddingDate;
-                                    traversed_farmers.Add(spouse_farmer);
-                                    spouse_name = spouse_farmer.Name;
-                                }
-                            }
-                        }
-                        if (!(wedding_date == null))
-                        {
-                            if (wedding_date.TotalDays < Game1.Date.TotalDays)
-                            {
-                                wedding_date = new WorldDate(Game1.Date);
-                                wedding_date.TotalDays++;
-                            }
-                            if (wedding_date != null && wedding_date.TotalDays >= Game1.Date.TotalDays && Utility.getSeasonNumber(Game1.currentSeason) == wedding_date.SeasonIndex && j == wedding_date.DayOfMonth)
-                            {
-                                if (!____upcomingWeddings.ContainsKey(calendar_day))
-                                {
-                                    ____upcomingWeddings[calendar_day] = new List<string>();
-                                }
-                                traversed_farmers.Add(farmer);
-                                ____upcomingWeddings[calendar_day].Add(farmer.Name);
-                                ____upcomingWeddings[calendar_day].Add(spouse_name);
-                            }
-                        }
-                    }
-                }
-                __instance.calendarDays.Add(calendar_day);
+                    myID = day,
+                    rightNeighborID = ((day % 7 != 0) ? (day + 1) : (-1)),
+                    leftNeighborID = ((day % 7 != 1) ? (day - 1) : (-1)),
+                    downNeighborID = day + 7,
+                    upNeighborID = ((day > 7) ? (day - 7) : (-1))
+                });
             }
         }
 

@@ -24,24 +24,23 @@ namespace PlaygroundMod
             {
                 SMonitor.Log($"Transpiling FarmerRenderer.drawHairAndAccesories");
                 var codes = new List<CodeInstruction>(instructions);
-                CodeInstruction texture = null;
+                int count = 0;
                 for (int i = 0; i < codes.Count; i++)
                 {
                     if (i > 0 && i < codes.Count -1 && codes[i].opcode == OpCodes.Ldarg_S && (byte)codes[i].operand == 4 && codes[i + 1].opcode == OpCodes.Ldarg_S && (byte)codes[i + 1].operand == 5)
                     {
-                        texture = codes[i - 1].Clone();
-                        
-                        SMonitor.Log("replacing added origin");
+                        count++;
+                        SMonitor.Log($"replacing added origin {count}");
                         codes.Insert(i + 2, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.ChangeAddedOrigin))));
-                        codes.Insert(i + 1, texture);
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldc_I4, count));
                         codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_3));
                         i += 3;
                     }
                     else if (i < codes.Count -1 && codes[i].opcode == OpCodes.Ldarg_S && (byte)codes[i].operand == 8 && codes[i + 1].opcode == OpCodes.Ldarg_S && (byte)codes[i + 1].operand == 5)
                     {
-                        SMonitor.Log("replacing actual origin");
+                        SMonitor.Log($"replacing actual origin {count}");
                         codes.Insert(i + 2, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.ChangeActualOrigin))));
-                        codes.Insert(i + 1, texture);
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldc_I4, count));
                         codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_3));
                         i += 3;
                     }
@@ -51,71 +50,77 @@ namespace PlaygroundMod
             }
         }
 
-        private static Vector2 ChangeActualOrigin(Farmer farmer, Texture2D texture, Vector2 origin)
+        private static Vector2 ChangeActualOrigin(Farmer farmer, int number, Vector2 origin)
         {
             if (!Config.ModEnabled)
                 return origin;
             if (springTicks.ContainsKey(farmer.UniqueMultiplayerID))
             {
-                if(texture == FarmerRenderer.shirtsTexture)
+                switch (number)
                 {
-                    origin = new Vector2(2f, 19f);
-                }
-                else if (texture == FarmerRenderer.accessoriesTexture)
-                {
-                    origin = new Vector2(6f,32f);
-                }
-                else if (texture == FarmerRenderer.hatsTexture)
-                {
-                    origin = new Vector2(8, 35);
-                }
-                else if (texture == FarmerRenderer.hairStylesTexture)
-                {
-                    origin = new Vector2(6, 32.5f);
+                    case 1: // shirt
+                    case 3:
+                    case 6:
+                    case 9:
+                        return new Vector2(2f, 19f);
+                    case 4: // accessory
+                    case 7:
+                    case 10:
+                        return new Vector2(6f, 32f);
 
+                    case 12: // hat
+                    case 13:
+                        return new Vector2(8, 35);
+                    case 2: // hair
+                    case 5:
+                    case 8:
+                    case 11:
+                        return new Vector2(6, 32.5f);
                 }
             }
             else if (swingTicks.ContainsKey(farmer.UniqueMultiplayerID))
             {
-                if (texture == FarmerRenderer.shirtsTexture)
+                if (number == 1 || number == 3 ||number ==61 ||number == 9)
                 {
-                    origin = new Vector2(origin.X * 0.25f, origin.Y );
+                    return new Vector2(origin.X * 0.25f, origin.Y );
                 }
             }
             return origin;
         }
 
-        private static Vector2 ChangeAddedOrigin(Farmer farmer, Texture2D texture, Vector2 origin)
+        private static Vector2 ChangeAddedOrigin(Farmer farmer, int number, Vector2 origin)
         {
             if (!Config.ModEnabled)
                 return origin;
             if (springTicks.ContainsKey(farmer.UniqueMultiplayerID))
             {
-                if (texture == FarmerRenderer.shirtsTexture)
+                switch (number)
                 {
-                    origin = new Vector2(-12f, -16f);
+                    case 1: // shirt
+                    case 3:
+                    case 6:
+                    case 9:
+                        return new Vector2(-12f, -16f);
+                    case 4: // accessory
+                    case 7:
+                    case 10:
+                        return new Vector2(3f, 38);
+                    case 12: // hat
+                    case 13:
+                        origin += new Vector2(6, 20);
+                        return origin;
+                    case 2: // hair
+                    case 5:
+                    case 8:
+                    case 11:
+                        return new Vector2(4, 40);
                 }
-                else if (texture == FarmerRenderer.accessoriesTexture)
-                {
-                    origin = new Vector2(3f, 38);
-                }
-                else if (texture == FarmerRenderer.hatsTexture)
-                { 
-                    origin += new Vector2(6, 20);
-
-                }
-                else if (texture == FarmerRenderer.hairStylesTexture)
-                {
-                    origin = new Vector2(4, 40);
-
-                }
-
             }
             else if (swingTicks.ContainsKey(farmer.UniqueMultiplayerID))
             {
-                if (texture == FarmerRenderer.shirtsTexture)
+                if (number == 1 || number == 3 || number == 61 || number == 9)
                 {
-                    origin = new Vector2(0, origin.Y * 0.70f + 5);
+                    return new Vector2(0, origin.Y * 0.70f + 5);
                 }
             }
             return origin;

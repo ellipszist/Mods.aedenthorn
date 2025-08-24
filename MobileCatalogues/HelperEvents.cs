@@ -39,7 +39,7 @@ namespace MobileCatalogues
                 Texture2D appIcon;
                 bool success;
 
-                appIcon = Helper.Content.Load<Texture2D>(Path.Combine("assets", "app_icon.png"));
+                appIcon = Helper.ModContent.Load<Texture2D>(Path.Combine("assets", "app_icon.png"));
                 success = ModEntry.api.AddApp(Helper.ModRegistry.ModID + "Catalogues", Helper.Translation.Get("catalogues"), CataloguesApp.OpenCatalogueApp, appIcon);
                 Monitor.Log($"loaded catalogues app successfully: {success}", LogLevel.Debug);
 
