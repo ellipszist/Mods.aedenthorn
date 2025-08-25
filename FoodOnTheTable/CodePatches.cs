@@ -19,7 +19,7 @@ namespace FoodOnTheTable
 		}
 		private static void NPC_performTenMinuteUpdate_Postfix(NPC __instance)
 		{
-			if (!Config.EnableMod || Game1.eventUp || __instance.currentLocation is null || !__instance.isVillager() || !WantsToEat(__instance))
+			if (!Config.EnableMod || Game1.eventUp || __instance.currentLocation is null || !__instance.IsVillager || !WantsToEat(__instance))
 				return;
 			PlacedFoodData food = GetClosestFood(__instance, __instance.currentLocation);
 			TryToEatFood(__instance, food);
@@ -31,7 +31,7 @@ namespace FoodOnTheTable
                 return;
 			foreach (NPC npc in __instance.characters)
 			{
-				if (npc.isVillager())
+				if (npc.IsVillager)
 				{
 					NPC villager = npc;
 					if (villager != null && WantsToEat(villager) && Game1.random.NextDouble() < Config.MoveToFoodChance / 100f && villager.controller == null && villager.Schedule == null && !villager.Tile.Equals(Utility.PointToVector2(__instance.getSpouseBedSpot(villager.Name))) && __instance.furniture.Count > 0)

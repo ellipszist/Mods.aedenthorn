@@ -31,7 +31,7 @@ namespace StardewOpenWorld
                 scaled_height = (int)((float)height * scale);
                 try
                 {
-                    map_bitmap = SKSurface.Create(scaled_width, scaled_height, SKColorType.Rgb888x, SKAlphaType.Opaque);
+                    map_bitmap = SKSurface.Create(new SKImageInfo(scaled_width, scaled_height, SKColorType.Rgb888x, SKAlphaType.Opaque));
                 }
                 catch (Exception e)
                 {
@@ -159,11 +159,11 @@ namespace StardewOpenWorld
             {
                 return;
 
+                /*
                 if (renderTarget is null)
                 {
                 }
 
-                /*
                 renderTarget = new RenderTarget2D(Game1.graphics.GraphicsDevice, mapSize * tileSize, mapSize * tileSize);
                 Game1.graphics.GraphicsDevice.SetRenderTarget(renderTarget);
 

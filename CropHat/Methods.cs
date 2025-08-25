@@ -24,16 +24,11 @@ namespace CropHat
             int row = Convert.ToInt32(hat.modData[rowKey]);
             bool fullyGrown = hat.modData[grownKey] == "true";
 
-            Dictionary<int, string> cropData = Game1.content.Load<Dictionary<int, string>>("Data\\Crops");
-            if (!cropData.TryGetValue(Convert.ToInt32(hat.modData[seedKey]), out string cropString))
+            if(!Game1.cropData.TryGetValue(hat.modData[seedKey], out var data))
                 return;
-            string[] split = cropString.Split('/', StringSplitOptions.None);
-            string[] phaseSplit = split[0].Split(' ', StringSplitOptions.None);
+            
             List<int> phaseDays = new List<int>();
-            for (int i = 0; i < phaseSplit.Length; i++)
-            {
-                phaseDays.Add(Convert.ToInt32(phaseSplit[i]));
-            }
+            phaseDays.AddRange(data.DaysInPhase);
             phaseDays.Add(99999);
             if (fullyGrown)
                 days--;
@@ -68,10 +63,9 @@ namespace CropHat
         {
             if(!hat.modData.ContainsKey(phasesKey))
             {
-                Dictionary<int, string> cropData = Game1.content.Load<Dictionary<int, string>>("Data\\Crops");
-                if (!cropData.TryGetValue(Convert.ToInt32(hat.modData[seedKey]), out string cropString))
+                if (!Game1.cropData.TryGetValue(hat.modData[seedKey], out var data))
                     return false;
-                hat.modData[phasesKey] = cropString.Split('/')[0].Split(' ').Length+"";
+                hat.modData[phasesKey] = data.DaysInPhase.Count+"";
             }
             if(!hat.modData.ContainsKey(grownKey))
             {
@@ -85,24 +79,24 @@ namespace CropHat
         }
         private static void HarvestHatCrop(Farmer farmer)
         {
-            Crop crop = new Crop(Convert.ToInt32(farmer.hat.Value.modData[seedKey]), 0, 0);
+            Crop crop = new Crop(farmer.hat.Value.modData[seedKey], 0, 0, farmer.currentLocation);
 
             crop.currentPhase.Value = crop.phaseDays.Count - 1;
             crop.dayOfCurrentPhase.Value = 0;
 
             HoeDirt soil = new HoeDirt(0, crop);
-            crop.harvest(farmer.getTileX(), farmer.getTileY(), soil);
-            if(crop.regrowAfterHarvest.Value != -1)
-            {
-                farmer.hat.Value.modData[grownKey] = "true";
-                farmer.hat.Value.modData[daysKey] = crop.regrowAfterHarvest.Value + "";
-                int phase = Convert.ToInt32(farmer.hat.Value.modData[phaseKey]);
-                int row = Convert.ToInt32(farmer.hat.Value.modData[rowKey]);
-                farmer.hat.Value.modData[xKey] = GetSourceX(row, phase, crop.regrowAfterHarvest.Value, true, false) + "";
-            }
-            else
+            if(crop.harvest(farmer.TilePoint.X, farmer.TilePoint.Y, soil))
             {
                 farmer.hat.Value = null;
+            }
+            if (crop.RegrowsAfterHarvest())
+            {
+                var data = Game1.cropData[crop.netSeedIndex.Value];
+                farmer.hat.Value.modData[grownKey] = "true";
+                farmer.hat.Value.modData[daysKey] = data.RegrowDays + "";
+                int phase = Convert.ToInt32(farmer.hat.Value.modData[phaseKey]);
+                int row = Convert.ToInt32(farmer.hat.Value.modData[rowKey]);
+                farmer.hat.Value.modData[xKey] = GetSourceX(row, phase, data.RegrowDays, true, false) + "";
             }
         }
     }

@@ -2,16 +2,12 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
-using StardewValley.BellsAndWhistles;
+using StardewValley.Extensions;
+using StardewValley.ItemTypeDefinitions;
 using StardewValley.Menus;
 using StardewValley.Objects;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
 using xTile.Dimensions;
-using Object = StardewValley.Object;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace CropHat
@@ -72,16 +68,13 @@ namespace CropHat
             {
                 if (!Config.EnableMod || !__instance.modData.TryGetValue(seedKey, out string seedIndex))
                     return true;
-                Dictionary<int, string> cropData = Game1.content.Load<Dictionary<int, string>>("Data\\Crops");
-                if (!cropData.TryGetValue(Convert.ToInt32(seedIndex), out string cropString))
+                if (!Game1.cropData.TryGetValue(seedIndex, out var cropData))
                     return true;
-                string[] split = cropString.Split('/', StringSplitOptions.None);
-                var harvestIndex = Convert.ToInt32(split[3]);
-                if (!Game1.objectInformation.TryGetValue(harvestIndex, out string objectInformation))
+                ParsedItemData data = ItemRegistry.GetData(cropData.HarvestItemId);
+                if (data is null)
                     return true;
-                split = objectInformation.Split('/', StringSplitOptions.None);
-                __instance.displayName = string.Format(SHelper.Translation.Get("x-hat"), split[4]);
-                __instance.description = split[5];
+                __instance.displayName =  string.Format(SHelper.Translation.Get("x-hat"), data.DisplayName);
+                __instance.description = data.Description;
                 __result = true;
                 return false;
             }
@@ -132,8 +125,7 @@ namespace CropHat
             {
                 if (!Config.EnableMod || (Game1.player.CursorSlotItem is null) || Game1.player.hat.Value is not null)
                     return true;
-                Dictionary<int, string> cropData = Game1.content.Load<Dictionary<int, string>>("Data\\Crops");
-                if (!cropData.TryGetValue(Game1.player.CursorSlotItem.ParentSheetIndex, out string cropString))
+                if (!Game1.cropData.TryGetValue(Game1.player.CursorSlotItem.ItemId, out var cropData))
                     return true;
 
 
@@ -142,24 +134,22 @@ namespace CropHat
                     if (c.name == "Hat" && c.containsPoint(x, y))
                     {
                         SMonitor.Log($"Trying to wear {Game1.player.CursorSlotItem.Name}");
-                        string[] split = cropString.Split('/');
-                        int row = Convert.ToInt32(split[2]);
-                        Hat hat = new Hat(0);
-                        hat.modData[seedKey] = "" + Game1.player.CursorSlotItem.ParentSheetIndex;
+                        int row = cropData.SpriteIndex;
+                        Hat hat = new Hat("0");
+                        hat.modData[seedKey] = Game1.player.CursorSlotItem.ItemId;
                         hat.modData[daysKey] = "0";
                         hat.modData[phaseKey] = "0";
-                        hat.modData[phasesKey] = (split[0].Split(' ').Length + 1)+"";
+                        hat.modData[phasesKey] = cropData.DaysInPhase.Count+"";
                         hat.modData[rowKey] = row+"";
                         hat.modData[grownKey] = "false";
                         hat.modData[xKey] = GetSourceX(row, 0, 0, false, false) + "";
                         hat.modData[yKey] = GetSourceY(row) + "";
 
-                        var harvestIndex = Convert.ToInt32(split[3]);
-                        if (Game1.objectInformation.TryGetValue(harvestIndex, out string objectInformation))
+                        ParsedItemData data = ItemRegistry.GetData(cropData.HarvestItemId);
+                        if (data != null)
                         {
-                            var split2 = objectInformation.Split('/', StringSplitOptions.None);
-                            hat.displayName = string.Format(SHelper.Translation.Get("x-hat"), split2[4]);
-                            hat.description = split2[5];
+                            hat.displayName = string.Format(SHelper.Translation.Get("x-hat"), data.DisplayName);
+                            hat.description = data.Description;
                         }
 
                         Game1.player.CursorSlotItem.Stack--;
