@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using xTile.Display;
 using xTile.Tiles;
 
 namespace TileTransparency
@@ -35,7 +36,7 @@ namespace TileTransparency
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.Patch(
-                original: AccessTools.Method(helper.GetType().Assembly.GetType("StardewModdingAPI.Framework.Rendering.SDisplayDevice"), "DrawTile"),
+                original: AccessTools.Method(typeof(XnaDisplayDevice), nameof(XnaDisplayDevice.DrawTile)),
                 prefix: new HarmonyMethod(typeof(ModEntry), nameof(DrawTile_Prefix)),
                 postfix: new HarmonyMethod(typeof(ModEntry), nameof(DrawTile_Postfix))
             );

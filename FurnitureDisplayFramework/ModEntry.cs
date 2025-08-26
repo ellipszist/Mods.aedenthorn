@@ -2,10 +2,8 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using StardewModdingAPI;
 using StardewValley;
-using StardewValley.Objects;
 using System;
 using System.Collections.Generic;
 using Object = StardewValley.Object;
@@ -151,6 +149,8 @@ namespace FurnitureDisplayFramework
                 return;
             if(e.Button == Config.PlaceKey && Game1.player.ActiveObject is not null && !Game1.player.ActiveObject.bigCraftable.Value && Game1.player.ActiveObject.GetType().BaseType == typeof(Item))
             {
+                var mx = Game1.viewport.X + Game1.getOldMouseX();
+                var my = Game1.viewport.Y + Game1.getOldMouseY();
                 foreach (var f in Game1.currentLocation.furniture)
                 {
                     var name = f.rotations.Value > 1 ? f.Name + ":" + f.currentRotation.Value : f.Name;
@@ -161,7 +161,7 @@ namespace FurnitureDisplayFramework
                         {
                             Rectangle slotRect = new Rectangle((int)(f.boundingBox.X + data.slots[i].slotRect.X * 4), (int)(f.boundingBox.Y + data.slots[i].slotRect.Y * 4), (int)(data.slots[i].slotRect.Width * 4), (int)(data.slots[i].slotRect.Height * 4));
                             //Monitor.Log($"Checking if {slotRect} contains {Game1.viewport.X + Game1.getOldMouseX()},{Game1.viewport.Y + Game1.getOldMouseY()}");
-                            if (slotRect.Contains(Game1.viewport.X + Game1.getOldMouseX(), Game1.viewport.Y + Game1.getOldMouseY()))
+                            if (slotRect.Contains(mx, my))
                             {
                                 Object obj = null;
                                 var amount = Config.PlaceAllByDefault ? Game1.player.ActiveObject.Stack : 1;
@@ -273,6 +273,8 @@ namespace FurnitureDisplayFramework
 
         public static Object GetObjectFromSlot(string slotString)
         {
+            if (string.IsNullOrEmpty(slotString))
+                return null;
             var currentItem = slotString.Split(',');
             return GetObjectFromID(currentItem[0], int.Parse(currentItem[1]), int.Parse(currentItem[2]));
         }

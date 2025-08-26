@@ -81,7 +81,7 @@ namespace ShowPlayerBehind
                 return;
             foreach(Farmer f in Game1.getAllFarmers())
             {
-                Point fp = f.getTileLocationPoint();
+                Point fp = f.TilePoint;
                 if (farmerPoints.ContainsKey(f.UniqueMultiplayerID))
                 {
                     if (farmerPoints[f.UniqueMultiplayerID] == fp)
@@ -175,7 +175,7 @@ namespace ShowPlayerBehind
 
         private Point[] AddFarmerPoints(Farmer f)
         {
-            Point p = f.getTileLocationPoint();
+            Point p = f.TilePoint;
             Point[] points = new Point[]
             {
                 new Point(p.X, p.Y),

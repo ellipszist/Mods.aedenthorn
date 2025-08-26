@@ -29,7 +29,38 @@ namespace StardewOpenWorld
 
         public static void CreateAnimatedTiles()
         {
+
+            var amt = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<int, AnimatedTileData>>>(File.ReadAllText(Path.Combine(SHelper.DirectoryPath, "assets", "animated_tiles.json")));
+            
             animatedTiles.Clear();
+            foreach (var kvp in amt) 
+            {
+                if (!animatedTiles.TryGetValue(kvp.Key, out var dict))
+                {
+                    dict = new Dictionary<int, AnimatedTile>();
+                    animatedTiles[kvp.Key] = dict;
+                }
+                foreach(var kvp2 in kvp.Value)
+                {
+                    if (!dict.ContainsKey(kvp2.Key))
+                    {
+                        List<StaticTile> tileFrames = new();
+                        foreach(var td in kvp2.Value.tileFrames)
+                        {
+                            Layer l = openWorldLocation.Map.GetLayer(td.layer);
+                            TileSheet ts = openWorldLocation.Map.GetTileSheet(td.ts);
+                            StaticTile st = new StaticTile(l, ts, td.blend, td.tileIndex);
+                            tileFrames.Add(st);
+                        }
+                        Layer layer = openWorldLocation.Map.GetLayer(kvp2.Value.layer);
+                        AnimatedTile tile = new AnimatedTile(layer, tileFrames.ToArray(), kvp2.Value.frameInterval);
+                        dict[kvp2.Key] = tile;
+                    }
+                }
+            }
+            /*
+            var amt = new Dictionary<string, Dictionary<int, AnimatedTileData>>();
+
             foreach (var tlayer in Game1.getLocationFromName("Town").Map.Layers)
             {
                 var layer = openWorldLocation.Map.GetLayer(tlayer.Id);
@@ -44,21 +75,23 @@ namespace StardewOpenWorld
                             string sheetID = openWorldLocation.Map.TileSheets.FirstOrDefault(s => s.ImageSource == tile.TileSheet.ImageSource)?.Id;
                             if (sheetID == null)
                                 continue;
-                            if (!animatedTiles.ContainsKey(sheetID))
+                            if (!amt.ContainsKey(sheetID))
                             {
-                                animatedTiles[sheetID] = new();
+                                amt[sheetID] = new();
                             }
-                            List<StaticTile> tiles = new List<StaticTile>();
+                            List<StaticTileInfo> tiles = new List<StaticTileInfo>();
                             foreach(var t in tile.TileFrames)
                             {
                                 var ts = GetOpenWorldTileSheet(t.TileSheet);
-                                tiles.Add(new StaticTile(layer, ts, BlendMode.Alpha, t.TileIndex));
+                                tiles.Add(new StaticTileInfo(layer.Id, ts.Id, BlendMode.Alpha, t.TileIndex));
                             }
-                            animatedTiles[sheetID][tile.TileIndex] = new AnimatedTile(layer, tiles.ToArray(), tile.FrameInterval);
+                            amt[sheetID][tile.TileIndex] = new AnimatedTileData(layer.Id, tiles.ToArray(), tile.FrameInterval);
                         }
                     }
                 }
             }
+            File.WriteAllText("test.json", JsonConvert.SerializeObject(amt, Formatting.Indented));
+            */
         }
 
         public static TileSheet GetOpenWorldTileSheet(TileSheet tileSheet)
@@ -99,7 +132,7 @@ namespace StardewOpenWorld
                 
                 RandomSeed = Utility.CreateRandomSeed(Game1.uniqueIDForThisGame / 100UL, Config.NewMapDaily ? Game1.stats.DaysPlayed * 10U + 1U : 0.0);
 
-                Random r = Utility.CreateRandom(RandomSeed, 242);
+                Random r = Utility.CreateRandom(RandomSeed, "centers".GetHashCode());
                 for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesPerForestMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesPerForestMin * Config.OpenWorldSize + 1); i++)
                 {
                     Point ap = new(
@@ -256,7 +289,7 @@ namespace StardewOpenWorld
             if (!lakeCenters.TryGetValue(cp, out var centers))
                 return;
             var back = openWorldLocation.Map.GetLayer("Back");
-            var mainSheet = openWorldLocation.Map.GetTileSheet("outdoors");
+            var mainSheet = openWorldLocation.Map.GetTileSheet("Landscape");
             foreach (var c in centers)
             {
                 int maxTiles = r.Next(Config.MinLakeSize * 2, Config.MaxLakeSize * 2 + 1);
@@ -304,7 +337,7 @@ namespace StardewOpenWorld
         {
             var back = openWorldLocation.Map.GetLayer("Back");
             var build = openWorldLocation.Map.GetLayer("Buildings");
-            var mainSheet = openWorldLocation.Map.GetTileSheet("outdoors");
+            var mainSheet = openWorldLocation.Map.GetTileSheet("Landscape");
             AddTileToChunk(chunkPoint, "Back", p.X, p.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246), true);
             //return;
             if (!tiles.Contains(p + new Point(-1, 0)))
@@ -706,7 +739,7 @@ namespace StardewOpenWorld
         {
             var layer = openWorldLocation.Map.GetLayer("Back");
             Random r = Utility.CreateRandom(RandomSeed, cp.X * cp.Y + cp.X, 42);
-            var mainSheet = openWorldLocation.Map.GetTileSheet("outdoors");
+            var mainSheet = openWorldLocation.Map.GetTileSheet("Landscape");
             for (int y = 0; y < openWorldChunkSize; y++)
             {
                 for (int x = 0; x < openWorldChunkSize; x++)
@@ -735,14 +768,14 @@ namespace StardewOpenWorld
 
         private static void AddBorderToChunk(Point cp)
         {
-            Random r = Utility.CreateRandom(RandomSeed);
+            Random r = Utility.CreateRandom(RandomSeed, cp.X + cp.X * cp.Y, "border".GetHashCode());
 
             var grassTiles = new int[] { 150, 151, 152, 175, 175, 175, 175, 175, 175 };
             var rightTiles = new int[] { 316, 341, 366, 391, 416 };
             var leftTiles = new int[] { 319, 344, 369, 394, 419 };
             var buildLayer = openWorldLocation.Map.GetLayer("Buildings");
             var frontLayer = openWorldLocation.Map.GetLayer("Front");
-            var ts = openWorldLocation.Map.GetTileSheet("outdoors");
+            var ts = openWorldLocation.Map.GetTileSheet("Landscape");
             var chunk = cachedChunks[cp];
             if (cp.X == 0)
             {
@@ -810,12 +843,12 @@ namespace StardewOpenWorld
         private static void AddRocksToChunk(Point cp)
         {
 
-            Random r = Utility.CreateRandom(RandomSeed, cp.X * cp.Y + cp.X, 42);
+            Random r = Utility.CreateRandom(RandomSeed, cp.X * cp.Y + cp.X, "rocks".GetHashCode());
             if (!rockCenters.TryGetValue(cp, out var centers))
                 return;
 
             var back = openWorldLocation.Map.GetLayer("Back");
-            var mainSheet = openWorldLocation.Map.GetTileSheet("outdoors");
+            var mainSheet = openWorldLocation.Map.GetTileSheet("Landscape");
 
             MethodInfo litter = typeof(MineShaft).GetMethod("createLitterObject", BindingFlags.NonPublic | BindingFlags.Instance);
             foreach (var c in centers)
@@ -906,7 +939,7 @@ namespace StardewOpenWorld
         private static void AddGrassToChunk(Point cp)
         {
 
-            Random r = Utility.CreateRandom(RandomSeed, cp.X * cp.Y + cp.X, 42);
+            Random r = Utility.CreateRandom(RandomSeed, cp.X * cp.Y + cp.X, "grass".GetHashCode());
             if (!grassCenters.TryGetValue(cp, out var centers))
                 return;
             foreach (var c in centers)
@@ -989,7 +1022,7 @@ namespace StardewOpenWorld
             Stopwatch s = Stopwatch.StartNew();
             if (advancedLootFrameworkApi is null)
                 return;
-            Random r = Utility.CreateRandom(RandomSeed, 942);
+            Random r = Utility.CreateRandom(RandomSeed, cp.X + cp.X * cp.Y, "chests".GetHashCode());
 
             int count = (int)Math.Floor(openWorldChunkSize * openWorldChunkSize / (float)(Config.TilesPerChestMin + ((Config.TilesPerChestMax - Config.TilesPerChestMin) * r.NextDouble() * cp.Y * openWorldChunkSize / Config.OpenWorldSize ))); 
             int i = 0;
@@ -1004,8 +1037,9 @@ namespace StardewOpenWorld
                 }
                 if (IsOpenTile(av))
                 {
-                    double fraction = Math.Pow(r.NextDouble(), 1 / Config.RarityChance);
-                    int level = (int)Math.Ceiling(fraction * cp.Y * openWorldChunkSize / Config.OpenWorldSize);
+                    float distance = (Config.OpenWorldSize - av.Y) / Config.OpenWorldSize;
+                    double fraction = Math.Min(1, Math.Max(0, distance + (r.NextDouble() - 0.5 - (1 - Config.ChestRarityBias))));
+                    int level = (int)Math.Ceiling(fraction * Config.OpenWorldSize / openWorldChunkSize);
                     Chest chest = advancedLootFrameworkApi.MakeChest(treasuresList, Config.ItemListChances, Config.MaxItems, Config.MinItemValue, Config.MaxItemValue, level, Config.IncreaseRate, Config.ItemsBaseMaxValue, freeTile);
                     chest.CanBeGrabbed = false;
                     chest.playerChoiceColor.Value = MakeTint(fraction);
@@ -1020,7 +1054,7 @@ namespace StardewOpenWorld
         }
         public static void AddBushesToChunk(Point cp)
         {
-            Random r = Utility.CreateRandom(RandomSeed, "bush".GetHashCode());
+            Random r = Utility.CreateRandom(RandomSeed, cp.X + cp.X * cp.Y, "bush".GetHashCode());
             int count = (int)Math.Floor(openWorldChunkSize * openWorldChunkSize / (float)(Config.TilesPerBushMin + ((Config.TilesPerBushMax - Config.TilesPerBushMin) * r.NextDouble() * cp.Y * openWorldChunkSize / Config.OpenWorldSize ))); 
             int i = 0;
             int attempt = 0;
@@ -1045,7 +1079,7 @@ namespace StardewOpenWorld
         }
         public static void AddForageToChunk(Point cp)
         {
-            Random r = Utility.CreateRandom(RandomSeed, "forage".GetHashCode());
+            Random r = Utility.CreateRandom(RandomSeed, cp.X + cp.X * cp.Y, "forage".GetHashCode());
             int count = (int)Math.Floor(openWorldChunkSize * openWorldChunkSize / (float)(Config.TilesPerForageMin + ((Config.TilesPerForageMax - Config.TilesPerForageMin) * r.NextDouble() * cp.Y * openWorldChunkSize / Config.OpenWorldSize ))); 
             int i = 0;
             int attempt = 0;
@@ -1105,7 +1139,7 @@ namespace StardewOpenWorld
 
         public static void AddClumpsToChunk(Point cp)
         {
-            Random r = Utility.CreateRandom(RandomSeed, "clump".GetHashCode());
+            Random r = Utility.CreateRandom(RandomSeed, cp.X + cp.X * cp.Y, "clump".GetHashCode());
             int count = (int)Math.Floor(openWorldChunkSize * openWorldChunkSize / (float)(Config.TilesPerClumpMin + ((Config.TilesPerClumpMax - Config.TilesPerClumpMin) * r.NextDouble() * cp.Y * openWorldChunkSize / Config.OpenWorldSize ))); 
             int i = 0;
             int attempt = 0;
@@ -1156,7 +1190,7 @@ namespace StardewOpenWorld
         private static void AddTreesToChunk(Point cp)
         {
 
-            Random r = Utility.CreateRandom(RandomSeed, cp.X * cp.Y + cp.X, 42);
+            Random r = Utility.CreateRandom(RandomSeed, cp.X * cp.Y + cp.X, "trees".GetHashCode());
             if (!treeCenters.TryGetValue(cp, out var centers))
                 return;
             foreach (var c in centers)

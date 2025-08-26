@@ -27,7 +27,7 @@ namespace RoastingMarshmallows
                         break;
                 }
 
-                if (farmer.currentLocation.Objects.TryGetValue(t, out var obj) && obj is Torch && obj.QualifiedItemId == "(BC)146" && (obj as Torch).IsOn)
+                if (farmer.currentLocation.Objects.TryGetValue(t, out var obj) && obj is Torch && Config.Campfires.Contains(obj.QualifiedItemId) && (obj as Torch).IsOn)
                 {
                     if (farmer.modData.TryGetValue(modKey, out var pstring))
                     {

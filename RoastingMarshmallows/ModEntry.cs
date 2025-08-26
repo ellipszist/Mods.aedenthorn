@@ -86,7 +86,7 @@ namespace RoastingMarshmallows
                         DisplayName = SHelper.Translation.Get("RawMarshmallow.Name"),
                         Description = SHelper.Translation.Get("RawMarshmallow.Description"),
                         Price = 20,
-                        Edibility = 10,
+                        Edibility = Config.RawMarshmallowHealth,
                         Type = "Cooking",
                         Category = -7,
                         Texture = rawItem + "/texture",
@@ -98,7 +98,7 @@ namespace RoastingMarshmallows
                         DisplayName = SHelper.Translation.Get("CookedMarshmallow.Name"),
                         Description = SHelper.Translation.Get("CookedMarshmallow.Description"),
                         Price = 50,
-                        Edibility = 50,
+                        Edibility = Config.CookedMarshmallowHealth,
                         Type = "Cooking",
                         Category = -7,
                         Texture = cookedItem + "/texture",
@@ -110,7 +110,7 @@ namespace RoastingMarshmallows
                         DisplayName = SHelper.Translation.Get("BurntMarshmallow.Name"),
                         Description = SHelper.Translation.Get("BurntMarshmallow.Description"),
                         Price = 10,
-                        Edibility = 20,
+                        Edibility = Config.BurntMarshmallowHealth,
                         Type = "Cooking",
                         Category = -7,
                         Texture = burntItem + "/texture",
@@ -161,6 +161,24 @@ namespace RoastingMarshmallows
                     name: () => ModEntry.SHelper.Translation.Get("GMCM.RoastKey.Name"),
                     getValue: () => Config.RoastKey,
                     setValue: value => Config.RoastKey = value
+                );
+                configMenu.AddNumberOption(
+                    mod: ModManifest,
+                    name: () => ModEntry.SHelper.Translation.Get("GMCM.RawMarshmallowHealth.Name"),
+                    getValue: () => Config.RawMarshmallowHealth,
+                    setValue: value => Config.RawMarshmallowHealth = value
+                );
+                configMenu.AddNumberOption(
+                    mod: ModManifest,
+                    name: () => ModEntry.SHelper.Translation.Get("GMCM.CookedMarshmallowHealth.Name"),
+                    getValue: () => Config.CookedMarshmallowHealth,
+                    setValue: value => Config.CookedMarshmallowHealth = value
+                );
+                configMenu.AddNumberOption(
+                    mod: ModManifest,
+                    name: () => ModEntry.SHelper.Translation.Get("GMCM.BurntMarshmallowHealth.Name"),
+                    getValue: () => Config.BurntMarshmallowHealth,
+                    setValue: value => Config.BurntMarshmallowHealth = value
                 );
                 configMenu.AddNumberOption(
                     mod: ModManifest,

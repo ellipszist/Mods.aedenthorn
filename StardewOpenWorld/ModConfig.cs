@@ -49,7 +49,7 @@ namespace StardewOpenWorld
         public int MaxItemValue { get; set; } = -1;
         public int CoinBaseMin { get; set; } = 20;
         public int CoinBaseMax { get; set; } = 100;
-        public float RarityChance { get; set; } = 0.2f;
+        public float ChestRarityBias { get; set; } = 1f;
         public float IncreaseRate { get; set; } = 0.3f;
         public Dictionary<string, int> ItemListChances { get; set; } = new Dictionary<string, int>
         {
