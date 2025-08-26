@@ -28,7 +28,7 @@ namespace FreeLove
                     currentSpouses[farmer.UniqueMultiplayerID][ospouse] = npc;
                 }
             }
-            SMonitor.Log($"Checking for extra spouses in {farmer.friendshipData.Count()} friends");
+            //SMonitor.Log($"Checking for extra spouses in {farmer.friendshipData.Count()} friends");
             foreach (string friend in farmer.friendshipData.Keys)
             {
                 if (farmer.friendshipData[friend].IsMarried() && friend != farmer.spouse)
@@ -43,7 +43,7 @@ namespace FreeLove
             }
             if (farmer.spouse is null && currentSpouses[farmer.UniqueMultiplayerID].Any())
                 farmer.spouse = currentSpouses[farmer.UniqueMultiplayerID].First().Key;
-            SMonitor.Log($"reloaded {currentSpouses[farmer.UniqueMultiplayerID].Count} spouses for {farmer.Name} {farmer.UniqueMultiplayerID}");
+            //SMonitor.Log($"reloaded {currentSpouses[farmer.UniqueMultiplayerID].Count} spouses for {farmer.Name} {farmer.UniqueMultiplayerID}");
         }
         public static Dictionary<string, NPC> GetSpouses(Farmer farmer, bool all)
         {
@@ -85,18 +85,16 @@ namespace FreeLove
             return spouses.Keys.ToArray()[0];
         }
 
-        public static void PlaceSpousesInFarmhouse(FarmHouse farmHouse)
+        public static void PlaceSpousesInFarmhouse(FarmHouse farmHouse, Farmer farmer)
         {
-            Farmer farmer = farmHouse.owner;
-
-            if (farmer == null)
+            if (farmHouse == null || farmer == null)
                 return;
 
             List<NPC> allSpouses = GetSpouses(farmer, true).Values.ToList();
 
             if (allSpouses.Count == 0)
             {
-                SMonitor.Log("no spouses");
+                SMonitor.Log($"no spouses for {farmer.Name}");
                 return;
             }
 

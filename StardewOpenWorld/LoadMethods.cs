@@ -29,7 +29,7 @@ namespace StardewOpenWorld
         }
         private void CheckForChunkChange()
         {
-
+            bool force = false;
             List<Point> points = new List<Point>();
             foreach (var f in Game1.getAllFarmers())
             {
@@ -54,12 +54,11 @@ namespace StardewOpenWorld
                     {
                         playerChunks.Remove(f.UniqueMultiplayerID);
                         playerTilePoints.Remove(f.UniqueMultiplayerID);
-                        PlayerChunkChanged(points);
-                        return;
+                        force = true;
                     }
                 }
             }
-            if (points.Any())
+            if (force || points.Any())
             {
                 PlayerChunkChanged(points);
             }

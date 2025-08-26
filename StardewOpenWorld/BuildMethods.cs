@@ -1038,7 +1038,7 @@ namespace StardewOpenWorld
                 if (IsOpenTile(av))
                 {
                     float distance = (Config.OpenWorldSize - av.Y) / Config.OpenWorldSize;
-                    double fraction = Math.Min(1, Math.Max(0, distance + (r.NextDouble() - 0.5 - (1 - Config.ChestRarityBias))));
+                    double fraction = Math.Min(0.99, Math.Max(0, distance + (r.NextDouble() - 0.5 - (1 - Config.ChestRarityBias))));
                     int level = (int)Math.Ceiling(fraction * Config.OpenWorldSize / openWorldChunkSize);
                     Chest chest = advancedLootFrameworkApi.MakeChest(treasuresList, Config.ItemListChances, Config.MaxItems, Config.MinItemValue, Config.MaxItemValue, level, Config.IncreaseRate, Config.ItemsBaseMaxValue, freeTile);
                     chest.CanBeGrabbed = false;

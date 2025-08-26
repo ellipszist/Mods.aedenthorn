@@ -136,14 +136,6 @@ namespace FreeLove
             ResetDivorces();
             ResetSpouses(Game1.player);
 
-
-            foreach (GameLocation location in Game1.locations)
-            {
-                if(ReferenceEquals(location.GetType(),typeof(FarmHouse)))
-                {
-                    PlaceSpousesInFarmhouse(location as FarmHouse);
-                }
-            }
             if (Game1.IsMasterGame)
             {
                 Game1.getFarm().addSpouseOutdoorArea(Game1.player.spouse == null ? "" : Game1.player.spouse);

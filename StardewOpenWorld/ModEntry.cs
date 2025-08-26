@@ -185,7 +185,10 @@ namespace StardewOpenWorld
 
         private void GameLoop_OneSecondUpdateTicked(object sender, OneSecondUpdateTickedEventArgs e)
         {
-            DoCachePoll();
+            if (Config.ModEnabled && Game1.IsMasterGame)
+            {
+                DoCachePoll();
+            }
         }
 
 
@@ -271,7 +274,8 @@ namespace StardewOpenWorld
 
         private void GameLoop_DayEnding(object sender, DayEndingEventArgs e)
         {
-            ReloadOpenWorld(Config.NewMapDaily);
+            if(Config.ModEnabled && Game1.IsMasterGame)
+                ReloadOpenWorld(Config.NewMapDaily);
         }
 
         public override object GetApi()
@@ -447,9 +451,11 @@ namespace StardewOpenWorld
         {
             if (!Config.ModEnabled || !Context.IsWorldReady)
                 return;
-            var x = lakeRects;
-            CheckForChunkLoading();
-            CheckForChunkChange();
+            if (Game1.IsMasterGame)
+            {
+                CheckForChunkLoading();
+                CheckForChunkChange();
+            }
 
             if (Config.Debug && !Game1.isWarping && Game1.player.currentLocation.Name.Equals("Backwoods"))
             {
