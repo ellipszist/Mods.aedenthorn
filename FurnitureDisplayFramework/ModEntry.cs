@@ -1,11 +1,12 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Newtonsoft.Json;
 using StardewModdingAPI;
 using StardewValley;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Xml.Serialization;
 using Object = StardewValley.Object;
 
 namespace FurnitureDisplayFramework
@@ -149,6 +150,7 @@ namespace FurnitureDisplayFramework
                 return;
             if(e.Button == Config.PlaceKey && Game1.player.ActiveObject is not null && !Game1.player.ActiveObject.bigCraftable.Value && Game1.player.ActiveObject.GetType().BaseType == typeof(Item))
             {
+                var aObj = (Object)Game1.player.ActiveObject.getOne();
                 var mx = Game1.viewport.X + Game1.getOldMouseX();
                 var my = Game1.viewport.Y + Game1.getOldMouseY();
                 foreach (var f in Game1.currentLocation.furniture)
@@ -165,58 +167,44 @@ namespace FurnitureDisplayFramework
                             {
                                 Object obj = null;
                                 var amount = Config.PlaceAllByDefault ? Game1.player.ActiveObject.Stack : 1;
+                                aObj.Stack = amount;
                                 //Monitor.Log($"Clicked on furniture display {name} slot {i}");
-                                Monitor.Log($"Placing {Game1.player.ActiveObject.Name} x{amount} in slot {i}");
+                                Monitor.Log($"Placing {aObj.Name} x{amount} in slot {i}");
                                 Game1.player.currentLocation.playSound("dwop");
                                 if (f.modData.TryGetValue("aedenthorn.FurnitureDisplayFramework/" + i, out string slotString))
                                 {
-                                    if (slotString.Contains("{"))
-                                    {
-                                        obj = JsonConvert.DeserializeObject<Object>(slotString, new JsonSerializerSettings
-                                        {
-                                            Error = HandleDeserializationError
-                                        });
-
-                                    }
-                                    else
-                                    {
-                                        var currentItem = f.modData["aedenthorn.FurnitureDisplayFramework/" + i].Split(',');
-                                        obj = GetObjectFromID(currentItem[0], int.Parse(currentItem[1]), int.Parse(currentItem[2]));
-                                    }
-                                    if(obj is not null)
+                                    var currentItem = f.modData["aedenthorn.FurnitureDisplayFramework/" + i];
+                                    obj = GetObjectFromSlot(currentItem);
+                                    if (obj is not null)
                                     {
                                         Monitor.Log($"Slot has {obj.Name}x{obj.Stack}");
-                                        if ((Game1.player.ActiveObject.Name != obj.Name && Game1.player.ActiveObject.ParentSheetIndex.ToString() != obj.Name) || Game1.player.ActiveObject.Quality != obj.Quality)
+                                        if (AreNotSame(obj, aObj))
                                         {
-                                            if (!Game1.player.addItemToInventoryBool(obj, true))
+                                            if (Game1.player.addItemToInventoryBool(obj, true))
                                             {
-                                                Monitor.Log($"Switching with {Game1.player.CurrentItem.Name} x{amount}");
-                                                f.modData["aedenthorn.FurnitureDisplayFramework/" + i] = JsonConvert.SerializeObject(obj, new JsonSerializerSettings() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+                                                if (obj.Stack <= 0)
+                                                {
 
-                                                if (amount >= Game1.player.CurrentItem.Stack)
-                                                    Game1.player.removeItemFromInventory(Game1.player.CurrentItem);
-                                                else
-                                                    Game1.player.CurrentItem.Stack -= amount;
+                                                    if (amount >= Game1.player.ActiveObject.Stack)
+                                                        Game1.player.removeItemFromInventory(Game1.player.ActiveObject);
+                                                    else
+                                                        Game1.player.ActiveObject.Stack -= amount;
+                                                    f.modData["aedenthorn.FurnitureDisplayFramework/" + i] = aObj.ToXmlString();
+                                                }
+                                                Monitor.Log($"Switching with {Game1.player.ActiveObject.Name} x{amount}");
+
                                             }
                                         }
                                         else
                                         {
                                             int slotAmount = obj.Stack;
-                                            int newSlotAmount = Math.Min(Game1.player.ActiveObject.maximumStackSize(), slotAmount + amount);
+                                            int newSlotAmount = Math.Min(aObj.maximumStackSize(), slotAmount + amount);
                                             obj.Stack = newSlotAmount;
-                                            Monitor.Log($"Adding {Game1.player.ActiveObject.Name} x{newSlotAmount}");
-                                            f.modData["aedenthorn.FurnitureDisplayFramework/" + i] = JsonConvert.SerializeObject(obj, new JsonSerializerSettings() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
-                                            if (newSlotAmount < slotAmount + amount)
-                                            {
-                                                Game1.player.ActiveObject.Stack = slotAmount + amount - newSlotAmount;
-                                            }
-                                            else
-                                            {
-                                                if (amount >= Game1.player.ActiveObject.Stack)
-                                                    Game1.player.removeItemFromInventory(Game1.player.ActiveObject);
-                                                else
-                                                    Game1.player.ActiveObject.Stack -= amount;
-                                            }
+                                            Monitor.Log($"Adding {aObj.Name} x{newSlotAmount}");
+                                            f.modData["aedenthorn.FurnitureDisplayFramework/" + i] = obj.ToXmlString();
+                                            Game1.player.ActiveObject.Stack -= newSlotAmount - slotAmount;
+                                            if (Game1.player.ActiveObject.Stack <= 0)
+                                                Game1.player.removeItemFromInventory(Game1.player.ActiveObject);
                                         }
                                         Helper.Input.Suppress(e.Button);
                                         return;
@@ -224,9 +212,8 @@ namespace FurnitureDisplayFramework
 
                                 }
                                 Monitor.Log($"Adding {Game1.player.ActiveObject.Name} x{amount}");
-                                obj = (Object)Game1.player.ActiveObject.getOne();
-                                obj.Stack = amount;
-                                f.modData["aedenthorn.FurnitureDisplayFramework/" + i] = JsonConvert.SerializeObject(obj, new JsonSerializerSettings() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore, Error = HandleSerializationError });
+
+                                f.modData["aedenthorn.FurnitureDisplayFramework/" + i] = aObj.ToXmlString();
                                 if (amount >= Game1.player.ActiveObject.Stack)
                                     Game1.player.removeItemFromInventory(Game1.player.ActiveObject);
                                 else
@@ -271,12 +258,47 @@ namespace FurnitureDisplayFramework
             }
         }
 
+        private bool AreNotSame(Object obj1, Object obj2)
+        {
+            return obj1.Name != obj2.Name || obj1.QualifiedItemId != obj2.QualifiedItemId || obj1.Quality != obj2.Quality || obj1.preservedParentSheetIndex != obj2.preservedParentSheetIndex;
+        }
+
         public static Object GetObjectFromSlot(string slotString)
         {
             if (string.IsNullOrEmpty(slotString))
                 return null;
-            var currentItem = slotString.Split(',');
-            return GetObjectFromID(currentItem[0], int.Parse(currentItem[1]), int.Parse(currentItem[2]));
+            return slotString.FromXmlString<Object>();
         }
     }
+    
+
+    public static class XmlTools
+    {
+        public static string ToXmlString<T>(this T input)
+        {
+            using (var writer = new StringWriter())
+            {
+                input.ToXml(writer);
+                return writer.ToString();
+            }
+        }
+        public static T FromXmlString<T>(this string input)
+        {
+            using (TextReader reader = new StringReader(input))
+            {
+                return (T)new XmlSerializer(typeof(T)).Deserialize(reader);
+            }
+        }
+        public static void ToXml<T>(this T objectToSerialize, Stream stream)
+        {
+            new XmlSerializer(typeof(T)).Serialize(stream, objectToSerialize);
+        }
+
+        public static void ToXml<T>(this T objectToSerialize, StringWriter writer)
+        {
+            new XmlSerializer(typeof(T)).Serialize(writer, objectToSerialize);
+        }
+    }
+
+
 }

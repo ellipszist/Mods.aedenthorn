@@ -1,15 +1,11 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Newtonsoft.Json;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Locations;
 using StardewValley.Objects;
-using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Reflection;
 using Object = StardewValley.Object;
 
 namespace FoodOnTheTable

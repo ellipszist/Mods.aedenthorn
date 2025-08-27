@@ -7,6 +7,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -71,7 +73,7 @@ namespace WeddingTweaks
             );
 
             harmony.Patch(
-               original: AccessTools.Method(typeof(Game1), nameof(Game1.getCharacterFromName), new Type[] { typeof(string), typeof(bool), typeof(bool) }),
+               original: AccessTools.GetDeclaredMethods(typeof(Game1)).First(m => m.Name == nameof(Game1.getCharacterFromName) && m.ReturnType == typeof(NPC) && m.GetParameters().Length == 3),
                prefix: new HarmonyMethod(typeof(Game1Patches), nameof(Game1Patches.getCharacterFromName_Prefix))
             );
 

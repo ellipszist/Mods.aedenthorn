@@ -171,7 +171,7 @@ namespace WeddingTweaks
                                 });
                             }
                             else
-                                Utility.facePlayerEndBehavior(actor, location);
+                                actor.facePlayer(Game1.player);
                             continue;
                         }
                         if ((npcWitness is not null && actor.Name == npcWitness))
@@ -199,7 +199,7 @@ namespace WeddingTweaks
                                 });
                             }
                             else
-                                Utility.facePlayerEndBehavior(actor, location);
+                                actor.facePlayer(Game1.player);
                             continue;
                         }
                         if (addSpouses && spouses.Contains(actor.Name))
@@ -256,7 +256,7 @@ namespace WeddingTweaks
                             });
                             }
                             else
-                                Utility.facePlayerEndBehavior(actor, location);
+                                actor.facePlayer(Game1.player);
                             continue;
                         }
                     }
@@ -269,18 +269,18 @@ namespace WeddingTweaks
             }
         }
 
-        [HarmonyPatch(typeof(Event), "endBehaviors")]
+        [HarmonyPatch(typeof(Event), nameof(Event.endBehaviors), new Type[] { typeof(string[]), typeof(GameLocation) })]
         public static class Event_endBehaviors_Patch
         {
-            public static void Postfix(string[] split)
+            public static void Postfix(string[] args)
             {
                 try
                 {
                     if (!Config.AllSpousesJoinWeddings || freeLoveAPI == null)
                         return;
-                    if (split != null && split.Length > 1)
+                    if (args != null && args.Length > 1)
                     {
-                        string text = split[1];
+                        string text = args[1];
                         if (text == "wedding")
                         {
                             freeLoveAPI.PlaceSpousesInFarmhouse(Utility.getHomeOfFarmer(Game1.player));
@@ -294,33 +294,18 @@ namespace WeddingTweaks
             }
         }
 
-        [HarmonyPatch(typeof(Event), "command_loadActors")]
-        public static class Event_command_loadActors_Patch
+        [HarmonyPatch(typeof(Event.DefaultCommands), nameof(Event.DefaultCommands.LoadActors))]
+        public static class Event_DefaultCommands_LoadActors_Patch
         {
             public static void Prefix()
             {
-                try
-                {
-                    startingLoadActors = true;
-                }
-                catch (Exception ex)
-                {
-                    SMonitor.Log($"Failed in {nameof(Event_command_loadActors_Patch)}:\n{ex}", LogLevel.Error);
-                }
+                startingLoadActors = true;
             }
 
             public static void Postfix()
             {
-                try
-                {
-                    startingLoadActors = false;
-                    Game1Patches.lastGotCharacter = null;
-
-                }
-                catch (Exception ex)
-                {
-                    SMonitor.Log($"Failed in {nameof(Event_command_loadActors_Patch)}:\n{ex}", LogLevel.Error);
-                }
+                startingLoadActors = false;
+                Game1Patches.lastGotCharacter = null;
             }
         }
         
