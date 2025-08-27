@@ -195,6 +195,14 @@ namespace StardewOpenWorld
             {
                 openWorldLocation.terrainFeatures.Remove(tf.Key);
             }
+            foreach (var kvp in chunk.largeTerrainFeatures)
+            {
+                openWorldLocation.largeTerrainFeatures.Remove(kvp.Value);
+            }
+            foreach (var kvp in chunk.resourceClumps)
+            {
+                openWorldLocation.resourceClumps.Remove(kvp.Value);
+            }
             openWorldLocation.largeTerrainFeatures.RemoveWhere(tf => tf.modData.TryGetValue(modChunkKey, out var ps) && ps == $"{cp.X},{cp.Y}");
             loadedChunks.Remove(cp);
         }
@@ -232,6 +240,12 @@ namespace StardewOpenWorld
                             chunks.RemoveAt(i);
                             continue;
                         }
+                    }
+                    break;
+                case BuildStage.Landmarks:
+                    foreach (var cp in chunks)
+                    {
+                        AddLandmarkPathsToChunk(cp);
                     }
                     break;
                 case BuildStage.Chests:

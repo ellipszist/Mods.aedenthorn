@@ -244,6 +244,28 @@ namespace StardewOpenWorld
                 return codes.AsEnumerable();
             }
         }
+        [HarmonyPatch(typeof(Crop), nameof(Crop.updateDrawMath))]
+        public static class Crop_updateDrawMath_Patch
+        {
+            public static void Postfix(Crop __instance, Vector2 tileLocation)
+            {
+                if (__instance.currentLocation != openWorldLocation)
+                    return;
+                var y = FloatToLocalYTile(tileLocation.Y);
+                var x = FloatToLocalXTile(tileLocation.X);
+                if (__instance.forageCrop.Value)
+                {
+                    __instance.layerDepth = (y * 64f + 32f + ((y * 11f + x * 7f) % 10f - 5f)) / 10000f;
+                }
+                else
+                {
+                    __instance.layerDepth = (y * 64f + 32f + ((!__instance.shouldDrawDarkWhenWatered() || __instance.currentPhase.Value >= __instance.phaseDays.Count - 1) ? 0f : ((y * 11f + x * 7f) % 10f - 5f))) / 10000f / ((__instance.currentPhase.Value == 0 && __instance.shouldDrawDarkWhenWatered()) ? 2f : 1f);
+                    __instance.coloredLayerDepth = (y * 64f + 32f + ((y * 11f + x * 7f) % 10f - 5f)) / 10000f / (float)((__instance.currentPhase.Value == 0 && __instance.shouldDrawDarkWhenWatered()) ? 2 : 1);
+
+                }
+
+            }
+        }
         
         [HarmonyPatch(typeof(ResourceClump), nameof(ResourceClump.draw), new Type[] { typeof(SpriteBatch) })]
         public static class ResourceClump_draw_Patch

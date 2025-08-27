@@ -403,7 +403,8 @@ namespace StardewOpenWorld
         }
         private static List<Point> GetBlobPadding(List<Point> tiles, int amount, bool include)
         {
-            List<Point> temp = new(tiles);
+            List<Point> temp = new();
+            temp.AddRange(tiles);
             List<Point> newTiles = new();
             for(int i = 0; i < amount; i++)
             {
@@ -420,7 +421,8 @@ namespace StardewOpenWorld
                             }
                         }
                     }
-                    temp = new(tiles);
+                    temp = new();
+                    temp.AddRange(tiles);
                     temp.AddRange(newTiles);
                 }
             }

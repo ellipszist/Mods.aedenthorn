@@ -16,38 +16,10 @@ namespace IndoorOutdoor
         }
 
 
-        public static bool DrawOverrideVector(Texture2D texture, Vector2 position, Rectangle? sourceRectangle) 
-        {
-            if (!Config.ModEnabled || !renderingWorld)
-                return true;
-            var rect = new Rectangle((int)position.X, (int)position.Y, (int)((sourceRectangle is null ? texture.Width : sourceRectangle.Value.Width)), (int)((sourceRectangle is null ? texture.Height : sourceRectangle.Value.Height)));
-            return CheckScreenRect(rect);
-        }
-        public static bool DrawOverrideVectorVector(Texture2D texture, Vector2 position, Rectangle? sourceRectangle, Vector2 scale, Vector2 origin) 
-        {
-            if (!Config.ModEnabled || !renderingWorld)
-                return true;
-            var rect = new Rectangle((int)(position.X - origin.X), (int)(position.Y - origin.Y), (int)((sourceRectangle is null ? texture.Width : sourceRectangle.Value.Width) * scale.X), (int)((sourceRectangle is null ? texture.Height : sourceRectangle.Value.Height) * scale.Y));
-            return CheckScreenRect(rect);
-        }
-        public static bool DrawOverrideRect(Texture2D texture, Rectangle destinationRectangle) 
-        {
-            if (!Config.ModEnabled || !renderingWorld)
-                return true;
-            return CheckScreenRect(destinationRectangle);
-        }
-        public static bool DrawOverrideRectVector(Texture2D texture, Rectangle destinationRectangle, Vector2 origin) 
-        {
-            if (!Config.ModEnabled || !renderingWorld)
-                return true;
-            destinationRectangle.Offset(-origin);
-            return CheckScreenRect(destinationRectangle);
-        }
 
-
-        public static bool CheckScreenRect(Rectangle bb)
+        public static bool CheckScreenRect(Rectangle drawRect)
         {
-            foreach (var kvp in currentLocationIndoorMapDict.Value)
+            foreach (var kvp in currentLocationIndoorRectDict.Value)
             {
                 if (kvp.Key == currentIndoors.Value)
                 {
@@ -58,23 +30,27 @@ namespace IndoorOutdoor
                     foreach (var rect in kvp.Value)
                     {
                         var screenRect = new Rectangle(rect.Location - new Point(Game1.viewport.X, Game1.viewport.Y), rect.Size);
-                        if (screenRect.Contains(bb.Center))
+                        if (drawRect.Contains(screenRect))
                         {
                             return true;
                         }
-                        if (screenRect.Contains(bb.Location))
+                        if (screenRect.Contains(drawRect.Center))
+                        {
+                            return true;
+                        }
+                        if (screenRect.Contains(drawRect.Location))
                         {
                             tl = true;
                         }
-                        if (screenRect.Contains(bb.Location + new Point(bb.Width, 0)))
+                        if (screenRect.Contains(drawRect.Location + new Point(drawRect.Width, 0)))
                         {
                             tr = true;
                         }
-                        if (screenRect.Contains(bb.Location + new Point(bb.Width, bb.Height)))
+                        if (screenRect.Contains(drawRect.Location + new Point(drawRect.Width, drawRect.Height)))
                         {
                             br = true;
                         }
-                        if (screenRect.Contains(bb.Location + new Point(0, bb.Height)))
+                        if (screenRect.Contains(drawRect.Location + new Point(0, drawRect.Height)))
                         {
                             bl = true;
                         }
@@ -90,19 +66,23 @@ namespace IndoorOutdoor
                     foreach (var rect in kvp.Value)
                     {
                         var screenRect = new Rectangle(rect.Location - new Point(Game1.viewport.X, Game1.viewport.Y), rect.Size);
-                        if (screenRect.Contains(bb.Location))
+                        if (screenRect.Contains(drawRect.Center))
+                        {
+                            return false;
+                        }
+                        if (screenRect.Contains(drawRect.Location))
                         {
                             tl = true;
                         }
-                        if (screenRect.Contains(bb.Location + new Point(bb.Width, 0)))
+                        if (screenRect.Contains(drawRect.Location + new Point(drawRect.Width, 0)))
                         {
                             tr = true;
                         }
-                        if (screenRect.Contains(bb.Location + new Point(bb.Width, bb.Height)))
+                        if (screenRect.Contains(drawRect.Location + new Point(drawRect.Width, drawRect.Height)))
                         {
                             br = true;
                         }
-                        if (screenRect.Contains(bb.Location + new Point(0, bb.Height)))
+                        if (screenRect.Contains(drawRect.Location + new Point(0, drawRect.Height)))
                         {
                             bl = true;
                         }

@@ -1,10 +1,8 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.Characters;
 
 namespace IndoorOutdoor
 {
@@ -25,7 +23,7 @@ namespace IndoorOutdoor
                 return SHelper.GameContent.Load<Dictionary<string, IndoorData>>(dictPath);
             }
         }
-        public static PerScreen<Dictionary<string, List<Rectangle>>> currentLocationIndoorMapDict = new(() => new Dictionary<string, List<Rectangle>>());
+        public static PerScreen<Dictionary<string, List<Rectangle>>> currentLocationIndoorRectDict = new(() => new Dictionary<string, List<Rectangle>>());
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
@@ -45,23 +43,20 @@ namespace IndoorOutdoor
             helper.Events.Content.AssetRequested += Content_AssetRequested;
             helper.Events.Input.ButtonPressed += Input_ButtonPressed;
 
-            helper.Events.Display.RenderingWorld += Display_RenderingWorld;
-            helper.Events.Display.RenderedWorld += Display_RenderedWorld;
+            helper.Events.Display.RenderedStep += Display_RenderedStep;
 			
             Harmony harmony = new(ModManifest.UniqueID);
             harmony.PatchAll();
         }
-
         public static bool renderingWorld;
 
-        private void Display_RenderingWorld(object? sender, StardewModdingAPI.Events.RenderingWorldEventArgs e)
+        private void Display_RenderedStep(object? sender, StardewModdingAPI.Events.RenderedStepEventArgs e)
         {
-            renderingWorld = true;
+            if (e.Step == StardewValley.Mods.RenderSteps.World_DrawLightmapOnScreen)
+                renderingWorld = false;
         }
-        private void Display_RenderedWorld(object? sender, StardewModdingAPI.Events.RenderedWorldEventArgs e)
-        {
-            renderingWorld = false;
-        }
+
+
 
 
         private void Player_Warped(object? sender, StardewModdingAPI.Events.WarpedEventArgs e)
@@ -73,7 +68,7 @@ namespace IndoorOutdoor
 
         private void BuildIndoorMap(GameLocation newLocation)
         {
-            currentLocationIndoorMapDict.Value.Clear();
+            currentLocationIndoorRectDict.Value.Clear();
             foreach (var kvp in IndoorDict)
             {
                 if(kvp.Value.Location == newLocation.Name)
@@ -83,7 +78,7 @@ namespace IndoorOutdoor
                     {
                         list.Add(new Rectangle(rect.X * 64, rect.Y * 64, rect.Width * 64, rect.Height * 64));
                     }
-                    currentLocationIndoorMapDict.Value[kvp.Key] = list;
+                    currentLocationIndoorRectDict.Value[kvp.Key] = list;
                 }
             }
         }
@@ -92,13 +87,15 @@ namespace IndoorOutdoor
         {
             renderingWorld = false;
 
-            if (currentLocationIndoorMapDict.Value.Any())
+            if (currentLocationIndoorRectDict.Value.Any())
             {
-                foreach (var kvp in currentLocationIndoorMapDict.Value)
+                foreach (var kvp in currentLocationIndoorRectDict.Value)
                 {
                     foreach (var area in kvp.Value)
                     {
-                        if (area.Contains(Game1.player.GetBoundingBox()))
+                        var rect = Game1.player.GetBoundingBox();
+                        rect.Inflate(24, 24);
+                        if (area.Contains(rect))
                         {
                             currentIndoors.Value = kvp.Key;
                             return;
@@ -106,27 +103,17 @@ namespace IndoorOutdoor
                     }
                 }
             }
+
             currentIndoors.Value = null;
         }
         private void Input_ButtonPressed(object? sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
         {
-            return;
-            if(e.Button == SButton.O)
-            {
-                SHelper.GameContent.InvalidateCache(dictPath);
-                var cc = Game1.getFarm().characters;
-                for (int i = cc.Count - 1; i >= 0; i--)
-                {
-                    if (cc[i] is Horse horse)
-                    {
-                        cc.RemoveAt(i);
-                    }
-                }
-            }
         }
 
         private void GameLoop_SaveLoaded(object? sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)
         {
+            currentIndoors.Value = null;
+            currentLocationIndoorRectDict.Value.Clear();
             renderingWorld = false;
         }
 
@@ -135,6 +122,24 @@ namespace IndoorOutdoor
             if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
             {
                 e.LoadFrom(() => new Dictionary<string, IndoorData>(), StardewModdingAPI.Events.AssetLoadPriority.Exclusive);
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo("Maps/Woods"))
+            {
+                e.Edit((IAssetData data) =>
+                {
+                    var map = data.AsMap().Data;
+                    var l = map.GetLayer("AlwaysFront");
+                    for(int x = 30; x < 54; x++)
+                    {
+                        for (int y = 22; y < 31; y++)
+                        {
+                            if (l.Tiles[x, y] != null) 
+                            {
+                                l.Tiles[x, y].Properties[modKey] = "Indoor/Outdoor";
+                            }
+                        }
+                    }
+                });
             }
         }
 

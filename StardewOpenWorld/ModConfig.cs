@@ -10,6 +10,8 @@ namespace StardewOpenWorld
         public bool CreateEntrance { get; set; } = true;
         public bool NewMapDaily { get; set; } = false;
         public bool DrawMap { get; set; } = true;
+        public float MapScale { get; set; } = 0.25f;
+        public int MapTilesDimension { get; set; } = 6400;
         public int OpenWorldSize { get; set; } = 10000;
         public int MaxOutcropLevel { get; set; } = 1000;
         public int TilesPerForestMin { get; set; } = 500;
@@ -43,14 +45,14 @@ namespace StardewOpenWorld
         public double RockDensity { get; set; } = 0.3;
         public double GrassDensity { get; set; } = 0.3;
         public string BackgroundMusic { get; set; } = "desolate";
-        public int MaxItems { get; set; } = 5;
-        public int ItemsBaseMaxValue { get; set; } = 100;
-        public int MinItemValue { get; set; } = 20;
-        public int MaxItemValue { get; set; } = -1;
+        public int ChestMaxItems { get; set; } = 5;
+        public int ChestItemsBaseMaxValue { get; set; } = 100;
+        public int ChestMinItemValue { get; set; } = 20;
+        public int ChestMaxItemValue { get; set; } = -1;
         public int CoinBaseMin { get; set; } = 20;
         public int CoinBaseMax { get; set; } = 100;
         public float ChestRarityBias { get; set; } = 1f;
-        public float IncreaseRate { get; set; } = 0.3f;
+        public float ChestValueIncreaseRate { get; set; } = 0.3f;
         public Dictionary<string, int> ItemListChances { get; set; } = new Dictionary<string, int>
         {
             {"MeleeWeapon", 100},

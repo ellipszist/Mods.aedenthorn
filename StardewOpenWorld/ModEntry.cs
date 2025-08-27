@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using xTile;
 using xTile.Tiles;
 
@@ -52,6 +53,7 @@ namespace StardewOpenWorld
         public static Dictionary<Point, Dictionary<Vector2, string>> monsterCenters = new();
 
         public static Dictionary<Point, HashSet<Rectangle>> landmarkRects = new();
+        public static HashSet<Rectangle> loadedLandmarkRects = new();
         public static Dictionary<Point ,HashSet<Rectangle>> lakeRects = new();
         public static Dictionary<Point, HashSet<Rectangle>> outcropRects = new();
 
@@ -82,9 +84,6 @@ namespace StardewOpenWorld
         {
             Begin,
             Landmarks,
-            Lakes,
-            GrassTiles,
-            Border,
             Chests,
             Trees,
             Bushes,
@@ -179,6 +178,7 @@ namespace StardewOpenWorld
             lakeRects.Clear();
             outcropRects.Clear();
             landmarkRects.Clear();
+            loadedLandmarkRects.Clear();
 
             waterTiles.Clear();
         }
@@ -204,7 +204,7 @@ namespace StardewOpenWorld
             showingMap = true;
             if (!Config.ModEnabled || !Context.IsWorldReady || !Config.DrawMap || !Game1.currentLocation.Name.Contains(locName) || Game1.activeClickableMenu is not GameMenu || (Game1.activeClickableMenu as GameMenu).GetCurrentPage() is not MapPage)
                 return;
-            TakeMapScreenshot(openWorldLocation, 0.25f);
+            TakeMapScreenshot(openWorldLocation, Config.MapScale);
 
         }
 
@@ -230,8 +230,7 @@ namespace StardewOpenWorld
             if (Config.Debug && e.Button == SButton.N)
             {
 
-                //Game1.currentLocation.debris.Add(new Debris(ItemRegistry.Create("(BC)29", 1), Game1.player.Position + new Vector2(128, 128)));
-                //Game1.currentLocation.characters.Add(new Serpent(Game1.player.Position + new Vector2(128, 128)));
+                CreateAnimatedTiles();
             }
             if (Config.DrawMap && showingMap && e.Button == SButton.MouseLeft && renderTarget != null)
             {
@@ -266,7 +265,13 @@ namespace StardewOpenWorld
                 //}
                 else if (Config.Debug && mapRect.Contains(Game1.getMousePosition()))
                 {
-
+                    float scale = mapRect.Width / (float)(Config.MapTilesDimension);
+                    float x = Game1.getMousePosition().X - mapRect.X - mapRect.Width / 2f;
+                    float y = Game1.getMousePosition().Y - mapRect.Y - mapRect.Height / 2f;
+                    x /= scale;
+                    y /= scale;
+                    Game1.player.Position += new Vector2(x, y);
+                    Game1.activeClickableMenu.exitThisMenu(true);
                 }
                 SHelper.Input.Suppress(e.Button);
             }
@@ -491,6 +496,61 @@ namespace StardewOpenWorld
                     getValue: () => Config.ModEnabled,
                     setValue: value => Config.ModEnabled = value
                 );
+                var props = typeof(ModConfig).GetProperties().ToArray();
+                Array.Sort(props, (PropertyInfo a, PropertyInfo b) =>
+                {
+                    return a.Name.CompareTo(b.Name);
+                });
+                foreach (var p in props)
+                {
+                    if (p.Name == nameof(Config.ModEnabled))
+                        continue;
+                    if(p.PropertyType == typeof(bool))
+                    {
+                        configMenu.AddBoolOption(
+                            mod: ModManifest,
+                            name: () => p.Name,
+                            getValue: () => (bool)p.GetValue(Config),
+                            setValue: value => p.SetValue(Config, value)
+                        );
+                    }
+                    else if(p.PropertyType == typeof(int))
+                    {
+                        configMenu.AddNumberOption(
+                            mod: ModManifest,
+                            name: () => p.Name,
+                            getValue: () => (int)p.GetValue(Config),
+                            setValue: value => p.SetValue(Config, value)
+                        );
+                    }
+                    else if(p.PropertyType == typeof(float))
+                    {
+                        configMenu.AddTextOption(
+                            mod: ModManifest,
+                            name: () => p.Name,
+                            getValue: () => p.GetValue(Config).ToString(),
+                            setValue: value => { if (float.TryParse(value, out var f)){ p.SetValue(Config, f); } }
+                        );
+                    }
+                    else if(p.PropertyType == typeof(double))
+                    {
+                        configMenu.AddTextOption(
+                            mod: ModManifest,
+                            name: () => p.Name,
+                            getValue: () => p.GetValue(Config).ToString(),
+                            setValue: value => { if (double.TryParse(value, out var f)){ p.SetValue(Config, f); } }
+                        );
+                    }
+                    else if(p.PropertyType == typeof(string))
+                    {
+                        configMenu.AddTextOption(
+                            mod: ModManifest,
+                            name: () => p.Name,
+                            getValue: () => (string)p.GetValue(Config),
+                            setValue: value => p.SetValue(Config, value)
+                        );
+                    }
+                }
             }
         }
     }

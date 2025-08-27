@@ -1,17 +1,12 @@
-﻿using HarmonyLib;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
-using xTile.Dimensions;
 using xTile.Layers;
-using xTile.ObjectModel;
-using xTile.Tiles;
 
 namespace ShowPlayerBehind
 {
@@ -21,19 +16,19 @@ namespace ShowPlayerBehind
         public static ModConfig Config;
         public static IMonitor SMonitor;
 
-        private Dictionary<long, Point[]> transparentPoints = new Dictionary<long, Point[]>();
-        private Dictionary<long, Point> farmerPoints = new Dictionary<long, Point>();
-
+        private Dictionary<GameLocation, HashSet<Point>> fadeInPoints = new();
+        private Dictionary<GameLocation, Dictionary<Point, float>> fadeOutPoints = new();
         public override void Entry(IModHelper helper)
         {
             Config = Helper.ReadConfig<ModConfig>();
 
             SMonitor = Monitor;
 
-            Helper.Events.Display.RenderingWorld += Display_RenderingWorld;
+            Helper.Events.GameLoop.UpdateTicked += GameLoop_UpdateTicked;
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
 
         }
+
 
         public void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
         {
@@ -75,137 +70,179 @@ namespace ShowPlayerBehind
                 setValue: delegate(string value) { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var f)) { Config.CornerTransparency = f; } }
             );
         }
-        private void Display_RenderingWorld(object sender, StardewModdingAPI.Events.RenderingWorldEventArgs e)
+        private void GameLoop_UpdateTicked(object sender, StardewModdingAPI.Events.UpdateTickedEventArgs e)
         {
-            if (!Config.ModEnabled)
+            if (!Config.ModEnabled || !Context.IsWorldReady)
                 return;
-            foreach(Farmer f in Game1.getAllFarmers())
+            Config.TransparencyFadeSpeed = 0.02f;
+            Dictionary<GameLocation, Dictionary<Point, float>> farmerPoints = new();
+            foreach (Farmer f in Game1.getAllFarmers())
             {
-                Point fp = f.TilePoint;
-                if (farmerPoints.ContainsKey(f.UniqueMultiplayerID))
+                bool coverFeet = false;
+                bool coverHead = false;
+                foreach(var l in f.currentLocation.Map.Layers)
                 {
-                    if (farmerPoints[f.UniqueMultiplayerID] == fp)
+                    if (!l.Id.StartsWith("Front") && !l.Id.StartsWith("AlwaysFront"))
                         continue;
-                    farmerPoints[f.UniqueMultiplayerID] = fp;
+                    if (IsOutOfBounds(f.TilePoint, l) || IsOutOfBounds(f.TilePoint + new Point(0, -1), l))
+                        continue;
+                    if (l.Tiles[f.TilePoint.X, f.TilePoint.Y] != null)
+                        coverFeet = true;
+                    if (l.Tiles[f.TilePoint.X, f.TilePoint.Y - 1] != null)
+                        coverHead = true;
+                    if (coverFeet && coverHead)
+                        break;
                 }
-                else
-                {
-                    farmerPoints.Add(f.UniqueMultiplayerID, fp);
-                }
-
-                GameLocation gl = f.currentLocation;
-
-                if (gl == null)
+                if (!coverHead || !coverFeet)
                     continue;
 
-                Point[] outpoints = AddFarmerPoints(f);
-
-                Tile tile1 = null;
-                Tile tile2 = null;
-                Tile tile3 = null;
-                Tile tile4 = null;
-
-                if (gl.map.GetLayer("Front") != null)
+                Point fp = f.TilePoint;
+                if (!farmerPoints.TryGetValue(f.currentLocation, out var dict))
                 {
-                    tile1 = gl.map.GetLayer("Front").PickTile(new Location(fp.X, fp.Y) * Game1.tileSize, Game1.viewport.Size);
-                    tile3 = gl.map.GetLayer("Front").PickTile(new Location(fp.X, fp.Y - 1) * Game1.tileSize, Game1.viewport.Size);
+                    dict = new();
+                    farmerPoints[f.currentLocation] = dict;
                 }
-                if (gl.map.GetLayer("AlwaysFront") != null)
+                dict[fp] = Config.InnerTransparency;
+                dict[fp + new Point(0, -1)] = Config.InnerTransparency;
+
+                float v;
+                if(!dict.TryGetValue(fp + new Point(1, 1), out v) || v > Config.CornerTransparency)
+                    dict[fp + new Point(1, 1)] = Config.CornerTransparency;
+                if (!dict.TryGetValue(fp + new Point(-1, 1), out v) || v > Config.CornerTransparency)
+                    dict[fp + new Point(-1, 1)] = Config.CornerTransparency;
+
+                if (!dict.TryGetValue(fp + new Point(-1, 0), out v) || v > Config.OuterTransparency)
+                    dict[fp + new Point(-1, 0)] = Config.OuterTransparency;
+                if (!dict.TryGetValue(fp + new Point(1, 0), out v) || v > Config.OuterTransparency)
+                    dict[fp + new Point(1, 0)] = Config.OuterTransparency;
+                if (!dict.TryGetValue(fp + new Point(-1, -1), out v) || v > Config.OuterTransparency)
+                    dict[fp + new Point(-1, -1)] = Config.OuterTransparency;
+                if (!dict.TryGetValue(fp + new Point(1, -1), out v) || v > Config.OuterTransparency)
+                    dict[fp + new Point(1, -1)] = Config.OuterTransparency;
+                if (!dict.TryGetValue(fp + new Point(0, 1), out v) || v > Config.OuterTransparency)
+                    dict[fp + new Point(0, 1)] = Config.OuterTransparency;
+
+                if (!dict.TryGetValue(fp + new Point(-1, -2), out v) || v > 10 + Config.CornerTransparency)
+                    dict[fp + new Point(-1, -2)] = 1 + Config.CornerTransparency;
+                if (!dict.TryGetValue(fp + new Point(1, -2), out v) || v > 10 + Config.CornerTransparency)
+                    dict[fp + new Point(1, -2)] = 1 + Config.CornerTransparency;
+                if (!dict.TryGetValue(fp + new Point(0, -2), out v) || v > 10 + Config.OuterTransparency)
+                    dict[fp + new Point(0, -2)] = Config.OuterTransparency;
+
+            }
+            foreach (var kvp in farmerPoints)
+            {
+                if(!fadeOutPoints.ContainsKey(kvp.Key))
                 {
-                    tile2 = gl.map.GetLayer("AlwaysFront").PickTile(new Location(fp.X, fp.Y) * Game1.tileSize, Game1.viewport.Size);
-                    tile4 = gl.map.GetLayer("AlwaysFront").PickTile(new Location(fp.X, fp.Y - 1) * Game1.tileSize, Game1.viewport.Size);
+                    fadeOutPoints[kvp.Key] = new();
                 }
-
-
-                bool fullyCovered = (tile1 != null || tile2 != null) && (tile3 != null || tile4 != null);
-
-                foreach (string layer in new string[] { "Front", "AlwaysFront" })
+                var dict = farmerPoints[kvp.Key];
+                foreach(var kvp2 in dict)
                 {
-                    if (gl.map.GetLayer(layer) == null)
-                        continue;
-
-                    foreach(Point p in outpoints)
+                    fadeOutPoints[kvp.Key][kvp2.Key] = kvp2.Value;
+                }
+            }
+            foreach (var key in fadeOutPoints.Keys.ToArray())
+            {
+                foreach (var kvp in fadeOutPoints[key].ToArray())
+                {
+                    Point p = kvp.Key;
+                    if (farmerPoints.TryGetValue(key, out var dict))
                     {
-                        Tile tile = gl.map.GetLayer(layer).PickTile(new Location(p.X, p.Y) * Game1.tileSize, Game1.viewport.Size);
-                        if (tile != null)
+                        if (dict.TryGetValue(p, out var trans))
                         {
-                            tile.Properties.TryGetValue("@Opacity", out PropertyValue property);
-                            if (property != null)
+                            foreach (var l in key.Map.Layers)
                             {
-                                gl.map.GetLayer(layer).Tiles[p.X, p.Y].Properties.Remove("@Opacity");
+                                if ((trans >= 10 && !l.Id.StartsWith("AlwaysFront")) || (!l.Id.StartsWith("AlwaysFront") && l.Id.StartsWith("Front")))
+                                {
+                                    continue;
+                                }
+                                if (IsOutOfBounds(p, l))
+                                {
+                                    continue;
+                                }
+                                if (l.Tiles[p.X, p.Y] != null)
+                                {
+
+                                    string os = null;
+                                    if (l.Tiles[p.X, p.Y].Properties.TryGetValue("@Opacity", out os))
+                                    {
+                                        if (l.Tiles[p.X, p.Y].Properties.ContainsKey("@ShowPlayerBehind"))
+                                        {
+                                            var opacity = float.Parse(os) - Config.TransparencyFadeSpeed;
+                                            l.Tiles[p.X, p.Y].Properties["@Opacity"] = Math.Max(opacity, trans % 10) + "";
+                                        }
+                                    }
+                                    else
+                                    {
+                                        l.Tiles[p.X, p.Y].Properties["@Opacity"] = "1";
+                                        l.Tiles[p.X, p.Y].Properties["@ShowPlayerBehind"] = "T";
+                                    }
+                                }
+
+                            }
+                        }
+                        else
+                        {
+                            if (!fadeInPoints.ContainsKey(key))
+                            {
+                                fadeInPoints[key] = new();
+                            }
+                            fadeInPoints[key].Add(p);
+                            fadeOutPoints[key].Remove(p);
+                        }
+
+                    }
+                    else
+                    {
+                        if (!fadeInPoints.ContainsKey(key))
+                        {
+                            fadeInPoints[key] = new();
+                        }
+                        fadeInPoints[key].Add(p);
+                        fadeOutPoints[key].Remove(p);
+                    }
+                }
+            }
+            foreach (var key in fadeInPoints.Keys.ToArray())
+            {
+                var front = key.Map.GetLayer("Front");
+                foreach (var p in fadeInPoints[key].ToArray())
+                {
+                    if (!farmerPoints.TryGetValue(key, out var dict) || !dict.ContainsKey(p))
+                    {
+                        foreach (var l in key.Map.Layers)
+                        {
+                            if ((l.Id.StartsWith("Front") || l.Id.StartsWith("AlwaysFront")) && l.Tiles[p.X, p.Y] != null)
+                            {
+                                string os = null;
+                                if (l.Tiles[p.X, p.Y].Properties.TryGetValue("@Opacity", out os))
+                                {
+                                    if(l.Tiles[p.X, p.Y].Properties.ContainsKey("@ShowPlayerBehind"))
+                                    {
+                                        var opacity = float.Parse(os) + Config.TransparencyFadeSpeed;
+                                        if (opacity < 1)
+                                        {
+                                            l.Tiles[p.X, p.Y].Properties["@Opacity"] = opacity + "";
+                                        }
+                                        else
+                                        {
+                                            l.Tiles[p.X, p.Y].Properties.Remove("@Opacity");
+                                            l.Tiles[p.X, p.Y].Properties.Remove("@ShowPlayerBehind");
+                                            fadeInPoints[key].Remove(p);
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
-
-                    if (!fullyCovered)
-                        continue;
-
-                    foreach (Point p in transparentPoints[f.UniqueMultiplayerID])
-                    {
-                        Tile tile = gl.map.GetLayer(layer).PickTile(new Location(p.X, p.Y) * Game1.tileSize, Game1.viewport.Size);
-                        if (tile != null)
-                        {
-                            float opacity = Config.OuterTransparency;
-                            if (p == fp || p == new Point(fp.X, fp.Y - 1))
-                            {
-                                opacity = Config.InnerTransparency;
-                            }
-                            else if (layer == "Front" && p.Y == fp.Y - 2)
-                            {
-                                continue;
-                            }
-                            else if(p.X != fp.X && (p.Y == fp.Y - 2 || p.Y == fp.Y + 1))
-                            {
-                                opacity = Config.CornerTransparency;
-                            }
-                            if (tile.Properties.ContainsKey("@Opacity"))
-                            {
-                                gl.map.GetLayer(layer).Tiles[p.X, p.Y].Properties["@Opacity"] = opacity + "";
-                            }
-                            else
-                            {
-                                gl.map.GetLayer(layer).Tiles[p.X, p.Y].Properties.Add("@Opacity", opacity + "");
-                            }
-                        }
-                    }
                 }
-
             }
         }
 
-        private Point[] AddFarmerPoints(Farmer f)
+        private bool IsOutOfBounds(Point p, Layer layer)
         {
-            Point p = f.TilePoint;
-            Point[] points = new Point[]
-            {
-                new Point(p.X, p.Y),
-                new Point(p.X - 1, p.Y - 2),
-                new Point(p.X, p.Y - 2),
-                new Point(p.X + 1, p.Y - 2),
-                new Point(p.X - 1, p.Y - 1),
-                new Point(p.X, p.Y - 1),
-                new Point(p.X + 1, p.Y - 1),
-                new Point(p.X + 1, p.Y),
-                new Point(p.X + 1, p.Y + 1),
-                new Point(p.X, p.Y + 1),
-                new Point(p.X - 1, p.Y + 1),
-                new Point(p.X - 1, p.Y)
-            };
-
-            List<Point> outpoints = new List<Point>();
-
-            if (!transparentPoints.ContainsKey(f.UniqueMultiplayerID))
-                transparentPoints.Add(f.UniqueMultiplayerID, new Point[0]);
-
-            foreach (Point i in transparentPoints[f.UniqueMultiplayerID])
-            {
-                if (!points.Contains(i))
-                    outpoints.Add(i);
-            }
-            transparentPoints[f.UniqueMultiplayerID] = points;
-
-            return outpoints.ToArray();
+            return p.X < 0 || p.Y < 0 || p.X >= layer.LayerWidth || p.Y >= layer.LayerHeight;
         }
-
     }
 }

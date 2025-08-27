@@ -58,10 +58,14 @@ namespace StardewOpenWorld
                     }
                 }
             }
-            /*
-            var amt = new Dictionary<string, Dictionary<int, AnimatedTileData>>();
-
-            foreach (var tlayer in Game1.getLocationFromName("Town").Map.Layers)
+            amt = new Dictionary<string, Dictionary<int, AnimatedTileData>>();
+            return;
+            List<Layer> layers = new();
+            layers.AddRange(Game1.getLocationFromName("Mountain").Map.Layers);
+            layers.AddRange(Game1.getLocationFromName("Town").Map.Layers);
+            layers.AddRange(Game1.getLocationFromName("Forest").Map.Layers);
+            layers.AddRange(Game1.getLocationFromName("Beach").Map.Layers);
+            foreach (var tlayer in layers)
             {
                 var layer = openWorldLocation.Map.GetLayer(tlayer.Id);
                 if (layer is null)
@@ -91,7 +95,7 @@ namespace StardewOpenWorld
                 }
             }
             File.WriteAllText("test.json", JsonConvert.SerializeObject(amt, Formatting.Indented));
-            */
+            
         }
 
         public static TileSheet GetOpenWorldTileSheet(TileSheet tileSheet)
@@ -338,20 +342,42 @@ namespace StardewOpenWorld
             var back = openWorldLocation.Map.GetLayer("Back");
             var build = openWorldLocation.Map.GetLayer("Buildings");
             var mainSheet = openWorldLocation.Map.GetTileSheet("Landscape");
-            AddTileToChunk(chunkPoint, "Back", p.X, p.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246), true);
+            var tile = GetRandomWaterTile(r, back, mainSheet);
+            AddTileToChunk(chunkPoint, "Back", p.X, p.Y, tile, true);
+            if(tile.TileIndex == 1299 && tiles.Contains(p + new Point(0, -1)))
+            {
+                AddTileToChunk(chunkPoint, "Buildings", p.X, p.Y - 1, animatedTiles[mainSheet.Id][r.Choose(1293, 1318)], false);
+            }
+            
             //return;
             if (!tiles.Contains(p + new Point(-1, 0)))
             {
 
                 if (tiles.Contains(p + new Point(-1, 1)))
                 {
-                    AddTileToChunk(chunkPoint, "Back", p.X - 1, p.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1266), true);
-                    if (!tiles.Contains(p + new Point(0, -1)))
+                    if(!tiles.Contains(p + new Point(-2, 2)) && tiles.Contains(p + new Point(-2, 3)))
                     {
-                        AddTileToChunk(chunkPoint, "Back", p.X - 1, p.Y - 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 1268), true);
-                        AddTileToChunk(chunkPoint, "Buildings", p.X - 1, p.Y - 1, animatedTiles[mainSheet.Id][283], true);
-                        AddTileToChunk(chunkPoint, "Back", p.X - 1, p.Y - 2, new StaticTile(back, mainSheet, BlendMode.Alpha, 1243), true);
-                        AddTileToChunk(chunkPoint, "Buildings", p.X - 1, p.Y - 2, animatedTiles[mainSheet.Id][183], true);
+                        AddTileToChunk(chunkPoint, "Back", p.X - 1, p.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1241), true);
+                        AddTileToChunk(chunkPoint, "Buildings", p.X - 1, p.Y, animatedTiles[mainSheet.Id][283], true);
+                        if (!tiles.Contains(p + new Point(0, -1)))
+                        {
+                            AddTileToChunk(chunkPoint, "Back", p.X - 1, p.Y - 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 1268), true);
+                            AddTileToChunk(chunkPoint, "Buildings", p.X - 1, p.Y - 1, animatedTiles[mainSheet.Id][r.Choose(233, 208)], false);
+                            AddTileToChunk(chunkPoint, "Back", p.X - 1, p.Y - 2, new StaticTile(back, mainSheet, BlendMode.Alpha, 1243), true);
+                            AddTileToChunk(chunkPoint, "Buildings", p.X - 1, p.Y - 2, animatedTiles[mainSheet.Id][183], false);
+                        }
+
+                    }
+                    else
+                    {
+                        AddTileToChunk(chunkPoint, "Back", p.X - 1, p.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1266), true);
+                        if (!tiles.Contains(p + new Point(0, -1)))
+                        {
+                            AddTileToChunk(chunkPoint, "Back", p.X - 1, p.Y - 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 1268), true);
+                            AddTileToChunk(chunkPoint, "Buildings", p.X - 1, p.Y - 1, animatedTiles[mainSheet.Id][283], false);
+                            AddTileToChunk(chunkPoint, "Back", p.X - 1, p.Y - 2, new StaticTile(back, mainSheet, BlendMode.Alpha, 1243), true);
+                            AddTileToChunk(chunkPoint, "Buildings", p.X - 1, p.Y - 2, animatedTiles[mainSheet.Id][183], false);
+                        }
                     }
                 }
                 else if (tiles.Contains(p + new Point(-1, 2)))
@@ -366,7 +392,7 @@ namespace StardewOpenWorld
                         AddTileToChunk(chunkPoint, "Back", p.X, p.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1266), true);
                         AddTileToChunk(chunkPoint, "Back", p.X - 1, p.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1268), true);
                         AddTileToChunk(chunkPoint, "Back", p.X - 1, p.Y - 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 1243), true);
-                        AddTileToChunk(chunkPoint, "Buildings", p.X - 1, p.Y - 1, animatedTiles[mainSheet.Id][183], true);
+                        AddTileToChunk(chunkPoint, "Buildings", p.X - 1, p.Y - 1, animatedTiles[mainSheet.Id][183], false);
                     }
 
                 }
@@ -374,33 +400,33 @@ namespace StardewOpenWorld
                 {
                     if(tiles.Contains(p + new Point(-1, -1)))
                     {
-                        AddTileToChunk(chunkPoint, "Back", p.X - 1, p.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246), true);
+                        AddTileToChunk(chunkPoint, "Back", p.X - 1, p.Y, GetRandomWaterTile(r, back, mainSheet), true);
                         AddTileToChunk(chunkPoint, "Back", p.X - 2, p.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246) , true);
-                        AddTileToChunk(chunkPoint, "Buildings", p.X - 2, p.Y, animatedTiles[mainSheet.Id][258], true);
+                        AddTileToChunk(chunkPoint, "Buildings", p.X - 2, p.Y, animatedTiles[mainSheet.Id][258], false);
                     }
                     else if(tiles.Contains(p + new Point(-1, -2)))
                     {
                         AddTileToChunk(chunkPoint, "Back", p.X - 1, p.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246), true);
-                        AddTileToChunk(chunkPoint, "Buildings", p.X - 1, p.Y, animatedTiles[mainSheet.Id][237], true);
+                        AddTileToChunk(chunkPoint, "Buildings", p.X - 1, p.Y, animatedTiles[mainSheet.Id][237], false);
 
                     }
                     else 
                     {
                         AddTileToChunk(chunkPoint, "Back", p.X - 1, p.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246), true);
-                        AddTileToChunk(chunkPoint, "Buildings", p.X - 1, p.Y, animatedTiles[mainSheet.Id][r.Next() > 0.5 ? 208 : 233], true);
+                        AddTileToChunk(chunkPoint, "Buildings", p.X - 1, p.Y, animatedTiles[mainSheet.Id][r.Next() > 0.5 ? 208 : 233], false);
 
                         if (!tiles.Contains(p + new Point(0, -1)))
                         {
                             AddTileToChunk(chunkPoint, "Back", p.X - 1, p.Y - 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 1268), true);
-                            AddTileToChunk(chunkPoint, "Buildings", p.X - 1, p.Y - 1, animatedTiles[mainSheet.Id][r.Next() > 0.5 ? 208 : 233], true);
+                            AddTileToChunk(chunkPoint, "Buildings", p.X - 1, p.Y - 1, animatedTiles[mainSheet.Id][r.Next() > 0.5 ? 208 : 233], false);
                             AddTileToChunk(chunkPoint, "Back", p.X - 1, p.Y - 2, new StaticTile(back, mainSheet, BlendMode.Alpha, 1243), true);
-                            AddTileToChunk(chunkPoint, "Buildings", p.X - 1, p.Y - 2, animatedTiles[mainSheet.Id][183], true);
+                            AddTileToChunk(chunkPoint, "Buildings", p.X - 1, p.Y - 2, animatedTiles[mainSheet.Id][183], false);
                         }
                     }
                     if (!tiles.Contains(p + new Point(0, 1)))
                     {
                         AddTileToChunk(chunkPoint, "Back", p.X - 1, p.Y + 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246), true);
-                        AddTileToChunk(chunkPoint, "Buildings", p.X - 1, p.Y + 1, animatedTiles[mainSheet.Id][258], true);
+                        AddTileToChunk(chunkPoint, "Buildings", p.X - 1, p.Y + 1, animatedTiles[mainSheet.Id][258], false);
                     }
                 }
             }
@@ -412,21 +438,21 @@ namespace StardewOpenWorld
                     if (!tiles.Contains(p + new Point(0, -1)))
                     {
                         AddTileToChunk(chunkPoint, "Back", p.X + 1, p.Y - 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 1270), true);
-                        AddTileToChunk(chunkPoint, "Buildings", p.X + 1, p.Y - 1, animatedTiles[mainSheet.Id][284], true);
+                        AddTileToChunk(chunkPoint, "Buildings", p.X + 1, p.Y - 1, animatedTiles[mainSheet.Id][284], false);
                         AddTileToChunk(chunkPoint, "Back", p.X + 1, p.Y - 2, new StaticTile(back, mainSheet, BlendMode.Alpha, 1245), true);
-                        AddTileToChunk(chunkPoint, "Buildings", p.X + 1, p.Y - 2, animatedTiles[mainSheet.Id][185], true);
+                        AddTileToChunk(chunkPoint, "Buildings", p.X + 1, p.Y - 2, animatedTiles[mainSheet.Id][185], false);
                     }
                 }
                 else if (tiles.Contains(p + new Point(1, 2)))
                 {
-                    AddTileToChunk(chunkPoint, "Buildings", p.X + 1, p.Y, animatedTiles[mainSheet.Id][284], true);
+                    AddTileToChunk(chunkPoint, "Buildings", p.X + 1, p.Y, animatedTiles[mainSheet.Id][284], false);
                     AddTileToChunk(chunkPoint, "Back", p.X + 1, p.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1242), true);
                     if (!tiles.Contains(p + new Point(0, -1)))
                     {
                         AddTileToChunk(chunkPoint, "Back", p.X + 1, p.Y - 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 1270), true);
-                        AddTileToChunk(chunkPoint, "Buildings", p.X + 1, p.Y - 1, animatedTiles[mainSheet.Id][r.Next() > 0.5 ? 210 : 235], true);
+                        AddTileToChunk(chunkPoint, "Buildings", p.X + 1, p.Y - 1, animatedTiles[mainSheet.Id][r.Next() > 0.5 ? 210 : 235], false);
                         AddTileToChunk(chunkPoint, "Back", p.X + 1, p.Y - 2, new StaticTile(back, mainSheet, BlendMode.Alpha, 1245), true);
-                        AddTileToChunk(chunkPoint, "Buildings", p.X + 1, p.Y - 2, animatedTiles[mainSheet.Id][185], true);
+                        AddTileToChunk(chunkPoint, "Buildings", p.X + 1, p.Y - 2, animatedTiles[mainSheet.Id][185], false);
                     }
 
                 }
@@ -436,30 +462,30 @@ namespace StardewOpenWorld
                     {
                         AddTileToChunk(chunkPoint, "Back", p.X + 1, p.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246), true);
                         AddTileToChunk(chunkPoint, "Back", p.X + 2, p.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246), true);
-                        AddTileToChunk(chunkPoint, "Buildings", p.X + 2, p.Y, animatedTiles[mainSheet.Id][260], true);
+                        AddTileToChunk(chunkPoint, "Buildings", p.X + 2, p.Y, animatedTiles[mainSheet.Id][260], false);
                     }
                     else if (tiles.Contains(p + new Point(1, -2)))
                     {
                         AddTileToChunk(chunkPoint, "Back", p.X + 1, p.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246), true);
-                        AddTileToChunk(chunkPoint, "Buildings", p.X + 1, p.Y, animatedTiles[mainSheet.Id][238], true);
+                        AddTileToChunk(chunkPoint, "Buildings", p.X + 1, p.Y, animatedTiles[mainSheet.Id][238], false);
                     }
                     else
                     {
                         AddTileToChunk(chunkPoint, "Back", p.X + 1, p.Y, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246), true);
-                        AddTileToChunk(chunkPoint, "Buildings", p.X + 1, p.Y, animatedTiles[mainSheet.Id][r.Next() > 0.5 ? 210 : 235], true);
+                        AddTileToChunk(chunkPoint, "Buildings", p.X + 1, p.Y, animatedTiles[mainSheet.Id][r.Next() > 0.5 ? 210 : 235], false);
 
                         if (!tiles.Contains(p + new Point(0, -1)))
                         {
                             AddTileToChunk(chunkPoint, "Back", p.X + 1, p.Y - 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 1270), true);
-                            AddTileToChunk(chunkPoint, "Buildings", p.X + 1, p.Y - 1, animatedTiles[mainSheet.Id][r.Next() > 0.5 ? 210 : 235], true);
+                            AddTileToChunk(chunkPoint, "Buildings", p.X + 1, p.Y - 1, animatedTiles[mainSheet.Id][r.Next() > 0.5 ? 210 : 235], false);
                             AddTileToChunk(chunkPoint, "Back", p.X + 1, p.Y - 2, new StaticTile(back, mainSheet, BlendMode.Alpha, 1245), true);
-                            AddTileToChunk(chunkPoint, "Buildings", p.X + 1, p.Y - 2, animatedTiles[mainSheet.Id][185], true);
+                            AddTileToChunk(chunkPoint, "Buildings", p.X + 1, p.Y - 2, animatedTiles[mainSheet.Id][185], false);
                         }
                     }
                     if (!tiles.Contains(p + new Point(0, 1)))
                     {
                         AddTileToChunk(chunkPoint, "Back", p.X + 1, p.Y + 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246), true);
-                        AddTileToChunk(chunkPoint, "Buildings", p.X + 1, p.Y + 1, animatedTiles[mainSheet.Id][260], true);
+                        AddTileToChunk(chunkPoint, "Buildings", p.X + 1, p.Y + 1, animatedTiles[mainSheet.Id][260], false);
                     }
 
                 }
@@ -471,7 +497,7 @@ namespace StardewOpenWorld
 
                     AddTileToChunk(chunkPoint, "Back", p.X, p.Y - 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 1269), true);
                     AddTileToChunk(chunkPoint, "Back", p.X, p.Y - 2, new StaticTile(back, mainSheet, BlendMode.Alpha, 1244), true);
-                    AddTileToChunk(chunkPoint, "Buildings", p.X, p.Y - 2, animatedTiles[mainSheet.Id][184], true);
+                    AddTileToChunk(chunkPoint, "Buildings", p.X, p.Y - 2, animatedTiles[mainSheet.Id][184], false);
                 }
             }
             if (!tiles.Contains(p + new Point(0, 1)))
@@ -482,7 +508,7 @@ namespace StardewOpenWorld
                     if(!tiles.Contains(p + new Point(1, 2)))
                     { 
                         AddTileToChunk(chunkPoint, "Back", p.X, p.Y + 2, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246), true);
-                        AddTileToChunk(chunkPoint, "Buildings", p.X, p.Y + 2, new StaticTile(back, mainSheet, BlendMode.Alpha, 212), true);
+                        AddTileToChunk(chunkPoint, "Buildings", p.X, p.Y + 2, new StaticTile(back, mainSheet, BlendMode.Alpha, 212), false);
 
 
                     }
@@ -492,14 +518,14 @@ namespace StardewOpenWorld
                     if (!tiles.Contains(p + new Point(-1, 2)))
                     {
                         AddTileToChunk(chunkPoint, "Back", p.X, p.Y + 2, new StaticTile(back, mainSheet, BlendMode.Alpha, 1246), true);
-                        AddTileToChunk(chunkPoint, "Buildings", p.X, p.Y + 2, new StaticTile(back, mainSheet, BlendMode.Alpha, 213), true);
+                        AddTileToChunk(chunkPoint, "Buildings", p.X, p.Y + 2, new StaticTile(back, mainSheet, BlendMode.Alpha, 213), false);
 
                     }
 
                 }
                 else
                 {
-                    AddTileToChunk(chunkPoint, "Buildings", p.X, p.Y + 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 259), true);
+                    AddTileToChunk(chunkPoint, "Buildings", p.X, p.Y + 1, new StaticTile(back, mainSheet, BlendMode.Alpha, 259), false);
                 }
             }
         }
@@ -643,58 +669,26 @@ namespace StardewOpenWorld
         private static Tile GetRandomDirtTile(Random r, Layer back, TileSheet mainSheet)
         {
             var which = r.NextDouble();
-
-            if (which < 0.01f)
+            if (which < 0.12f)
             {
-                return new StaticTile(back, mainSheet, BlendMode.Alpha, 181);
-            }
-            else if (which < 0.02f)
-            {
-                return new StaticTile(back, mainSheet, BlendMode.Alpha, 488);
-            }
-            else if (which < 0.03f)
-            {
-                return new StaticTile(back, mainSheet, BlendMode.Alpha, 207);
-            }
-            else if (which < 0.04f)
-            {
-                return new StaticTile(back, mainSheet, BlendMode.Alpha, 614);
-            }
-            else if (which < 0.05f)
-            {
-                return new StaticTile(back, mainSheet, BlendMode.Alpha, 206);
-            }
-            else if (which < 0.05f)
-            {
-                return new StaticTile(back, mainSheet, BlendMode.Alpha, 560);
-            }
-            else if (which < 0.06f)
-            {
-                return new StaticTile(back, mainSheet, BlendMode.Alpha, 564);
-            }
-            else if (which < 0.07f)
-            {
-                return new StaticTile(back, mainSheet, BlendMode.Alpha, 513);
-            }
-            else if (which < 0.08f)
-            {
-                return new StaticTile(back, mainSheet, BlendMode.Alpha, 463);
-            }
-            else if (which < 0.09f)
-            {
-                return new StaticTile(back, mainSheet, BlendMode.Alpha, 463);
-            }
-            else if (which < 0.10f)
-            {
-                return new StaticTile(back, mainSheet, BlendMode.Alpha, 610);
-            }
-            else if (which < 0.11f)
-            {
-                return new StaticTile(back, mainSheet, BlendMode.Alpha, 589);
+                return new StaticTile(back, mainSheet, BlendMode.Alpha, r.Choose(181, 488, 207, 614, 206, 560, 564, 513, 463, 610, 589, 227));
             }
             else
             {
                 return new StaticTile(back, mainSheet, BlendMode.Alpha, 227);
+            }
+        }
+        private static Tile GetRandomWaterTile(Random r, Layer back, TileSheet mainSheet)
+        {
+            var which = r.NextDouble();
+
+            if (which < 0.12f)
+            {
+                return new StaticTile(back, mainSheet, BlendMode.Alpha, r.Choose(1247, 1248, 1249, 1272, 1273, 1274, 1297, 1298, 1299, 1322, 1323, 1324));
+            }
+            else
+            {
+                return new StaticTile(back, mainSheet, BlendMode.Alpha, r.Choose(1246, 1271));
             }
         }
 
@@ -864,7 +858,7 @@ namespace StardewOpenWorld
                 Rectangle ar = new();
                 while (idx < rocks)
                 {
-                    ar = new Rectangle(ToGlobalTile(cp, c.ToPoint() + begin - new Point(8, 8)), end - begin + new Point(9, 9));
+                    ar = new Rectangle(ToGlobalTile(cp, c.ToPoint() + begin - new Point(10, 10)), end - begin + new Point(11, 11));
                     if (ConflictsRect(cp, ar))
                     {
                         goto next;
@@ -919,14 +913,15 @@ namespace StardewOpenWorld
                 var newTiles = MakeBlobFromTiles(r, tiles);
                 if (newTiles != null)
                 {
-                    var padding = GetBlobPadding(newTiles, 2, true);
+                    var padding = GetBlobPadding(newTiles, 4, true);
                     foreach (var rp in padding)
                     {
                         AddBlobTileToChunk(BorderTiles.meadow, GetRandomMeadowTile(r, back, mainSheet), back, mainSheet, cp, rp, padding, r);
                     }
-                    foreach (var rp in newTiles)
+                    padding = GetBlobPadding(newTiles, 2, true);
+                    foreach (var rp in padding)
                     {
-                        AddBlobTileToChunk(BorderTiles.dirt, GetRandomDirtTile(r, back, mainSheet), back, mainSheet, cp, rp, newTiles, r);
+                        AddBlobTileToChunk(BorderTiles.dirt, GetRandomDirtTile(r, back, mainSheet), back, mainSheet, cp, rp, padding, r);
                     }
                     AddRectToList(ar, outcropRects);
                 }
@@ -1016,7 +1011,22 @@ namespace StardewOpenWorld
                 continue;
             }
         }
-
+        public static void AddLandmarkPathsToChunk(Point cp)
+        {
+            if (!landmarkRects.TryGetValue(cp, out var rects))
+                return;
+            var chunkRect = new Rectangle(cp.X * openWorldChunkSize, cp.Y * openWorldChunkSize, openWorldChunkSize, openWorldChunkSize);
+            foreach(var rect in rects)
+            {
+                if (loadedLandmarkRects.Contains(rect))
+                    continue;
+                if (chunkRect.Intersects(rect))
+                {
+                    openWorldLocation.loadPathsLayerObjectsInArea(rect.X, rect.Y, rect.Width, rect.Height);
+                    loadedLandmarkRects.Add(rect);
+                }
+            }
+        }
         public static void AddChestsToChunk(Point cp)
         {
             Stopwatch s = Stopwatch.StartNew();
@@ -1040,11 +1050,11 @@ namespace StardewOpenWorld
                     float distance = (Config.OpenWorldSize - av.Y) / Config.OpenWorldSize;
                     double fraction = Math.Min(0.99, Math.Max(0, distance + (r.NextDouble() - 0.5 - (1 - Config.ChestRarityBias))));
                     int level = (int)Math.Ceiling(fraction * Config.OpenWorldSize / openWorldChunkSize);
-                    Chest chest = advancedLootFrameworkApi.MakeChest(treasuresList, Config.ItemListChances, Config.MaxItems, Config.MinItemValue, Config.MaxItemValue, level, Config.IncreaseRate, Config.ItemsBaseMaxValue, freeTile);
+                    Chest chest = advancedLootFrameworkApi.MakeChest(treasuresList, Config.ItemListChances, Config.ChestMaxItems, Config.ChestMinItemValue, Config.ChestMaxItemValue, level, Config.ChestValueIncreaseRate, Config.ChestItemsBaseMaxValue, freeTile);
                     chest.CanBeGrabbed = false;
                     chest.playerChoiceColor.Value = MakeTint(fraction);
                     chest.modData.Add(modKey, "T");
-                    chest.modData.Add(modCoinKey, advancedLootFrameworkApi.GetChestCoins(level, Config.IncreaseRate, Config.CoinBaseMin, Config.CoinBaseMax).ToString());
+                    chest.modData.Add(modCoinKey, advancedLootFrameworkApi.GetChestCoins(level, Config.ChestValueIncreaseRate, Config.CoinBaseMin, Config.CoinBaseMax).ToString());
                     cachedChunks[cp].overlayObjects[av] = chest;
                     i++;
                 }
@@ -1686,7 +1696,7 @@ namespace StardewOpenWorld
 
         public static void UpdateTreasuresList()
         {
-            treasuresList = advancedLootFrameworkApi.LoadPossibleTreasures(Config.ItemListChances.Where(p => p.Value > 0).ToDictionary(s => s.Key, s => s.Value).Keys.ToArray(), Config.MinItemValue, Config.MaxItemValue);
+            treasuresList = advancedLootFrameworkApi.LoadPossibleTreasures(Config.ItemListChances.Where(p => p.Value > 0).ToDictionary(s => s.Key, s => s.Value).Keys.ToArray(), Config.ChestMinItemValue, Config.ChestMaxItemValue);
         }
    }
 }

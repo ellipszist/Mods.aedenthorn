@@ -17,10 +17,11 @@ namespace StardewOpenWorld
         {
             //int start_x = (int)Game1.player.Position.X - openWorldChunkSize * 64 + mapOffset.X * openWorldChunkSize * 128;
             //int start_y = (int)Game1.player.Position.Y - openWorldChunkSize * 64 + mapOffset.Y * openWorldChunkSize * 128;
-            int start_x = (int)Game1.player.Position.X - openWorldChunkSize * 64;
-            int start_y = (int)Game1.player.Position.Y - openWorldChunkSize * 64;
-            int width = openWorldChunkSize * 128;
-            int height = openWorldChunkSize * 128;
+
+            int width = Config.MapTilesDimension;
+            int height = Config.MapTilesDimension;
+            int start_x = (int)Game1.player.Position.X - width / 2;
+            int start_y = (int)Game1.player.Position.Y - height / 2;
             SKSurface map_bitmap = null;
             int scaled_width;
             int scaled_height;
@@ -250,7 +251,7 @@ namespace StardewOpenWorld
                 float alpha = player == Game1.player ? 1f : 0.75f;
                 if (!playerBox.Contains(player.Tile))
                     continue;
-                Vector2 pos = player.Position - Game1.player.Position + new Vector2(vpWidth / 2 - 4, vpHeight / 2 - 16);
+                Vector2 pos = player.Position - Game1.player.Position + new Vector2(vpWidth / 2, vpHeight / 2 - 16) ;
                 player.FarmerRenderer.drawMiniPortrat(e.SpriteBatch, pos, 0.00011f, 2f, 2, player, alpha);
             }
             if(upperRightCloseButton is null)

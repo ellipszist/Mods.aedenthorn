@@ -9,12 +9,21 @@ namespace IndoorOutdoor
 {
     public partial class ModEntry
     {
+        [HarmonyPatch(typeof(Game1), nameof(Game1.DrawLighting))]
+        public static class Game1_DrawLighting_Patch
+        {
+            public static void Postfix()
+            {
+                if (Config.ModEnabled)
+                    renderingWorld = true;
+            }
+        }
         [HarmonyPatch(typeof(SpriteBatch), nameof(SpriteBatch.Draw), [typeof(Texture2D), typeof(Vector2), typeof(Color)])]
         public static class SpriteBatch_Draw_Patch1
         {
             public static bool Prefix(Texture2D texture, Vector2 position)
             {
-                if (!Config.ModEnabled || !currentLocationIndoorMapDict.Value.Any())
+                if (!Config.ModEnabled || !renderingWorld)
                     return true;
                 var rect = new Rectangle((int)position.X, (int)position.Y, texture.Width, texture.Height);
                 return CheckScreenRect(rect);
@@ -25,7 +34,7 @@ namespace IndoorOutdoor
         {
             public static bool Prefix(Texture2D texture, Rectangle destinationRectangle)
             {
-                if (!Config.ModEnabled || !currentLocationIndoorMapDict.Value.Any())
+                if (!Config.ModEnabled || !renderingWorld)
                     return true;
                 return CheckScreenRect(destinationRectangle);
             }
@@ -69,50 +78,43 @@ namespace IndoorOutdoor
         {
             public static bool Prefix(Texture2D texture, Vector2 position, Rectangle? sourceRectangle, Vector2 scale, Vector2 origin)
             {
+                if(drawingTile)
+                {
+                    drawingTile = false;
+                    return true;
+                }
                 if (!Config.ModEnabled || !renderingWorld)
                     return true;
                 var rect = new Rectangle((int)(position.X - origin.X * scale.X), (int)(position.Y - origin.Y * scale.X), (int)((sourceRectangle is null ? texture.Width : sourceRectangle.Value.Width) * scale.X), (int)((sourceRectangle is null ? texture.Height : sourceRectangle.Value.Height) * scale.Y));
-                bool ret = CheckScreenRect(rect);
-                if (!ret && Environment.StackTrace.Contains("FarmerRenderer"))
-                {
-                    var x = true;
-                }
-                return ret;
+                return CheckScreenRect(rect);
             }
         }
+
+        public static bool drawingTile;
 
         [HarmonyPatch(typeof(XnaDisplayDevice), nameof(XnaDisplayDevice.DrawTile))]
         public static class XnaDisplayDevice_DrawTile_Patch
         {
             public static bool Prefix(Tile tile, xTile.Dimensions.Location location)
             {
-                if (!Config.ModEnabled || !currentLocationIndoorMapDict.Value.Any())
+                drawingTile = true;
+                if (!Config.ModEnabled || !currentLocationIndoorRectDict.Value.Any())
                     return true;
+                if (tile.Properties.TryGetValue(modKey, out var prop))
+                {
+                    if(prop == "Indoor/Outdoor")
+                    {
+                        return true;
+                    }
+                    if(prop == "Outdoor")
+                    {
+                        return currentIndoors.Value == null;
+                    }
+                    return currentIndoors.Value == prop;
+                }
                 Rectangle r = new Rectangle(location.X, location.Y, 64, 64);
                 return CheckScreenRect(r);
             }
         }
-        //[HarmonyPatch(typeof(Tree), nameof(Tree.draw))]
-        //public static class Tree_draw_Patch
-        //{
-        //    public static bool Prefix(Tree __instance)
-        //    {
-        //        if (!Config.ModEnabled || !currentLocationIndoorMapDict.Value.Any())
-        //            return true;
-        //        var bb = ToXTile(__instance.getBoundingBox());
-        //        return CheckBoundingBox(bb);
-        //    }
-        //}
-        //[HarmonyPatch(typeof(Bush), nameof(Bush.draw), new Type[] { typeof(SpriteBatch) })]
-        //public static class Bush_draw_Patch
-        //{
-        //    public static bool Prefix(Bush __instance)
-        //    {
-        //        if (!Config.ModEnabled || !currentLocationIndoorMapDict.Value.Any())
-        //            return true;
-        //        var bb = ToXTile(__instance.getBoundingBox());
-        //        return CheckBoundingBox(bb);
-        //    }
-        //}
     }
 }
