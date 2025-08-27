@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using StardewValley;
 using StardewValley.Extensions;
+using StardewValley.TerrainFeatures;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -214,6 +216,7 @@ namespace StardewOpenWorld
                 chunk.tiles["Back"] = new Tile[openWorldChunkSize, openWorldChunkSize];
                 chunk.tiles["Buildings"] = new Tile[openWorldChunkSize, openWorldChunkSize];
                 chunk.tiles["Front"] = new Tile[openWorldChunkSize, openWorldChunkSize];
+                chunk.tiles["Paths"] = new Tile[openWorldChunkSize, openWorldChunkSize];
                 cachedChunks[cp] = chunk;
             }
             if (!full || chunk.cached)
@@ -245,7 +248,7 @@ namespace StardewOpenWorld
                 case BuildStage.Landmarks:
                     foreach (var cp in chunks)
                     {
-                        AddLandmarkPathsToChunk(cp);
+                        AddPathsObjectsToChunk(cp);
                     }
                     break;
                 case BuildStage.Chests:
@@ -308,7 +311,6 @@ namespace StardewOpenWorld
             SMonitor.Log($"Build stage {currentBuildStage.ToString()} took {s.ElapsedMilliseconds}ms");
             currentBuildStage++;
         }
-
 
         private static void TryLoadChunk(Point pc)
         {

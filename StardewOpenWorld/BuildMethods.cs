@@ -1,5 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using HarmonyLib;
+using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
+using Sickhead.Engine.Util;
 using StardewValley;
 using StardewValley.Extensions;
 using StardewValley.GameData.Locations;
@@ -1011,19 +1013,159 @@ namespace StardewOpenWorld
                 continue;
             }
         }
-        public static void AddLandmarkPathsToChunk(Point cp)
+        private static void AddPathsObjectsToChunk(Point cp)
         {
             if (!landmarkRects.TryGetValue(cp, out var rects))
                 return;
             var chunkRect = new Rectangle(cp.X * openWorldChunkSize, cp.Y * openWorldChunkSize, openWorldChunkSize, openWorldChunkSize);
-            foreach(var rect in rects)
+            foreach (var rect in rects)
             {
-                if (loadedLandmarkRects.Contains(rect))
-                    continue;
                 if (chunkRect.Intersects(rect))
                 {
-                    openWorldLocation.loadPathsLayerObjectsInArea(rect.X, rect.Y, rect.Width, rect.Height);
-                    loadedLandmarkRects.Add(rect);
+                    var startx = Math.Max(0, rect.X - cp.X * openWorldChunkSize);
+                    var starty = Math.Max(0, rect.Y - cp.Y * openWorldChunkSize);
+                    var endx = Math.Min(openWorldChunkSize, rect.X - cp.X * openWorldChunkSize + rect.Width);
+                    var endy = Math.Min(openWorldChunkSize, rect.Y - cp.Y * openWorldChunkSize + rect.Height);
+                    for (int x = startx; x < endx; x++)
+                    {
+                        for (int y = starty; y < endy; y++)
+                        {
+
+                            Tile t = cachedChunks[cp].tiles["Paths"][x, y];
+                            if (t != null)
+                            {
+                                Vector2 tile = ToGlobalTile(cp, new Vector2(x , y));
+                                string treeId;
+                                int? growthStageOnLoad;
+                                int? growthStageOnRegrow;
+                                bool isFruitTree;
+                                if (openWorldLocation.TryGetTreeIdForTile(t, out treeId, out growthStageOnLoad, out growthStageOnRegrow, out isFruitTree))
+                                {
+                                    if (openWorldLocation.GetFurnitureAt(tile) == null && !openWorldLocation.terrainFeatures.ContainsKey(tile) && !openWorldLocation.objects.ContainsKey(tile))
+                                    {
+                                        if (isFruitTree)
+                                        {
+                                            cachedChunks[cp].terrainFeatures.Add(tile, new FruitTree(treeId, growthStageOnLoad.GetValueOrDefault(4)));
+                                        }
+                                        else
+                                        {
+                                            cachedChunks[cp].terrainFeatures.Add(tile, new Tree(treeId, growthStageOnLoad.GetValueOrDefault(5), false));
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    switch (t.TileIndex)
+                                    {
+                                        case 13:
+                                        case 14:
+                                        case 15:
+                                            if (!openWorldLocation.objects.ContainsKey(tile) && !Game1.IsWinter)
+                                            {
+                                                openWorldLocation.objects.Add(tile, ItemRegistry.Create<Object>(GameLocation.getWeedForSeason(Game1.random, openWorldLocation.GetSeason()), 1, 0, false));
+                                            }
+                                            break;
+                                        case 16:
+                                            if (!openWorldLocation.objects.ContainsKey(tile))
+                                            {
+                                                openWorldLocation.objects.Add(tile, ItemRegistry.Create<Object>(Game1.random.Choose("(O)343", "(O)450"), 1, 0, false));
+                                            }
+                                            break;
+                                        case 17:
+                                            if (!openWorldLocation.objects.ContainsKey(tile))
+                                            {
+                                                openWorldLocation.objects.Add(tile, ItemRegistry.Create<Object>(Game1.random.Choose("(O)343", "(O)450"), 1, 0, false));
+                                            }
+                                            break;
+                                        case 18:
+                                            if (!openWorldLocation.objects.ContainsKey(tile))
+                                            {
+                                                openWorldLocation.objects.Add(tile, ItemRegistry.Create<Object>(Game1.random.Choose("(O)294", "(O)295"), 1, 0, false));
+                                            }
+                                            break;
+                                        case 19:
+                                            openWorldLocation.addResourceClumpAndRemoveUnderlyingTerrain(602, 2, 2, tile);
+                                            break;
+                                        case 20:
+                                            openWorldLocation.addResourceClumpAndRemoveUnderlyingTerrain(672, 2, 2, tile);
+                                            break;
+                                        case 21:
+                                            openWorldLocation.addResourceClumpAndRemoveUnderlyingTerrain(600, 2, 2, tile);
+                                            break;
+                                        case 22:
+                                        case 36:
+                                            if (!openWorldLocation.terrainFeatures.ContainsKey(tile))
+                                            {
+                                                Microsoft.Xna.Framework.Rectangle tileRect = new Microsoft.Xna.Framework.Rectangle((int)tile.X * 64, (int)tile.Y * 64, 64, 64);
+                                                tileRect.Inflate(-1, -1);
+                                                bool fail = false;
+                                                using (List<ResourceClump>.Enumerator enumerator = openWorldLocation.resourceClumps.GetEnumerator())
+                                                {
+                                                    while (enumerator.MoveNext())
+                                                    {
+                                                        if (enumerator.Current.getBoundingBox().Intersects(tileRect))
+                                                        {
+                                                            fail = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                if (!fail)
+                                                {
+                                                    openWorldLocation.terrainFeatures.Add(tile, new Grass((t.TileIndex == 36) ? 7 : 1, 3));
+                                                }
+                                            }
+                                            break;
+                                        case 23:
+                                            if (!openWorldLocation.terrainFeatures.ContainsKey(tile))
+                                            {
+                                                openWorldLocation.terrainFeatures.Add(tile, new Tree(Game1.random.Next(1, 4).ToString(), Game1.random.Next(2, 4), false));
+                                            }
+                                            break;
+                                        case 24:
+                                            if (!openWorldLocation.terrainFeatures.ContainsKey(tile))
+                                            {
+                                                openWorldLocation.largeTerrainFeatures.Add(new Bush(tile, 2, openWorldLocation, -1));
+                                            }
+                                            break;
+                                        case 25:
+                                            if (!openWorldLocation.terrainFeatures.ContainsKey(tile))
+                                            {
+                                                openWorldLocation.largeTerrainFeatures.Add(new Bush(tile, 1, openWorldLocation, -1));
+                                            }
+                                            break;
+                                        case 26:
+                                            if (!openWorldLocation.terrainFeatures.ContainsKey(tile))
+                                            {
+                                                openWorldLocation.largeTerrainFeatures.Add(new Bush(tile, 0, openWorldLocation, -1));
+                                            }
+                                            break;
+                                        case 27:
+                                            ChangeMapProperties("BrookSounds", tile.X.ToString() + " " + tile.Y.ToString() + " 0");
+                                            break;
+                                        case 29:
+                                        case 30:
+                                            {
+                                                string rawOrder;
+                                                if (Game1.startingCabins > 0 && t.Properties.TryGetValue("Order", out rawOrder) && int.Parse(rawOrder) <= Game1.startingCabins && ((t.TileIndex == 29 && !Game1.cabinsSeparate) || (t.TileIndex == 30 && Game1.cabinsSeparate)))
+                                                {
+                                                    AccessTools.FieldRefAccess<GameLocation, List<Vector2>>(openWorldLocation, "_startingCabinLocations").Add(tile);
+                                                }
+                                                break;
+                                            }
+                                        case 33:
+                                            if (!openWorldLocation.terrainFeatures.ContainsKey(tile))
+                                            {
+                                                openWorldLocation.largeTerrainFeatures.Add(new Bush(tile, 4, openWorldLocation, -1));
+                                            }
+                                            break;
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+
                 }
             }
         }

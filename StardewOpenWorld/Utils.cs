@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using xTile.Layers;
+using xTile.ObjectModel;
 using xTile.Tiles;
 
 namespace StardewOpenWorld
@@ -429,6 +430,25 @@ namespace StardewOpenWorld
             if (include)
                 newTiles.AddRange(tiles);
             return newTiles;
+        }
+        private static void ChangeMapProperties(string propertyName, string toAdd)
+        {
+            try
+            {
+                PropertyValue oldValue = null;
+                if (!openWorldLocation.map.Properties.TryGetValue(propertyName, out oldValue))
+                {
+                    openWorldLocation.map.Properties[propertyName] = new PropertyValue(toAdd);
+                }
+                else if (!((string)oldValue).Contains(toAdd))
+                {
+                    string newValue = oldValue + " " + toAdd;
+                    openWorldLocation.map.Properties[propertyName] = new PropertyValue(newValue);
+                }
+            }
+            catch
+            {
+            }
         }
     }
 }
