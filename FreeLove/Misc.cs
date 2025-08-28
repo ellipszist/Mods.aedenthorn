@@ -107,9 +107,13 @@ namespace FreeLove
             {
                 if(spouse is null) 
                     continue;
+                if (Game1.getFarm().Equals(spouse.currentLocation))
+                {
+                    SMonitor.Log($"{spouse.Name} is not in farm ({spouse.currentLocation.Name})");
+                }
                 if (!farmHouse.Equals(spouse.currentLocation))
                 {
-                    SMonitor.Log($"{spouse.Name} is not in farm house ({spouse.currentLocation.Name})");
+                    SMonitor.Log($"{spouse.Name} is not in farm ({spouse.currentLocation.Name})");
                     continue;
                 }
                 int type = myRand.Next(0, 100);

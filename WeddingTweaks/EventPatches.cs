@@ -2,9 +2,11 @@
 using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.GameData.Characters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 
 namespace WeddingTweaks
 {
@@ -31,6 +33,7 @@ namespace WeddingTweaks
                         return;
                     string witness = null;
                     string npcWitness = null;
+                    CharacterData npcData = Game1.player.getSpouse().GetData();
                     if (Config.AllowWitnesses)
                     {
                         if (Game1.player.modData.TryGetValue(witnessKey, out witness))
@@ -54,31 +57,31 @@ namespace WeddingTweaks
                         }
                         if (npcWitness is null)
                         {
-                            Dictionary<string, string> dispositions = Game1.content.Load<Dictionary<string, string>>("Data\\NPCDispositions");
-                            if(dispositions.TryGetValue(spouse, out string dis))
+                            if (npcData != null)
                             {
-                                string[] relations = dis.Split('/')[9].Split(' ');
-                                if (relations.Length > 0)
+
+                                var relations = npcData.FriendsAndFamily;
+                                if (relations.Count > 0)
                                 {
                                     List<string> family = new List<string>();
-                                    for (int i = 0; i < relations.Length; i += 2)
+                                    foreach (var n in relations)
                                     {
                                         try
                                         {
-                                            if(relations[i] != spouse && relations[i] != witness)
-                                                family.Add(relations[i]);
+                                            if (n.Key != spouse && n.Key != witness)
+                                                family.Add(n.Key);
                                         }
                                         catch
                                         {
 
                                         }
                                     }
-                                    if(family.Count > 0)
+                                    if (family.Count > 0)
                                     {
                                         npcWitness = family[Game1.random.Next(family.Count)];
                                     }
                                 }
-                                if(npcWitness is null && Config.AllowRandomNPCWitnesses && Game1.player.friendshipData.Keys.Count() > 1)
+                                if (npcWitness is null && Config.AllowRandomNPCWitnesses && Game1.player.friendshipData.Keys.Count() > 1)
                                 {
                                     List<string> friends = new List<string>();
                                     foreach (var key in Game1.player.friendshipData.Keys)
@@ -95,10 +98,11 @@ namespace WeddingTweaks
                                     }
                                     npcWitness = friends[Game1.random.Next(friends.Count)];
                                 }
-                                if(npcWitness != null)
+                                if (npcWitness != null)
                                 {
                                     SMonitor.Log($"{spouse} chose {npcWitness} as witness");
                                 }
+
                             }
                         }
                     }
@@ -276,15 +280,13 @@ namespace WeddingTweaks
             {
                 try
                 {
-                    if (!Config.AllSpousesJoinWeddings || freeLoveAPI == null)
+                    if (!Config.AllSpousesJoinWeddings || !Game1.IsMasterGame || freeLoveAPI == null)
                         return;
-                    if (args != null && args.Length > 1)
+                    string text = ArgUtility.Get(args, 1, null, true);
+
+                    if (text == "wedding")
                     {
-                        string text = args[1];
-                        if (text == "wedding")
-                        {
-                            freeLoveAPI.PlaceSpousesInFarmhouse(Utility.getHomeOfFarmer(Game1.player));
-                        }
+                        freeLoveAPI.PlaceSpousesInFarmhouse(Utility.getHomeOfFarmer(Game1.player));
                     }
                 }
                 catch (Exception ex)
