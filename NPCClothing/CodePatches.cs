@@ -16,7 +16,7 @@ namespace NPCClothing
         {
             public static bool Prefix(NPC __instance, ref bool __result, Farmer who, GameLocation l)
             {
-                if (!Config.ModEnabled || !__instance.isVillager() || who.CurrentItem is null)
+                if (!Config.ModEnabled || !__instance.IsVillager || who.CurrentItem is null)
                     return true;
                 IEnumerable<ClothingData> list = null;
                 try
@@ -51,26 +51,30 @@ namespace NPCClothing
                             forceWear = data;
                         if (who.ActiveObject is null)
                         {
-                            int index = giftIndexes[0];
+                            int index = 0;
                             switch (data.giftReaction)
                             {
                                 case "like":
-                                    index = giftIndexes[1];
+                                    index = 2;
                                     break;
                                 case "dislike":
-                                    index = giftIndexes[2];
+                                    index = 4;
                                     break;
                                 case "hate":
-                                    index = giftIndexes[3];
+                                    index = 6;
                                     break;
                                 case "neutral":
-                                    index = giftIndexes[4];
+                                    index = 8;
                                     break;
                             }
 
-                            who.ActiveObject = new Object(index, 1) { Name = who.CurrentItem.Name };
+                            var obj = new Object("-1", 1);
+                            obj.name = who.CurrentItem.Name;
+                            obj.modData[giftKey] = index + "";
+                            who.ActiveObject = null;
                         }
-                        __instance.tryToReceiveActiveObject(who);
+                        __instance.receiveGift(who.ActiveObject, who, false);
+                        who.reduceActiveItemByOne();
                         __result = true;
                         return false;
                     }
@@ -83,9 +87,9 @@ namespace NPCClothing
         {
             public static bool Prefix(NPC __instance, Item item, ref int __result)
             {
-                if (!Config.ModEnabled || !__instance.isVillager() || !giftIndexes.Contains(item.ParentSheetIndex))
+                if (!Config.ModEnabled || !__instance.IsVillager || !item.modData.TryGetValue(giftKey, out var idx))
                     return true;
-                __result = Math.Abs(item.ParentSheetIndex) - 42424200;
+                __result = int.Parse(idx);
                 SMonitor.Log($"Returning gift taste of {__result} for {item.Name}");
                 return false;
             }
@@ -95,19 +99,19 @@ namespace NPCClothing
         {
             public static void Prefix(NPC __instance)
             {
-                if (!Config.ModEnabled || !__instance.isVillager())
+                if (!Config.ModEnabled || !__instance.IsVillager)
                     return;
                 SHelper.GameContent.InvalidateCache($"Characters\\{NPC.getTextureNameForCharacter(__instance.Name)}");
                 SHelper.GameContent.InvalidateCache($"Portraits\\{NPC.getTextureNameForCharacter(__instance.Name)}");
             }
         }
-        [HarmonyPatch(typeof(NPC), new Type[] { typeof(AnimatedSprite), typeof(Vector2), typeof(string), typeof(int), typeof(string), typeof(bool), typeof(Dictionary<int, int[]>), typeof(Texture2D) })]
+        [HarmonyPatch(typeof(NPC), new Type[] { typeof(AnimatedSprite), typeof(Vector2), typeof(string), typeof(int), typeof(string), typeof(Texture2D), typeof(bool) })]
         [HarmonyPatch(MethodType.Constructor)]
         public class NPC_Patch
         {
             public static void Postfix(NPC __instance)
             {
-                if (!Config.ModEnabled || !__instance.isVillager())
+                if (!Config.ModEnabled || !__instance.IsVillager)
                     return;
                 SHelper.GameContent.InvalidateCache($"Characters\\{NPC.getTextureNameForCharacter(__instance.Name)}");
                 SHelper.GameContent.InvalidateCache($"Portraits\\{NPC.getTextureNameForCharacter(__instance.Name)}");
@@ -118,7 +122,7 @@ namespace NPCClothing
         {
             public static void Postfix(NPC __instance, Object o)
             {
-                if (!Config.ModEnabled || !__instance.isVillager())
+                if (!Config.ModEnabled || !__instance.IsVillager)
                     return;
                 try
                 {

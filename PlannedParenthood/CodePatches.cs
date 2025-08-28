@@ -34,7 +34,7 @@ namespace PlannedParenthood
             {
                 if (kvp.Value?.IsMarried() == true)
                 {
-                    Farmer spouse = Game1.getFarmer((kvp.Key.Farmer1 == Game1.player.UniqueMultiplayerID ? kvp.Key.Farmer2 : kvp.Key.Farmer1));
+                    Farmer spouse = Game1.GetPlayer((kvp.Key.Farmer1 == Game1.player.UniqueMultiplayerID ? kvp.Key.Farmer2 : kvp.Key.Farmer1));
                     if (kvp.Value.NextBirthingDate is not null)
                     {
                         SMonitor.Log($"Found existing birth event with {spouse.Name}, preventing birth questions", LogLevel.Debug);

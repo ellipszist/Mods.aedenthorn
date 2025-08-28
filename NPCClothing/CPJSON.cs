@@ -7,7 +7,7 @@ namespace NPCClothing
         public CPJSON()
         {
         }
-        public string Format = "1.28.0";
+        public string Format = "2.7.0";
         public List<Dictionary<string, object>> Changes = new();
 
     }

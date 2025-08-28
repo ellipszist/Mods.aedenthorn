@@ -112,7 +112,7 @@ namespace WeddingTweaks
             Game1.weddingToday = false;
             foreach (long id in Game1.weddingsToday)
             {
-                Farmer spouse_farmer = Game1.getFarmer(id);
+                Farmer spouse_farmer = Game1.GetPlayer(id);
                 if (spouse_farmer != null && !spouse_farmer.hasCurrentOrPendingRoommate())
                 {
                     Game1.weddingToday = true;

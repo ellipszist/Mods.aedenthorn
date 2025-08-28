@@ -1,16 +1,8 @@
 ﻿using HarmonyLib;
-using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
-using StardewValley.BellsAndWhistles;
-using StardewValley.Locations;
-using StardewValley.Menus;
-using StardewValley.TerrainFeatures;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
 
 namespace GiftRejection
 {

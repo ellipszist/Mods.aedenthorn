@@ -31,6 +31,8 @@ namespace CustomGiftLimits
                 FriendshipLevel level = FriendshipLevel.stranger;
                 int perDay = Config.OrdinaryGiftsPerDay;
                 int perWeek = Config.OrdinaryGiftsPerWeek;
+                int today = 0;
+                int week = 0;
                 if (who.friendshipData.TryGetValue(__instance.Name, out Friendship f))
                 {
                     if (f.IsMarried() || f.IsRoommate())
@@ -51,32 +53,38 @@ namespace CustomGiftLimits
                         perDay = Config.FriendGiftsPerDay;
                         perWeek = Config.FriendGiftsPerWeek;
                     }
+
+                    today = f.GiftsToday;
+                    week = f.GiftsThisWeek;
                 }
 
                 SMonitor.Log($"Gift to {level} {__instance.Name}");
                 __state = new List<int> {
-                    who.friendshipData[__instance.Name].GiftsToday,
-                    who.friendshipData[__instance.Name].GiftsThisWeek,
+                    today,
+                    week,
                     0,
                     0
                 };
-                if (perDay < 0 || who.friendshipData[__instance.Name].GiftsToday < perDay)
+                if (f != null)
                 {
-                    who.friendshipData[__instance.Name].GiftsToday = 0;
-                }
-                else
-                {
-                    who.friendshipData[__instance.Name].GiftsToday = 1;
-                    __state[2] = 1; // flag to say we set it to 1
-                }
-                if (perWeek < 0 || who.friendshipData[__instance.Name].GiftsThisWeek < perWeek)
-                {
-                    who.friendshipData[__instance.Name].GiftsThisWeek = 0;
-                }
-                else
-                {
-                    who.friendshipData[__instance.Name].GiftsThisWeek = 2;
-                    __state[3] = 1; // flag to say we set it to 2
+                    if (perDay < 0 || today < perDay)
+                    {
+                        who.friendshipData[__instance.Name].GiftsToday = 0;
+                    }
+                    else
+                    {
+                        who.friendshipData[__instance.Name].GiftsToday = 1;
+                        __state[2] = 1; // flag to say we set it to 1
+                    }
+                    if (perWeek < 0 || f.GiftsThisWeek < perWeek)
+                    {
+                        who.friendshipData[__instance.Name].GiftsThisWeek = 0;
+                    }
+                    else
+                    {
+                        who.friendshipData[__instance.Name].GiftsThisWeek = 2;
+                        __state[3] = 1; // flag to say we set it to 2
+                    }
                 }
             }
             public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -135,7 +143,7 @@ namespace CustomGiftLimits
             }
             public static void Postfix(NPC __instance, ref Farmer who, List<int> __state)
             {
-                if (__state != null && __state.Count > 0)
+                if (__state != null && __state.Count > 0 && who.friendshipData.ContainsKey(__instance.Name))
                 {
                     if (who.friendshipData[__instance.Name].GiftsToday == 1 && __state[2] == 0) // set to 0, giftstoday was increased
                     {
