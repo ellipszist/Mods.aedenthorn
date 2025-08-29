@@ -290,16 +290,16 @@ namespace CustomSpousePatioRedux
                     header = Helper.Translation.Get("move-patio-which-way");
                     newQuestion = "CSP_Wizard_Questions_MovePatio_2";
                     responses.Add(new Response($"{whichAnswer}_cursorLoc", string.Format(Helper.Translation.Get("cursor-location"), cursorLoc.X, cursorLoc.Y)));
-                    responses.Add(new Response($"{whichAnswer}_up", Helper.Translation.Get("up")));
-                    responses.Add(new Response($"{whichAnswer}_down", Helper.Translation.Get("down")));
-                    responses.Add(new Response($"{whichAnswer}_left", Helper.Translation.Get("left")));
-                    responses.Add(new Response($"{whichAnswer}_right", Helper.Translation.Get("right")));
+                    responses.Add(new Response($"{whichAnswer}^up", Helper.Translation.Get("up")));
+                    responses.Add(new Response($"{whichAnswer}^down", Helper.Translation.Get("down")));
+                    responses.Add(new Response($"{whichAnswer}^left", Helper.Translation.Get("left")));
+                    responses.Add(new Response($"{whichAnswer}^right", Helper.Translation.Get("right")));
                     break;
                 case "CSP_Wizard_Questions_MovePatio_2":
                     if (MoveSpousePatio(whichAnswer, cursorLoc))
-                        Game1.drawObjectDialogue(string.Format(Helper.Translation.Get("moved-patio"), whichAnswer.Split('_')[0]));
+                        Game1.drawObjectDialogue(string.Format(Helper.Translation.Get("moved-patio"), whichAnswer.Split('^')[0]));
                     else
-                        Game1.drawObjectDialogue(string.Format(Helper.Translation.Get("not-moved-patio"), whichAnswer.Split('_')[0]));
+                        Game1.drawObjectDialogue(string.Format(Helper.Translation.Get("not-moved-patio"), whichAnswer.Split('^')[0]));
                     return;
                 case "CSP_Wizard_Questions_RemovePatio":
                     if (whichAnswer == "next")
@@ -334,8 +334,8 @@ namespace CustomSpousePatioRedux
 
         public bool MoveSpousePatio(string spouse_dir, Point cursorLoc)
         {
-            string spouse = spouse_dir.Split('_')[0];
-            string dir = spouse_dir.Split('_')[1];
+            string spouse = spouse_dir.Split('^')[0];
+            string dir = spouse_dir.Split('^')[1];
             Vector2 outdoorArea = outdoorAreas.dict[spouse].corner;
             string location = outdoorAreas.dict[spouse].location;
             switch (dir)

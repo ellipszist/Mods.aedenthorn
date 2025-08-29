@@ -138,6 +138,10 @@ namespace FreeLove
 
             if (Game1.IsMasterGame)
             {
+                foreach (var f in Game1.getAllFarmers())
+                {
+                    PlaceSpousesInFarmhouse(Game1.RequireLocation<FarmHouse>(f.homeLocation.Value, false), f);
+                }
                 Game1.getFarm().addSpouseOutdoorArea(Game1.player.spouse == null ? "" : Game1.player.spouse);
                 farmHelperSpouse = GetRandomSpouse(Game1.MasterPlayer);
             }

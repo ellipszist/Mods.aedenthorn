@@ -20,16 +20,5 @@ namespace FreeLove
             if (EventPatches.startingLoadActors)
                 lastGotCharacter = name;
         }
-        public static void OnDayStarted_Postfix()
-        {
-            if (Game1.IsMasterGame)
-            {
-                foreach (var f in Game1.getAllFarmers())
-                {
-                    ModEntry.PlaceSpousesInFarmhouse(Game1.RequireLocation<FarmHouse>(f.homeLocation.Value, false), f);
-                }
-            }
-
-        }
     }
 }

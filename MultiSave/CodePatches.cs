@@ -1,26 +1,15 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Graphics.PackedVector;
-using Netcode;
-using Newtonsoft.Json;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
-using StardewValley.Network;
-using StardewValley.TerrainFeatures;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using xTile.Dimensions;
 using static StardewValley.Menus.LoadGameMenu;
 using Color = Microsoft.Xna.Framework.Color;
-using Object = StardewValley.Object;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace MultiSave
@@ -28,7 +17,7 @@ namespace MultiSave
     public partial class ModEntry
     {
 
-        [HarmonyPatch(typeof(LoadGameMenu), new Type[] { })]
+        [HarmonyPatch(typeof(LoadGameMenu), new Type[] { typeof(string) })]
         [HarmonyPatch(MethodType.Constructor)]
         public class LoadGameMenu_Patch
         {
@@ -104,7 +93,7 @@ namespace MultiSave
                 saveBackupList.Clear();
                 AccessTools.FieldRefAccess<LoadGameMenu, List<MenuSlot>>(TitleMenu.subMenu as LoadGameMenu, "menuSlots").Clear();
                 AccessTools.FieldRefAccess<LoadGameMenu, int>(TitleMenu.subMenu as LoadGameMenu, "currentItemIndex") = 0;
-                AccessTools.Method(typeof(LoadGameMenu), "startListPopulation").Invoke(TitleMenu.subMenu, new object[] { });
+                AccessTools.Method(typeof(LoadGameMenu), "startListPopulation").Invoke(TitleMenu.subMenu, new object[] { null });
                 (TitleMenu.subMenu as LoadGameMenu).UpdateButtons();
                 if (Game1.options.snappyMenus && Game1.options.gamepadControls)
                 {

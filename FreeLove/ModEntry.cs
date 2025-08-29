@@ -319,11 +319,6 @@ namespace FreeLove
                original: AccessTools.GetDeclaredMethods(typeof(Game1)).Where(m => m.Name == "getCharacterFromName" && m.ReturnType == typeof(NPC)).First(),
                prefix: new HarmonyMethod(typeof(Game1Patches), nameof(Game1Patches.getCharacterFromName_Prefix))
             );
-            harmony.Patch(
-               original: AccessTools.Method(typeof(Game1), nameof(Game1.OnDayStarted)),
-               postfix: new HarmonyMethod(typeof(Game1Patches), nameof(Game1Patches.OnDayStarted_Postfix))
-            );
-
         }
 
         public override object GetApi()

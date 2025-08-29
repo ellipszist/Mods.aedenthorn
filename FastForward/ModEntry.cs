@@ -3,12 +3,8 @@ using Microsoft.Xna.Framework.Graphics;
 using Netcode;
 using StardewModdingAPI;
 using StardewModdingAPI.Utilities;
-using StardewValley;
 using StardewValley.Objects;
-using System;
 using System.Collections.Generic;
-using System.IO;
-using xTile;
 using xTile.Dimensions;
 
 namespace FastForward

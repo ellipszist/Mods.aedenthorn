@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.GameData.Characters;
+using StardewValley.Locations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -310,7 +311,15 @@ namespace WeddingTweaks
                 Game1Patches.lastGotCharacter = null;
             }
         }
-        
+        [HarmonyPatch(typeof(FarmHouse), nameof(FarmHouse.getPorchStandingSpot))]
+        public static class FarmHouse_getPorchStandingSpot_Patch
+        {
+            public static void Prefix()
+            {
+                var x = Environment.StackTrace;
+            }
+
+        }
 
     }
 }
