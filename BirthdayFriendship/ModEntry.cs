@@ -34,7 +34,7 @@ namespace BirthdayFriendship
 
                 harmony.Patch(
                     original: AccessTools.Method(typeof(Billboard), nameof(Billboard.GetBirthdays)),
-                    postfix: new HarmonyMethod(typeof(Billboard_Patch), nameof(Billboard_Patch.Postfix))
+                    postfix: new HarmonyMethod(typeof(Billboard_GetBirthdays_Patch), nameof(Billboard_GetBirthdays_Patch.Postfix))
                 );
             }
             catch (Exception e)

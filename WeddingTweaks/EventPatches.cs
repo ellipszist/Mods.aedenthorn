@@ -311,15 +311,6 @@ namespace WeddingTweaks
                 Game1Patches.lastGotCharacter = null;
             }
         }
-        [HarmonyPatch(typeof(FarmHouse), nameof(FarmHouse.getPorchStandingSpot))]
-        public static class FarmHouse_getPorchStandingSpot_Patch
-        {
-            public static void Prefix()
-            {
-                var x = Environment.StackTrace;
-            }
-
-        }
 
     }
 }

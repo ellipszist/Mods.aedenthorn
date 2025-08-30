@@ -6,7 +6,7 @@ namespace BirthdayFriendship
 {
     public partial class ModEntry
     {
-        public class Billboard_Patch
+        public class Billboard_GetBirthdays_Patch
         {
             public static void Postfix(Dictionary<int, List<NPC>> __result)
             {
