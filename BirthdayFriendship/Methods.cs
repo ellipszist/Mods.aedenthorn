@@ -7,7 +7,7 @@ namespace BirthdayFriendship
         private static bool CheckBirthday(NPC npc)
         {
             if (!Config.ModEnabled)
-                return npc.IsVillager;
+                return true;
             return npc.IsVillager && Game1.player.friendshipData.TryGetValue(npc.Name, out Friendship f) && f.Points >= Config.Hearts * 250;
         }
     }

@@ -13,5 +13,17 @@ namespace BirthdayFriendship
                 __result.Values.ToList().ForEach(npcList => npcList.RemoveAll(npc => !CheckBirthday(npc)));
             }
         }
+        public class NPC_Birthday_Season_Patch
+        {
+            public static bool Prefix(NPC __instance, ref string __result)
+            {
+                if(Config.ModCheck && !CheckBirthday(__instance))
+                {
+                    __result = "foobar";
+                    return false;
+                }
+                return true;
+            }
+        }
     }
 }

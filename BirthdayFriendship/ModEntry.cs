@@ -1,6 +1,7 @@
 ﻿using System;
 using HarmonyLib;
 using StardewModdingAPI;
+using StardewValley;
 using StardewValley.Menus;
 
 namespace BirthdayFriendship
@@ -27,21 +28,17 @@ namespace BirthdayFriendship
 
             Helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
 
-            // Load Harmony patches
-            try
-            {
-                Harmony harmony = new(ModManifest.UniqueID);
 
-                harmony.Patch(
-                    original: AccessTools.Method(typeof(Billboard), nameof(Billboard.GetBirthdays)),
-                    postfix: new HarmonyMethod(typeof(Billboard_GetBirthdays_Patch), nameof(Billboard_GetBirthdays_Patch.Postfix))
-                );
-            }
-            catch (Exception e)
-            {
-                Monitor.Log($"Issue with Harmony patching: {e}", LogLevel.Error);
-                return;
-            }
+            Harmony harmony = new(ModManifest.UniqueID);
+
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Billboard), nameof(Billboard.GetBirthdays)),
+                postfix: new HarmonyMethod(typeof(Billboard_GetBirthdays_Patch), nameof(Billboard_GetBirthdays_Patch.Postfix))
+            );
+            harmony.Patch(
+                original: AccessTools.PropertyGetter(typeof(NPC), nameof(NPC.Birthday_Season)),
+                prefix: new HarmonyMethod(typeof(Billboard_GetBirthdays_Patch), nameof(NPC_Birthday_Season_Patch.Prefix))
+            );
         }
 
         public void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)

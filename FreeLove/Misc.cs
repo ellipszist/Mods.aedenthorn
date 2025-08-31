@@ -328,8 +328,17 @@ namespace FreeLove
 
             if (name == "Krobus")
                 return 8;
+            Texture2D tex = null;
+            try
+            {
 
-            Texture2D tex = Game1.content.Load<Texture2D>($"Characters\\{name}");
+                tex = Game1.content.Load<Texture2D>($"Characters\\{name}");
+            }
+            catch
+            {
+                topOfHeadOffsets[name] = 0;
+                return 0;
+            }
 
             int sleepidx;
             string sleepAnim = SleepAnimation(name);
@@ -367,7 +376,7 @@ namespace FreeLove
                     break;
                 }
             }
-            topOfHeadOffsets.Add(name, top);
+            topOfHeadOffsets[name] = top;
             return top;
         }
 
