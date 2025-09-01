@@ -3,12 +3,8 @@ using Microsoft.Xna.Framework.Graphics;
 using Netcode;
 using StardewModdingAPI;
 using StardewModdingAPI.Utilities;
-using StardewValley;
 using StardewValley.Objects;
-using System;
 using System.Collections.Generic;
-using System.IO;
-using xTile;
 using xTile.Dimensions;
 
 namespace FastForward
@@ -23,11 +19,6 @@ namespace FastForward
 
         public static ModEntry context;
         
-        public static string orderKey = "aedenthorn.FastForward/order";
-        public static Texture2D emoteSprite;
-        public static PerScreen<Dictionary<string, int>> npcOrderNumbers = new PerScreen<Dictionary<string, int>>();
-        public static NetRef<Chest> fridge;
-        public static PerScreen<Location> fridgePosition = new PerScreen<Location>();
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>

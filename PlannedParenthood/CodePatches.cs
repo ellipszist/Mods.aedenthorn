@@ -34,7 +34,7 @@ namespace PlannedParenthood
             {
                 if (kvp.Value?.IsMarried() == true)
                 {
-                    Farmer spouse = Game1.getFarmer((kvp.Key.Farmer1 == Game1.player.UniqueMultiplayerID ? kvp.Key.Farmer2 : kvp.Key.Farmer1));
+                    Farmer spouse = Game1.GetPlayer((kvp.Key.Farmer1 == Game1.player.UniqueMultiplayerID ? kvp.Key.Farmer2 : kvp.Key.Farmer1));
                     if (kvp.Value.NextBirthingDate is not null)
                     {
                         SMonitor.Log($"Found existing birth event with {spouse.Name}, preventing birth questions", LogLevel.Debug);
@@ -160,14 +160,14 @@ namespace PlannedParenthood
         public class Utility_pickPersonalFarmEvent_Patch
         {
 
-            public static bool Prefix(ref FarmEvent __result)
+            public static void Postfix(ref FarmEvent __result)
             {
-                if (!Config.ModEnabled || partnerName is null)
-                    return true;
+                if (!Config.ModEnabled || partnerName is null || __result is BirthingEvent)
+                    return;
                 if (Game1.weddingToday)
                 {
                     __result = null;
-                    return false;
+                    return;
                 }
                 if (freeLoveAPI is not null)
                     freeLoveAPI.SetLastPregnantSpouse(partnerName);
@@ -182,7 +182,6 @@ namespace PlannedParenthood
                     SMonitor.Log($"creating PC pregnancy event with {partnerName}");
                     __result = new QuestionEvent(3);
                 }
-                return false;
             }
         }
     }

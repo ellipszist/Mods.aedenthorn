@@ -63,7 +63,7 @@ namespace WeddingTweaks
                     if (npc != null)
                     {
                         npc.CurrentDialogue.Clear();
-                        npc.CurrentDialogue.Push(new Dialogue(dialogue, npc));
+                        npc.CurrentDialogue.Push(new Dialogue(npc, null, dialogue));
                         Game1.drawDialogue(npc);
                     }
                     __result = true;

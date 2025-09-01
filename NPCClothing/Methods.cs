@@ -96,7 +96,7 @@ namespace NPCClothing
                 return false;
             if (data.namesForbid is not null && data.namesForbid.Count > 0 && data.namesForbid.Contains(npc.Name))
                 return false;
-            if (data.gendersAllow is not null && data.gendersAllow.Count > 0 && !data.gendersAllow.Contains(genderList[npc.Gender]))
+            if (data.gendersAllow is not null && data.gendersAllow.Count > 0 && !data.gendersAllow.Contains(genderList[(int)npc.Gender]))
                 return false;
             if (data.agesAllow is not null && data.agesAllow.Count > 0 && !data.agesAllow.Contains(ageList[npc.Age]))
                 return false;
@@ -117,7 +117,7 @@ namespace NPCClothing
             {
                 foreach(var d in offsets)
                 {
-                    if (d.names?.Contains(npc.Name) == true || d.ages?.Contains(ages[npc.Age]) == true || d.genders?.Contains(genders[npc.Gender]) == true)
+                    if (d.names?.Contains(npc.Name) == true || d.ages?.Contains(ages[npc.Age]) == true || d.genders?.Contains(genders[(int)npc.Gender]) == true)
                     {
                         offset = d.offset;
                         break;

@@ -1,5 +1,6 @@
 ﻿using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Locations;
 
 namespace FreeLove
 {

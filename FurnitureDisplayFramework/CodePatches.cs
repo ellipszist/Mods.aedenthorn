@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Newtonsoft.Json;
 using StardewValley;
 using StardewValley.Objects;
 using Object = StardewValley.Object;
@@ -8,7 +7,6 @@ using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace FurnitureDisplayFramework
 {
-    /// <summary>The mod entry point.</summary>
     public partial class ModEntry
     {
         private static void GameLocation_draw_Postfix(GameLocation __instance, SpriteBatch b)
@@ -28,18 +26,9 @@ namespace FurnitureDisplayFramework
                     if (!f.modData.TryGetValue("aedenthorn.FurnitureDisplayFramework/" + i, out var slotString) || slotString.Length == 0)
                         continue;
                     Object obj;
-                    if (slotString.Contains("{"))
-                    {
-                        obj = JsonConvert.DeserializeObject<Object>(slotString, new JsonSerializerSettings
-                        {
-                            Error = HandleDeserializationError
-                        });
-                    }
-                    else
-                    {
-                        var currentItem = f.modData["aedenthorn.FurnitureDisplayFramework/" + i].Split(',');
-                        obj = GetObjectFromID(currentItem[0], int.Parse(currentItem[1]), int.Parse(currentItem[2]));
-                    }
+                        var currentItem = f.modData["aedenthorn.FurnitureDisplayFramework/" + i];
+                    obj = GetObjectFromSlot(currentItem);
+                    
                     if (obj == null)
                         continue;
                     float scale = 4;
@@ -56,11 +45,5 @@ namespace FurnitureDisplayFramework
                 }
             }
         } 
-        private static void Furniture_placementAction_Postfix(Furniture __instance)
-        {
-            if (!Config.EnableMod)
-                return;
-            SMonitor.Log($"furniture name {__instance.Name}");
-        }
     }
 }

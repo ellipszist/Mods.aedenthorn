@@ -69,7 +69,7 @@ namespace AprilFools
         [HarmonyPatch(typeof(Tree), nameof(Tree.performToolAction))]
         public class Tree_performToolAction
         {
-            public static bool Prefix(Tree __instance, Tool t, Vector2 tileLocation, GameLocation location, ref float __state)
+            public static bool Prefix(Tree __instance, Tool t, Vector2 tileLocation, ref float __state)
             {
                 if (!IsModEnabled() || !Config.TreeScreamEnabled)
                     return true;
@@ -84,10 +84,10 @@ namespace AprilFools
                         var y = tile * 64;
                         if (t.getLastFarmerToUse().GetBoundingBox().Intersects(new Rectangle((int)tile.X * 64,(int)tile.Y * 64, 64, 64)))
                             continue;
-                        if (!location.terrainFeatures.ContainsKey(tile) && !location.objects.ContainsKey(tile) && location.map.GetLayer("Buildings").PickTile(new Location((int)tile.X * 64, (int)tile.Y * 64), Game1.viewport.Size) == null)
+                        if (!__instance.Location.terrainFeatures.ContainsKey(tile) && !__instance.Location.objects.ContainsKey(tile) && __instance.Location.map.GetLayer("Buildings").PickTile(new Location((int)tile.X * 64, (int)tile.Y * 64), Game1.viewport.Size) == null)
                         {
-                            location.terrainFeatures[tile] = __instance;
-                            location.terrainFeatures.Remove(tileLocation);
+                            __instance.Location.terrainFeatures[tile] = __instance;
+                            __instance.Location.terrainFeatures.Remove(tileLocation);
                             Game1.playSound("leafrustle");
                             return false;
                         }
@@ -113,10 +113,10 @@ namespace AprilFools
                 }
             }
         }
-        [HarmonyPatch(typeof(Tree), nameof(Tree.draw), new Type[] { typeof(SpriteBatch), typeof(Vector2) })]
+        [HarmonyPatch(typeof(Tree), nameof(Tree.draw), new Type[] { typeof(SpriteBatch) })]
         public class Tree_draw
         {
-            public static void Postfix(Tree __instance, SpriteBatch spriteBatch, Vector2 tileLocation, NetBool ___falling)
+            public static void Postfix(Tree __instance, SpriteBatch spriteBatch, NetBool ___falling)
             {
                 if (!IsModEnabled() || !Config.TreeScreamEnabled)
                     return;
@@ -133,7 +133,7 @@ namespace AprilFools
                     __instance.modData["aedenthorn.AprilFools/timer"] = "120/120";
                 }
 
-                Vector2 local = Game1.GlobalToLocal(tileLocation * 64 + new Vector2(32, ___falling.Value || __instance.stump.Value ? -128 : -192));
+                Vector2 local = Game1.GlobalToLocal(__instance.Tile * 64 + new Vector2(32, ___falling.Value || __instance.stump.Value ? -128 : -192));
                 string[] timerString = __instance.modData["aedenthorn.AprilFools/timer"].Split('/');
                 int.TryParse(timerString[0], out int timer);
                 int.TryParse(timerString[1], out int timerMax);
@@ -149,7 +149,7 @@ namespace AprilFools
                     alpha = timer / 5f;
                 else if (timer > timerMax - 5)
                     alpha = timerMax - timer / 5f;
-                SpriteText.drawStringWithScrollCenteredAt(spriteBatch, speech, (int)local.X, (int)local.Y, "", alpha, -1, 1, 1, false);
+                SpriteText.drawStringWithScrollCenteredAt(spriteBatch, speech, (int)local.X, (int)local.Y, "", alpha, null, 1, 1, false);
             }
         }
         [HarmonyPatch(typeof(Farmer), nameof(Farmer.MovePosition))]
@@ -187,7 +187,7 @@ namespace AprilFools
         {
             public static void Prefix(NPC __instance, SpriteBatch b)
             {
-                if (!IsModEnabled() || !Config.GiantEnabled || !__instance.isVillager())
+                if (!IsModEnabled() || !Config.GiantEnabled || !__instance.IsVillager)
                     return;
                 __instance.Scale =  !gianting ? 1 : 1 + (float)new Random((int)Game1.stats.DaysPlayed + __instance.Name.GetHashCode()).NextDouble() * 2;
             }
@@ -228,7 +228,7 @@ namespace AprilFools
                 if (!IsModEnabled() || !Config.SlimeEnabled || !slimeFarmer)
                     return true;
                 slime.Position = __instance.Position;
-                b.Draw(slime.Sprite.Texture, slime.getLocalPosition(Game1.viewport) + new Vector2(56f, (float)(16 + slime.yJumpOffset)), new Rectangle?(slime.Sprite.SourceRect), Utility.GetPrismaticColor(348 + 50, 5f), slime.rotation, new Vector2(16f, 16f), Math.Max(0.2f, slime.Scale) * 4f, slime.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, Math.Max(0f, slime.drawOnTop ? 0.991f : ((float)slime.getStandingY() / 10000f)));
+                b.Draw(slime.Sprite.Texture, slime.getLocalPosition(Game1.viewport) + new Vector2(56f, (float)(16 + slime.yJumpOffset)), new Rectangle?(slime.Sprite.SourceRect), Utility.GetPrismaticColor(348 + 50, 5f), slime.rotation, new Vector2(16f, 16f), Math.Max(0.2f, slime.Scale) * 4f, slime.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, Math.Max(0f, slime.drawOnTop ? 0.991f : ((float)slime.StandingPixel.Y / 10000f)));
                 return false;
             }
         }
@@ -300,26 +300,26 @@ namespace AprilFools
                     {
                         if (speakingAnimals.textAboveHeadTimer > 0 && speakingAnimals.textAboveHead != null)
                         {
-                            Vector2 local = Game1.GlobalToLocal(new Vector2((float)a.getStandingX(), (float)(a.getStandingY() - a.Sprite.SpriteHeight * 4 - 64 + a.yJumpOffset)));
+                            Vector2 local = Game1.GlobalToLocal(new Vector2((float)a.StandingPixel.X, (float)(a.StandingPixel.Y - a.Sprite.SpriteHeight * 4 - 64 + a.yJumpOffset)));
 
                             if (a.shouldShadowBeOffset)
                             {
-                                local += a.drawOffset.Value;
+                                local += a.drawOffset;
                             }
-                            SpriteText.drawStringWithScrollCenteredAt(b, speakingAnimals.textAboveHead, (int)local.X, (int)local.Y, "", speakingAnimals.textAboveHeadAlpha, speakingAnimals.textAboveHeadColor, 1, (float)(a.getTileY() * 64) / 10000f + 0.001f + (float)a.getTileX() / 10000f, false);
+                            SpriteText.drawStringWithScrollCenteredAt(b, speakingAnimals.textAboveHead, (int)local.X, (int)local.Y, "", speakingAnimals.textAboveHeadAlpha, speakingAnimals.textAboveHeadColor, 1, (float)(a.Tile.Y * 64) / 10000f + 0.001f + (float)a.Tile.Y / 10000f, false);
                         }
                     }
                     else if (speakingAnimals.bID == a.myID.Value)
                     {
                         if (speakingAnimals.bTextAboveHeadTimer > 0 && speakingAnimals.bTextAboveHead != null)
                         {
-                            Vector2 local = Game1.GlobalToLocal(new Vector2((float)a.getStandingX(), (float)(a.getStandingY() - a.Sprite.SpriteHeight * 4 - 64 + a.yJumpOffset)));
+                            Vector2 local = Game1.GlobalToLocal(new Vector2((float)a.StandingPixel.X, (float)(a.StandingPixel.Y - a.Sprite.SpriteHeight * 4 - 64 + a.yJumpOffset)));
 
                             if (a.shouldShadowBeOffset)
                             {
-                                local += a.drawOffset.Value;
+                                local += a.drawOffset;
                             }
-                            SpriteText.drawStringWithScrollCenteredAt(b, speakingAnimals.bTextAboveHead, (int)local.X, (int)local.Y, "", speakingAnimals.bTextAboveHeadAlpha, speakingAnimals.bTextAboveHeadColor, 1, (float)(a.getTileY() * 64) / 10000f + 0.001f + (float)a.getTileX() / 10000f, false);
+                            SpriteText.drawStringWithScrollCenteredAt(b, speakingAnimals.bTextAboveHead, (int)local.X, (int)local.Y, "", speakingAnimals.bTextAboveHeadAlpha, speakingAnimals.bTextAboveHeadColor, 1, (float)(a.Tile.Y * 64) / 10000f + 0.001f + (float)a.Tile.Y / 10000f, false);
                         }
                     }
                 }

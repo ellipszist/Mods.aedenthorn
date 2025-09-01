@@ -7,14 +7,15 @@ using StardewValley;
 
 namespace BirthdayFriendship
 {
+    /// <summary>The API which lets other mods add a config UI through Generic Mod Config Menu.</summary>
     public interface IGenericModConfigMenuApi
     {
         /*********
-        ** Methods
-        *********/
+		** Methods
+		*********/
         /****
-        ** Must be called first
-        ****/
+		** Must be called first
+		****/
         /// <summary>Register a mod whose config can be edited through the UI.</summary>
         /// <param name="mod">The mod's manifest.</param>
         /// <param name="reset">Reset the mod's config to its default values.</param>
@@ -23,10 +24,9 @@ namespace BirthdayFriendship
         /// <remarks>Each mod can only be registered once, unless it's deleted via <see cref="Unregister"/> before calling this again.</remarks>
         void Register(IManifest mod, Action reset, Action save, bool titleScreenOnly = false);
 
-
         /****
-        ** Basic options
-        ****/
+		** Basic options
+		****/
         /// <summary>Add a section title at the current position in the form.</summary>
         /// <param name="mod">The mod's manifest.</param>
         /// <param name="text">The title text shown in the form.</param>
@@ -109,10 +109,9 @@ namespace BirthdayFriendship
         /// <param name="fieldId">The unique field ID for use with <see cref="OnFieldChanged"/>, or <c>null</c> to auto-generate a randomized ID.</param>
         void AddKeybindList(IManifest mod, Func<KeybindList> getValue, Action<KeybindList> setValue, Func<string> name, Func<string> tooltip = null, string fieldId = null);
 
-
         /****
-        ** Multi-page management
-        ****/
+		** Multi-page management
+		****/
         /// <summary>Start a new page in the mod's config UI, or switch to that page if it already exists. All options registered after this will be part of that page.</summary>
         /// <param name="mod">The mod's manifest.</param>
         /// <param name="pageId">The unique page ID.</param>
@@ -127,10 +126,9 @@ namespace BirthdayFriendship
         /// <param name="tooltip">The tooltip text shown when the cursor hovers on the link, or <c>null</c> to disable the tooltip.</param>
         void AddPageLink(IManifest mod, string pageId, Func<string> text, Func<string> tooltip = null);
 
-
         /****
-        ** Advanced
-        ****/
+		** Advanced
+		****/
         /// <summary>Add an option at the current position in the form using custom rendering logic.</summary>
         /// <param name="mod">The mod's manifest.</param>
         /// <param name="name">The label text to show in the form.</param>

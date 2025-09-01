@@ -115,7 +115,7 @@ namespace AprilFools
                     {
                         if (a.myID.Value == b.myID.Value)
                             continue;
-                        if (Vector2.Distance(a.getTileLocation(), b.getTileLocation()) <= 10 && Game1.random.NextDouble() < 0.3)
+                        if (Vector2.Distance(a.Tile, b.Tile) <= 10 && Game1.random.NextDouble() < 0.3)
                         {
                             speakingAnimals = new SpeakingAnimalData(a, b);
                             return;
@@ -263,23 +263,21 @@ namespace AprilFools
 
             if (Config.AsciiEnabled && asciifying)
             {
+                e.SpriteBatch.Draw(beeTexture, new Rectangle(0, 0, Game1.viewport.Width, Game1.viewport.Height), null, Color.White, 0, new Vector2(0, 0), SpriteEffects.None, 1);
                 int scale = 16;
                 var lines = ConvertToAscii(ScaleScreen(scale, out int w, out int h), Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth / scale);
-                if (lines.Count > 0)
-                {
-                    e.SpriteBatch.Draw(blackTexture, new Rectangle(0, 0, Game1.viewport.Width, Game1.viewport.Height), Color.White);
-                    int height = Game1.viewport.Height / lines.Count;
-                    for (int i = 0; i < lines.Count; i++)
-                    {
-                        e.SpriteBatch.DrawString(font, lines[i], new Vector2(0, height * i), Color.White, 0, Vector2.Zero, 0.8f, SpriteEffects.None, 1);
-                    }
-                }
             }
             else if (Config.PixelateEnabled && pixelating)
             {
                 Color[] data = ScaleScreen(16, out int width, out int height);
                 Texture2D pixelScreen = new Texture2D(Game1.graphics.GraphicsDevice, width, height);
                 pixelScreen.SetData(data);
+                //var path = Path.Combine(SHelper.DirectoryPath, "test.png");
+                //var mimeType = "image/png";
+                //using (var stream = File.Create(path))
+                //{
+                //    pixelScreen.SaveAsPng(stream, pixelScreen.Width, pixelScreen.Height);
+                //}
                 e.SpriteBatch.Draw(pixelScreen, new Rectangle(0, 0, Game1.viewport.Width, Game1.viewport.Height), Color.White);
             }
             if (Config.RavenEnabled && (Game1.timeOfDay >= 2100 || Game1.timeOfDay <= 200))

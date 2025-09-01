@@ -1,7 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using System;
-using xTile.Dimensions;
-using xTile.Layers;
+﻿using xTile.Layers;
 using xTile.Tiles;
 
 namespace StardewOpenWorld
@@ -23,7 +20,7 @@ namespace StardewOpenWorld
             get
             {
                 Tile result;
-                if (x < 0 || x >= ModEntry.openWorldSize || y < 0 || y >= ModEntry.openWorldSize)
+                if (x < 0 || x >= ModEntry.Config.OpenWorldSize || y < 0 || y >= ModEntry.Config.OpenWorldSize)
                 {
                     result = null;
                 }

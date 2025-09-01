@@ -8,7 +8,7 @@ namespace FreeLove
     {
         public void PlaceSpousesInFarmhouse(FarmHouse farmHouse)
         {
-            ModEntry.PlaceSpousesInFarmhouse(farmHouse);
+            ModEntry.PlaceSpousesInFarmhouse(farmHouse, farmHouse.owner);
         }
         public Dictionary<string, NPC> GetSpouses(Farmer farmer, bool all = true)
         {

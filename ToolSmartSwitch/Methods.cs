@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Netcode;
 using Newtonsoft.Json;
 using StardewValley;
+using StardewValley.Buildings;
 using StardewValley.Locations;
 using StardewValley.Monsters;
 using StardewValley.Objects;
@@ -20,7 +21,7 @@ namespace ToolSmartSwitch
     public partial class ModEntry
     {
 
-        private static bool SwitchToolType(Farmer f, Type type, Dictionary<int, Tool> tools)
+        private static bool SwitchToolType(Farmer f, Type? type, Dictionary<int, Tool> tools)
         {
             if (CheckTool(f, type))
                 return true;
@@ -51,7 +52,7 @@ namespace ToolSmartSwitch
             return false;
         }
 
-        private static bool CheckTool(Farmer f, Type type)
+        private static bool CheckTool(Farmer f, Type? type)
         {
             if (f.CurrentTool is null)
                 return false;
@@ -74,7 +75,7 @@ namespace ToolSmartSwitch
 
         public static void SmartSwitch(Farmer f)
         {
-            if (!Config.FromWeapon && f.CurrentTool is MeleeWeapon && !(f.CurrentTool as MeleeWeapon).isScythe(f.CurrentTool.ParentSheetIndex))
+            if (!Config.FromWeapon && f.CurrentTool is MeleeWeapon && !(f.CurrentTool as MeleeWeapon).isScythe())
                 return;
             var tile = f.GetToolLocation(false) / 64;
             tile = new Vector2((int)tile.X, (int)tile.Y);
@@ -143,12 +144,12 @@ namespace ToolSmartSwitch
                 if (Config.SwitchForCrops && tf is HoeDirt && (tf as HoeDirt).crop != null)
                 {
                     var crop = (tf as HoeDirt).crop;
-                    if (crop.forageCrop.Value == false && (crop.harvestMethod.Value == 1 || Config.HarvestWithScythe) && crop.currentPhase.Value >= crop.phaseDays.Count - 1 && (!crop.fullyGrown.Value || crop.dayOfCurrentPhase.Value <= 0))
+                    if (crop.forageCrop.Value == false && (crop.GetHarvestMethod() == StardewValley.GameData.Crops.HarvestMethod.Grab || Config.HarvestWithScythe) && crop.currentPhase.Value >= crop.phaseDays.Count - 1 && (!crop.fullyGrown.Value || crop.dayOfCurrentPhase.Value <= 0))
                     {
                         if (SwitchToolType(f, null, tools))
                             return;
                     }
-                    else if ((tf as HoeDirt).crop.forageCrop.Value == true && (tf as HoeDirt).crop.whichForageCrop.Value == Crop.forageCrop_ginger)
+                    else if ((tf as HoeDirt).crop.forageCrop.Value == true && (tf as HoeDirt).crop.whichForageCrop.Value == Crop.forageCrop_ginger.ToString())
                     {
                         if (SwitchToolType(f, typeof(Hoe), tools))
                             return;
@@ -161,35 +162,18 @@ namespace ToolSmartSwitch
 
                 foreach (ResourceClump clump in f.currentLocation.resourceClumps)
                 {
-                    var bb = clump.getBoundingBox(clump.tile.Value);
+                    var bb = clump.getBoundingBox();
                     if (bb.Intersects(tileRect))
                     {
                         if (SwitchForClump(f, clump, tools))
                             return;
                     }
                 }
-                if(f.currentLocation is Woods)
-                {
-                    foreach (ResourceClump clump in (f.currentLocation as Woods).stumps)
-                    {
-                        var bb = clump.getBoundingBox(clump.tile.Value);
-                        if (bb.Intersects(tileRect))
-                        {
-                            if (SwitchForClump(f, clump, tools))
-                                return;
-                        }
-                    }
-                }
-                if (f.currentLocation is Forest && (Game1.currentLocation as Forest).log?.occupiesTile((int)tile.X, (int)tile.Y) == true)
-                {
-                    if (SwitchForClump(f, (Game1.currentLocation as Forest).log, tools))
-                        return;
-                }
             }
             if (Config.SwitchForPan)
             {
                 Rectangle orePanRect = new Rectangle(f.currentLocation.orePanPoint.X * 64 - 64, f.currentLocation.orePanPoint.Y * 64 - 64, 256, 256);
-                if (orePanRect.Contains((int)tile.X * 64, (int)tile.Y * 64) && Utility.distance((float)f.getStandingX(), (float)orePanRect.Center.X, (float)f.getStandingY(), (float)orePanRect.Center.Y) <= 192f)
+                if (orePanRect.Contains((int)tile.X * 64, (int)tile.Y * 64) && Utility.distance((float)f.getStandingPosition().X, (float)orePanRect.Center.X, (float)f.getStandingPosition().Y, (float)orePanRect.Center.Y) <= 192f)
                 {
                     if (SwitchToolType(f, typeof(Pan), tools))
                         return;
@@ -209,10 +193,18 @@ namespace ToolSmartSwitch
                     if (SwitchToolType(f, typeof(WateringCan), tools))
                         return;
                 }
-                if (f.currentLocation is Farm && f.currentLocation.getTileIndexAt((int)tile.X, (int)tile.Y, "Buildings") == 1938 && !(f.currentLocation as Farm).petBowlWatered.Value)
+                foreach (Building building in f.currentLocation.buildings)
                 {
-                    if (SwitchToolType(f, typeof(WateringCan), tools))
-                        return;
+                    if (!building.isMoving && building.occupiesTile(tile, true))
+                    {
+                        string tileProperty = null;
+                        if (building.doesTileHaveProperty((int)tile.X, (int)tile.Y, "PetBowl", "Buildings", ref tileProperty))
+                        {
+                            if (SwitchToolType(f, typeof(WateringCan), tools))
+                                return;
+                        }
+                        break;
+                    }
                 }
                 if (f.currentLocation.objects.TryGetValue(tile, out obj) && obj.Name.EndsWith("Pet Bowl"))
                 {
@@ -234,7 +226,7 @@ namespace ToolSmartSwitch
                 catch { }
             }
             
-            if (Config.SwitchForTilling && f.currentLocation.doesTileHaveProperty((int)tile.X, (int)tile.Y, "Diggable", "Back") != null && !f.currentLocation.isTileOccupied(tile, "", false) && f.currentLocation.isTilePassable(new Location((int)tile.X, (int)tile.Y), Game1.viewport))
+            if (Config.SwitchForTilling && f.currentLocation.doesTileHaveProperty((int)tile.X, (int)tile.Y, "Diggable", "Back") != null && !f.currentLocation.IsTileOccupiedBy(tile) && f.currentLocation.isTilePassable(new Location((int)tile.X, (int)tile.Y), Game1.viewport))
             {
                 if (SwitchToolType(f, typeof(Hoe), tools))
                     return;
@@ -257,11 +249,11 @@ namespace ToolSmartSwitch
 
         public static bool SwitchForAnimal(Farmer f, FarmAnimal c, Dictionary<int, Tool> tools)
         {
-            if (c.toolUsedForHarvest.Value.Equals("Shears")) 
+            if (c.GetAnimalData().HarvestTool.Equals("Shears")) 
             { 
                 return SwitchToolType(f, typeof(Shears), tools); 
             }
-            else if (c.toolUsedForHarvest.Value.Equals("Milk Pail")) 
+            else if (c.GetAnimalData().HarvestTool.Equals("Milk Pail")) 
             {
                 return SwitchToolType(f, typeof(MilkPail), tools);
 
@@ -341,7 +333,7 @@ namespace ToolSmartSwitch
             {
                 return SwitchToolType(f, null, tools);
             }
-            else if (Config.SwitchForCrops && tf is HoeDirt && (tf as HoeDirt).crop?.harvestMethod.Value == 1 && (tf as HoeDirt).crop.currentPhase.Value >= (tf as HoeDirt).crop.phaseDays.Count - 1 && (!(tf as HoeDirt).crop.fullyGrown.Value || (tf as HoeDirt).crop.dayOfCurrentPhase.Value <= 0)) 
+            else if (Config.SwitchForCrops && tf is HoeDirt && (tf as HoeDirt).crop?.GetHarvestMethod() == StardewValley.GameData.Crops.HarvestMethod.Scythe && (tf as HoeDirt).crop.currentPhase.Value >= (tf as HoeDirt).crop.phaseDays.Count - 1 && (!(tf as HoeDirt).crop.fullyGrown.Value || (tf as HoeDirt).crop.dayOfCurrentPhase.Value <= 0)) 
             {
                 return SwitchToolType(f, null, tools);
             }

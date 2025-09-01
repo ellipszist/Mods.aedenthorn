@@ -46,7 +46,7 @@ namespace OutfitSets
                 {
                     string leftRingData = Game1.player.leftRing.Value.ToXmlString();
                     Game1.player.modData[keyPrefix + "leftRing" + oldSet] = leftRingData;
-                    Game1.player.leftRing.Value.onUnequip(Game1.player, Game1.currentLocation);
+                    Game1.player.leftRing.Value.onUnequip(Game1.player);
                 }
                 else
                 {
@@ -56,7 +56,7 @@ namespace OutfitSets
                 {
                     string rightRingData = Game1.player.rightRing.Value.ToXmlString();
                     Game1.player.modData[keyPrefix + "rightRing" + oldSet] = rightRingData;
-                    Game1.player.rightRing.Value.onUnequip(Game1.player, Game1.currentLocation);
+                    Game1.player.rightRing.Value.onUnequip(Game1.player);
                 }
                 else
                 {
@@ -108,14 +108,14 @@ namespace OutfitSets
             if (Game1.player.modData.TryGetValue(keyPrefix + "leftRing" + which, out string leftRing))
             {
                 Game1.player.leftRing.Value = leftRing.FromXml<Ring>();
-                Game1.player.leftRing.Value.onEquip(Game1.player, Game1.currentLocation);
+                Game1.player.leftRing.Value.onEquip(Game1.player);
             }
             else
                 Game1.player.leftRing.Value = null;
             if (Game1.player.modData.TryGetValue(keyPrefix + "rightRing" + which, out string rightRing))
             {
                 Game1.player.rightRing.Value = rightRing.FromXml<Ring>();
-                Game1.player.rightRing.Value.onEquip(Game1.player, Game1.currentLocation);
+                Game1.player.rightRing.Value.onEquip(Game1.player);
             }
             else
                 Game1.player.rightRing.Value = null;

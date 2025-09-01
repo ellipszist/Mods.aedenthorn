@@ -218,7 +218,7 @@ namespace MapEdit
                 }
                 SaveMapData(relPath, mapData);
             }
-            cleanMaps.Remove(mapName);
+            UpdateCurrentMap(true);
         }
         public static void AddTilesheet(TileSheet tileSheet, string mapName)
         {
@@ -317,7 +317,7 @@ namespace MapEdit
                 return;
             string mapName = Game1.player.currentLocation.mapPath.Value.Replace("Maps\\", "");
 
-            if (!mapCollectionData.mapDataDict.ContainsKey(mapName) || (!force && cleanMaps.Contains(mapName)))
+            if (!force && (!mapCollectionData.mapDataDict.ContainsKey(mapName) || cleanMaps.Contains(mapName)))
                 return;
             if(Game1.player.currentLocation is FarmHouse)
             {

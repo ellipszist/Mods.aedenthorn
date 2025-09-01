@@ -62,6 +62,7 @@ namespace FreeLove
                         ModEntry.divorceHeartsLost = 0;
                     }
                     ModEntry.spouseToDivorce = spouse;
+                    Monitor.Log($"Confirmed divorce: {ModEntry.spouseToDivorce}");
                     Game1.player.divorceTonight.Value = true;
                     string s = Game1.content.LoadString("Strings\\Locations:ManorHouse_DivorceBook_Filed_" + spouse, spouse);
                     if (s == "Strings\\Locations:ManorHouse_DivorceBook_Filed_" + spouse)
@@ -127,6 +128,7 @@ namespace FreeLove
             {
                 Monitor.Log("divorce method");
                 ModEntry.spouseToDivorce = complexDivorceSpouse;
+                Monitor.Log($"Confirmed divorce: {ModEntry.spouseToDivorce}");
                 string r = Helper.Translation.Get(whichAnswer);
                 if (r != null)
                 {

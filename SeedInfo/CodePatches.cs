@@ -23,24 +23,6 @@ namespace SeedInfo
     {
         public static Dictionary<int, SeedEntryInfo> shopDict = new();
 
-        [HarmonyPatch(typeof(ShopMenu), nameof(IClickableMenu.draw), new Type[] { typeof(List<ISalable>), typeof(int), typeof(string), typeof(Func<ISalable, Farmer, int, bool>), typeof(Func<ISalable, bool>), typeof(string) })]
-        [HarmonyPatch(MethodType.Constructor)]
-        public class ShopMenu_Patch
-        {
-
-            public static void Postfix(ShopMenu __instance)
-            {
-                if (!Config.ModEnabled)
-                    return;
-                shopDict.Clear();
-                for(int i = 0; i < __instance.forSale.Count; i++)
-                {
-                    if (__instance.forSale[i] is not Object || (__instance.forSale[i] as Object).Category != Object.SeedsCategory)
-                        continue;
-                    shopDict[((Object)__instance.forSale[i]).ParentSheetIndex] = new SeedEntryInfo((Object)__instance.forSale[i]);
-                }
-            }
-        }
 
         [HarmonyPatch(typeof(ShopMenu), nameof(ShopMenu.draw))]
         public class ShopMenu_draw_Patch
@@ -62,6 +44,18 @@ namespace SeedInfo
                 }
 
                 return codes.AsEnumerable();
+            }
+            public static void Postfix(ShopMenu __instance)
+            {
+                if (!Config.ModEnabled)
+                    return;
+                shopDict.Clear();
+                for (int i = 0; i < __instance.forSale.Count; i++)
+                {
+                    if (__instance.forSale[i] is not Object || (__instance.forSale[i] as Object).Category != Object.SeedsCategory)
+                        continue;
+                    shopDict[((Object)__instance.forSale[i]).ParentSheetIndex] = new SeedEntryInfo((Object)__instance.forSale[i]);
+                }
             }
         }
     }

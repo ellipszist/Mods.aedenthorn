@@ -44,9 +44,11 @@ namespace AprilFools
 
             Game1.graphics.GraphicsDevice.SetRenderTarget(renderTarget);
 
-            screenBatch.Begin();
-            screenBatch.Draw(screenTexture, destinationRectangle, Color.White);
-            screenBatch.End();
+            var renderBatch = new SpriteBatch(Game1.graphics.GraphicsDevice);
+
+            renderBatch.Begin();
+            renderBatch.Draw(screenTexture, destinationRectangle, Color.White);
+            renderBatch.End();
 
             Game1.graphics.GraphicsDevice.SetRenderTarget(null);
             Color[] data = new Color[renderTarget.Width * renderTarget.Height];

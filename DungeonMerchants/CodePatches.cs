@@ -51,7 +51,7 @@ namespace DungeonMerchants
                 if (!Config.ModEnabled || !__instance.Name.Equals("Dwarf") || !who.canUnderstandDwarves || l is not MineShaft)
                     return true;
                 __result = true;
-                Game1.activeClickableMenu = new ShopMenu(Utility.getDwarfShopStock(), 0, "Dwarf", null, null, null);
+                Utility.TryOpenShopMenu("Dwarf", "Dwarf", true);
                 return false;
             }
         }
@@ -68,7 +68,7 @@ namespace DungeonMerchants
 
                 if (tileRect.Intersects(new Rectangle((int)pos.X, (int)pos.Y + 64, 20, 26)))
                 {
-                    Game1.activeClickableMenu = new ShopMenu(Desert.getDesertMerchantTradeStock(Game1.player), 0, "DesertTrade", new Func<ISalable, Farmer, int, bool>(boughtTraderItem), null, null);
+                    Utility.TryOpenShopMenu("DesertTrade", __instance, null, null, false, true, null);
                     __result = true;
                     return false;
                 }

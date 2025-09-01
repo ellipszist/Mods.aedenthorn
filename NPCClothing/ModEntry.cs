@@ -26,13 +26,6 @@ namespace NPCClothing
         
         public static ClothingData forceWear;
 
-        public static int[] giftIndexes = new int[] {
-            -42424200,
-            -42424202,
-            -42424204,
-            -42424206,
-            -42424208
-        };
         
         public static Dictionary<string, ClothingData> clothingDict = new Dictionary<string, ClothingData>();
         public static Dictionary<string, List<Color>> skinDict = new Dictionary<string, List<Color>>();

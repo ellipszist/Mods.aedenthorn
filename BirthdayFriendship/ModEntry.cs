@@ -1,19 +1,19 @@
-﻿using HarmonyLib;
+﻿using System;
+using HarmonyLib;
 using StardewModdingAPI;
+using StardewValley;
+using StardewValley.Menus;
 
 namespace BirthdayFriendship
 {
     /// <summary>The mod entry point.</summary>
     public partial class ModEntry : Mod
     {
+        internal static IMonitor SMonitor;
+        internal static IModHelper SHelper;
+        internal static ModConfig Config;
 
-        public static IMonitor SMonitor;
-        public static IModHelper SHelper;
-        public static ModConfig Config;
-
-        public static ModEntry context;
-
-
+        internal static ModEntry context;
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
@@ -28,9 +28,19 @@ namespace BirthdayFriendship
 
             Helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
 
-            var harmony = new Harmony(ModManifest.UniqueID);
-            harmony.PatchAll();
+
+            Harmony harmony = new(ModManifest.UniqueID);
+
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Billboard), nameof(Billboard.GetBirthdays)),
+                postfix: new HarmonyMethod(typeof(Billboard_GetBirthdays_Patch), nameof(Billboard_GetBirthdays_Patch.Postfix))
+            );
+            harmony.Patch(
+                original: AccessTools.PropertyGetter(typeof(NPC), nameof(NPC.Birthday_Season)),
+                prefix: new HarmonyMethod(typeof(NPC_Birthday_Season_Patch), nameof(NPC_Birthday_Season_Patch.Prefix))
+            );
         }
+
         public void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
         {
             // get Generic Mod Config Menu's API (if it's installed)
@@ -46,18 +56,16 @@ namespace BirthdayFriendship
 
                 configMenu.AddBoolOption(
                     mod: ModManifest,
-                    name: () => SHelper.Translation.Get("GMCM_Option_ModEnabled_Name"),
+                    name: () => SHelper.Translation.Get("GMCM.ModEnabled.Name"),
                     getValue: () => Config.ModEnabled,
                     setValue: value => Config.ModEnabled = value
                 );
-
                 configMenu.AddNumberOption(
                     mod: ModManifest,
-                    name: () => SHelper.Translation.Get("GMCM_Option_Hearts_Name"),
+                    name: () => SHelper.Translation.Get("GMCM.Hearts.Name"),
                     getValue: () => Config.Hearts,
                     setValue: value => Config.Hearts = value
                 );
-                
             }
         }
     }

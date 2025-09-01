@@ -28,7 +28,7 @@ namespace FreeLove
                     currentSpouses[farmer.UniqueMultiplayerID][ospouse] = npc;
                 }
             }
-            SMonitor.Log($"Checking for extra spouses in {farmer.friendshipData.Count()} friends");
+            //SMonitor.Log($"Checking for extra spouses in {farmer.friendshipData.Count()} friends");
             foreach (string friend in farmer.friendshipData.Keys)
             {
                 if (farmer.friendshipData[friend].IsMarried() && friend != farmer.spouse)
@@ -43,7 +43,7 @@ namespace FreeLove
             }
             if (farmer.spouse is null && currentSpouses[farmer.UniqueMultiplayerID].Any())
                 farmer.spouse = currentSpouses[farmer.UniqueMultiplayerID].First().Key;
-            SMonitor.Log($"reloaded {currentSpouses[farmer.UniqueMultiplayerID].Count} spouses for {farmer.Name} {farmer.UniqueMultiplayerID}");
+            //SMonitor.Log($"reloaded {currentSpouses[farmer.UniqueMultiplayerID].Count} spouses for {farmer.Name} {farmer.UniqueMultiplayerID}");
         }
         public static Dictionary<string, NPC> GetSpouses(Farmer farmer, bool all)
         {
@@ -85,18 +85,16 @@ namespace FreeLove
             return spouses.Keys.ToArray()[0];
         }
 
-        public static void PlaceSpousesInFarmhouse(FarmHouse farmHouse)
+        public static void PlaceSpousesInFarmhouse(FarmHouse farmHouse, Farmer farmer)
         {
-            Farmer farmer = farmHouse.owner;
-
-            if (farmer == null)
+            if (farmHouse == null || farmer == null)
                 return;
 
             List<NPC> allSpouses = GetSpouses(farmer, true).Values.ToList();
 
             if (allSpouses.Count == 0)
             {
-                SMonitor.Log("no spouses");
+                SMonitor.Log($"no spouses for {farmer.Name}");
                 return;
             }
 
@@ -111,14 +109,14 @@ namespace FreeLove
                     continue;
                 if (!farmHouse.Equals(spouse.currentLocation))
                 {
-                    SMonitor.Log($"{spouse.Name} is not in farm house ({spouse.currentLocation.Name})");
+                    SMonitor.Log($"{spouse.Name} is not in farmhouse ({spouse.currentLocation.Name})");
                     continue;
                 }
                 int type = myRand.Next(0, 100);
 
                 SMonitor.Log($"spouse rand {type}, bed: {Config.PercentChanceForSpouseInBed} kitchen {Config.PercentChanceForSpouseInKitchen}");
-                
-                if(type < Config.PercentChanceForSpouseInBed)
+
+                if (type < Config.PercentChanceForSpouseInBed)
                 {
                     if (bedSpouses.Count < 1 && (Config.RoommateRomance || !farmer.friendshipData[spouse.Name].IsRoommate()) && HasSleepingAnimation(spouse.Name))
                     {
@@ -198,8 +196,15 @@ namespace FreeLove
                     spouse.setSpouseRoomMarriageDialogue();
                 }
                 else 
-                { 
-                    spouse.setTilePosition(farmHouse.getRandomOpenPointInHouse(myRand));
+                {
+                    Point point = new(-1, -1);
+                    for(int i = 0; i < 100; i++)
+                    {
+                        point = farmHouse.getRandomOpenPointInHouse(myRand);
+                        if (!IsTileOccupied(farmHouse, point, spouse.Name))
+                            break;
+                    }
+                    spouse.setTilePosition(point);
                     spouse.faceDirection(myRand.Next(0, 4));
                     SMonitor.Log($"{spouse.Name} spouse random loc {spouse.TilePoint}");
                     spouse.setRandomAfternoonMarriageDialogue(Game1.timeOfDay, farmHouse, false);
@@ -323,8 +328,17 @@ namespace FreeLove
 
             if (name == "Krobus")
                 return 8;
+            Texture2D tex = null;
+            try
+            {
 
-            Texture2D tex = Game1.content.Load<Texture2D>($"Characters\\{name}");
+                tex = Game1.content.Load<Texture2D>($"Characters\\{name}");
+            }
+            catch
+            {
+                topOfHeadOffsets[name] = 0;
+                return 0;
+            }
 
             int sleepidx;
             string sleepAnim = SleepAnimation(name);
@@ -362,7 +376,7 @@ namespace FreeLove
                     break;
                 }
             }
-            topOfHeadOffsets.Add(name, top);
+            topOfHeadOffsets[name] = top;
             return top;
         }
 
