@@ -269,6 +269,12 @@ namespace StardewOpenWorld
                         AddBushesToChunk(cp);
                     }
                     break;
+                case BuildStage.Artifacts:
+                    foreach (var cp in chunks)
+                    {
+                        AddArtifactsToChunk(cp);
+                    }
+                    break;
                 case BuildStage.Chunks:
                     foreach (var cp in chunks)
                     {

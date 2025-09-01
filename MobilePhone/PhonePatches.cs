@@ -188,13 +188,13 @@ namespace MobilePhone
             }
         }
 
-        public static bool Event_command_prefix(Event __instance, string[] args, EventContext context)
+        public static bool Event_command_prefix(Event @event, string[] args, EventContext context)
         {
             if (ModEntry.isReminiscing)
             {
                 Monitor.Log($"Reminiscing, will not execute event command {string.Join(" ",args)}");
-                int num = __instance.CurrentCommand;
-                __instance.CurrentCommand = num + 1;
+                int num = @event.CurrentCommand;
+                @event.CurrentCommand = num + 1;
                 return false;
             }
             return true;

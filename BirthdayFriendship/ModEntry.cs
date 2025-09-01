@@ -37,7 +37,7 @@ namespace BirthdayFriendship
             );
             harmony.Patch(
                 original: AccessTools.PropertyGetter(typeof(NPC), nameof(NPC.Birthday_Season)),
-                prefix: new HarmonyMethod(typeof(Billboard_GetBirthdays_Patch), nameof(NPC_Birthday_Season_Patch.Prefix))
+                prefix: new HarmonyMethod(typeof(NPC_Birthday_Season_Patch), nameof(NPC_Birthday_Season_Patch.Prefix))
             );
         }
 

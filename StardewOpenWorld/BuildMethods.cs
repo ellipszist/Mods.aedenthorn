@@ -17,6 +17,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using xTile;
+using xTile.Dimensions;
 using xTile.Layers;
 using xTile.Tiles;
 using Bush = StardewValley.TerrainFeatures.Bush;
@@ -139,7 +140,7 @@ namespace StardewOpenWorld
                 RandomSeed = Utility.CreateRandomSeed(Game1.uniqueIDForThisGame / 100UL, Config.NewMapDaily ? Game1.stats.DaysPlayed * 10U + 1U : 0.0);
 
                 Random r = Utility.CreateRandom(RandomSeed, "centers".GetHashCode());
-                for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesPerForestMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesPerForestMin * Config.OpenWorldSize + 1); i++)
+                for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesForestMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesForestMin * Config.OpenWorldSize + 1); i++)
                 {
                     Point ap = new(
                             r.Next(10, Config.OpenWorldSize - 10),
@@ -153,7 +154,7 @@ namespace StardewOpenWorld
                     }
                     treeCenters[cp][rp] = GetRandomTree(ap.ToVector2(), r);
                 }
-                for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesPerLakeMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesPerLakeMin * Config.OpenWorldSize + 1); i++)
+                for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesLakeMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesLakeMin * Config.OpenWorldSize + 1); i++)
                 {
                     Point ap = new(
                             r.Next(10, Config.OpenWorldSize - 10),
@@ -168,7 +169,7 @@ namespace StardewOpenWorld
                     if (!lakeCenters[cp].Exists(c => Vector2.Distance(c.ToVector2(), rp.ToVector2()) < openWorldChunkSize))
                         lakeCenters[cp].Add(rp);
                 }
-                for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesPerOutcropMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesPerOutcropMin * Config.OpenWorldSize + 1); i++)
+                for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesOutcropMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesOutcropMin * Config.OpenWorldSize + 1); i++)
                 {
                     Point ap = new(
                             r.Next(10, Config.OpenWorldSize - 10),
@@ -182,7 +183,7 @@ namespace StardewOpenWorld
                     }
                     rockCenters[cp].Add(rp);
                 }
-                for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesPerGrassMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesPerGrassMin * Config.OpenWorldSize + 1); i++)
+                for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesGrassMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesGrassMin * Config.OpenWorldSize + 1); i++)
                 {
                     Point ap = new(
                             r.Next(10, Config.OpenWorldSize - 10),
@@ -196,7 +197,7 @@ namespace StardewOpenWorld
                     }
                     grassCenters[cp].Add(rp);
                 }
-                for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesPerMonsterMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesPerMonsterMin * Config.OpenWorldSize + 1); i++)
+                for (int i = 0; i < r.Next(Config.OpenWorldSize / Config.TilesMonsterMax * Config.OpenWorldSize, Config.OpenWorldSize / Config.TilesMonsterMin * Config.OpenWorldSize + 1); i++)
                 {
                     Point ap = new(
                             r.Next(10, Config.OpenWorldSize - 10),
@@ -1176,7 +1177,7 @@ namespace StardewOpenWorld
                 return;
             Random r = Utility.CreateRandom(RandomSeed, cp.X + cp.X * cp.Y, "chests".GetHashCode());
 
-            int count = (int)Math.Floor(openWorldChunkSize * openWorldChunkSize / (float)(Config.TilesPerChestMin + ((Config.TilesPerChestMax - Config.TilesPerChestMin) * r.NextDouble() * cp.Y * openWorldChunkSize / Config.OpenWorldSize ))); 
+            int count = (int)Math.Floor(openWorldChunkSize * openWorldChunkSize / (float)(Config.TilesChestMin + ((Config.TilesChestMax - Config.TilesChestMin) * r.NextDouble() * cp.Y * openWorldChunkSize / Config.OpenWorldSize ))); 
             int i = 0;
             int attempt = 0;
             while (i < count && attempt < count * 10)
@@ -1207,7 +1208,7 @@ namespace StardewOpenWorld
         public static void AddBushesToChunk(Point cp)
         {
             Random r = Utility.CreateRandom(RandomSeed, cp.X + cp.X * cp.Y, "bush".GetHashCode());
-            int count = (int)Math.Floor(openWorldChunkSize * openWorldChunkSize / (float)(Config.TilesPerBushMin + ((Config.TilesPerBushMax - Config.TilesPerBushMin) * r.NextDouble() * cp.Y * openWorldChunkSize / Config.OpenWorldSize ))); 
+            int count = (int)Math.Floor(openWorldChunkSize * openWorldChunkSize / (float)(Config.TilesBushMin + ((Config.TilesBushMax - Config.TilesBushMin) * r.NextDouble() ))); 
             int i = 0;
             int attempt = 0;
             while (i < count && attempt < count * 10)
@@ -1229,10 +1230,35 @@ namespace StardewOpenWorld
                 attempt++;
             }
         }
+        public static void AddArtifactsToChunk(Point cp)
+        {
+            Random r = Utility.CreateRandom(RandomSeed, cp.X + cp.X * cp.Y, "artifact".GetHashCode());
+            int count = (int)Math.Floor(openWorldChunkSize * openWorldChunkSize / (float)(Config.TilesArtifactMin + ((Config.TilesArtifactMax - Config.TilesBushMin) * r.NextDouble() * cp.Y * openWorldChunkSize / Config.OpenWorldSize ))); 
+            int i = 0;
+            int attempt = 0;
+            while (i < count && attempt < count * 10)
+            {
+                Vector2 freeTile = new(r.Next(openWorldChunkSize), r.Next(openWorldChunkSize));
+                var av = ToGlobalTile(cp, freeTile);
+                if (IsInsideRect(cp, av, landmarkRects))
+                {
+                    goto next;
+                }
+                if (IsOpenTile(av))
+                {
+                    Object obj = ItemRegistry.Create<Object>("(O)590");
+
+                    cachedChunks[cp].objects[av] = obj;
+                    i++;
+                }
+            next:
+                attempt++;
+            }
+        }
         public static void AddForageToChunk(Point cp)
         {
             Random r = Utility.CreateRandom(RandomSeed, cp.X + cp.X * cp.Y, "forage".GetHashCode());
-            int count = (int)Math.Floor(openWorldChunkSize * openWorldChunkSize / (float)(Config.TilesPerForageMin + ((Config.TilesPerForageMax - Config.TilesPerForageMin) * r.NextDouble() * cp.Y * openWorldChunkSize / Config.OpenWorldSize ))); 
+            int count = (int)Math.Floor(openWorldChunkSize * openWorldChunkSize / (float)(Config.TilesForageMin + ((Config.TilesForageMax - Config.TilesForageMin) * r.NextDouble()))); 
             int i = 0;
             int attempt = 0;
             var forest = Game1.getLocationFromName("Forest");
@@ -1292,7 +1318,7 @@ namespace StardewOpenWorld
         public static void AddClumpsToChunk(Point cp)
         {
             Random r = Utility.CreateRandom(RandomSeed, cp.X + cp.X * cp.Y, "clump".GetHashCode());
-            int count = (int)Math.Floor(openWorldChunkSize * openWorldChunkSize / (float)(Config.TilesPerClumpMin + ((Config.TilesPerClumpMax - Config.TilesPerClumpMin) * r.NextDouble() * cp.Y * openWorldChunkSize / Config.OpenWorldSize ))); 
+            int count = (int)Math.Floor(openWorldChunkSize * openWorldChunkSize / (float)(Config.TilesClumpMin + ((Config.TilesClumpMax - Config.TilesClumpMin) * r.NextDouble() ))); 
             int i = 0;
             int attempt = 0;
             while (i < count && attempt < count * 10)
