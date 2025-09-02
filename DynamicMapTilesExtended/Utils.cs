@@ -74,6 +74,9 @@ namespace DMT
 
         public static void PushTilesWithOthers(Farmer f, Tile t, Point start)
         {
+            if (f == null)
+                return;
+
             List<(Point, Tile)> tiles = [(start, t)];
             if (!t.HasProperty(Keys.PushAlsoKey, out var others))
             {
@@ -266,9 +269,9 @@ namespace DMT
             {
                 return false;
             }
-            return DoTriggerActions(who, tilePosition, properties);
+            return DoTriggerActions(who, location, tilePosition, properties);
         }
-        public static bool DoTriggerActions(Farmer who, Point tilePosition, List<(DynamicTileProperty prop, Tile tile)> properties)
+        public static bool DoTriggerActions(Farmer who, GameLocation location, Point tilePosition, List<(DynamicTileProperty prop, Tile tile)> properties)
         {
             List<string> triggered = new();
 
@@ -281,35 +284,38 @@ namespace DMT
                     var tile = item.tile;
                     switch (item.prop.Key)
                     {
+                        case Keys.ActionKey:
+                            Actions.DoAction(who, value);
+                            break;
                         case Keys.AddLayerKey:
-                            Actions.DoAddLayer(who, value);
+                            Actions.DoAddLayer(location, value);
                             break;
                         case Keys.AddTilesheetKey:
-                            Actions.DoAddTileSheet(who, value);
+                            Actions.DoAddTileSheet(location, value);
                             break;
                         case Keys.AnimationKey:
-                            Actions.DoAnimate(who, value, false);
+                            Actions.DoAnimate(location, value, false);
                             break;
                         case Keys.AnimationOffKey:
-                            Actions.DoAnimate(who, value, true);
+                            Actions.DoAnimate(location, value, true);
                             break;
                         case Keys.BuffKey:
                             Actions.DoAddBuff(who, value);
                             break;
                         case Keys.ChangeIndexKey:
-                            Actions.DoChangeIndex(who, value, tile, tilePosition);
+                            Actions.DoChangeIndex(location, value, tile, tilePosition);
                             break;
                         case Keys.ChangeMultipleIndexKey:
-                            Actions.DoChangeMultipleIndexes(who, value, tile, tilePosition);
+                            Actions.DoChangeMultipleIndexes(location, value, tile, tilePosition);
                             break;
                         case Keys.ChangePropertiesKey:
                             Actions.DoChangeProperties(value, tile);
                             break;
                         case Keys.ChangeMultiplePropertiesKey:
-                            Actions.DoChangeMultipleProperties(who, value, tile);
+                            Actions.DoChangeMultipleProperties(location, value, tile);
                             break;
                         case Keys.ChestKey:
-                            Actions.DoSpawnChest(who, value);
+                            Actions.DoSpawnChest(location, value);
                             break;
                         case Keys.EmoteKey:
                             Actions.DoEmote(who, value);
@@ -318,7 +324,7 @@ namespace DMT
                             Actions.DoPlayEvent(value);
                             break;
                         case Keys.ExplosionKey:
-                            Actions.DoExplode(who, value, tilePosition);
+                            Actions.DoExplode(who, location, value, tilePosition);
                             break;
                         case Keys.GiveKey:
                             Actions.DoGive(who, value);
@@ -366,7 +372,7 @@ namespace DMT
                             Actions.DoUpdateStaminaPerSecondCont(who, value);
                             break;
                         case Keys.SoundKey:
-                            Actions.DoPlaySound(who, value);
+                            Actions.DoPlaySound(location, value);
                             break;
                         case Keys.TakeKey:
                             Actions.DoTake(who, value);
@@ -547,7 +553,7 @@ namespace DMT
                             {
                                 if (action.trigger == Triggers.Load)
                                 {
-                                    DoTriggerActions(Game1.player, new(x, y), [(action, tile)]);
+                                    DoTriggerActions(Game1.player, l, new(x, y), [(action, tile)]);
                                 }
                                 else
                                 {

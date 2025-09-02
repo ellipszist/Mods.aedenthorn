@@ -26,7 +26,6 @@ namespace FreeLove
         public static ModEntry context;
         public static Multiplayer mp;
         public static Random myRand;
-        public static string farmHelperSpouse = null;
         internal static NPC tempOfficialSpouse;
         public static int bedSleepOffset = 76;
 

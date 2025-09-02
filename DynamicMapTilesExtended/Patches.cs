@@ -269,6 +269,25 @@ namespace DMT
                 }
             }
         }
+        
+        internal static void Character_MovePosition_Prefix(Character __instance, ref Point __state)
+        {
+            if (!Enabled || (!Context.Config.TriggerDuringEvents && Game1.eventUp) || __instance.currentLocation is null)
+                return;
+            __state = __instance.TilePoint;
+        }
+
+        internal static void Character_MovePosition_Postfix(Character __instance, ref Point __state)
+        {
+            if (!Enabled || (!Context.Config.TriggerDuringEvents && Game1.eventUp) || __state == default || __instance.currentLocation is null)
+                return;
+            var layer = __instance.currentLocation.Map.GetLayer("Back");
+            if (__state != __instance.TilePoint)
+            {
+                TriggerActions([layer], null, __instance.currentLocation, __state, [Triggers.StepOffNPC]);
+                TriggerActions([layer], null, __instance.currentLocation, __instance.TilePoint, [Triggers.StepOnNPC]);
+            }
+        }
 
         internal static void NPC_CheckAction_Postfix(NPC __instance, Farmer who)
         {

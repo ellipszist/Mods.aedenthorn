@@ -1,8 +1,12 @@
 ﻿using DMT.Data;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using StardewValley;
+using StardewValley.Characters;
+using StardewValley.Extensions;
 using StardewValley.Objects;
+using xTile.Dimensions;
 using xTile.Layers;
 using xTile.Tiles;
 
@@ -12,16 +16,36 @@ namespace DMT
     {
         public static readonly Dictionary<string, Action<Farmer, string, Tile, Point>> ModActions = [];
 
-        public static void DoAddLayer(Farmer who, string value) => AddLayer(who.currentLocation.map, value);
+        public static void DoAction(Farmer who, string value)
+        {
+            if (who?.currentLocation == null || string.IsNullOrEmpty(value))
+                return;
 
-        public static void DoAddTileSheet(Farmer who, string value)
+            var split = value.Split(',');
+            if (split.Length != 2 || !int.TryParse(split[0], out var x) || !int.TryParse(split[1], out var y))
+                return;
+            xLocation tileLocation = tileLocation = new(x, y);
+
+            Tile tile = who.currentLocation.map.RequireLayer("Buildings").PickTile(new Location(tileLocation.X * 64, tileLocation.Y * 64), Game1.viewport.Size);
+            string action;
+            if (tile == null || !tile.Properties.TryGetValue("Action", out action))
+            {
+                action = who.currentLocation.doesTileHaveProperty(tileLocation.X, tileLocation.Y, "Action", "Buildings", false);
+                if (action != null)
+                {
+                    who.currentLocation.performAction(action, who, tileLocation);
+                }
+            }
+        }
+        public static void DoAddLayer(GameLocation location, string value) => AddLayer(location.map, value);
+
+        public static void DoAddTileSheet(GameLocation location, string value)
         {
             var split = value.Split(',');
             if (split.Length == 2)
-                AddTileSheet(who.currentLocation.map, split[0], split[1]);
+                AddTileSheet(location.map, split[0], split[1]);
         }
-
-        public static void DoChangeIndex(Farmer who, string value, Tile tile, Point tilePos)
+        public static void DoChangeIndex(GameLocation location, string value, Tile tile, Point tilePos)
         {
             if (string.IsNullOrEmpty(value))
             {
@@ -48,7 +72,7 @@ namespace DMT
                     else if (index.ToString().Contains('/'))
                     {
                         var sheetIndex = index.ToString().Split('/');
-                        tiles.Add(new StaticTile(tile.Layer, who.currentLocation.Map.GetTileSheet(sheetIndex[0]), BlendMode.Alpha, int.Parse(sheetIndex[1])));
+                        tiles.Add(new StaticTile(tile.Layer, location.Map.GetTileSheet(sheetIndex[0]), BlendMode.Alpha, int.Parse(sheetIndex[1])));
                     }
 
                 }
@@ -58,11 +82,11 @@ namespace DMT
             if (value.Contains('/'))
             {
                 var sheetIndex = value.Split('/');
-                tile.Layer.Tiles[tilePos.X, tilePos.Y] = new StaticTile(tile.Layer, who.currentLocation.Map.GetTileSheet(sheetIndex[0]), BlendMode.Alpha, int.Parse(sheetIndex[1]));
+                tile.Layer.Tiles[tilePos.X, tilePos.Y] = new StaticTile(tile.Layer, location.Map.GetTileSheet(sheetIndex[0]), BlendMode.Alpha, int.Parse(sheetIndex[1]));
             }
         }
 
-        public static void DoChangeMultipleIndexes(Farmer who, string value, Tile tile, Point tilePos)
+        public static void DoChangeMultipleIndexes(GameLocation location, string value, Tile tile, Point tilePos)
         {
             var tileInfos = value.Split('|');
             foreach (var tileInfo in tileInfos)
@@ -71,8 +95,8 @@ namespace DMT
                 if (pair.Length != 2)
                     continue;
                 var layerXY = pair[0].Split(' ');
-                var l = who.currentLocation.Map.GetLayer(layerXY[0]);
-                l ??= AddLayer(who.currentLocation.Map, layerXY[0]);
+                var l = location.Map.GetLayer(layerXY[0]);
+                l ??= AddLayer(location.Map, layerXY[0]);
                 if (string.IsNullOrEmpty(pair[1]))
                 {
                     l.Tiles[int.Parse(layerXY[1]), int.Parse(layerXY[2])] = null;
@@ -95,7 +119,7 @@ namespace DMT
                         else if (index.Contains('/'))
                         {
                             var sheetIndex = index.Split('/');
-                            tiles.Add(new StaticTile(l, who.currentLocation.Map.GetTileSheet(sheetIndex[0]), BlendMode.Alpha, int.Parse(sheetIndex[1])));
+                            tiles.Add(new StaticTile(l, location.Map.GetTileSheet(sheetIndex[0]), BlendMode.Alpha, int.Parse(sheetIndex[1])));
                         }
 
                     }
@@ -105,7 +129,7 @@ namespace DMT
                 if (pair[1].Contains('/'))
                 {
                     var sheetIndex = pair[1].Split('/');
-                    l.Tiles[int.Parse(layerXY[1]), int.Parse(layerXY[2])] = new StaticTile(tile.Layer, who.currentLocation.Map.GetTileSheet(sheetIndex[0]), BlendMode.Alpha, int.Parse(sheetIndex[1]));
+                    l.Tiles[int.Parse(layerXY[1]), int.Parse(layerXY[2])] = new StaticTile(tile.Layer, location.Map.GetTileSheet(sheetIndex[0]), BlendMode.Alpha, int.Parse(sheetIndex[1]));
                     continue;
                 }
             }
@@ -124,7 +148,7 @@ namespace DMT
             }
         }
 
-        public static void DoChangeMultipleProperties(Farmer who, string value, Tile tile)
+        public static void DoChangeMultipleProperties(GameLocation location, string value, Tile tile)
         {
             var tiles = value.Split('|');
             foreach (var prop in tiles)
@@ -139,14 +163,14 @@ namespace DMT
                     }
                     else if (tileInfo.Length == 4)
                     {
-                        var l = who.currentLocation.Map.GetLayer(tileInfo[0]) ?? AddLayer(who.currentLocation.Map, tileInfo[0]);
+                        var l = location.Map.GetLayer(tileInfo[0]) ?? AddLayer(location.Map, tileInfo[0]);
                         l.Tiles[int.Parse(tileInfo[1]), int.Parse(tileInfo[2])].Properties[tileInfo[3]] = pair[1];
                     }
                 }
             }
         }
 
-        public static void DoPlaySound(Farmer who, string value)
+        public static void DoPlaySound(GameLocation location, string value)
         {
             var split = value.Split('|');
             for (int i = 0; i < split.Length; i++)
@@ -155,13 +179,13 @@ namespace DMT
                 {
                     var split2 = split[i].Split(',');
                     if (int.TryParse(split2[1], out int delay))
-                        DelayedAction.playSoundAfterDelay(split2[0], delay, who.currentLocation);
+                        DelayedAction.playSoundAfterDelay(split2[0], delay, location);
                     continue;
                 }
                 if (i == 0)
-                    who.currentLocation.playSound(split[i]);
+                    location.playSound(split[i]);
                 else
-                    DelayedAction.playSoundAfterDelay(split[i], i * 300, who.currentLocation);
+                    DelayedAction.playSoundAfterDelay(split[i], i * 300, location);
             }
         }
 
@@ -209,12 +233,15 @@ namespace DMT
 
         public static void DoPlayMusic(string value) => Game1.changeMusicTrack(value);
 
-        public static void DoAddMailflag(Farmer who, string value) => who.mailReceived.Add(value);
+        public static void DoAddMailflag(Farmer who, string value) => who?.mailReceived.Add(value);
 
-        public static void DoRemoveMailflag(Farmer who, string value) => who.mailReceived.Remove(value);
+        public static void DoRemoveMailflag(Farmer who, string value) => who?.mailReceived.Remove(value);
 
         public static void DoAddMailForTomorrow(Farmer who, string value)
         {
+            if (who == null)
+                return;
+
             if (!who.mailbox.Contains(value))
                 who.mailbox.Add(value);
         }
@@ -227,6 +254,9 @@ namespace DMT
 
         public static void DoTeleport(Farmer who, string value)
         {
+            if (who == null)
+                return;
+
             var split = value.Split(' ');
             if (split.Length != 2 || !int.TryParse(split[0], out int x) || !int.TryParse(split[1], out int y))
                 return;
@@ -235,6 +265,9 @@ namespace DMT
 
         public static void DoTeleportTile(Farmer who, string value)
         {
+            if (who == null)
+                return;
+
             var split = value.Split(' ');
             if (split.Length != 2 || !int.TryParse(split[0], out int x) || !int.TryParse(split[1], out int y))
                 return;
@@ -243,6 +276,8 @@ namespace DMT
 
         public static void DoGive(Farmer who, string value)
         {
+            if(who == null) 
+                return;
             Item? item = null;
             if (value.StartsWith("Money/"))
             {
@@ -260,6 +295,9 @@ namespace DMT
 
         public static void DoTake(Farmer who, string value)
         {
+            if (who == null)
+                return;
+
             Item? item = null;
             if (value.StartsWith("Money/"))
             {
@@ -273,12 +311,12 @@ namespace DMT
             who.Items.ReduceId(item.ItemId, item.Stack);
         }
 
-        public static void DoSpawnChest(Farmer who, string value)
+        public static void DoSpawnChest(GameLocation location, string value)
         {
             var split = value.Split('=');
             var split2 = split[0].Split(' ');
             Vector2 tilePos = new(int.Parse(split2[0]), int.Parse(split2[1]));
-            if (who.currentLocation.Objects.TryGetValue(tilePos, out var obj) && obj is Chest)
+            if (location.Objects.TryGetValue(tilePos, out var obj) && obj is Chest)
                 return;
             int coins = 0;
             string? chestId = null;
@@ -319,11 +357,14 @@ namespace DMT
             chest.GetItemsForPlayer(who.UniqueMultiplayerID).AddRange(items);
             if (coins > 0)
                 chest.GetItemsForPlayer(who.UniqueMultiplayerID).Add(ItemRegistry.Create("(O)GoldCoin", coins));*/
-            who.currentLocation.overlayObjects[tilePos] = chest;
+            location.overlayObjects[tilePos] = chest;
         }
 
         public static void DoUpdateHealth(Farmer who, string value)
         {
+            if (who == null)
+                return;
+
             if (!int.TryParse(value, out int number))
                 return;
             if (number > 0)
@@ -337,6 +378,9 @@ namespace DMT
 
         public static void DoUpdateHealthPerSecond(Farmer who, string value)
         {
+            if (who == null)
+                return;
+
             if (!value.Contains('|'))
                 return;
             var split = value.Split('|');
@@ -355,6 +399,9 @@ namespace DMT
 
         public static void DoUpdateStamina(Farmer who, string value)
         {
+            if (who == null)
+                return;
+
             if (!float.TryParse(value, out var number))
                 return;
             who.Stamina += number;
@@ -362,6 +409,9 @@ namespace DMT
 
         public static void DoUpdateStaminaPerSecond(Farmer who, string value)
         {
+            if (who == null)
+                return;
+
             if (!value.Contains('|'))
                 return;
             var split = value.Split('|');
@@ -373,6 +423,9 @@ namespace DMT
 
         public static void DoUpdateStaminaPerSecondCont(Farmer who, string value)
         {
+            if (who == null)
+                return;
+
             if (!int.TryParse(value, out int number))
                 return;
             Context.SecondUpdateContinuousLoops.Value.Add(new() { Tile = who.Tile, Location = who.currentLocation, Value = number, type = SecondUpdateData.SecondUpdateType.Stamina, Who = who });
@@ -380,6 +433,9 @@ namespace DMT
 
         public static void DoAddBuff(Farmer who, string value)
         {
+            if (who == null)
+                return;
+
             foreach (var item in value.Split('|'))
             {
                 if (!item.Contains(','))
@@ -394,12 +450,15 @@ namespace DMT
 
         public static void DoEmote(Farmer who, string value)
         {
+            if (who == null)
+                return;
+
             if (!int.TryParse(value, out int id))
                 return;
             who.doEmote(id);
         }
 
-        public static void DoExplode(Farmer who, string value, Point tilePos)
+        public static void DoExplode(Farmer who, GameLocation location, string value, Point tilePos)
         {
             var split = value.Split(' ');
             string explodeSound = "explosion";
@@ -423,11 +482,11 @@ namespace DMT
                 pos = new(int.Parse(split[0]), int.Parse(split[1]));
 
 
-            who.currentLocation.playSound(explodeSound);
+            location.playSound(explodeSound);
             who.currentLocation.explode(pos, radius, who, damagesFarmer, damageRadius, destroyObjects);
         }
 
-        public static void DoAnimate(Farmer who, string value, bool off)
+        public static void DoAnimate(GameLocation location, string value, bool off)
         {
             if (!value.Contains(','))
                 return;
@@ -451,10 +510,10 @@ namespace DMT
                 if (anim?.ToSAnim() is not TemporaryAnimatedSprite sprite)
                     continue;
 
-                who.currentLocation.removeTemporarySpritesWithIDLocal(sprite.id);
+                location.removeTemporarySpritesWithIDLocal(sprite.id);
                 if (!off)
                 {
-                    who.currentLocation.TemporarySprites.Add(sprite);
+                    location.TemporarySprites.Add(sprite);
                 }
             }
         }
@@ -463,6 +522,9 @@ namespace DMT
 
         public static void DoPushOtherTiles(Farmer who, string value, Tile tile, Point tilePos)
         {
+            if (who == null)
+                return;
+
             var split = value.Split(',');
             foreach (var item in split)
             {
@@ -480,6 +542,9 @@ namespace DMT
 
         public static void DoWarp(Farmer who, string value)
         {
+            if (who == null)
+                return;
+
             var split = value.Split(',');
             int x, y;
             if (split.Length == 2 || string.IsNullOrWhiteSpace(split[0]))
@@ -503,6 +568,9 @@ namespace DMT
 
         public static void DoFriendshipChange(Farmer who, string value)
         {
+            if (who == null)
+                return;
+
             var split = value.Split(',');
             foreach (var item in split)
             {

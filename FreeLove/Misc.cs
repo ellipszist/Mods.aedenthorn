@@ -91,17 +91,28 @@ namespace FreeLove
                 return;
 
             List<NPC> allSpouses = GetSpouses(farmer, true).Values.ToList();
-
             if (allSpouses.Count == 0)
             {
                 SMonitor.Log($"no spouses for {farmer.Name}");
                 return;
             }
+            try
+            {
+                allSpouses.Sort((NPC a, NPC b) =>
+                {
+                    return farmer.friendshipData[a.Name].DaysMarried.CompareTo(farmer.friendshipData[b.Name].DaysMarried);
+                });
 
-            ShuffleList(ref allSpouses);
+            }
+            catch 
+            {
+                ShuffleList(ref allSpouses);
+            }
+
 
             List<string> bedSpouses = new List<string>();
             string kitchenSpouse = null;
+            string porchSpouse = null;
 
             foreach (NPC spouse in allSpouses)
             {
@@ -109,8 +120,20 @@ namespace FreeLove
                     continue;
                 if (!farmHouse.Equals(spouse.currentLocation))
                 {
-                    SMonitor.Log($"{spouse.Name} is not in farmhouse ({spouse.currentLocation.Name})");
-                    continue;
+                    if (!Game1.getFarm().Equals(spouse.currentLocation))
+                    {
+                        SMonitor.Log($"{spouse.Name} is not in farmhouse ({spouse.currentLocation.Name})");
+                        continue;
+                    }
+                    else if(porchSpouse == null)
+                    {
+                        porchSpouse = spouse.Name;
+                        continue;
+                    }
+                    else
+                    {
+                        Game1.warpCharacter(spouse, farmHouse.NameOrUniqueName, farmHouse.getRandomOpenPointInHouse(myRand));
+                    }
                 }
                 int type = myRand.Next(0, 100);
 

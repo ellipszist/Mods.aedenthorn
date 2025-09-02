@@ -14,6 +14,8 @@
         public const string PushedTile = "Pushed";
         public const string StepOff = "Off";
         public const string StepOn = "On";
+        public const string StepOffNPC = "OffNPC";
+        public const string StepOnNPC = "OnNPC";
         public const string TalkToNPC = "Talk{0}";
         public const string UseItem = "Item{0}";
         public const string UseTool = "Tool{0}";

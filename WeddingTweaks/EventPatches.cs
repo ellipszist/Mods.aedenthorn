@@ -287,13 +287,19 @@ namespace WeddingTweaks
 
                     if (text == "wedding")
                     {
-                        freeLoveAPI.PlaceSpousesInFarmhouse(Utility.getHomeOfFarmer(Game1.player));
+                        SHelper.Events.GameLoop.UpdateTicked += GameLoop_UpdateTicked;
                     }
                 }
                 catch (Exception ex)
                 {
                     SMonitor.Log($"Failed in {nameof(Event_endBehaviors_Patch)}:\n{ex}", LogLevel.Error);
                 }
+            }
+
+            private static void GameLoop_UpdateTicked(object sender, StardewModdingAPI.Events.UpdateTickedEventArgs e)
+            {
+                freeLoveAPI.PlaceSpousesInFarmhouse(Utility.getHomeOfFarmer(Game1.player));
+                SHelper.Events.GameLoop.UpdateTicked -= GameLoop_UpdateTicked;
             }
         }
 
