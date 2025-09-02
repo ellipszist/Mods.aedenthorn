@@ -61,8 +61,8 @@ namespace WeatherTotem
 					IDictionary<string, ObjectData> data = asset.AsDictionary<string, ObjectData>().Data;
 
 					data["681"].Name = "Weather Totem";
-					data["681"].DisplayName = "[aedenthorn.WeatherTotem_i18n item.weather_totem.name]";
-					data["681"].Description = "[aedenthorn.WeatherTotem_i18n item.weather_totem.description]";
+					data["681"].DisplayName = SHelper.Translation.Get("item.weather_totem.name");
+					data["681"].Description = SHelper.Translation.Get("item.weather_totem.description");
 				});
 			}
 		}
