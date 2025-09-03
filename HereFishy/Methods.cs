@@ -39,6 +39,10 @@ namespace HereFishy
 				{
 					fishySound.Play();
 				}
+                else if (soundDict.TryGetValue("fishy", out fishySound)) 
+				{
+					fishySound.Play();
+				}
 			}
 			who.completelyStopAnimatingOrDoingAction();
 			who.CanMove = Config.AllowMovement;
