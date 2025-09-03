@@ -54,14 +54,27 @@ namespace HereFishy
 			SMonitor = Monitor;
 			SHelper = helper;
 
+			string fishyPath = Path.Combine(Helper.DirectoryPath, "fishy.wav");
+
+            if (!File.Exists(fishyPath))
+			{
+                fishyPath = Path.Combine(Helper.DirectoryPath, "assets", "fishy.wav");
+            }
+
+			string weePath = Path.Combine(Helper.DirectoryPath, "wee.wav");
+            if (!File.Exists(weePath))
+			{
+                weePath = Path.Combine(Helper.DirectoryPath, "assets", "wee.wav");
+            }
+
 			try
 			{
-				fishySound = SoundEffect.FromStream(new FileStream(Path.Combine(Helper.DirectoryPath, "assets", "fishy.wav"), FileMode.Open));
-				weeSound = SoundEffect.FromStream(new FileStream(Path.Combine(Helper.DirectoryPath, "assets", "wee.wav"), FileMode.Open));
+				fishySound = SoundEffect.FromStream(new FileStream(fishyPath, FileMode.Open));
+				weeSound = SoundEffect.FromStream(new FileStream(weePath, FileMode.Open));
 			}
 			catch(Exception e)
 			{
-				SMonitor.Log($"error loading fishy.wav: {e}");
+				SMonitor.Log($"error loading wav files: {e}");
 			}
 
 			helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
