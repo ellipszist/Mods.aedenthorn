@@ -26,7 +26,19 @@ namespace HereFishy
 			hereFishying = true;
 			if (Config.PlaySound)
 			{
-				fishySound?.Play();
+				string which = "fishy_male";
+				if (Config.PlayGenderedSound)
+				{
+					which = (who.Gender == Gender.Female ? "fishy_female" : "fishy_male");
+                    if (!soundDict.ContainsKey(which))
+					{
+						which = "fishy_male";
+					}
+                }
+                if (soundDict.TryGetValue(which, out var fishySound)) 
+				{
+					fishySound.Play();
+				}
 			}
 			who.completelyStopAnimatingOrDoingAction();
 			who.CanMove = Config.AllowMovement;
@@ -171,11 +183,11 @@ namespace HereFishy
 					who.gainExperience(1, 3);
 				}
 			}
-			if (Config.PlaySound)
-			{
-				weeSound?.Play();
-			}
-			CreateAnimation(objectTexture, objectData is null ? 1384 : item.ParentSheetIndex, x, y, who, 0.002f, "tinyWhip", PlayerCaughtFishEndFunction);
+            if (Config.PlaySound & soundDict.TryGetValue("wee", out var weeSound))
+            {
+                weeSound.Play();
+            }
+            CreateAnimation(objectTexture, objectData is null ? 1384 : item.ParentSheetIndex, x, y, who, 0.002f, "tinyWhip", PlayerCaughtFishEndFunction);
 			if (caughtDoubleFish)
 			{
 				CreateAnimation(objectTexture, objectData is null ? 1384 : item.ParentSheetIndex, x, y, who, 0.0016f, "fishSlap");

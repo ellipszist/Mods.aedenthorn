@@ -24,8 +24,7 @@ namespace HereFishy
 
 		private static readonly List<TemporaryAnimatedSprite> animations = new();
 		private static bool beginnersRod;
-		private static SoundEffect fishySound;
-		private static SoundEffect weeSound;
+		private static Dictionary<string, SoundEffect> soundDict = new();
 		private static SparklingText sparklingText;
 		private static bool caughtDoubleFish;
 		private static Farmer lastUser;
@@ -54,28 +53,18 @@ namespace HereFishy
 			SMonitor = Monitor;
 			SHelper = helper;
 
-			string fishyPath = Path.Combine(Helper.DirectoryPath, "fishy.wav");
-
-            if (!File.Exists(fishyPath))
+			foreach(var s in new string[] { "fishy", "fishy_female", "fishy_male", "wee" })
 			{
-                fishyPath = Path.Combine(Helper.DirectoryPath, "assets", "fishy.wav");
+				var path = Path.Combine(Helper.DirectoryPath, $"{s}.wav");
+                if (!File.Exists(path))
+                {
+                    path = Path.Combine(Helper.DirectoryPath, "assets", $"{s}.wav");
+                }
+                if (File.Exists(path))
+				{
+					soundDict[s] = SoundEffect.FromStream(new FileStream(path, FileMode.Open));
+                }
             }
-
-			string weePath = Path.Combine(Helper.DirectoryPath, "wee.wav");
-            if (!File.Exists(weePath))
-			{
-                weePath = Path.Combine(Helper.DirectoryPath, "assets", "wee.wav");
-            }
-
-			try
-			{
-				fishySound = SoundEffect.FromStream(new FileStream(fishyPath, FileMode.Open));
-				weeSound = SoundEffect.FromStream(new FileStream(weePath, FileMode.Open));
-			}
-			catch(Exception e)
-			{
-				SMonitor.Log($"error loading wav files: {e}");
-			}
 
 			helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
 			Helper.Events.Display.RenderedWorld += Display_RenderedWorld;
