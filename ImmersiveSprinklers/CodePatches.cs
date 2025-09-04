@@ -44,13 +44,13 @@ namespace ImmersiveSprinklers
                     {
                         tf.modData[enricherKey + which] = "true";
                         who.reduceActiveItemByOne();
-                        __instance.playSound("axe", NetAudio.SoundContext.Default);
+                        __instance.playSound("axe");
                     }
                     else if (who.CurrentItem.ParentSheetIndex == 915 && !tf.modData.ContainsKey(nozzleKey + which))
                     {
                         tf.modData[nozzleKey + which] = "true";
                         who.reduceActiveItemByOne();
-                        __instance.playSound("axe", NetAudio.SoundContext.Default);
+                        __instance.playSound("axe");
                     }
                     else if (who.CurrentItem.Category == -19 && tf.modData.ContainsKey(enricherKey + which))
                     {
@@ -86,7 +86,7 @@ namespace ImmersiveSprinklers
                             who.showNotCarrying();
                         }
                         tf.modData[fertilizerKey + which] = index + "," + addStack;
-                        __instance.playSound("dirtyHit", NetAudio.SoundContext.Default);
+                        __instance.playSound("dirtyHit");
                     }
                     else
                         return true;
@@ -113,12 +113,16 @@ namespace ImmersiveSprinklers
                     SMonitor.Log($"Placing {__instance.Name} at {x},{y}:{which}");
                     location.playSound("woodyStep");
                     ReturnSprinkler(who, location, placementTile, which);
-                    tf.modData[sprinklerKey + which] = GetSprinklerString(__instance);
                     if (__instance.bigCraftable.Value)
                     {
                         tf.modData[bigCraftableKey + which] = "true";
+                        tf.modData[sprinklerKey + which] = (string)AccessTools.Method(typeof(Item), "ValidateUnqualifiedItemId").Invoke(__instance, null);
                     }
-                    tf.modData[guidKey + which] = Guid.NewGuid().ToString();
+                    else
+                    {
+                        tf.modData[guidKey + which] = Guid.NewGuid().ToString();
+                        tf.modData[sprinklerKey + which] = __instance.ItemId;
+                    }
                     if (atApi is not null)
                     {
                         Object obj = (Object)__instance.getOne();
@@ -150,7 +154,7 @@ namespace ImmersiveSprinklers
                                 if (GetSprinklerTiles(kvp.Key, i, radius).Contains(placementTile))
                                 {
                                     Object f = GetFertilizer(fertString);
-                                    if (((HoeDirt)tf).plant(f.ParentSheetIndex, (int)placementTile.X, (int)placementTile.Y, who, true, location))
+                                    if (((HoeDirt)tf).plant(Crop.ResolveSeedId(f.ItemId, location), who, true))
                                     {
                                         f.Stack--;
                                         if(f.Stack > 0)
@@ -173,10 +177,12 @@ namespace ImmersiveSprinklers
         [HarmonyPatch(typeof(HoeDirt), nameof(HoeDirt.DrawOptimized))]
         public class HoeDirt_DrawOptimized_Patch
         {
-            public static void Postfix(HoeDirt __instance, SpriteBatch dirt_batch, Vector2 tileLocation)
+            public static void Postfix(HoeDirt __instance, SpriteBatch dirt_batch)
             {
                 if (!Config.EnableMod)
-                    return;
+                    return; 
+                Vector2 tileLocation = __instance.Tile;
+
                 for (int i = 0; i < 4; i++)
                 {
                     if(__instance.modData.ContainsKey(sprinklerKey + i))
@@ -216,7 +222,7 @@ namespace ImmersiveSprinklers
             }
 
         }
-        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.isTileOccupiedForPlacement))]
+        //[HarmonyPatch(typeof(GameLocation), nameof(GameLocation.isTileLocationOpen))]
         public class GameLocation_isTileOccupiedForPlacement_Patch
         {
             public static void Postfix(GameLocation __instance, Vector2 tileLocation, Object toPlace, ref bool __result)
@@ -230,12 +236,12 @@ namespace ImmersiveSprinklers
             }
 
         }
-        [HarmonyPatch(typeof(Utility), "itemCanBePlaced")]
-        public class Utility_itemCanBePlaced_Patch
+        [HarmonyPatch(typeof(Object), nameof(Object.canBePlacedHere))]
+        public class Object_canBePlacedHere_Patch
         {
-            public static bool Prefix(GameLocation location, Vector2 tileLocation, Item item, ref bool __result)
+            public static bool Prefix(Object __instance, GameLocation l, Vector2 tile, ref bool __result)
             {
-                if (!Config.EnableMod || item is not Object || !(item as Object).IsSprinkler() || !location.terrainFeatures.TryGetValue(tileLocation, out var tf) || tf is not HoeDirt)
+                if (!Config.EnableMod || __instance is not Object || !(__instance as Object).IsSprinkler() || !l.terrainFeatures.TryGetValue(tile, out var tf) || tf is not HoeDirt)
                     return true;
                 __result = true;
                 return false;
@@ -313,9 +319,9 @@ namespace ImmersiveSprinklers
         [HarmonyPatch(typeof(HoeDirt), nameof(HoeDirt.dayUpdate))]
         public class HoeDirt_dayUpdate_Patch
         {
-            public static void Postfix(HoeDirt __instance, GameLocation environment, Vector2 tileLocation)
+            public static void Postfix(HoeDirt __instance)
             {
-                if (!Config.EnableMod || (environment.IsOutdoors && Game1.IsRainingHere(environment)))
+                if (!Config.EnableMod || (__instance.Location.IsOutdoors && Game1.IsRainingHere(__instance.Location)))
                     return;
                 for (int i = 0; i < 4; i++)
                 {
@@ -325,9 +331,9 @@ namespace ImmersiveSprinklers
                         if (obj is not null)
                         {
                             var which = i;
-                            environment.postFarmEventOvernightActions.Add(delegate
+                            __instance.Location.postFarmEventOvernightActions.Add(delegate
                             {
-                                ActivateSprinkler(environment, tileLocation, obj, which, true);
+                                ActivateSprinkler(__instance.Location, __instance.Tile, obj, which, true);
                             });
                         }
                     }
