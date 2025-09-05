@@ -5,7 +5,6 @@ using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Characters;
 using StardewValley.Monsters;
-using System.Diagnostics;
 using System.Globalization;
 using Object = StardewValley.Object;
 
@@ -13,7 +12,7 @@ namespace DMT
 {
     internal static class Patches
     {
-        private static bool Enabled => Context.Config.Enabled;
+        private static bool Enabled => context.Config.Enabled;
 
         private static PerScreen<Farmer> ExplodingFarmer => new();
 
@@ -61,6 +60,12 @@ namespace DMT
                 prefix: new(typeof(Patches), nameof(Farmer_MovePosition_Prefix)),
                 postfix: new(typeof(Patches), nameof(Farmer_MovePosition_Postfix))
             );
+            
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Character), nameof(Character.MovePosition)),
+                prefix: new(typeof(Patches), nameof(Character_MovePosition_Prefix)),
+                postfix: new(typeof(Patches), nameof(Character_MovePosition_Postfix))
+            );
 
             harmony.Patch(
                 original: AccessTools.Method(typeof(NPC), nameof(NPC.checkAction)),
@@ -101,7 +106,7 @@ namespace DMT
 
         internal static void GameLocation_ExplosionAt_Postfix(GameLocation __instance, float x, float y)
         {
-            if (!Enabled || !__instance.isTileOnMap(new Vector2(x, y)) || (!Context.Config.TriggerDuringEvents && Game1.eventUp))
+            if (!Enabled || !__instance.isTileOnMap(new Vector2(x, y)) || (!context.Config.TriggerDuringEvents && Game1.eventUp))
                 return;
 
             foreach (var layer in __instance.map.Layers)
@@ -121,7 +126,7 @@ namespace DMT
 
         internal static bool GameLocation_IsCollidingPosition_Prefix(GameLocation __instance, Rectangle position, ref bool __result)
         {
-            if (!Enabled || !Context.PushTileDict.TryGetValue(__instance, out var tiles))
+            if (!Enabled || !context.PushTileDict.TryGetValue(__instance, out var tiles))
                 return true;
 
             foreach (var tile in tiles)
@@ -137,7 +142,7 @@ namespace DMT
 
         internal static void GameLocation_Draw_Postfix(GameLocation __instance)
         {
-            if (!Enabled || !Context.PushTileDict.TryGetValue(__instance, out var tiles))
+            if (!Enabled || !context.PushTileDict.TryGetValue(__instance, out var tiles))
                 return;
 
             foreach (var tile in tiles)
@@ -174,7 +179,7 @@ namespace DMT
         internal static void Farmer_GetMovementSpeed_Postfix(Farmer __instance, ref float __result)
         {
 
-            if (!Enabled || (!Context.Config.TriggerDuringEvents && Game1.eventUp) || __instance.currentLocation is null)
+            if (!Enabled || (!context.Config.TriggerDuringEvents && Game1.eventUp) || __instance.currentLocation is null)
                 return;
 
             var tilePos = __instance.TilePoint;
@@ -188,7 +193,7 @@ namespace DMT
 
         internal static void Farmer_MovePosition_Prefix(Farmer __instance, ref Vector2[] __state)
         {
-            if (!Enabled || (!Context.Config.TriggerDuringEvents && Game1.eventUp) || __instance.currentLocation is null)
+            if (!Enabled || (!context.Config.TriggerDuringEvents && Game1.eventUp) || __instance.currentLocation is null)
                 return;
             var tileLoc = __instance.Tile;
             if (__instance.currentLocation.isTileOnMap(tileLoc))
@@ -206,7 +211,7 @@ namespace DMT
 
         internal static void Farmer_MovePosition_Postfix(Farmer __instance, ref Vector2[] __state)
         {
-            if (!Enabled || (!Context.Config.TriggerDuringEvents && Game1.eventUp) || __state is null || __instance.currentLocation is null)
+            if (!Enabled || (!context.Config.TriggerDuringEvents && Game1.eventUp) || __state is null || __instance.currentLocation is null)
                 return;
             var f = __instance;
             var center = f.GetBoundingBox().Center;
@@ -272,14 +277,14 @@ namespace DMT
         
         internal static void Character_MovePosition_Prefix(Character __instance, ref Point __state)
         {
-            if (!Enabled || (!Context.Config.TriggerDuringEvents && Game1.eventUp) || __instance.currentLocation is null)
+            if (!Enabled || (!context.Config.TriggerDuringEvents && Game1.eventUp) || __instance.currentLocation is null)
                 return;
             __state = __instance.TilePoint;
         }
 
         internal static void Character_MovePosition_Postfix(Character __instance, ref Point __state)
         {
-            if (!Enabled || (!Context.Config.TriggerDuringEvents && Game1.eventUp) || __state == default || __instance.currentLocation is null)
+            if (!Enabled || (!context.Config.TriggerDuringEvents && Game1.eventUp) || __state == default || __instance.currentLocation is null)
                 return;
             var layer = __instance.currentLocation.Map.GetLayer("Back");
             if (__state != __instance.TilePoint)
@@ -291,14 +296,14 @@ namespace DMT
 
         internal static void NPC_CheckAction_Postfix(NPC __instance, Farmer who)
         {
-            if (!Enabled || (!Context.Config.TriggerDuringEvents && Game1.eventUp) || !Game1.dialogueUp || __instance.currentLocation?.Name != who.currentLocation.Name)
+            if (!Enabled || (!context.Config.TriggerDuringEvents && Game1.eventUp) || !Game1.dialogueUp || __instance.currentLocation?.Name != who.currentLocation.Name)
                 return;
             TriggerActions([.. who.currentLocation.Map.Layers], who, __instance.currentLocation, __instance.TilePoint, [string.Format(Triggers.TalkToNPC, Utils.BuildFormattedTrigger(__instance.Name))]);
         }
 
         internal static void Monster_TakeDamage_Postfix(Monster __instance, Farmer who)
         {
-            if (!Enabled || (!Context.Config.TriggerDuringEvents && Game1.eventUp) || __instance.Health > 0 || __instance.currentLocation?.Name != who.currentLocation.Name)
+            if (!Enabled || (!context.Config.TriggerDuringEvents && Game1.eventUp) || __instance.Health > 0 || __instance.currentLocation?.Name != who.currentLocation.Name)
                 return;
             TriggerActions([.. who.currentLocation.Map.Layers], who, __instance.currentLocation, __instance.TilePoint, [string.Format(Triggers.MonsterSlain, Utils.BuildFormattedTrigger(__instance.Name))]);
         }
@@ -312,7 +317,7 @@ namespace DMT
         {
             if (!Enabled || !Game1.IsMasterGame || __instance.IsErrorCrop() || !__state || !__instance.fullyGrown.Value)
                 return;
-            Context.Monitor.Log($"Crop {__instance.netSeedIndex.Value} grew up");
+            context.Monitor.Log($"Crop {__instance.netSeedIndex.Value} grew up");
             TriggerActions([.. __instance.currentLocation.Map.Layers], null, __instance.currentLocation, __instance.tilePosition.ToPoint(), [string.Format(Triggers.CropGrown, Utils.BuildFormattedTrigger(__instance.netSeedIndex.Value))]);
         }
         internal static void Object_placementAction_Postfix(Object __instance, GameLocation location, int x, int y, Farmer who)
@@ -330,7 +335,7 @@ namespace DMT
 
         internal static void Farmer_SetMount_Prefix(Farmer __instance, Horse mount)
         {
-            if (!Enabled || !SContext.IsWorldReady || (!Context.Config.TriggerDuringEvents && Game1.eventUp))
+            if (!Enabled || !SContext.IsWorldReady || (!context.Config.TriggerDuringEvents && Game1.eventUp))
                 return;
             TriggerActions([.. __instance.currentLocation.Map.Layers], __instance, __instance.currentLocation, __instance.TilePoint, [string.Format(mount != null ? Triggers.Mount : Triggers.Dismount, ""), string.Format(mount != null ? Triggers.Mount : Triggers.Dismount, Utils.BuildFormattedTrigger((__instance.mount ?? mount)?.Name)), string.Format(mount != null ? Triggers.Mount : Triggers.Dismount, Utils.BuildFormattedTrigger((__instance.mount ?? mount)?.GetType()?.Name))]);
         }

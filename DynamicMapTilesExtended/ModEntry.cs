@@ -17,19 +17,30 @@ using System.Diagnostics;
 
 namespace DMT
 {
-    internal class ModEntry : Mod
+    public class ModEntry : Mod
     {
         public static string ModPrefix => "DMT/";
         public string TileDataDictPath => "DMT/Tiles";
         public string AnimationDataDictPath => "DMT/Animations";
 
-        internal static ModEntry Context { get; private set; }
+        public enum Invalidate
+        {
+            None,
+            OnTimeChanged,
+            OnLocationChanged,
+            OnNewDay
+        }
+        public Dictionary<GameLocation, List<PushedTile>> PushTileDict { get; } = [];
+
+        public static ModEntry context;
 
         public Config Config { get; private set; }
 
         public static int animationCounter = 0;
 
-        public Dictionary<GameLocation, List<PushedTile>> PushTileDict { get; } = [];
+        public static Dictionary<GameLocation, int> InvalidateOnTimeChanged = new();
+        public static List<GameLocation> InvalidateOnLocationChanged = new();
+        public static List<GameLocation> InvalidateOnNewDay = new();
 
         public Dictionary<string, List<Animation>> animationsDict;
         public Dictionary<string, List<Animation>> AnimationsDict {
@@ -55,7 +66,7 @@ namespace DMT
 
         public override void Entry(IModHelper helper)
         {
-            Context = this;
+            context = this;
 
             Config = Helper.ReadConfig<Config>();
 
@@ -65,8 +76,57 @@ namespace DMT
             Helper.Events.Content.AssetsInvalidated += onAssetInvalidated;
             Helper.Events.GameLoop.UpdateTicked += onUpdateTicked;
             Helper.Events.GameLoop.SaveLoaded += onSaveLoad;
+            Helper.Events.GameLoop.TimeChanged += onTimeChanged;
+            Helper.Events.GameLoop.DayStarted += onDayStarted;
 
             Helper.ConsoleCommands.Add("dmt", "DMT test commands", onConsoleCommand);
+        }
+
+        private void onDayStarted(object? sender, DayStartedEventArgs e)
+        {
+            if (!Config.Enabled)
+                return;
+            if (InvalidateOnNewDay.Any())
+            {
+                foreach (var l in InvalidateOnNewDay)
+                {
+                    Helper.GameContent.InvalidateCache(l.mapPath.Value);
+                }
+                InvalidateOnNewDay.Clear();
+            }
+            if (InvalidateOnTimeChanged.Any()) // invalidate on new day as well, safer this way
+            {
+                foreach (var l in InvalidateOnTimeChanged.Keys)
+                {
+                    Helper.GameContent.InvalidateCache(l.mapPath.Value);
+                }
+                InvalidateOnTimeChanged.Clear();
+            }
+        }
+
+        private void onTimeChanged(object? sender, TimeChangedEventArgs e)
+        {
+            if(!Config.Enabled)  
+                return;
+            if (Context.IsWorldReady && InvalidateOnTimeChanged.Any())
+            {
+                foreach(var key in InvalidateOnTimeChanged.Keys.ToArray()) 
+                {
+                    // amount is how much time left
+                    int amount = InvalidateOnTimeChanged[key];
+                    int h = amount / 100;
+                    int m = amount % 100;
+                    int dh = e.NewTime / 100 - e.OldTime / 100;
+                    int dm = e.NewTime % 100 - e.OldTime % 100;
+                    
+                    int newAmount = h - dh * 100 + m - dm * 100;
+                    if(newAmount <= 0)
+                    {
+                        Helper.GameContent.InvalidateCache(key.mapPath.Value);
+                        InvalidateOnTimeChanged.Remove(key);
+                    }
+                }
+            }
         }
 
         private void onSaveLoad(object? sender, SaveLoadedEventArgs e)
@@ -186,6 +246,14 @@ namespace DMT
 
         private void onWarped(object? sender, WarpedEventArgs e)
         {
+            if (InvalidateOnLocationChanged.Contains(e.OldLocation))
+            {
+                if (Game1.getAllFarmers().Where(f => f.currentLocation == e.OldLocation).Count() == 0)
+                {
+                    Helper.GameContent.InvalidateCache(e.OldLocation.mapPath.Value);
+                    InvalidateOnLocationChanged.Remove(e.OldLocation);
+                }
+            }
             GameLocation l = e.NewLocation;
             LoadLocation(l);
             TriggerActions([.. l.Map.Layers], e.Player, e.NewLocation, e.Player.TilePoint, ["Enter"]);

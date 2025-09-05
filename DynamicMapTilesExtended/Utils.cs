@@ -18,7 +18,7 @@ namespace DMT
 {
     public static class Utils
     {
-        private static bool Enabled => Context.Config.Enabled;
+        private static bool Enabled => context.Config.Enabled;
 
         public static bool CheckTrigger(DynamicTileProperty property, IEnumerable<string> triggers)
         {
@@ -58,8 +58,8 @@ namespace DMT
                     ))
                     return false;
             }
-            if (!Context.PushTileDict.TryGetValue(l, out var pushed))
-                Context.PushTileDict[l] = pushed = [];
+            if (!context.PushTileDict.TryGetValue(l, out var pushed))
+                context.PushTileDict[l] = pushed = [];
             for (int i = 0; i < tiles.Count; i++)
             {
                 Point destination = tiles[i].p + GetNextTile(dir);
@@ -112,7 +112,7 @@ namespace DMT
 
         internal static TileSheet AddTileSheet(Map map, string id, string texturePath)
         {
-            var texture = Context.Helper.GameContent.Load<Texture2D>(texturePath);
+            var texture = context.Helper.GameContent.Load<Texture2D>(texturePath);
             if (texture == null)
                 return null;
             var tilesheet = new TileSheet(id, map, texturePath, new xSize(texture.Width / 16, texture.Height / 16), new xSize(16, 16));
@@ -147,45 +147,51 @@ namespace DMT
             return item;
         }
 
-        internal static DynamicTileProperty? GetInternalProperty(string data)
-        {
-            return JsonConvert.DeserializeObject<DynamicTileProperty>(data);
-        }
-
         internal static DynamicTileProperty? ParseProperty(KeyValuePair<string, string> kvp, IOrderedEnumerable<string> keys)
         {
             if (!kvp.Key.StartsWith(ModPrefix))
                 return null;
             DynamicTileProperty prop = new() { Value = kvp.Value };
-            string key = kvp.Key;
+            string[] key = kvp.Key.Split('_');
+            if (key.Length < 2)
+                return null;
             foreach (var item in keys)
             {
-                if (!key.StartsWith(item, StringComparison.OrdinalIgnoreCase))
+                if (!key[0].StartsWith(item, StringComparison.OrdinalIgnoreCase))
                     continue; 
                 prop.Key = item;
-                key = key.Substring(item.Length);
                 break;
             }
-            if (string.IsNullOrWhiteSpace(key))
+            if(key.Length > 2)
             {
-                return null;
-            }
-            key = key.Trim('_');
-            if (key.StartsWith("Once", StringComparison.OrdinalIgnoreCase))
-            {
-                prop.Once = true;
-                key = key[4..];
-            }
-            key = key.Trim('_');
-            if (!string.IsNullOrWhiteSpace(key))
-            {
-                foreach (var item in Triggers.Regexes)
+                for (int i = 1; i < key.Length - 1; i++) // first is the action, last is the trigger
                 {
-                    if (!Regex.IsMatch(key, item))
-                        continue;
-                    prop.Trigger = key;
-                    break;
+                    if (key[i].StartsWith("Once", StringComparison.OrdinalIgnoreCase))
+                    {
+                        prop.Once = true;
+                    }
+                    else if (key[i].StartsWith("Invalidate", StringComparison.OrdinalIgnoreCase))
+                    {
+                        foreach(var e in Enum.GetValues(typeof(Invalidate)))
+                        {
+                            if (key[i].StartsWith((string)e))
+                            {
+                                prop.Invalidate = (string)e;
+                                break;
+                            }
+                        }
+                    }
                 }
+            }
+            var trigger = key[key.Length - 1];
+            if (string.IsNullOrWhiteSpace(trigger))
+                return null;
+            foreach (var item in Triggers.Regexes)
+            {
+                if (!Regex.IsMatch(trigger, item))
+                    continue;
+                prop.Trigger = trigger;
+                break;
             }
             return prop;
         }
@@ -198,7 +204,7 @@ namespace DMT
             {
                 if (keys.Contains(prop.Key))
                 {
-                    Context.Monitor.Log($"Found duplicate key {prop.Key}{(string.IsNullOrWhiteSpace(prop.LogName) ? "" : $" For named property {prop.LogName}")}, This property was automatically filtered out. Please avoid adding duplicate actions for tiles", LogLevel.Warn);
+                    context.Monitor.Log($"Found duplicate key {prop.Key}{(string.IsNullOrWhiteSpace(prop.LogName) ? "" : $" For named property {prop.LogName}")}, This property was automatically filtered out. Please avoid adding duplicate actions for tiles", LogLevel.Warn);
                     continue;
                 }
                 keys.Add(prop.Key);
@@ -230,41 +236,12 @@ namespace DMT
             return false;
         }
 
-        /*
-        Riding a mount as a trigger 
-        Crop is grown as a trigger 
-        Placing and/or clicking on a specific big craftable/furniture/flute block tone
-        */
-
-        //All of the methods below this line cost me a lot (mainly sanity wise), continue at your own risk
-
         public static bool TriggerActions(List<Layer> layers, Farmer? who, GameLocation location, Point tilePosition, string[] triggers)
         {
-            if (!Enabled || !location.isTileOnMap(tilePosition) || (!Context.Config.TriggerDuringEvents && Game1.eventUp))
+            if (!Enabled || !location.isTileOnMap(tilePosition) || (!context.Config.TriggerDuringEvents && Game1.eventUp))
                 return false;
 
             List<(DynamicTileProperty prop, Tile tile)> properties = GetPropertiesForTriggers(layers, who, tilePosition, triggers);
-            /*foreach (var layer in layers)
-            {
-                var tile = layer.Tiles[tilePosition.X, tilePosition.Y];
-
-                if (tile is null)
-                    continue;
-                string[] props = [.. tile.Properties.Keys];
-
-                foreach (var key in props)
-                {
-                    DynamicTileProperty? prop = !key.StartsWith("DMT_PROP_INTERNAL") ? ParseOldProperty(new(key, tile.Properties[key])) : GetInternalProperty(tile.Properties[key]);
-
-                    if (prop is null || !CheckTrigger(prop, triggers))
-                        continue;
-
-                    if (prop.Once)
-                        tile.Properties.Remove(key);
-
-                    properties.Add(new(prop, tile));
-                }
-            }*/
             if (properties.Count == 0)
             {
                 return false;
@@ -399,12 +376,43 @@ namespace DMT
                             break;
                     }
                     if (found)
+                    {
                         triggered.Add(item.prop.key);
+                        if (item.prop.Invalidate != "None" && item.prop.Invalidate != null)
+                        {
+                            if (item.prop.Invalidate.Equals(Invalidate.OnNewDay + ""))
+                            {
+                                InvalidateOnNewDay.Add(location);
+                            }
+                            else if (item.prop.Invalidate.Equals(Invalidate.OnLocationChanged + ""))
+                            {
+                                InvalidateOnLocationChanged.Add(location);
+                            }
+                            else if (item.prop.Invalidate.StartsWith(Invalidate.OnTimeChanged + ""))
+                            {
+                                int time = 10;
+                                string timeString = item.prop.Invalidate.Substring((Invalidate.OnTimeChanged + "").Length);
+                                if (!string.IsNullOrEmpty(timeString))
+                                {
+                                    int.TryParse(timeString, out time);
+                                }
+                                if (InvalidateOnTimeChanged.TryGetValue(location, out int oldTime))
+                                {
+                                    if (time < oldTime)
+                                        InvalidateOnTimeChanged[location] = time;
+                                }
+                                else
+                                {
+                                    InvalidateOnTimeChanged[location] = time;
+                                }
+                            }
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
-                    Context.Monitor.Log($"Error while trying to run action {item.prop.Key}", LogLevel.Error);
-                    Context.Monitor.Log($"[{ex.GetType().Name}] {ex.Message}\n{ex.Message}", LogLevel.Error);
+                    context.Monitor.Log($"Error while trying to run action {item.prop.Key}", LogLevel.Error);
+                    context.Monitor.Log($"[{ex.GetType().Name}] {ex.Message}\n{ex.Message}", LogLevel.Error);
                 }
             }
             if (triggered.Any())
@@ -505,9 +513,9 @@ namespace DMT
         {
             Stopwatch s = new();
             s.Start();
-            if (!Context.Config.Enabled)
+            if (!context.Config.Enabled)
                 return;
-            var dict = Context.Helper.GameContent.Load<Dictionary<string, DynamicTile>>(Context.TileDataDictPath);
+            var dict = context.Helper.GameContent.Load<Dictionary<string, DynamicTile>>(context.TileDataDictPath);
             var keys = dict.Keys.ToList();
             for(int i = keys.Count - 1; i >= 0 ; i--)
             {
@@ -565,7 +573,7 @@ namespace DMT
                     }
                 }
             }
-            Context.Monitor.Log($"Load location {l.DisplayName} took {s.ElapsedMilliseconds}ms");
+            context.Monitor.Log($"Load location {l.DisplayName} took {s.ElapsedMilliseconds}ms");
         }
 
         internal static bool HasProperty(this Tile t, string key, [NotNullWhen(true)] out string? propertyValue)

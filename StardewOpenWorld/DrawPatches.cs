@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Graphics.PackedVector;
 using Netcode;
 using Newtonsoft.Json.Linq;
+using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Characters;
 using StardewValley.Locations;
@@ -249,7 +250,7 @@ namespace StardewOpenWorld
         {
             public static void Postfix(Crop __instance, Vector2 tileLocation)
             {
-                if (__instance.currentLocation != openWorldLocation)
+                if (__instance.currentLocation != openWorldLocation || !Context.IsWorldReady)
                     return;
                 var y = FloatToLocalYTile(tileLocation.Y);
                 var x = FloatToLocalXTile(tileLocation.X);
@@ -398,7 +399,7 @@ namespace StardewOpenWorld
         {
             public static bool Prefix(Farmer __instance, ref float __result)
             {
-                if (!Config.ModEnabled || __instance.currentLocation != openWorldLocation)
+                if (!Config.ModEnabled || !Context.IsWorldReady || __instance.currentLocation != openWorldLocation)
                     return true;
                 int rsp = __instance.StandingPixel.Y % (openWorldChunkSize * 64) + (Game1.viewport.Y / (openWorldChunkSize * 64) < __instance.StandingPixel.Y / (openWorldChunkSize * 64) ? openWorldChunkSize * 64 : 0);
                 if (__instance.onBridge.Value)
@@ -423,7 +424,7 @@ namespace StardewOpenWorld
         {
             public static bool Prefix(Layer __instance, IDisplayDevice displayDevice, xTile.Dimensions.Rectangle mapViewport, Location displayOffset, int pixelZoom, float sort_offset)
             {
-                if (!Config.ModEnabled || Game1.currentLocation != openWorldLocation)
+                if (!Config.ModEnabled || !Context.IsWorldReady || Game1.currentLocation != openWorldLocation)
                     return true;
                 Layer.zoom = pixelZoom;
                 int tileWidth = pixelZoom * 16;
@@ -532,7 +533,7 @@ namespace StardewOpenWorld
         {
             public static bool Prefix(GameLocation __instance, SpriteBatch b)
             {
-                if (!Config.ModEnabled || __instance != openWorldLocation)
+                if (!Config.ModEnabled || !Context.IsWorldReady || __instance != openWorldLocation)
                     return true;
                 int sx = Game1.viewport.X / 64 - 1;
                 int sy = Game1.viewport.Y / 64 - 1;

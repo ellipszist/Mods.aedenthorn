@@ -258,8 +258,8 @@ namespace DMT.Data
                 }
                 catch(Exception ex) 
                 {
-                    Context.Monitor.Log("Could not create animation from custom texture", LogLevel.Error);
-                    Context.Monitor.Log($"[{ex.GetType().Name}] {ex.Message}\n{ex.StackTrace}", LogLevel.Error);
+                    context.Monitor.Log("Could not create animation from custom texture", LogLevel.Error);
+                    context.Monitor.Log($"[{ex.GetType().Name}] {ex.Message}\n{ex.StackTrace}", LogLevel.Error);
                     return null;
                 }
             }
@@ -272,8 +272,8 @@ namespace DMT.Data
             }
             catch (Exception ex)
             {
-                Context.Monitor.Log("Could not create animation from default texture", LogLevel.Error);
-                Context.Monitor.Log($"[{ex.GetType().Name}] {ex.Message}\n{ex.StackTrace}", LogLevel.Error);
+                context.Monitor.Log("Could not create animation from default texture", LogLevel.Error);
+                context.Monitor.Log($"[{ex.GetType().Name}] {ex.Message}\n{ex.StackTrace}", LogLevel.Error);
                 return null;
             }
             return sprite;

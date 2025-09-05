@@ -5,7 +5,7 @@ namespace DMT.Data
 {
     public record SecondUpdateData
     {
-        public long LastTick { get; set; } = Context.UpdateTicks.Value - 60;
+        public long LastTick { get; set; } = context.UpdateTicks.Value - 60;
         public int Loops { get; set; } = 0;
 
         public Vector2 Tile { get; set; }

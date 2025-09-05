@@ -203,7 +203,7 @@ namespace StardewOpenWorld
             renderTarget = null;
             upperRightCloseButton = null;
             showingMap = true;
-            if (!Config.ModEnabled || !Context.IsWorldReady || !Config.DrawMap || !Game1.currentLocation.Name.Contains(locName) || Game1.activeClickableMenu is not GameMenu || (Game1.activeClickableMenu as GameMenu).GetCurrentPage() is not MapPage)
+            if (!Config.ModEnabled || !Context.IsWorldReady || !Config.DrawMap || Game1.currentLocation != openWorldLocation || Game1.activeClickableMenu is not GameMenu || (Game1.activeClickableMenu as GameMenu).GetCurrentPage() is not MapPage)
                 return;
             TakeMapScreenshot(openWorldLocation, Config.MapScale);
 
@@ -212,7 +212,7 @@ namespace StardewOpenWorld
 
         private void Display_RenderedActiveMenu(object sender, RenderedActiveMenuEventArgs e)
         {
-            if (!Config.ModEnabled || !Context.IsWorldReady || !Config.DrawMap || !Game1.currentLocation.Name.Contains(locName) || Game1.activeClickableMenu is not GameMenu || (Game1.activeClickableMenu as GameMenu).GetCurrentPage() is not MapPage)
+            if (!Config.ModEnabled || !Context.IsWorldReady || !Config.DrawMap || Game1.currentLocation != openWorldLocation || Game1.activeClickableMenu is not GameMenu || (Game1.activeClickableMenu as GameMenu).GetCurrentPage() is not MapPage)
                 return;
             DrawMap(e);
         }

@@ -224,7 +224,7 @@ namespace DMT
             }
             var eventId = split[2];
 
-            if (!string.IsNullOrWhiteSpace(eventStr) && Context.Helper.GameContent.Load<Dictionary<string, string>>(assetName).TryGetValue(assetKey, out eventStr))
+            if (!string.IsNullOrWhiteSpace(eventStr) && context.Helper.GameContent.Load<Dictionary<string, string>>(assetName).TryGetValue(assetKey, out eventStr))
             {
                 Game1.currentLocation.currentEvent = new(eventStr, assetName, eventId);
                 Game1.currentLocation.checkForEvents();
@@ -249,7 +249,7 @@ namespace DMT
         public static void DoInvalidateAsset(string value)
         {
             foreach (var asset in value.Split('|'))
-                Context.Helper.GameContent.InvalidateCache(asset);
+                context.Helper.GameContent.InvalidateCache(asset);
         }
 
         public static void DoTeleport(Farmer who, string value)
@@ -386,7 +386,7 @@ namespace DMT
             var split = value.Split('|');
             if (!int.TryParse(split[0], out int loops) || !int.TryParse(split[1], out int number))
                 return;
-            Context.SecondUpdateFiredLoops.Value.Add(new() { Loops = loops, Value = number, type = SecondUpdateData.SecondUpdateType.Health, Who = who });
+            context.SecondUpdateFiredLoops.Value.Add(new() { Loops = loops, Value = number, type = SecondUpdateData.SecondUpdateType.Health, Who = who });
         }
         
 
@@ -394,7 +394,7 @@ namespace DMT
         {
             if (!int.TryParse(value, out int number))
                 return;
-            Context.SecondUpdateContinuousLoops.Value.Add(new() { Tile = who.Tile, Location = who.currentLocation, Value = number, type = SecondUpdateData.SecondUpdateType.Health, Who = who });
+            context.SecondUpdateContinuousLoops.Value.Add(new() { Tile = who.Tile, Location = who.currentLocation, Value = number, type = SecondUpdateData.SecondUpdateType.Health, Who = who });
         }
 
         public static void DoUpdateStamina(Farmer who, string value)
@@ -417,7 +417,7 @@ namespace DMT
             var split = value.Split('|');
             if (!int.TryParse(split[0], out int loops) || !float.TryParse(split[1], out var number))
                 return;
-            Context.SecondUpdateFiredLoops.Value.Add(new() { Loops = loops, Value = number, type = SecondUpdateData.SecondUpdateType.Stamina, Who = who });
+            context.SecondUpdateFiredLoops.Value.Add(new() { Loops = loops, Value = number, type = SecondUpdateData.SecondUpdateType.Stamina, Who = who });
         }
         
 
@@ -428,7 +428,7 @@ namespace DMT
 
             if (!int.TryParse(value, out int number))
                 return;
-            Context.SecondUpdateContinuousLoops.Value.Add(new() { Tile = who.Tile, Location = who.currentLocation, Value = number, type = SecondUpdateData.SecondUpdateType.Stamina, Who = who });
+            context.SecondUpdateContinuousLoops.Value.Add(new() { Tile = who.Tile, Location = who.currentLocation, Value = number, type = SecondUpdateData.SecondUpdateType.Stamina, Who = who });
         }
 
         public static void DoAddBuff(Farmer who, string value)
@@ -494,8 +494,8 @@ namespace DMT
             var opt = value.Split(',');
             if (opt.Length == 2)
             {
-                var dict = Context.AnimationsDict;
-                if (!Context.AnimationsDict.TryGetValue(opt[0], out var animSet))
+                var dict = context.AnimationsDict;
+                if (!context.AnimationsDict.TryGetValue(opt[0], out var animSet))
                     return;
                 var names = opt[1].Split('|');
                 foreach(var name in names)
@@ -557,7 +557,7 @@ namespace DMT
             string location = split[0];
             if (Game1.getLocationFromName(location) is null)
             {
-                Context.Monitor.Log($"[{nameof(Actions)}.{nameof(DoWarp)}] Location {location} could not be found", LogLevel.Error);
+                context.Monitor.Log($"[{nameof(Actions)}.{nameof(DoWarp)}] Location {location} could not be found", LogLevel.Error);
                 return;
             }
             x = int.Parse(split[1]);
@@ -577,7 +577,7 @@ namespace DMT
                 var kv = item.Split('|');
                 if (kv.Length < 2)
                 {
-                    Context.Monitor.Log($"[{nameof(Actions)}.{nameof(DoFriendshipChange)}] Missing argument for {item}");
+                    context.Monitor.Log($"[{nameof(Actions)}.{nameof(DoFriendshipChange)}] Missing argument for {item}");
                     continue;
                 }
                 string name = kv[0].Trim();

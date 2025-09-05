@@ -36,5 +36,11 @@
             get => once;
             set => once = value;
         }
+        public string invalidate = "None";
+        public string Invalidate
+        {
+            get => invalidate;
+            set => invalidate = value;
+        }
     }
 }
