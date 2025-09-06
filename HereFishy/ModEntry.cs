@@ -188,6 +188,12 @@ namespace HereFishy
 				getValue: () => Config.PlaySound,
 				setValue: value => Config.PlaySound = value
 			);
+			configMenu.AddBoolOption(
+				mod: ModManifest,
+				name: () => SHelper.Translation.Get("GMCM.PlayGenderedSound.Name"),
+				getValue: () => Config.PlayGenderedSound,
+				setValue: value => Config.PlayGenderedSound = value
+			);
 			configMenu.AddNumberOption(
 				mod: ModManifest,
 				name: () => SHelper.Translation.Get("GMCM.StaminaCost.Name"),
