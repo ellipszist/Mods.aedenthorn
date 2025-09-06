@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.TerrainFeatures;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -33,6 +34,7 @@ namespace ImmersiveSprinklers
         public static string altTextureKey = "AlternativeTexture";
 
         public static Dictionary<string, Object> sprinklerDict = new();
+        public static Dictionary<GameLocation, Dictionary<Vector2, TerrainFeature>> hoeDirtsToReadd = new();
         public static object atApi;
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
@@ -48,12 +50,25 @@ namespace ImmersiveSprinklers
 
             Helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
             Helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
+            Helper.Events.GameLoop.UpdateTicking += GameLoop_UpdateTicking;
             Helper.Events.Input.ButtonPressed += Input_ButtonPressed;
             Helper.Events.Display.RenderedWorld += Display_RenderedWorld;
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
 
+        }
+
+        private void GameLoop_UpdateTicking(object sender, StardewModdingAPI.Events.UpdateTickingEventArgs e)
+        {
+            foreach(var kvp in hoeDirtsToReadd)
+            {
+                foreach (var kvp2 in kvp.Value)
+                {
+                    kvp.Key.terrainFeatures[kvp2.Key] = kvp2.Value;
+                }
+            }
+            hoeDirtsToReadd.Clear();
         }
 
         private void Display_RenderedWorld(object sender, StardewModdingAPI.Events.RenderedWorldEventArgs e)
@@ -127,6 +142,7 @@ namespace ImmersiveSprinklers
 
         private void GameLoop_SaveLoaded(object sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)
         {
+            hoeDirtsToReadd.Clear();
             sprinklerDict.Clear();
         }
 

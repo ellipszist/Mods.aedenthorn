@@ -1,22 +1,12 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Graphics.PackedVector;
-using Netcode;
-using Newtonsoft.Json;
 using StardewModdingAPI;
 using StardewValley;
-using StardewValley.Network;
 using StardewValley.TerrainFeatures;
 using StardewValley.Tools;
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Threading;
 using xTile.Dimensions;
-using xTile.Tiles;
 using Color = Microsoft.Xna.Framework.Color;
 using Object = StardewValley.Object;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
@@ -291,6 +281,7 @@ namespace ImmersiveSprinklers
             }
 
         }
+
         [HarmonyPatch(typeof(GameLocation), "initNetFields")]
         public class GameLocation_initNetFields_Patch
         {
@@ -298,24 +289,38 @@ namespace ImmersiveSprinklers
             {
                 if (!Config.EnableMod)
                     return;
-                __instance.terrainFeatures.OnValueRemoved += delegate (Vector2 tileLocation, TerrainFeature tf)
+                try
                 {
-                    if (tf is not HoeDirt)
-                        return;
-                    for (int i = 0; i < 4; i++)
+                    __instance.terrainFeatures.OnValueRemoved += delegate (Vector2 tileLocation, TerrainFeature tf)
                     {
-                        if (tf.modData.TryGetValue(sprinklerKey + i, out var sprinklerString))
+                        if (tf is not HoeDirt)
+                            return;
+                        for (int i = 0; i < 4; i++)
                         {
-                            try
+                            if (tf.modData.TryGetValue(sprinklerKey + i, out var sprinklerString))
                             {
-                                __instance.terrainFeatures.Add(tileLocation, tf);
+                                try
+                                {
+                                    if (!hoeDirtsToReadd.TryGetValue(__instance, out var dict))
+                                    {
+                                        dict = new();
+                                        hoeDirtsToReadd[__instance] = dict;
+                                    }
+                                    dict.Add(tileLocation, tf);
+                                }
+                                catch { }
                             }
-                            catch { }
                         }
-                    }
-                };
+                    };
+
+                }
+                catch(Exception ex) 
+                {
+                    SMonitor.Log(ex.Message, LogLevel.Error);
+                }
             }
         }
+
         [HarmonyPatch(typeof(HoeDirt), nameof(HoeDirt.dayUpdate))]
         public class HoeDirt_dayUpdate_Patch
         {
