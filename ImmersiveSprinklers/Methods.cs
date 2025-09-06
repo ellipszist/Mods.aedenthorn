@@ -311,7 +311,6 @@ namespace ImmersiveSprinklers
             int radius = GetSprinklerRadius(obj);
             if (radius < 0)
                 return; 
-            obj.Location = environment;
 
             foreach (Vector2 tile in GetSprinklerTiles(tileLocation, which, radius))
             {

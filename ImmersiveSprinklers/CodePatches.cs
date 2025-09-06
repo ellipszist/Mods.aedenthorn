@@ -336,9 +336,12 @@ namespace ImmersiveSprinklers
                         if (obj is not null)
                         {
                             var which = i;
-                            __instance.Location.postFarmEventOvernightActions.Add(delegate
+                            GameLocation location = __instance.Location;
+                            obj.Location = location;
+                            Vector2 tile = __instance.Tile;
+                            location.postFarmEventOvernightActions.Add(delegate
                             {
-                                ActivateSprinkler(__instance.Location, __instance.Tile, obj, which, true);
+                                ActivateSprinkler(location, tile, obj, which, true);
                             });
                         }
                     }
