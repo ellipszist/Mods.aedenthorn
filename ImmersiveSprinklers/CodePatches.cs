@@ -3,6 +3,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.ItemTypeDefinitions;
+using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 using StardewValley.Tools;
 using System;
@@ -185,13 +187,11 @@ namespace ImmersiveSprinklers
                             var position = Game1.GlobalToLocal(globalPosition);
                             var layerDepth = (globalPosition.Y + (obj.bigCraftable.Value ? 80 : 16) + Config.DrawOffsetZ) / 10000f;
                             Texture2D texture = null;
-                            Rectangle sourceRect = new Rectangle();
-                            if (atApi is not null && obj.modData.ContainsKey("AlternativeTextureName"))
-                            {
-                                texture = GetAltTextureForObject(obj, out sourceRect);
-                            }
-                            
-                            if(texture is null)
+                            ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem(obj.QualifiedItemId);
+                            Rectangle sourceRect = itemData.GetSourceRect(obj is Mannequin ? 2 : 0, new int?(obj.ParentSheetIndex));
+                            texture = itemData.GetTexture();
+
+                            if (texture is null)
                             {
                                 texture = obj.bigCraftable.Value ? Game1.bigCraftableSpriteSheet : Game1.objectSpriteSheet;
                                 sourceRect = obj.bigCraftable.Value ? Object.getSourceRectForBigCraftable(obj.ParentSheetIndex) : GameLocation.getSourceRectForObject(obj.ParentSheetIndex);
@@ -275,7 +275,11 @@ namespace ImmersiveSprinklers
                 }
                 if(__instance.bigCraftable.Value)
                     pos -= new Vector2(0, 64);
-                spriteBatch.Draw(__instance.bigCraftable.Value ? Game1.bigCraftableSpriteSheet : Game1.objectSpriteSheet, pos, __instance.bigCraftable.Value ? Object.getSourceRectForBigCraftable(__instance.ParentSheetIndex) : GameLocation.getSourceRectForObject(__instance.ParentSheetIndex), Color.White * Config.Alpha, 0, Vector2.Zero, Config.Scale, __instance.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0.02f);
+                Texture2D texture = null;
+                ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem(__instance.QualifiedItemId);
+                Rectangle sourceRect = itemData.GetSourceRect(__instance is Mannequin ? 2 : 0, new int?(__instance.ParentSheetIndex));
+                texture = itemData.GetTexture();
+                spriteBatch.Draw(texture, pos, sourceRect, Color.White * Config.Alpha, 0, Vector2.Zero, Config.Scale, __instance.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0.02f);
 
                 return false;
             }

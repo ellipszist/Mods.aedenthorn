@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
 
@@ -89,6 +90,18 @@ namespace OutfitSets
                 setValue: value => Config.Sets = value,
                 min: 1,
                 max: 12
+            );
+            configMenu.AddNumberOption(
+                mod: ModManifest,
+                name: () => "X Offset",
+                getValue: () => Config.PositionOffset.X,
+                setValue: value => Config.PositionOffset = new Point(value, Config.PositionOffset.Y)
+            );
+            configMenu.AddNumberOption(
+                mod: ModManifest,
+                name: () => "Y Offset",
+                getValue: () => Config.PositionOffset.Y,
+                setValue: value => Config.PositionOffset = new Point(Config.PositionOffset.X, value)
             );
         }
 

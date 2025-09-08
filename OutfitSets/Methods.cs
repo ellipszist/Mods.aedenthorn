@@ -1,13 +1,8 @@
-﻿using HarmonyLib;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using Newtonsoft.Json;
+﻿using Microsoft.Xna.Framework;
 using StardewValley;
 using StardewValley.Menus;
 using StardewValley.Objects;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 
@@ -134,7 +129,7 @@ namespace OutfitSets
         {
             var strToDraw = (1 + i) + "";
             Vector2 strSize = Game1.tinyFont.MeasureString(strToDraw);
-            return new Point(__instance.xPositionOnScreen + 48 + (int)Math.Round((i + 0.5f) * 270 / Config.Sets), __instance.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + 4 + 384 - 12 + 64 + 20 - (int)strSize.Y / 2);
+            return new Point(__instance.xPositionOnScreen + 48 + (int)Math.Round((i + 0.5f) * 270 / Config.Sets), __instance.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + 4 + 384 - 12 + 64 + 20 - (int)strSize.Y / 2) + Config.PositionOffset;
         }
     }
     public static class XmlTools

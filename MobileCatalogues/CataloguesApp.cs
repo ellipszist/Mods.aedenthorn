@@ -13,7 +13,7 @@ namespace MobileCatalogues
         private static ModConfig Config;
         private static IMobilePhoneApi api;
         public static bool opening;
-        internal static List<string> catalogueList = new List<string>();
+        public static List<string> catalogueList = new List<string>();
 
         // call this method from your Entry class
         public static void Initialize(IModHelper helper, IMonitor monitor, ModConfig config)
@@ -22,31 +22,14 @@ namespace MobileCatalogues
             Helper = helper;
             Config = config;
 
-            if (Config.EnableCatalogue)
-                catalogueList.Add("catalogue");
-            if (Config.EnableFurnitureCatalogue)
-                catalogueList.Add("furniture-catalogue");
-            if (Config.EnableSeedCatalogue)
-                catalogueList.Add("seed-catalogue");
-            if (Config.EnableTravelingCatalogue)
-                catalogueList.Add("travel-catalogue");
-            if (Config.EnableDesertCatalogue)
-                catalogueList.Add("desert-catalogue");
-            if (Config.EnableHatCatalogue)
-                catalogueList.Add("hat-catalogue");
-            if (Config.EnableClothingCatalogue)
-                catalogueList.Add("clothing-catalogue");
-            if (Config.EnableDwarfCatalogue)
-                catalogueList.Add("dwarf-catalogue");
-            if (Config.EnableKrobusCatalogue)
-                catalogueList.Add("krobus-catalogue");
-            if (Config.EnableGuildCatalogue)
-                catalogueList.Add("guild-catalogue");
+            catalogueList = new();
+            catalogueList.AddRange(DataLoader.Shops(Game1.content).Keys);
         }
         internal static void OpenCatalogueApp()
         {
             api = ModEntry.api;
             Helper.Events.Input.ButtonPressed += HelperEvents.Input_ButtonPressed;
+            Helper.Events.Input.MouseWheelScrolled += HelperEvents.Input_MouseWheelScrolled; ;
             api.SetAppRunning(true);
             api.SetRunningApp(Helper.ModRegistry.ModID);
             Helper.Events.Display.RenderedWorld += Visuals.Display_RenderedWorld;
@@ -60,6 +43,7 @@ namespace MobileCatalogues
             api.SetRunningApp(null);
             Helper.Events.Input.ButtonPressed -= HelperEvents.Input_ButtonPressed;
             Helper.Events.Display.RenderedWorld -= Visuals.Display_RenderedWorld;
+            Helper.Events.Display.RenderedWorld -= Visuals.Display_RenderedWorld;
         }
 
 
@@ -69,7 +53,7 @@ namespace MobileCatalogues
             Monitor.Log($"clicked index: {idx}");
             if (idx < catalogueList.Count && idx >= 0)
             {
-                if (!Config.RequireCataloguePurchase || Game1.player.mailReceived.Contains($"BoughtCatalogue{Helper.Translation.Get(catalogueList[idx])}"))
+                if (!Config.RequireCataloguePurchase || Game1.player.mailReceived.Contains($"BoughtCatalogue{catalogueList[idx]}"))
                 {
                     Catalogues.OpenCatalogue(catalogueList[idx]);
                 }
@@ -82,38 +66,26 @@ namespace MobileCatalogues
 
         internal static int GetCataloguePrice(string name)
         {
-            switch (name)
+            if (Config.CataloguePrices is null)
             {
-                case "catalogue":
-                    return Config.PriceCatalogue;
-                case "furniture-catalogue":
-                    return Config.PriceFurnitureCatalogue;
-                case "seed-catalogue":
-                    return Config.PriceSeedCatalogue;
-                case "travel-catalogue":
-                    return Config.PriceTravelingCatalogue;
-                case "desert-catalogue":
-                    return Config.PriceDesertCatalogue;
-                case "hat-catalogue":
-                    return Config.PriceHatCatalogue;
-                case "clothing-catalogue":
-                    return Config.PriceClothingCatalogue;
-                case "dwarf-catalogue":
-                    return Config.PriceDwarfCatalogue;
-                case "krobus-catalogue":
-                    return Config.PriceKrobusCatalogue;
-                case "guild-catalogue":
-                    return Config.PriceGuildCatalogue;
+                Config.CataloguePrices = new();
+                foreach (var kvp in DataLoader.Shops(Game1.content))
+                {
+                    Config.CataloguePrices[kvp.Key] = -1;
+                }
+                Helper.WriteConfig(Config);
             }
-            return 0;
+            else if (Config.CataloguePrices.TryGetValue(name, out var price) && price >= 0)
+                return price;
+            return Config.DefaultPrice;
         }
         internal static void PurchaseCatalogue(string id)
         {
             int price = GetCataloguePrice(id);
-            string name = Helper.Translation.Get(id);
+            string name = id;
             Response[] responses = new Response[]
             {
-                new Response($"Yes_{name}_{price}", Game1.content.LoadString("Strings\\Lexicon:QuestionDialogue_Yes")),
+                new Response($"Yes_{price}_{name}", Game1.content.LoadString("Strings\\Lexicon:QuestionDialogue_Yes")),
                 new Response("No", Game1.content.LoadString("Strings\\Lexicon:QuestionDialogue_No"))
             };
             Game1.player.currentLocation.createQuestionDialogue(string.Format(Helper.Translation.Get("buy-catalogue-question"), name, price), responses, DoPurchaseCatalogue);
@@ -123,17 +95,17 @@ namespace MobileCatalogues
         {
             if (whichAnswer.StartsWith("Yes_"))
             {
-                string[] parts = whichAnswer.Split('_');
+                string[] parts = whichAnswer.Split('_', 3);
 
-                if(who.Money < int.Parse(parts[2]))
+                if(who.Money < int.Parse(parts[1]))
                 {
                     Game1.activeClickableMenu = new DialogueBox(Helper.Translation.Get("not-enough-money"));
                     return;
                 }
 
-                who.mailReceived.Add($"BoughtCatalogue{parts[1]}");
-                who.Money -= int.Parse(parts[2]);
-                Game1.addHUDMessage(new HUDMessage(string.Format(Helper.Translation.Get("bought-catalogue"), parts[1]), 1));
+                who.mailReceived.Add($"BoughtCatalogue{parts[2]}");
+                who.Money -= int.Parse(parts[1]);
+                Game1.addHUDMessage(new HUDMessage(string.Format(Helper.Translation.Get("bought-catalogue"), parts[2]), 1));
             }
         }
     }

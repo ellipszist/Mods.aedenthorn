@@ -6,11 +6,5 @@
   "UniqueID": "aedenthorn.MobilePhone",
   "EntryDll": "MobilePhone.dll",
   "MinimumApiVersion": "4.0.2",
-  "UpdateKeys": [ "Nexus:6523" ],
-  "ModUpdater": {
-    "Repository": "StardewValleyMods",
-    "User": "aedenthorn",
-    "Directory": "_releases",
-    "ModFolder": "MobilePhone"
-  }
+  "UpdateKeys": [ "Nexus:6523" ]
 }

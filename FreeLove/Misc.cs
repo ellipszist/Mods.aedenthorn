@@ -354,8 +354,8 @@ namespace FreeLove
             Texture2D tex = null;
             try
             {
-
-                tex = Game1.content.Load<Texture2D>($"Characters\\{name}");
+                var npc = Game1.getCharacterFromName(name);
+                tex = npc.Sprite.spriteTexture;
             }
             catch
             {

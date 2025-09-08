@@ -1,7 +1,7 @@
 ﻿{
   "Name": "Outfit Sets",
   "Author": "aedenthorn",
-  "Version": "0.2.0",
+  "Version": "0.3.0",
   "Description": "Outfit Sets.",
   "UniqueID": "aedenthorn.OutfitSets",
   "EntryDll": "OutfitSets.dll",

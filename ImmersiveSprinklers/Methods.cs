@@ -310,7 +310,9 @@ namespace ImmersiveSprinklers
             }
             int radius = GetSprinklerRadius(obj);
             if (radius < 0)
-                return; 
+                return;
+
+            obj.Location = environment;
 
             foreach (Vector2 tile in GetSprinklerTiles(tileLocation, which, radius))
             {
@@ -392,42 +394,50 @@ namespace ImmersiveSprinklers
         {
             if (atApi is null)
                 return;
-
-            var textureMgr = AccessTools.Field(atApi.GetType().Assembly.GetType("AlternativeTextures.AlternativeTextures"), "textureManager").GetValue(null);
-
-            var modelType = "Craftable";
-            var baseName = AccessTools.Method(atApi.GetType().Assembly.GetType("AlternativeTextures.Framework.Patches.PatchTemplate"), "GetObjectName").Invoke(null, new object[] { obj });
-            var instanceName = $"{modelType}_{baseName}";
-            var instanceSeasonName = $"{instanceName}_{Game1.currentSeason}";
-
-            bool hasAlt = (bool)AccessTools.Method(textureMgr.GetType(), "DoesObjectHaveAlternativeTexture", new System.Type[] { typeof(string) }).Invoke(textureMgr, new object[] { instanceName });
-            bool hasAltSeason = (bool)AccessTools.Method(textureMgr.GetType(), "DoesObjectHaveAlternativeTexture", new System.Type[] { typeof(string) }).Invoke(textureMgr, new object[] { instanceSeasonName });
-            MethodInfo assignModData = AccessTools.Method(atApi.GetType().Assembly.GetType("AlternativeTextures.Framework.Patches.PatchTemplate"), "AssignModData").MakeGenericMethod(typeof(Object));
-            if ((bool)AccessTools.Method(atApi.GetType().Assembly.GetType("AlternativeTextures.Framework.Patches.PatchTemplate"), "HasCachedTextureName").MakeGenericMethod(typeof(Object)).Invoke(null, new object[] { obj, false }))
+            try
             {
-                return;
-            }
-            else if (hasAlt && hasAltSeason)
-            {
-                var result = Game1.random.Next(2) > 0 ? assignModData.Invoke(null, new object[] { obj, instanceSeasonName, true, obj.bigCraftable.Value }) : assignModData.Invoke(null, new object[] { obj, instanceName, false, obj.bigCraftable.Value });
-                return;
-            }
-            else
-            {
-                if (hasAlt)
+
+                var textureMgr = AccessTools.Field(atApi.GetType().Assembly.GetType("AlternativeTextures.AlternativeTextures"), "textureManager").GetValue(null);
+
+                var modelType = "Craftable";
+                var baseName = AccessTools.Method(atApi.GetType().Assembly.GetType("AlternativeTextures.Framework.Patches.PatchTemplate"), "GetObjectName").Invoke(null, new object[] { obj });
+                var instanceName = $"{modelType}_{baseName}";
+                var instanceSeasonName = $"{instanceName}_{Game1.currentSeason}";
+
+                bool hasAlt = (bool)AccessTools.Method(textureMgr.GetType(), "DoesObjectHaveAlternativeTextureById", new Type[] { typeof(string) }).Invoke(textureMgr, new object[] { instanceName });
+                bool hasAltSeason = (bool)AccessTools.Method(textureMgr.GetType(), "DoesObjectHaveAlternativeTextureById", new System.Type[] { typeof(string) }).Invoke(textureMgr, new object[] { instanceSeasonName });
+                MethodInfo assignModData = AccessTools.Method(atApi.GetType().Assembly.GetType("AlternativeTextures.Framework.Patches.PatchTemplate"), "AssignModData").MakeGenericMethod(typeof(Object));
+                if ((bool)AccessTools.Method(atApi.GetType().Assembly.GetType("AlternativeTextures.Framework.Patches.PatchTemplate"), "HasCachedTextureName").MakeGenericMethod(typeof(Object)).Invoke(null, new object[] { obj, false }))
                 {
-                    assignModData.Invoke(null, new object[] { obj, instanceName, false, obj.bigCraftable.Value });
                     return;
                 }
-
-                if (hasAltSeason)
+                else if (hasAlt && hasAltSeason)
                 {
-                    assignModData.Invoke(null, new object[] { obj, instanceSeasonName, true, obj.bigCraftable.Value });
+                    var result = Game1.random.Next(2) > 0 ? assignModData.Invoke(null, new object[] { obj, instanceSeasonName, true, obj.bigCraftable.Value }) : assignModData.Invoke(null, new object[] { obj, instanceName, false, obj.bigCraftable.Value });
                     return;
                 }
+                else
+                {
+                    if (hasAlt)
+                    {
+                        assignModData.Invoke(null, new object[] { obj, instanceName, false, obj.bigCraftable.Value });
+                        return;
+                    }
+
+                    if (hasAltSeason)
+                    {
+                        assignModData.Invoke(null, new object[] { obj, instanceSeasonName, true, obj.bigCraftable.Value });
+                        return;
+                    }
+                }
+
+                AccessTools.Method(atApi.GetType().Assembly.GetType("AlternativeTextures.Framework.Patches.PatchTemplate"), "AssignDefaultModData").MakeGenericMethod(typeof(Object)).Invoke(null, new object[] { obj, instanceSeasonName, true, obj.bigCraftable.Value });
+            }
+            catch (Exception ex)
+            {
+                ex = null;
             }
 
-            AccessTools.Method(atApi.GetType().Assembly.GetType("AlternativeTextures.Framework.Patches.PatchTemplate"), "AssignDefaultModData").MakeGenericMethod(typeof(Object)).Invoke(null, new object[] { obj, instanceSeasonName, true, obj.bigCraftable.Value });
         }
 
 

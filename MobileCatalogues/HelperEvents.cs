@@ -3,16 +3,8 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
-using StardewValley.Locations;
-using StardewValley.Menus;
-using StardewValley.Objects;
-using StardewValley.Util;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Object = StardewValley.Object;
 
 namespace MobileCatalogues
 {
@@ -72,6 +64,14 @@ namespace MobileCatalogues
                 Visuals.clicking = true;
                 Visuals.lastMousePosition = mousePos;
             }
+        }
+
+        public static void Input_MouseWheelScrolled(object sender, MouseWheelScrolledEventArgs e)
+        {
+
+            Visuals.offsetY += Math.Sign(e.Delta) * (Config.AppRowHeight + Config.MarginY);
+            //Monitor.Log($"offsetY {offsetY} max {screenSize.Y - Config.MarginY + (Config.MarginY + Game1.dialogueFont.LineSpacing * 0.9f) * audio.Length}");
+            Visuals.offsetY = Math.Min(0, Math.Max(Visuals.offsetY, (int)(api.GetScreenSize().Y - (Config.AppHeaderHeight + Config.MarginY + (Config.MarginY + Config.AppRowHeight) * CataloguesApp.catalogueList.Count))));
         }
     }
 }

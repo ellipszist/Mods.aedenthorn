@@ -40,15 +40,15 @@ namespace CatalogueFilter
             var harmony = new Harmony(ModManifest.UniqueID);
 
             harmony.Patch(
-                original: AccessTools.Constructor(typeof(ShopMenu), new Type[] { typeof(string), typeof(ShopData), typeof(ShopOwnerData), typeof(NPC), typeof(Func<ISalable, Farmer, int, bool>), typeof(Func<ISalable, bool>), typeof(bool) }),
+                original: AccessTools.Constructor(typeof(ShopMenu), new Type[] { typeof(string), typeof(ShopData), typeof(ShopOwnerData), typeof(NPC), typeof(ShopMenu.OnPurchaseDelegate), typeof(Func<ISalable, bool>), typeof(bool) }),
                 postfix: new HarmonyMethod(typeof(ModEntry), nameof(Shopmenu_Constructor_Postfix)));
 
             harmony.Patch(
-                original: AccessTools.Constructor(typeof(ShopMenu), new Type[] { typeof(string), typeof(Dictionary<ISalable, ItemStockInformation>), typeof(int), typeof(string), typeof(Func<ISalable, Farmer, int, bool>), typeof(Func<ISalable, bool>), typeof(bool) }),
+                original: AccessTools.Constructor(typeof(ShopMenu), new Type[] { typeof(string), typeof(Dictionary<ISalable, ItemStockInformation>), typeof(int), typeof(string), typeof(ShopMenu.OnPurchaseDelegate), typeof(Func<ISalable, bool>), typeof(bool) }),
                 postfix: new HarmonyMethod(typeof(ModEntry), nameof(Shopmenu_Constructor_Postfix)));
 
             harmony.Patch(
-                original: AccessTools.Constructor(typeof(ShopMenu), new Type[] { typeof(string), typeof(List<ISalable>), typeof(int), typeof(string), typeof(Func<ISalable, Farmer, int, bool>), typeof(Func<ISalable, bool>), typeof(bool) }),
+                original: AccessTools.Constructor(typeof(ShopMenu), new Type[] { typeof(string), typeof(List<ISalable>), typeof(int), typeof(string), typeof(ShopMenu.OnPurchaseDelegate), typeof(Func<ISalable, bool>), typeof(bool) }),
                 postfix: new HarmonyMethod(typeof(ModEntry), nameof(Shopmenu_Constructor_Postfix)));
 
             harmony.Patch(

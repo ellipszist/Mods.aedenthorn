@@ -133,6 +133,7 @@ namespace ImmersiveSprinklers
                     var obj = GetSprinkler(Game1.currentLocation.terrainFeatures[tile], which, Game1.currentLocation.terrainFeatures[tile].modData.ContainsKey(nozzleKey + which));
                     if (obj is not null)
                     {
+                        obj.Location = Game1.currentLocation;
                         ActivateSprinkler(Game1.currentLocation, tile, obj, which, false);
                         Helper.Input.Suppress(e.Button);
                     }

@@ -25,142 +25,14 @@ namespace MobileCatalogues
             Helper = helper;
             Config = config;
         }
-        internal static void OpenCatalogue(string id)
-        {
-            switch (id)
-            {
-                case "catalogue":
-                    OpenCatalogue();
-                    break;
-                case "furniture-catalogue":
-                    OpenFurnitureCatalogue();
-                    break;
-                case "seed-catalogue":
-                    OpenSeedCatalogue();
-                    break;
-                case "travel-catalogue":
-                    OpenTravelingCatalogue();
-                    break;
-                case "desert-catalogue":
-                    OpenDesertCatalogue();
-                    break;
-                case "hat-catalogue":
-                    OpenHatMouseCatalogue();
-                    break;
-                case "clothing-catalogue":
-                    OpenClothingCatalogue();
-                    break;
-                case "dwarf-catalogue":
-                    OpenDwarfCatalogue();
-                    break;
-                case "krobus-catalogue":
-                    OpenKrobusCatalogue();
-                    break;
-                case "guild-catalogue":
-                    OpenGuildCatalogue();
-                    break;
-            }
-        }
-
-        public static void OpenCatalogue()
-        {
-            Monitor.Log("Opening catalogue");
-            DelayedOpen(new ShopMenu(GetAllWallpapersAndFloors(), 0, null, null, null, "Catalogue"));
-            
-        }
-
-        public static void OpenFurnitureCatalogue()
-        {
-            Monitor.Log("Opening furniture catalogue");
-            DelayedOpen(new ShopMenu(GetAllFurnitures(), 0, null, null, null, "Furniture Catalogue"));
-        }
-
-        public static void OpenSeedCatalogue()
-        {
-            Monitor.Log("Opening seed catalogue");
-            DelayedOpen(new ShopMenu(GetAllSeeds(), 0, null, null, null, "Seed Catalogue"));
-        }
-
-        public static void OpenTravelingCatalogue()
-        {
-            if (Config.LimitTravelingCatalogToInTown && Game1.getLocationFromName("Forest") != null && !(Game1.getLocationFromName("Forest") as Forest).travelingMerchantDay)
-            {
-                Game1.activeClickableMenu = new DialogueBox(Helper.Translation.Get("traveling-merchant-not-here"));
-                return;
-            }
-
-            var dict = Utility.getTravelingMerchantStock((int)(Game1.uniqueIDForThisGame + (ulong)Game1.stats.DaysPlayed));
-
-            AdjustPrices(ref dict, Config.FreeTravelingCatalogue);
-
-            Monitor.Log("Opening traveling catalogue");
-            DelayedOpen(new ShopMenu(dict, 0, "Traveler", new Func<ISalable, Farmer, int, bool>(Utility.onTravelingMerchantShopPurchase), null, null));
-        }
-
-        public static void OpenDesertCatalogue()
-        {
-            if (Config.LimitDesertCatalogToBusFixed && !Game1.player.mailReceived.Contains("ccVault"))
-            {
-                Game1.activeClickableMenu = new DialogueBox(Helper.Translation.Get("desert-merchant-cannot-ship"));
-                return;
-            }
-            var dict = Desert.getDesertMerchantTradeStock(Game1.player);
-            AdjustPrices(ref dict, Config.FreeDesertCatalogue);
-
-            Monitor.Log("Opening desert catalogue");
-            DelayedOpen(new ShopMenu(dict, 0, "DesertTrade", new Func<ISalable, Farmer, int, bool>(boughtTraderItem), null, null));
-        }
-
-
-        public static void OpenHatMouseCatalogue()
-        {
-            if (Game1.player.achievements.Count == 0)
-            {
-                Game1.activeClickableMenu = new DialogueBox(Helper.Translation.Get("catalog-not-available"));
-                return;
-            }
-            var dict = Utility.getHatStock();
-            AdjustPrices(ref dict, Config.FreeHatCatalogue);
-
-            Monitor.Log("Opening hat catalogue");
-            DelayedOpen(new ShopMenu(dict, 0, "HatMouse", null, null, null));
-        }
-
-        public static void OpenClothingCatalogue()
-        {
-            Monitor.Log("Opening clothing catalogue");
-            DelayedOpen(new ShopMenu(GetAllClothing(), 0, "Clothing", null, null, null));
-        }
-
-
-        private static void OpenDwarfCatalogue()
-        {
-            var dict = Utility.getDwarfShopStock();
-            AdjustPrices(ref dict, false);
-            Game1.activeClickableMenu = new ShopMenu(dict, 0, "Dwarf", null, null, null);
-        }
-
-        private static void OpenKrobusCatalogue()
-        {
-            var dict = new Sewer().getShadowShopStock();
-            AdjustPrices(ref dict, false);
-            Game1.activeClickableMenu = new ShopMenu(dict, 0, "Krobus", null, null, null);
-        }
-
-        private static void OpenGuildCatalogue()
-        {
-            var dict = Utility.getAdventureShopStock();
-            AdjustPrices(ref dict, false);
-            Game1.activeClickableMenu = new ShopMenu(dict, 0, "Marlon", null, null, null);
-        }
-
-
-        private static async void DelayedOpen(ShopMenu menu)
+        internal static async void OpenCatalogue(string id)
         {
             await Task.Delay(100);
             Monitor.Log("Really opening catalogue");
-            Game1.activeClickableMenu = menu;
+            Utility.TryOpenShopMenu(id, null, false);
         }
+
+        /*
 
         private static Dictionary<ISalable, int[]> GetAllWallpapersAndFloors()
         {
@@ -298,6 +170,6 @@ namespace MobileCatalogues
             }
             return false;
         }
-
+        */
     }
 }
