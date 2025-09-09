@@ -37,18 +37,7 @@ namespace SelfServe
 
             harmony = new Harmony(ModManifest.UniqueID);
 
-            harmony.Patch(
-               original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.performAction)),
-               prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.GameLocation_performAction_Prefix))
-            );
-            harmony.Patch(
-               original: AccessTools.Method(typeof(IslandSouth), nameof(IslandSouth.checkAction)),
-               prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.IslandSouth_checkAction_Prefix))
-            );
-            harmony.Patch(
-               original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.openShopMenu)),
-               prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.GameLocation_openShopMenu_Prefix))
-            );
+            harmony.PatchAll();
         }
 
         private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)

@@ -150,6 +150,8 @@ namespace RealNames
 
         private static bool Dialogue_randomName_Prefix(ref string __result)
         {
+            if (!Config.Enabled)
+                return true;
             Gender gender = Gender.Undefined;
             if(Game1.activeClickableMenu is NamingMenu namingMenu) 
             {

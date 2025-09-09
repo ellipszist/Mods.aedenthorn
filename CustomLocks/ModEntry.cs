@@ -1,9 +1,10 @@
 ﻿using HarmonyLib;
+using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Locations;
-using StardewValley.Network;
 using System;
+using xTile.Dimensions;
 
 namespace CustomLocks
 {
@@ -36,11 +37,11 @@ namespace CustomLocks
                prefix: new HarmonyMethod(typeof(CustomLocksPatches), nameof(CustomLocksPatches.Mountain_checkAction_Prefix))
             );
             harmony.Patch(
-               original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.performTouchAction)),
+               original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.performTouchAction), new Type[] { typeof(string[]), typeof(Vector2) }),
                prefix: new HarmonyMethod(typeof(CustomLocksPatches), nameof(CustomLocksPatches.GameLocation_performTouchAction_Prefix))
             );
             harmony.Patch(
-               original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.performAction)),
+               original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.performAction), new Type[] { typeof(string[]), typeof(Farmer), typeof(Location) }),
                prefix: new HarmonyMethod(typeof(CustomLocksPatches), nameof(CustomLocksPatches.GameLocation_performAction_Prefix))
             );
             harmony.Patch(
@@ -108,12 +109,12 @@ namespace CustomLocks
             );
         }
 
-        internal static void DoWarp(string[] actionParams, GameLocation instance)
+        internal static void DoWarp(GameLocation location, Point tile, string dest)
         {
             Rumble.rumble(0.15f, 200f);
             Game1.player.completelyStopAnimatingOrDoingAction();
-            instance.playSoundAt("doorClose", Game1.player.getTileLocation(), NetAudio.SoundContext.Default);
-            Game1.warpFarmer(actionParams[3], Convert.ToInt32(actionParams[1]), Convert.ToInt32(actionParams[2]), false);
+            location.playSound("doorClose", Game1.player.Tile);
+            Game1.warpFarmer(dest, tile.X, tile.Y, false);
         }
     }
 }
