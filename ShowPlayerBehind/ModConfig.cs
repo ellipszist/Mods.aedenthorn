@@ -10,6 +10,6 @@ namespace ShowPlayerBehind
         public float InnerTransparency { get; set; } = 0.6f;
         public float OuterTransparency { get; set; } = 0.7f;
         public float CornerTransparency { get; set; } = 0.8f;
-        public float TransparencyFadeSpeed { get; set; } = 0.01f;
+        public float TransparencyFadeSpeed { get; set; } = 0.02f;
 }
 }

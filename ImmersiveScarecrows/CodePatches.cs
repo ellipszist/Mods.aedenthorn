@@ -1,24 +1,22 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Graphics.PackedVector;
-using Newtonsoft.Json;
+using StardewModdingAPI;
 using StardewValley;
+using StardewValley.ItemTypeDefinitions;
 using StardewValley.Network;
+using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
+using StardewValley.Tools;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using System.Reflection.Emit;
 using System.Reflection;
+using System.Reflection.Emit;
 using xTile.Dimensions;
 using Color = Microsoft.Xna.Framework.Color;
 using Object = StardewValley.Object;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
-using StardewValley.Objects;
-using StardewModdingAPI;
-using StardewValley.Tools;
 
 namespace ImmersiveScarecrows
 {
@@ -53,7 +51,7 @@ namespace ImmersiveScarecrows
                         }
                     }
                 }
-                location.playSound("woodyStep", NetAudio.SoundContext.Default);
+                location.playSound("woodyStep");
                 __result = true;
                 return false;
             }
@@ -77,13 +75,13 @@ namespace ImmersiveScarecrows
                 {
                     if (tf.modData.TryGetValue(hatKey + which, out var hatString))
                     {
-                        Game1.createItemDebris(new Hat(int.Parse(hatString)), tf.currentTileLocation * 64f, (who.FacingDirection + 2) % 4, null, -1);
+                        Game1.createItemDebris(new Hat(hatString), tf.Tile * 64f, (who.FacingDirection + 2) % 4, null, -1);
                         tf.modData.Remove(hatKey + which);
 
                     }
-                    tf.modData[hatKey + which] = (who.CurrentItem as Hat).which.Value + "";
+                    tf.modData[hatKey + which] = (who.CurrentItem as Hat).ItemId;
                     who.Items[who.CurrentToolIndex] = null;
-                    who.currentLocation.playSound("dirtyHit", NetAudio.SoundContext.Default);
+                    who.currentLocation.playSound("dirtyHit");
                     __result = true;
                     return false;
                 }
@@ -110,7 +108,7 @@ namespace ImmersiveScarecrows
         [HarmonyPatch(typeof(HoeDirt), nameof(HoeDirt.DrawOptimized))]
         public class HoeDirt_DrawOptimized_Patch
         {
-            public static void Postfix(HoeDirt __instance, SpriteBatch dirt_batch, Vector2 tileLocation)
+            public static void Postfix(HoeDirt __instance, SpriteBatch dirt_batch)
             {
                 if (!Config.EnableMod)
                     return;
@@ -130,10 +128,11 @@ namespace ImmersiveScarecrows
                         if (obj is not null)
                         {
                             Vector2 scaleFactor = obj.getScale();
-                            var globalPosition = tileLocation * 64 + new Vector2(32 - 8 * Config.Scale - scaleFactor.X / 2f + Config.DrawOffsetX, 32 - 8 * Config.Scale - 80 - scaleFactor.Y / 2f + Config.DrawOffsetY) + GetScarecrowCorner(i) * 32;
+                            var globalPosition = __instance.Tile * 64 + new Vector2(32 - 8 * Config.Scale - scaleFactor.X / 2f + Config.DrawOffsetX, 32 - 8 * Config.Scale - 80 - scaleFactor.Y / 2f + Config.DrawOffsetY) + GetScarecrowCorner(i) * 32;
                             var position = Game1.GlobalToLocal(globalPosition);
-                            Texture2D texture = null;
-                            Rectangle sourceRect = new Rectangle();
+                            ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem(obj.QualifiedItemId);
+                            Rectangle sourceRect = itemData.GetSourceRect(obj is Mannequin ? 2 : 0, new int?(obj.ParentSheetIndex));
+                            Texture2D texture = itemData.GetTexture();
                             if (atApi is not null && obj.modData.ContainsKey("AlternativeTextureName"))
                             {
                                 texture = GetAltTextureForObject(obj, out sourceRect);
@@ -155,7 +154,7 @@ namespace ImmersiveScarecrows
             }
 
         }
-        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.isTileOccupiedForPlacement))]
+        //[HarmonyPatch(typeof(GameLocation), nameof(GameLocation.isTileOccupiedForPlacement))]
         public class GameLocation_isTileOccupiedForPlacement_Patch
         {
             public static void Postfix(GameLocation __instance, Vector2 tileLocation, Object toPlace, ref bool __result)
@@ -169,12 +168,12 @@ namespace ImmersiveScarecrows
             }
 
         }
-        [HarmonyPatch(typeof(Utility), "itemCanBePlaced")]
-        public class Utility_itemCanBePlaced_Patch
+        [HarmonyPatch(typeof(Object), nameof(Object.canBePlacedHere))]
+        public class Object_canBePlacedHere_Patch
         {
-            public static bool Prefix(GameLocation location, Vector2 tileLocation, Item item, ref bool __result)
+            public static bool Prefix(Object __instance,GameLocation l, Vector2 tile, ref bool __result)
             {
-                if (!Config.EnableMod || item is not Object || !(item as Object).IsScarecrow() || !location.terrainFeatures.TryGetValue(tileLocation, out var tf) || tf is not HoeDirt)
+                if (!Config.EnableMod || !__instance.IsScarecrow() || !l.terrainFeatures.TryGetValue(tile, out var tf) || tf is not HoeDirt)
                     return true;
                 __result = true;
                 return false;

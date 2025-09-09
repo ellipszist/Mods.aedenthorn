@@ -21,7 +21,7 @@ namespace ImmersiveScarecrows
                 return null;
 
             Object obj = null;
-            foreach (var kvp in Game1.bigCraftablesInformation)
+            foreach (var kvp in Game1.bigCraftableData)
             {
                 if (kvp.Value.Equals(scarecrowString))
                 {
@@ -32,9 +32,9 @@ namespace ImmersiveScarecrows
             if(obj is null)
             {
                 scarecrowString = scarecrowString.Split('/')[0];
-                foreach (var kvp in Game1.bigCraftablesInformation)
+                foreach (var kvp in Game1.bigCraftableData)
                 {
-                    if (kvp.Value.StartsWith(scarecrowString + "/"))
+                    if (kvp.Value.Name == scarecrowString)
                     {
                         obj = new Object(Vector2.Zero, kvp.Key);
                         break;
@@ -66,7 +66,7 @@ namespace ImmersiveScarecrows
         }
         private static string GetScarecrowString(Object instance)
         {
-            return Game1.bigCraftablesInformation.TryGetValue(instance.ParentSheetIndex, out var str) ? str : instance.Name;
+            return Game1.bigCraftableData.TryGetValue(instance.ItemId, out var data) ? data.Name : instance.Name;
         }
         private static Vector2 GetScarecrowCorner(int i)
         {
@@ -293,7 +293,7 @@ namespace ImmersiveScarecrows
             var instanceName = $"{modelType}_{baseName}";
             var instanceSeasonName = $"{instanceName}_{Game1.currentSeason}";
 
-            bool hasAlt = (bool)AccessTools.Method(textureMgr.GetType(), "DoesObjectHaveAlternativeTexture", new System.Type[] { typeof(string) }).Invoke(textureMgr, new object[] { instanceName });
+            bool hasAlt = (bool)AccessTools.Method(textureMgr.GetType(), "DoesObjectHaveAlternativeTextureById", new Type[] { typeof(string) }).Invoke(textureMgr, new object[] { instanceName });
             bool hasAltSeason = (bool)AccessTools.Method(textureMgr.GetType(), "DoesObjectHaveAlternativeTexture", new System.Type[] { typeof(string) }).Invoke(textureMgr, new object[] { instanceSeasonName });
             MethodInfo assignModData = AccessTools.Method(atApi.GetType().Assembly.GetType("AlternativeTextures.Framework.Patches.PatchTemplate"), "AssignModData").MakeGenericMethod(typeof(Object));
             if ((bool)AccessTools.Method(atApi.GetType().Assembly.GetType("AlternativeTextures.Framework.Patches.PatchTemplate"), "HasCachedTextureName").MakeGenericMethod(typeof(Object)).Invoke(null, new object[] { obj, false }))

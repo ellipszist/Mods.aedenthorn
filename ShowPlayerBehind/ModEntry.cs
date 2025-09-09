@@ -74,7 +74,6 @@ namespace ShowPlayerBehind
         {
             if (!Config.ModEnabled || !Context.IsWorldReady)
                 return;
-            Config.TransparencyFadeSpeed = 0.02f;
             Dictionary<GameLocation, Dictionary<Point, float>> farmerPoints = new();
             foreach (Farmer f in Game1.getAllFarmers())
             {
@@ -123,11 +122,11 @@ namespace ShowPlayerBehind
                     dict[fp + new Point(0, 1)] = Config.OuterTransparency;
 
                 if (!dict.TryGetValue(fp + new Point(-1, -2), out v) || v > 10 + Config.CornerTransparency)
-                    dict[fp + new Point(-1, -2)] = 1 + Config.CornerTransparency;
+                    dict[fp + new Point(-1, -2)] = 10 + Config.CornerTransparency;
                 if (!dict.TryGetValue(fp + new Point(1, -2), out v) || v > 10 + Config.CornerTransparency)
-                    dict[fp + new Point(1, -2)] = 1 + Config.CornerTransparency;
+                    dict[fp + new Point(1, -2)] = 10 + Config.CornerTransparency;
                 if (!dict.TryGetValue(fp + new Point(0, -2), out v) || v > 10 + Config.OuterTransparency)
-                    dict[fp + new Point(0, -2)] = Config.OuterTransparency;
+                    dict[fp + new Point(0, -2)] = 10 + Config.OuterTransparency;
 
             }
             foreach (var kvp in farmerPoints)
@@ -153,7 +152,7 @@ namespace ShowPlayerBehind
                         {
                             foreach (var l in key.Map.Layers)
                             {
-                                if ((trans >= 10 && !l.Id.StartsWith("AlwaysFront")) || (!l.Id.StartsWith("AlwaysFront") && l.Id.StartsWith("Front")))
+                                if ((trans >= 10 && l.Id.StartsWith("Front")) || (!l.Id.StartsWith("AlwaysFront") && !l.Id.StartsWith("Front")))
                                 {
                                     continue;
                                 }
