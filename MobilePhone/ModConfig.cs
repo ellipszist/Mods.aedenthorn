@@ -95,8 +95,10 @@ namespace MobilePhone
         // phone call
 
         public bool EnableIncomingCalls { get; set; } = true;
-        public SButton ToggleIncomingCallsKey { get; set; } = SButton.None;
+        public bool AutoOpenOnCall { get; set; } = false;
         public bool ReceiveCallsUnderground { get; set; } = false;
+        public SButton ToggleIncomingCallsKey { get; set; } = SButton.None;
+        public SButton AnswerIncomingCallsKey { get; set; } = SButton.None;
         public float FriendCallChance { get; set; } = 0.01f;
         public Color CallTextColor { get; set; } = Color.White;
         public Color AnswerColor { get; set; } = Color.ForestGreen;

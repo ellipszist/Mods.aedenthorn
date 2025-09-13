@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using StardewValley;
+using System.Linq;
 using xTile.Layers;
 using xTile.Tiles;
 
@@ -28,8 +29,11 @@ namespace MapEdit
                 try
                 {
                     Tile tile = layer.Tiles[(int)Game1.currentCursorTile.X, (int)Game1.currentCursorTile.Y];
-                    currentTileDict.Value.Add(layer.Id, tile.Clone(layer));
-                    SMonitor.Log($"Copied layer {layer.Id} tile index {tile.TileIndex}");
+                    if(tile != null)
+                    {
+                        currentTileDict.Value.Add(layer.Id, tile.Clone(layer));
+                        SMonitor.Log($"Copied layer {layer.Id} tile index {tile.TileIndex}");
+                    }
                 }
                 catch { }
             }
@@ -43,8 +47,25 @@ namespace MapEdit
                 return;
 
             string mapName = Game1.player.currentLocation.mapPath.Value.Replace("Maps\\", "");
+            var tileDict = currentTileDict.Value;
+            if (SHelper.Input.IsDown(Config.LayerModButton))
+            {
+                tileDict = new System.Collections.Generic.Dictionary<string, Tile>(currentTileDict.Value);
+                
+                foreach(var l in Game1.player.currentLocation.Map.Layers)
+                {
+                    if (!currentTileDict.Value.ContainsKey(l.Id))
+                    {
+                        var tile = l.PickTile(new xTile.Dimensions.Location((int)Game1.currentCursorTile.X * 64, (int)Game1.currentCursorTile.Y * 64), Game1.viewport.Size);
+                        if(tile != null )
+                        {
+                            tileDict[l.Id] = tile;
+                        }
+                    }
+                }
+            }
 
-            SaveMapTile(mapName, Game1.currentCursorTile, new TileLayers(currentTileDict.Value));
+            SaveMapTile(mapName, Game1.currentCursorTile, new TileLayers(tileDict));
             pastedTileLoc.Value = Game1.currentCursorTile;
             Game1.playSound(Config.PasteSound);
             SMonitor.Log($"Pasted tile to {Game1.currentCursorTile}");

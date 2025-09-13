@@ -358,7 +358,14 @@ namespace AllChestsMenu
 			int oddRows = 0;
 
 			chestDataList.Clear();
-			for (int i = 0; i < allChestDataList.Count; i++)
+            inventoryButtons.Clear();
+            inventoryCells.Clear();
+			if (!allChestDataList.Any())
+			{
+                populateClickableComponentList();
+                return;
+            }
+            for (int i = 0; i < allChestDataList.Count; i++)
 			{
 				allChestDataList[i].index = i;
 
@@ -422,6 +429,12 @@ namespace AllChestsMenu
 				}
 				chestDataList.Add(chestData);
 			}
+            if (!chestDataList.Any())
+			{
+                populateClickableComponentList();
+                return;
+            }
+
             int lastY = chestDataList[0].menu.yPositionOnScreen;
             int lastHeight = 0;
 			totalHeight = 0;
@@ -439,8 +452,6 @@ namespace AllChestsMenu
             }
             totalHeight += lastHeight;
 
-            inventoryButtons.Clear();
-			inventoryCells.Clear();
 			for (int i = 0; i < chestDataList.Count; i++)
 			{
 				const int columns = 12;

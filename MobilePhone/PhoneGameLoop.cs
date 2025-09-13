@@ -349,11 +349,23 @@ namespace MobilePhone
                     getValue: () => Config.EnableIncomingCalls,
                     setValue: value => Config.EnableIncomingCalls = value
                 );
+                configMenu.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => "Auto Open On Call",
+                    getValue: () => Config.AutoOpenOnCall,
+                    setValue: value => Config.AutoOpenOnCall = value
+                );
                 configMenu.AddKeybind(
                     mod: ModManifest,
                     name: () => "Toggle Calls",
                     getValue: () => Config.ToggleIncomingCallsKey,
                     setValue: value => Config.ToggleIncomingCallsKey = value
+                );
+                configMenu.AddKeybind(
+                    mod: ModManifest,
+                    name: () => "Answer Calls",
+                    getValue: () => Config.AnswerIncomingCallsKey,
+                    setValue: value => Config.AnswerIncomingCallsKey = value
                 );
 
                 configMenu.AddBoolOption(

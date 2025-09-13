@@ -54,15 +54,16 @@ namespace MapEdit
             {
                 foreach (Layer layer in map.Layers)
                 {
-                    if (layer.Id == "Paths")
-                        continue;
-                    try
+                    if (layer.Id != "Paths")
                     {
-                        layer.Tiles[(int)kvp.Key.X, (int)kvp.Key.Y] = null;
-                    }
-                    catch
-                    {
+                        try
+                        {
+                            layer.Tiles[(int)kvp.Key.X, (int)kvp.Key.Y] = null;
+                        }
+                        catch
+                        {
 
+                        }
                     }
                 }
                 foreach (var kvp2 in kvp.Value.tileDict)

@@ -256,38 +256,16 @@ namespace ImmersiveScarecrows
                 SMonitor.Log($"Transpiling Farm.addCrows");
 
                 var codes = new List<CodeInstruction>(instructions);
-                bool found1 = false;
-                bool found2 = false;
                 for (int i = 0; i < codes.Count; i++)
                 {
-                    if (!found1 && i < codes.Count - 7 && codes[i].opcode == OpCodes.Call && codes[i].operand  is MethodInfo && (MethodInfo)codes[i].operand == AccessTools.PropertyGetter(typeof(KeyValuePair<Vector2, TerrainFeature>), nameof(KeyValuePair<Vector2, TerrainFeature>.Key)) && codes[i + 1].opcode == OpCodes.Stloc_S && codes[i + 7].opcode == OpCodes.Brfalse)
+                    if (i < codes.Count - 4 && codes[i].opcode == OpCodes.Ldloc_S && codes[i + 1].opcode == OpCodes.Brtrue_S && codes[i + 4].opcode == OpCodes.Callvirt && codes[i + 4].operand  is MethodInfo && (MethodInfo)codes[i + 4].operand == AccessTools.Method(typeof(HoeDirt), nameof(HoeDirt.destroyCrop)))
                     {
                         SMonitor.Log("Adding check for scarecrow at vector");
-                        codes.Insert(i + 2, codes[i + 7].Clone());
-                        codes.Insert(i + 2, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.IsNoScarecrowInRange))));
-                        codes.Insert(i + 2, new CodeInstruction(OpCodes.Ldloc_S, codes[i + 1].operand));
-                        codes.Insert(i + 2, new CodeInstruction(OpCodes.Ldarg_0));
-                        i += 11;
-                        found1 = true;
-                    }
-                    if (!found2 && i < codes.Count - 5 && codes[i].opcode == OpCodes.Ldloca_S  && codes[i + 1].opcode == OpCodes.Call && codes[i + 1].operand is MethodInfo && (MethodInfo)codes[i + 1].operand == AccessTools.PropertyGetter(typeof(KeyValuePair<Vector2, Object>), nameof(KeyValuePair<Vector2, Object>.Value)) && codes[i + 2].opcode == OpCodes.Ldfld && (FieldInfo)codes[i + 2].operand == AccessTools.Field(typeof(Object), nameof(Object.bigCraftable)) && codes[i + 4].opcode == OpCodes.Brfalse_S)
-                    {
-                        SMonitor.Log("Removing big craftable check");
-                        codes[i].opcode = OpCodes.Nop;
-                        codes[i + 1].opcode = OpCodes.Nop;
-                        codes[i + 2].opcode = OpCodes.Nop;
-                        codes[i + 3].opcode = OpCodes.Nop;
-                        codes[i + 4].opcode = OpCodes.Nop;
-                        codes[i].operand = null;
-                        codes[i + 1].operand = null;
-                        codes[i + 2].operand = null;
-                        codes[i + 3].operand = null;
-                        codes[i + 4].operand = null;
-                        i += 4;
-                        found2 = true;
-                    }
-                    if (found1 && found2)
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.IsScarecrowInRange))));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldloc_S, 11));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
                         break;
+                    }
                 }
 
                 return codes.AsEnumerable();

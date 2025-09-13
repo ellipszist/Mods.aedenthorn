@@ -287,6 +287,10 @@ namespace MobilePhone
             ModEntry.currentCallMaxRings = Game1.random.Next(Math.Max(0, Config.IncomingCallMinRings), Math.Max(Config.IncomingCallMinRings + 1, Config.IncomingCallMaxRings));
             ModEntry.calledToday.Add(caller.npc.Name);
             ModEntry.callingNPC = caller.npc;
+            if (Config.AutoOpenOnCall)
+            {
+                PhoneUtils.TogglePhone(true);
+            }
         }
     }
 }

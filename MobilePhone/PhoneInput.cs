@@ -38,6 +38,13 @@ namespace MobilePhone
                 return;
             }
 
+            if (!ModEntry.inCall && ModEntry.callingNPC != null && e.Button == Config.AnswerIncomingCallsKey)
+            {
+                PhoneUtils.StopRingTone();
+                MobilePhoneApp.CallNPC(ModEntry.callingNPC);
+                ModEntry.currentCallRings = 0;
+                return;
+            }
             if (e.Button == Config.OpenPhoneKey && Config.EnableOpenPhoneKey)
             {
                 PhoneUtils.TogglePhone();

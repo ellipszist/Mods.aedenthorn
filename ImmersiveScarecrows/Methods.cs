@@ -254,8 +254,10 @@ namespace ImmersiveScarecrows
             return list;
 
         }
-        private static bool IsNoScarecrowInRange(Farm f, Vector2 v)
+        private static bool IsScarecrowInRange(bool scarecrow, Farm f, Vector2 v)
         {
+            if (!Config.EnableMod || scarecrow)
+                return true;
             //SMonitor.Log("Checking for scarecrows near crop");
             foreach (var kvp in f.terrainFeatures.Pairs)
             {
@@ -271,14 +273,14 @@ namespace ImmersiveScarecrows
                                 var tiles = GetScarecrowTiles(kvp.Key, i, obj.GetRadiusForScarecrow());
                                 if(tiles.Contains(v))
                                 {
-                                    return false;
+                                    return true;
                                 }
                             }
                         }
                     }
                 }
             }
-            return true;
+            return false;
         }
 
         private static void SetAltTextureForObject(Object obj)

@@ -140,7 +140,7 @@ namespace MapEdit
                 if (!mapCollectionData.mapDataDict.ContainsKey(mapName))
                     mapCollectionData.mapDataDict[mapName] = new MapData();
 
-                mapCollectionData.mapDataDict[mapName].tileDataDict[Game1.currentCursorTile] = new TileLayers(currentTileDict.Value);
+                mapCollectionData.mapDataDict[mapName].tileDataDict[Game1.currentCursorTile] = tile;
             }
 
             string modPath = SHelper.DirectoryPath;

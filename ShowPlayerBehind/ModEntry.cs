@@ -24,7 +24,7 @@ namespace ShowPlayerBehind
 
             SMonitor = Monitor;
 
-            Helper.Events.GameLoop.UpdateTicked += GameLoop_UpdateTicked;
+            helper.Events.GameLoop.UpdateTicked += GameLoop_UpdateTicked;
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
 
         }
@@ -53,6 +53,12 @@ namespace ShowPlayerBehind
             );
             configMenu.AddTextOption(
                 mod: ModManifest,
+                name: () => "Transparency Fade Speed",
+                getValue: () => Config.TransparencyFadeSpeed+ "",
+                setValue: delegate(string value) { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var f)) { Config.TransparencyFadeSpeed = f; } }
+            );
+            configMenu.AddTextOption(
+                mod: ModManifest,
                 name: () => "Inner Transparency",
                 getValue: () => Config.InnerTransparency + "",
                 setValue: delegate(string value) { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var f)) { Config.InnerTransparency = f; } }
@@ -75,8 +81,10 @@ namespace ShowPlayerBehind
             if (!Config.ModEnabled || !Context.IsWorldReady)
                 return;
             Dictionary<GameLocation, Dictionary<Point, float>> farmerPoints = new();
-            foreach (Farmer f in Game1.getAllFarmers())
+            foreach (Farmer f in Game1.getOnlineFarmers())
             {
+                if (f?.currentLocation?.Map?.Layers is null)
+                    continue;
                 bool coverFeet = false;
                 bool coverHead = false;
                 foreach(var l in f.currentLocation.Map.Layers)

@@ -277,7 +277,7 @@ namespace MapEdit
             tileMenu.Value.draw(e.SpriteBatch);
         }
 
-        private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
+        private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
         {
 
             // get Generic Mod Config Menu's API (if it's installed)

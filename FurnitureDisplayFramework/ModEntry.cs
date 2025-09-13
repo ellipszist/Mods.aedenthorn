@@ -286,7 +286,14 @@ namespace FurnitureDisplayFramework
         {
             using (TextReader reader = new StringReader(input))
             {
-                return (T)new XmlSerializer(typeof(T)).Deserialize(reader);
+                try
+                {
+                    return (T)new XmlSerializer(typeof(T)).Deserialize(reader);
+                }
+                catch
+                {
+                    return default(T);
+                }
             }
         }
         public static void ToXml<T>(this T objectToSerialize, Stream stream)
