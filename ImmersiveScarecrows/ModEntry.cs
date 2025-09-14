@@ -83,7 +83,7 @@ namespace ImmersiveScarecrows
                 return;
             var which = GetMouseCorner();
             var scarecrowTile = Game1.currentCursorTile;
-            if (!GetScarecrowTileBool(Game1.currentLocation, ref scarecrowTile, ref which, out string str))
+            if (!GetScarecrowTileBool(Game1.currentLocation, ref scarecrowTile, ref which))
                 return;
             if (!Game1.currentLocation.terrainFeatures.TryGetValue(scarecrowTile, out tf))
                 return;

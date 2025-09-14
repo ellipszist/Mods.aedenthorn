@@ -20,16 +20,19 @@ namespace ImmersiveScarecrows
             if (!tf.modData.TryGetValue(scarecrowKey + which, out string scarecrowString))
                 return null;
 
-            Object obj = null;
-            foreach (var kvp in Game1.bigCraftableData)
+            Object obj = (Object)ItemRegistry.Create(scarecrowString, 1, 0, true);
+            if(obj == null)
             {
-                if (kvp.Value.Equals(scarecrowString))
+                foreach (var kvp in Game1.bigCraftableData)
                 {
-                    obj = new Object(Vector2.Zero, kvp.Key);
-                    break;
+                    if (kvp.Key.Equals(scarecrowString))
+                    {
+                        obj = new Object(Vector2.Zero, kvp.Key);
+                        break;
+                    }
                 }
             }
-            if(obj is null)
+            if (obj is null)
             {
                 scarecrowString = scarecrowString.Split('/')[0];
                 foreach (var kvp in Game1.bigCraftableData)
@@ -66,7 +69,7 @@ namespace ImmersiveScarecrows
         }
         private static string GetScarecrowString(Object instance)
         {
-            return Game1.bigCraftableData.TryGetValue(instance.ItemId, out var data) ? data.Name : instance.Name;
+            return instance.QualifiedItemId;
         }
         private static Vector2 GetScarecrowCorner(int i)
         {
@@ -111,9 +114,9 @@ namespace ImmersiveScarecrows
             }
         }
 
-        private static bool GetScarecrowTileBool(GameLocation location, ref Vector2 tile, ref int which, out string scarecrowString)
+        private static bool GetScarecrowTileBool(GameLocation location, ref Vector2 tile, ref int which)
         {
-            if ((scarecrowString = TileScarecrowString(location, tile, which)) is not null)
+            if (TileHasScarecrow(location, tile, which))
             { 
                 return true; 
             }
@@ -146,7 +149,7 @@ namespace ImmersiveScarecrows
                 foreach (var kvp in dict)
                 {
                     var newTile = tile + kvp.Value;
-                    if ((scarecrowString = TileScarecrowString(location, newTile, kvp.Key)) is not null)
+                    if (TileHasScarecrow(location, newTile, kvp.Key))
                     {
                         tile = newTile;
                         which = kvp.Key;
@@ -157,9 +160,9 @@ namespace ImmersiveScarecrows
             return false;
         }
 
-        private static string TileScarecrowString(GameLocation location, Vector2 tile, int which)
+        private static bool TileHasScarecrow(GameLocation location, Vector2 tile, int which)
         {
-            return (location.terrainFeatures.TryGetValue(tile, out var tf) && tf.modData.TryGetValue(scarecrowKey + which, out var scarecrowString)) ? scarecrowString : null;
+            return location.terrainFeatures.TryGetValue(tile, out var tf) && tf.modData.ContainsKey(scarecrowKey + which);
         }
 
         private static bool ReturnScarecrow(Farmer who, GameLocation location, Vector2 placementTile, int which)
@@ -265,7 +268,7 @@ namespace ImmersiveScarecrows
                 {
                     for (int i = 0; i < 4; i++)
                     {
-                        if (kvp.Value.modData.TryGetValue(scarecrowKey + i, out var scarecrowString))
+                        if (kvp.Value.modData.ContainsKey(scarecrowKey + i))
                         {
                             var obj = GetScarecrow(kvp.Value, i);
                             if (obj is not null)

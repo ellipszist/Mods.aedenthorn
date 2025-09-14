@@ -36,7 +36,7 @@ namespace ImmersiveScarecrows
                 int which = GetMouseCorner();
                 SMonitor.Log($"Placing {__instance.Name} at {x},{y}:{which}");
                 ReturnScarecrow(who, location, placementTile, which);
-                tf.modData[scarecrowKey + which] = GetScarecrowString(__instance);
+                tf.modData[scarecrowKey + which] = __instance.QualifiedItemId;
                 tf.modData[guidKey + which] = Guid.NewGuid().ToString();
                 tf.modData[scaredKey + which] = "0";
                 if (atApi is not null)
@@ -65,7 +65,7 @@ namespace ImmersiveScarecrows
                 if (!Config.EnableMod || !Game1.currentLocation.terrainFeatures.TryGetValue(tile, out var tf) || tf is not HoeDirt)
                     return true;
                 int which = GetMouseCorner();
-                if (!GetScarecrowTileBool(__instance, ref tile, ref which, out string scarecrowString))
+                if (!GetScarecrowTileBool(__instance, ref tile, ref which))
                     return true;
                 tf = __instance.terrainFeatures[tile];
                 var scareCrow = GetScarecrow(tf, which);
@@ -202,7 +202,7 @@ namespace ImmersiveScarecrows
                 var which = GetMouseCorner();
                 var scarecrowTile = Game1.currentCursorTile;
 
-                GetScarecrowTileBool(Game1.currentLocation, ref scarecrowTile, ref which, out string str);
+                GetScarecrowTileBool(Game1.currentLocation, ref scarecrowTile, ref which);
 
                 Vector2 pos = Game1.GlobalToLocal(scarecrowTile * 64 + GetScarecrowCorner(which) * 32f);
 
@@ -236,7 +236,7 @@ namespace ImmersiveScarecrows
                         return;
                     for (int i = 0; i < 4; i++)
                     {
-                        if (tf.modData.TryGetValue(scarecrowKey + i, out var scarecrowString))
+                        if (tf.modData.ContainsKey(scarecrowKey + i))
                         {
                             try
                             {

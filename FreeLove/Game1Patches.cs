@@ -1,4 +1,5 @@
-﻿using StardewModdingAPI;
+﻿using Microsoft.Xna.Framework;
+using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Locations;
 
@@ -19,6 +20,21 @@ namespace FreeLove
         {
             if (EventPatches.startingLoadActors)
                 lastGotCharacter = name;
+        }
+
+        public static void warpCharacter_Prefix(NPC character, GameLocation targetLocation, ref Vector2 position)
+        {
+            if(ModEntry.Config.EnableMod && targetLocation is FarmHouse)
+            {
+                foreach(var n in targetLocation.characters)
+                {
+                    if(Vector2.Distance(n.Tile, position) < 1)
+                    {
+                        position = Utility.recursiveFindOpenTileForCharacter(character, targetLocation, position, 100, false);
+                        break;
+                    }
+                }
+            }
         }
     }
 }
