@@ -8,19 +8,13 @@ using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Buffs;
-using StardewValley.GameData.Shirts;
-using StardewValley.Locations;
 using StardewValley.Menus;
 using StardewValley.Monsters;
-using StardewValley.Network;
 using StardewValley.Objects;
-using StardewValley.Tools;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using xTile.Dimensions;
 using xTile.Tiles;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
@@ -500,7 +494,7 @@ namespace Swim
 
         public static void GameLoop_UpdateTicked(object sender, UpdateTickedEventArgs e)
         {
-            if (Game1.player.currentLocation == null || Game1.player == null || !Game1.displayFarmer || Game1.player.position == null)
+            if (Game1.player?.currentLocation == null || Game1.farmEvent != null || Game1.CurrentEvent != null || Game1.eventUp || !Game1.displayFarmer || Game1.player.position == null)
                 return;
 
             ModEntry.isUnderwater.Value = SwimUtils.IsMapUnderwater(Game1.player.currentLocation.Name);

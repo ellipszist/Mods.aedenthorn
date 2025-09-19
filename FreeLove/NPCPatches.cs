@@ -445,7 +445,7 @@ namespace FreeLove
         {
             foreach (Farmer f in Game1.getAllFarmers())
             {
-                if (f.friendshipData.ContainsKey(__instance.Name) && f.friendshipData[__instance.Name].IsMarried())
+                if (f.friendshipData.TryGetValue(__instance.Name, out var fs) && fs.IsMarried())
                 {
                     __result = f;
                     return false;
@@ -456,14 +456,9 @@ namespace FreeLove
 
         public static bool NPC_isMarried_Prefix(NPC __instance, ref bool __result)
         {
-            __result = false;
-            if (!__instance.IsVillager)
-            {
-                return false;
-            }
             foreach (Farmer f in Game1.getAllFarmers())
             {
-                if (f.friendshipData.ContainsKey(__instance.Name) && f.friendshipData[__instance.Name].IsMarried())
+                if (f.friendshipData.TryGetValue(__instance.Name, out var fs) && fs.IsMarried())
                 {
                     __result = true;
                     return false;
@@ -474,14 +469,9 @@ namespace FreeLove
 
         public static bool NPC_isMarriedOrEngaged_Prefix(NPC __instance, ref bool __result)
         {
-            __result = false;
-            if (!__instance.IsVillager)
-            {
-                return false;
-            }
             foreach (Farmer f in Game1.getAllFarmers())
             {
-                if (f.friendshipData.ContainsKey(__instance.Name) && (f.friendshipData[__instance.Name].IsMarried() || f.friendshipData[__instance.Name].IsEngaged()))
+                if (f.friendshipData.TryGetValue(__instance.Name, out var fs) && (fs.IsMarried() || fs.IsEngaged()))
                 {
                     __result = true;
                     return false;

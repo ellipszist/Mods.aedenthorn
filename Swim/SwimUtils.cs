@@ -516,6 +516,9 @@ namespace Swim
 
         internal static bool CanSwimHere()
         {
+            if (!Config.EnableMod || Game1.eventUp)
+                return false;
+
             GameLocation location = Game1.player.currentLocation;
             bool result = (!Config.SwimIndoors || location.IsOutdoors) && location is not VolcanoDungeon && location is not BathHousePool && !ModEntry.locationIsPool.Value;
             if (!result)

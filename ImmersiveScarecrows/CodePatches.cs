@@ -223,29 +223,24 @@ namespace ImmersiveScarecrows
             }
 
         }
-        [HarmonyPatch(typeof(GameLocation), "initNetFields")]
-        public class GameLocation_initNetFields_Patch
+        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.GetDirtDecayChance))]
+        public class GameLocation_GetDirtDecayChance_Patch
         {
-            public static void Postfix(GameLocation __instance)
+            public static void Postfix(GameLocation __instance, Vector2 tile, ref double __result)
             {
                 if (!Config.EnableMod)
                     return;
-                __instance.terrainFeatures.OnValueRemoved += delegate (Vector2 tileLocation, TerrainFeature tf)
+                if(__instance.terrainFeatures.TryGetValue(tile, out var tf) && tf is HoeDirt)
                 {
-                    if (tf is not HoeDirt)
-                        return;
                     for (int i = 0; i < 4; i++)
                     {
                         if (tf.modData.ContainsKey(scarecrowKey + i))
                         {
-                            try
-                            {
-                                __instance.terrainFeatures.Add(tileLocation, tf);
-                            }
-                            catch { }
+                            __result = 0;
+                            return;
                         }
                     }
-                };
+                }
             }
         }
         [HarmonyPatch(typeof(Farm), nameof(Farm.addCrows))]
