@@ -211,6 +211,40 @@ namespace ImmersiveSprinklers
             return false;
         }
 
+        private static bool DropSprinkler(TerrainFeature tf, int which)
+        {
+            Object sprinkler = null;
+            if (tf.modData.ContainsKey(sprinklerKey + which))
+            {
+                sprinkler = GetSprinkler(tf, which, false);
+                tf.Location.debris.Add(new Debris(sprinkler, tf.Tile * 64));
+                tf.modData.Remove(sprinklerKey + which);
+                tf.modData.Remove(guidKey + which);
+                tf.modData.Remove(bigCraftableKey + which);
+                if (tf.modData.ContainsKey(enricherKey + which))
+                {
+                    tf.modData.Remove(enricherKey + which);
+                    var e = new Object("913", 1);
+                    tf.Location.debris.Add(new Debris(e, tf.Tile * 64));
+                }
+                if (tf.modData.ContainsKey(nozzleKey + which))
+                {
+                    tf.modData.Remove(nozzleKey + which);
+                    var n = new Object("915", 1);
+                    tf.Location.debris.Add(new Debris(n, tf.Tile * 64));
+
+                }
+                if (tf.modData.TryGetValue(fertilizerKey + which, out var fertString))
+                {
+                    tf.modData.Remove(fertilizerKey + which);
+                    Object f = GetFertilizer(fertString);
+                    tf.Location.debris.Add(new Debris(f, tf.Tile * 64));
+                }
+                SMonitor.Log($"Dropped {sprinkler?.Name}");
+                return true;
+            }
+            return false;
+        }
         private static bool TryReturnSprinkler(Farmer who, GameLocation location, TerrainFeature tf, Vector2 placementTile, int which)
         {
             Object sprinkler = null;
@@ -240,7 +274,7 @@ namespace ImmersiveSprinklers
                     Object f = GetFertilizer(fertString);
                     TryReturnObject(f, who);
                 }
-                SMonitor.Log($"Returning {sprinkler?.Name}");
+                SMonitor.Log($"Returned {sprinkler?.Name}");
                 return true;
             }
             return false;

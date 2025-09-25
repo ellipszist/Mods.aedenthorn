@@ -305,12 +305,7 @@ namespace ImmersiveSprinklers
                             {
                                 try
                                 {
-                                    if (!hoeDirtsToReadd.TryGetValue(__instance, out var dict))
-                                    {
-                                        dict = new();
-                                        hoeDirtsToReadd[__instance] = dict;
-                                    }
-                                    dict.Add(tileLocation, tf);
+                                    DropSprinkler(tf, i);
                                 }
                                 catch { }
                             }
