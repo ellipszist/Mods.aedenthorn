@@ -90,7 +90,7 @@ namespace InstantBuildingConstructionAndUpgrade
 							buildingData.BuildMaterials = new();
 						}
 					}
-				});
+				}, AssetEditPriority.Late);
 			}
 			if (Config.FreeConstructionAndUpgrade)
 			{
@@ -104,7 +104,7 @@ namespace InstantBuildingConstructionAndUpgrade
 						{
 							homeRenovation.Price = 0;
 						}
-					});
+					}, AssetEditPriority.Late);
 				}
 				if (e.NameWithoutLocale.IsEquivalentTo("Strings/Locations"))
 				{
@@ -142,6 +142,8 @@ namespace InstantBuildingConstructionAndUpgrade
 
 		private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
 		{
+			RegisterConsoleCommands();
+
 			// Get Generic Mod Config Menu's API
 			IGenericModConfigMenuApi gmcm = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
 
@@ -152,9 +154,11 @@ namespace InstantBuildingConstructionAndUpgrade
 					mod: ModManifest,
 					reset: () => Config = new ModConfig(),
 					save: () => {
-						SHelper.GameContent.InvalidateCache(asset => asset.Name.IsEquivalentTo("Data/Buildings"));
-						SHelper.GameContent.InvalidateCache(asset => asset.Name.IsEquivalentTo("Data/HomeRenovations"));
-						SHelper.GameContent.InvalidateCache(asset => asset.NameWithoutLocale.IsEquivalentTo("Strings/Locations"));
+						if (CompatibilityUtility.IsSolidFoundationsLoaded)
+						{
+							ExecuteCommand("sf_reload");
+						}
+						ExecuteCommand("ibcu_reload");
 						Helper.WriteConfig(Config);
 					}
 				);
