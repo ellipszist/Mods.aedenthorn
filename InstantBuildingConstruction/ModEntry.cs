@@ -158,7 +158,7 @@ namespace InstantBuildingConstructionAndUpgrade
 						{
 							ExecuteCommand("sf_reload");
 						}
-						ExecuteCommand("ibcu_reload");
+						InvalidateCaches();
 						Helper.WriteConfig(Config);
 					}
 				);

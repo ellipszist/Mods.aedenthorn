@@ -1,4 +1,5 @@
-﻿using System;
+﻿using StardewModdingAPI;
+using System;
 using System.Reflection;
 
 namespace InstantBuildingConstructionAndUpgrade
@@ -15,5 +16,14 @@ namespace InstantBuildingConstructionAndUpgrade
 
 			addMethod.Invoke(rawCommandQueue, new object[] { command });
 		}
-	}
+
+        private static void InvalidateCaches()
+        {
+            SHelper.GameContent.InvalidateCache(asset => asset.Name.IsEquivalentTo("Data/Buildings"));
+            SHelper.GameContent.InvalidateCache(asset => asset.Name.IsEquivalentTo("Data/HomeRenovations"));
+            SHelper.GameContent.InvalidateCache(asset => asset.NameWithoutLocale.IsEquivalentTo("Strings/Locations"));
+            SMonitor.Log("Modifications to building data and farmhouse renovation data reapplied.", LogLevel.Info);
+        }
+
+    }
 }
