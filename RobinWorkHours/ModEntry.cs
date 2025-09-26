@@ -4,6 +4,7 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Buildings;
 using StardewValley.Locations;
+using StardewValley.Pathfinding;
 using StardewValley.TerrainFeatures;
 using System;
 using System.Collections.Generic;
@@ -56,7 +57,7 @@ namespace RobinWorkHours
         private void GameLoop_DayStarted(object sender, StardewModdingAPI.Events.DayStartedEventArgs e)
         {
             startedWalking = false;
-            if (!Config.EnableMod || Utility.isFestivalDay(Game1.dayOfMonth, Game1.currentSeason))
+            if (!Config.EnableMod || Utility.isFestivalDay())
                 return;
             var robin = Game1.getCharacterFromName("Robin");
             if (robin is null)
@@ -74,7 +75,7 @@ namespace RobinWorkHours
 
         private void GameLoop_TimeChanged(object sender, StardewModdingAPI.Events.TimeChangedEventArgs e)
         {
-            if (!Config.EnableMod || !Game1.IsMasterGame || Utility.isFestivalDay(Game1.dayOfMonth, Game1.currentSeason) || (!Game1.getFarm().isThereABuildingUnderConstruction() && Game1.player.daysUntilHouseUpgrade.Value <= 0 && (Game1.getLocationFromName("Town") as Town).daysUntilCommunityUpgrade.Value <= 0))
+            if (!Config.EnableMod || !Game1.IsMasterGame || Utility.isFestivalDay() || (!Game1.getFarm().isThereABuildingUnderConstruction() && Game1.player.daysUntilHouseUpgrade.Value <= 0 && (Game1.getLocationFromName("Town") as Town).daysUntilCommunityUpgrade.Value <= 0))
                 return;
             var robin = Game1.getCharacterFromName("Robin");
             if(robin is null)
@@ -112,7 +113,7 @@ namespace RobinWorkHours
             if (!startedWalking && e.NewTime >= travelTime && e.NewTime < Config.EndTime && !robin.shouldPlayRobinHammerAnimation.Value) // walk to destination
             {
                 startedWalking = true;
-                if (robin.currentLocation.Name == dest && robin.getTileX() == destX && robin.getTileY() == destY)
+                if (robin.currentLocation.Name == dest && robin.Tile.X == destX && robin.Tile.Y == destY)
                 {
                     Monitor.Log($"Robin is starting work in {dest} at {e.NewTime}", LogLevel.Debug);
                     AccessTools.Method(typeof(NPC), "updateConstructionAnimation").Invoke(robin, new object[0]);
@@ -123,7 +124,8 @@ namespace RobinWorkHours
                 robin.reloadSprite();
                 robin.lastAttemptedSchedule = -1;
                 robin.temporaryController = null;
-                robin.Schedule = new Dictionary<int, SchedulePathDescription>() { { Game1.timeOfDay, (SchedulePathDescription)AccessTools.Method(typeof(NPC), "pathfindToNextScheduleLocation").Invoke(robin, new object[] { robin.currentLocation.Name, robin.getTileX(), robin.getTileY(), dest, destX, destY, 3, null, null }) } }; 
+                var sched = new Dictionary<int, SchedulePathDescription>() { { Game1.timeOfDay, (SchedulePathDescription)AccessTools.Method(typeof(NPC), "pathfindToNextScheduleLocation").Invoke(robin, new object[] { robin.ScheduleKey, robin.currentLocation.Name, (int)robin.Tile.X, (int)robin.Tile.Y, dest, destX, destY, 3, null, null }) } };
+                robin.TryLoadSchedule(robin.ScheduleKey, sched);
                 robin.checkSchedule(Game1.timeOfDay);
             }
             else if(e.NewTime >= Config.EndTime && robin.currentLocation == Game1.getFarm())
@@ -133,7 +135,7 @@ namespace RobinWorkHours
                 robin.ignoreScheduleToday = false;
                 robin.resetCurrentDialogue();
                 Game1.warpCharacter(robin, "BusStop", new Vector2(0, 23));
-                Game1.getFarm().removeTemporarySpritesWithIDLocal(16846f);
+                Game1.getFarm().removeTemporarySpritesWithIDLocal(16846);
 
                 robin.reloadSprite();
                 robin.temporaryController = null;
@@ -193,7 +195,7 @@ namespace RobinWorkHours
                         lastY = y;
                     }
                 }
-                robin.Schedule = schedule;
+                robin.TryLoadSchedule(robin.ScheduleKey, schedule);
                 robin.checkSchedule(Game1.timeOfDay);
             }
         }

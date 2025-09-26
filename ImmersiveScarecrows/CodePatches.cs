@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Netcode;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.ItemTypeDefinitions;
@@ -307,5 +308,66 @@ namespace ImmersiveScarecrows
                 return true;
             }
         }
+
+
+        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.DayUpdate))]
+        public class GameLocation_DayUpdate_Patch
+        {
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling GameLocation.DayUpdate");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Callvirt && codes[i].operand is MethodInfo && ((MethodInfo)codes[i].operand == AccessTools.Method(typeof(NetDictionary<Vector2, TerrainFeature, NetRef<TerrainFeature>, SerializableDictionary<Vector2, TerrainFeature>, NetVector2Dictionary<TerrainFeature, NetRef<TerrainFeature>>>), nameof(NetVector2Dictionary<TerrainFeature, NetRef<TerrainFeature>>.RemoveWhere))))
+                    {
+                        SMonitor.Log($"overriding hoedirt removal");
+                        codes.Insert(i, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.RemoveWhere))));
+                        i++;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+
+        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.HandleGrassGrowth))]
+        public class GameLocation_HandleGrassGrowth_Patch
+        {
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling GameLocation.DayUpdate");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Callvirt && codes[i].operand is MethodInfo && ((MethodInfo)codes[i].operand == AccessTools.Method(typeof(NetDictionary<Vector2, TerrainFeature, NetRef<TerrainFeature>, SerializableDictionary<Vector2, TerrainFeature>, NetVector2Dictionary<TerrainFeature, NetRef<TerrainFeature>>>), nameof(NetVector2Dictionary<TerrainFeature, NetRef<TerrainFeature>>.RemoveWhere))))
+                    {
+                        SMonitor.Log($"overriding hoedirt removal");
+                        codes.Insert(i, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.RemoveWhere))));
+                        i++;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+        [HarmonyPatch(typeof(HoeDirt), nameof(HoeDirt.seasonUpdate))]
+        public class HoeDirt_seasonUpdate_Patch
+        {
+            public static void Postfix(HoeDirt __instance, ref bool __result)
+            {
+                if (!__result || !Config.EnableMod)
+                    return;
+                for (int i = 0; i < 4; i++)
+                {
+                    if (__instance.modData.TryGetValue(scarecrowKey + i, out var sprinklerString))
+                    {
+                        __result = false;
+                        return;
+                    }
+                }
+            }
+        }
+
     }
 }

@@ -2,7 +2,9 @@
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Netcode;
 using StardewValley;
+using StardewValley.Network;
 using StardewValley.TerrainFeatures;
 using System;
 using System.Collections.Generic;
@@ -396,6 +398,27 @@ namespace ImmersiveScarecrows
             var h = (int)AccessTools.Property(textureModel.GetType(), "TextureHeight").GetValue(textureModel);
             sourceRect = new Rectangle(xTileOffset * w, textureOffset, w, h);
             return (Texture2D)AccessTools.Method(textureModel.GetType(), "GetTexture").Invoke(textureModel, new object[] { textureVariation });
+        }
+
+
+
+        public static Func<KeyValuePair<Vector2, TerrainFeature>, bool> RemoveWhere(Func<KeyValuePair<Vector2, TerrainFeature>, bool> match)
+        {
+            if (!Config.EnableMod)
+                return match;
+            return delegate (KeyValuePair<Vector2, TerrainFeature> pair)
+            {
+
+                for (int i = 0; i < 4; i++)
+                {
+                    if (pair.Value.modData.TryGetValue(scarecrowKey + i, out var scarecrowString))
+                    {
+                        SMonitor.Log($"Preventing hoedirt removal");
+                        return false;
+                    }
+                }
+                return match(pair);
+            };
         }
     }
 }

@@ -170,6 +170,8 @@ namespace GiantTrees
                     {
                         bools[i] = (__instance.Location.terrainFeatures.TryGetValue(array[i], out var tf) && tf is Tree tree && tree.treeType.Value == __instance.treeType.Value && tree.growthStage.Value >= 5);
                     }
+                    if (Config.GiantChance < Game1.random.NextDouble())
+                        return;
                     if (bools[0] && bools[1] && bools[3])
                     {
                         CreateGiantTree(__instance.Location, new Vector2[]{array[0], array[1], array[3], array[4]});
