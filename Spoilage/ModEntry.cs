@@ -78,35 +78,33 @@ namespace Spoilage
             foreach(var l in Game1.locations)
             {
                 locs.Add(l);
-                if(l is BuildableGameLocation)
+                foreach (var b in l.buildings)
                 {
-                    foreach(var b in (l as BuildableGameLocation).buildings)
+                    if (b.indoors.Value is not null)
                     {
-                        if(b.indoors.Value is not null)
-                        {
-                            locs.Add(b.indoors.Value);
-                        }
+                        locs.Add(b.indoors.Value);
                     }
                 }
             }
-            
-            foreach(var l in locs)
+
+            foreach (var l in locs)
             {
                 foreach(var obj in l.objects.Values)
                 {
-                    if(obj is Chest)
+                    if(obj is Chest chest)
                     {
-                        SpoilItems((obj as Chest).items, (obj as Chest).fridge.Value ? Config.FridgeMult : 1);
+                        SpoilItems(chest.Items, GetChestMult(chest));
                     }
-                    else if(obj.heldObject.Value is Chest)
+                    else if(obj.heldObject.Value is Chest chest2)
                     {
-                        SpoilItems((obj.heldObject.Value as Chest).items, (obj.heldObject.Value as Chest).fridge.Value ? Config.FridgeMult : 1);
+                        SpoilItems(chest2.Items, GetChestMult(chest2));
                     }
                 }
             }
-            SpoilItems(Game1.player.items, Config.PlayerMult);
+            SpoilItems(Game1.player.Items, Config.PlayerMult);
 
         }
+
 
         private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
         {
@@ -156,6 +154,12 @@ namespace Spoilage
                 name: () => "Display Days Left",
                 getValue: () => Config.DisplayDaysLeft,
                 setValue: value => Config.DisplayDaysLeft = value
+            );
+            configMenu.AddTextOption(
+                mod: ModManifest,
+                name: () => "Default Spoil Item",
+                getValue: () => Config.SpoiledItem,
+                setValue: value => Config.SpoiledItem = value
             );
             configMenu.AddNumberOption(
                 mod: ModManifest,
@@ -213,13 +217,19 @@ namespace Spoilage
             );
             configMenu.AddTextOption(
                 mod: ModManifest,
-                name: () => "Fridge Spoilage Multiplier",
+                name: () => "Fridge Multiplier",
                 getValue: () => Config.FridgeMult + "",
                 setValue: delegate (string value) { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out float f)) { Config.FridgeMult = f; } }
             );
             configMenu.AddTextOption(
                 mod: ModManifest,
-                name: () => "Player Spoilage Multiplier",
+                name: () => "Stone Chest Multiplier",
+                getValue: () => Config.StoneChestMult + "",
+                setValue: delegate (string value) { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out float f)) { Config.StoneChestMult = f; } }
+            );
+            configMenu.AddTextOption(
+                mod: ModManifest,
+                name: () => "Inventory Multiplier",
                 getValue: () => Config.PlayerMult + "",
                 setValue: delegate (string value) { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out float f)) { Config.PlayerMult = f; } }
             );

@@ -22,8 +22,9 @@ namespace Spoilage
         public int MeatDays { get; set; } = 1;
         public int FishDays { get; set; } = 1;
         public float FridgeMult { get; set; } = 0.1f;
+        public float StoneChestMult { get; set; } = 0.5f;
         public float PlayerMult { get; set; } = 1.5f;
-        public int SpoiledIndex { get; set; } = 168;
+        public string SpoiledItem { get; set; } = "168";
         public Color CustomSpoiledColor { get; set; } = Color.Lime;
         public Dictionary<string, SpoilData> CustomSpoilage { get; set; } = new Dictionary<string, SpoilData>
         {

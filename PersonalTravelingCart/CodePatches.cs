@@ -186,7 +186,7 @@ namespace PersonalTravelingCart
 		{
 			public static bool Prefix(ref bool __result)
 			{
-				if (!Config.ModEnabled || Game1.currentLocation is null)
+				if (!Config.ModEnabled || Game1.currentLocation is null || !Context.IsWorldReady)
 					return true;
 
 				foreach (NPC npc in Game1.currentLocation.characters)
@@ -211,20 +211,24 @@ namespace PersonalTravelingCart
 						}
 					}
 				}
-				if (Game1.getFarm().modData.TryGetValue($"{parkedListKey}/{Game1.currentLocation.NameOrUniqueName}", out string parkedString))
+				try
 				{
-					List<ParkedTravelingCart> parkedTravelingCarts = JsonConvert.DeserializeObject<List<ParkedTravelingCart>>(parkedString);
+                    if (Game1.getFarm().modData.TryGetValue($"{parkedListKey}/{Game1.currentLocation.NameOrUniqueName}", out string parkedString))
+                    {
+                        List<ParkedTravelingCart> parkedTravelingCarts = JsonConvert.DeserializeObject<List<ParkedTravelingCart>>(parkedString);
 
-					foreach (ParkedTravelingCart parkedTravelingCart in parkedTravelingCarts)
-					{
-						if (TryUpdateCursorForParkedTravelingCart(parkedTravelingCart))
-						{
-							__result = true;
-							return false;
-						}
-					}
-				}
-				return true;
+                        foreach (ParkedTravelingCart parkedTravelingCart in parkedTravelingCarts)
+                        {
+                            if (TryUpdateCursorForParkedTravelingCart(parkedTravelingCart))
+                            {
+                                __result = true;
+                                return false;
+                            }
+                        }
+                    }
+                }
+				catch { }
+                return true;
 			}
 		}
 

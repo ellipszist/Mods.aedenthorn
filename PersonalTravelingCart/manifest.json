@@ -1,7 +1,7 @@
 ﻿{
 	"Name": "Personal Traveling Cart",
 	"Author": "aedenthorn",
-	"Version": "0.3.6",
+	"Version": "0.3.7",
 	"Description": "Hitches a traveling cart to your horse that you can enter, decorate, store things, and even sleep in.",
 	"UniqueID": "aedenthorn.PersonalTravelingCart",
 	"EntryDll": "PersonalTravelingCart.dll",

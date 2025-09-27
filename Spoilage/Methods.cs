@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using Netcode;
 using StardewValley;
+using StardewValley.Objects;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -95,18 +96,21 @@ namespace Spoilage
                             items[i] = null;
                             continue;
                         }
-                        int spoiledIndex = Config.SpoiledIndex;
+                        string spoiledIndex = Config.SpoiledItem;
                         if ((spoilageDict.TryGetValue(item.Name, out SpoilData data) || spoilageDict.TryGetValue(item.ParentSheetIndex + "", out data)) && data.spoiled is not null)
                         {
-                            if(int.TryParse(data.spoiled, out int index))
-                                spoiledIndex = index;
+                            if(Game1.objectData.ContainsKey(data.spoiled))
+                                spoiledIndex = data.spoiled;
                             else
                             {
                                 try
                                 {
-                                    spoiledIndex = Game1.objectInformation.First(k => k.Value.StartsWith(data.spoiled + "/")).Key;
+                                    spoiledIndex = Game1.objectData.First(d => d.Value.Name == data.spoiled).Key;
                                 }
-                                catch { }
+                                catch
+                                {
+
+                                }
                             }
                         }
                         items[i] = new Object(spoiledIndex, items[i].Stack);
@@ -116,6 +120,16 @@ namespace Spoilage
                 }
                 item.modData[ageKey] = age + "";
             }
+        }
+
+        public static float GetChestMult(Chest chest)
+        {
+            float mult = 1.0f;
+            if (chest.fridge.Value)
+                mult = Config.FridgeMult;
+            else if (chest.QualifiedItemId.Equals("(BC)BigStoneChest"))
+                mult = Config.StoneChestMult;
+            return mult;
         }
     }
 }
