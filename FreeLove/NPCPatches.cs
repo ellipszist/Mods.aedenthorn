@@ -691,37 +691,60 @@ namespace FreeLove
         }
 
 
-        public static bool NPC_tryToReceiveActiveObject_Prefix(NPC __instance, ref Farmer who, Dictionary<string, string> ___dialogue, bool probe)
+        public static bool NPC_tryToReceiveActiveObject_Prefix(NPC __instance, ref Farmer who, Dictionary<string, string> ___dialogue, bool probe, ref bool __result)
         {
-            if (!Config.EnableMod || probe)
+            if (!Config.EnableMod || probe || !__instance.CanReceiveGifts())
                 return true;
             try
             {
-                Friendship friendship;
-                who.friendshipData.TryGetValue(__instance.Name, out friendship);
-                string safe_name = __instance.Name.ToLower().Replace(' ', '_');
-                if (who.ActiveObject.HasContextTag("propose_roommate_" + safe_name))
+                who.friendshipData.TryGetValue(__instance.Name, out var friendship);
+                if (friendship == null)
+                    return true;
+                if (who.ActiveObject.HasContextTag(ItemContextTagManager.SanitizeContextTag("propose_roommate_" + __instance.Name)))
                 {
                     Monitor.Log($"Roommate proposal item {who.ActiveObject.Name} to {__instance.Name}");
 
-                    if (who.getFriendshipHeartLevelForNPC(__instance.Name) >= 10 && who.HouseUpgradeLevel >= 1)
+
+                    string failedKey = null;
+                    object[] substitutions = null;
+                    bool defaultToPuzzledMessage = __instance.Name != "Krobus";
+                    if (who.spouse == __instance.Name)
                     {
-                        Monitor.Log($"proposal success!");
-                        AccessTools.Method(typeof(NPC), "engagementResponse").Invoke(__instance, new object[] { who, true });
-                        return false;
+                        failedKey = "RejectRoommateProposal_AlreadyAccepted";
+                        defaultToPuzzledMessage = false;
                     }
-                    Game1.drawObjectDialogue(Game1.parseText(Game1.content.LoadString("Strings\\Characters:MovieInvite_NoTheater", __instance.displayName)));
+                    else if (__instance.isMarriedOrEngaged())
+                    {
+                        failedKey = "RejectRoommateProposal_NpcWithSomeoneElse";
+                    }
+                    else if (who.getFriendshipHeartLevelForNPC(__instance.Name) < 10)
+                    {
+                        failedKey = "RejectRoommateProposal_LowFriendship";
+                    }
+                    else if (who.HouseUpgradeLevel < 1)
+                    {
+                        failedKey = "RejectRoommateProposal_SmallHouse";
+                    }
+                    if (failedKey != null)
+                    {
+                        Dialogue dialogue3 = ((substitutions != null) ? __instance.TryGetDialogue(failedKey, substitutions) : __instance.TryGetDialogue(failedKey)) ?? __instance.TryGetDialogue("RejectRoommateProposal");
+                        if (dialogue3 != null)
+                        {
+                            __instance.CurrentDialogue.Push(dialogue3);
+                            Game1.drawDialogue(__instance);
+                        }
+                        else if (defaultToPuzzledMessage)
+                        {
+                            Game1.drawObjectDialogue(Game1.parseText(Game1.content.LoadString("Strings\\Characters:MovieInvite_NoTheater", __instance.displayName)));
+                        }
+                        return dialogue3 != null || defaultToPuzzledMessage;
+                    }
+                    AccessTools.Method(typeof(NPC), "engagementResponse").Invoke(__instance, new object[] { who, true });
+
+                    __result = true;
                     return false;
                 }
-                else if (who.ActiveObject.ParentSheetIndex == 808 && __instance.Name.Equals("Krobus"))
-                {
-                    if (who.getFriendshipHeartLevelForNPC(__instance.Name) >= 10 && who.HouseUpgradeLevel >= 1)
-                    {
-                        AccessTools.Method(typeof(NPC), "engagementResponse").Invoke(__instance, new object[] { who, true });
-                        return false;
-                    }
-                }
-                else if (who.ActiveObject.ParentSheetIndex == 458)
+                else if (who.ActiveObject.QualifiedItemId == "(O)458")
                 {
                     Monitor.Log($"Try give bouquet to {__instance.Name}");
 
@@ -736,105 +759,115 @@ namespace FreeLove
                             fh.showSpouseRoom();
                             Helper.Reflection.GetMethod(fh, "resetLocalState").Invoke();
                         }
+                        __result = true;
                         return false;
                     }
 
-                    if (!__instance.datable.Value)
+                    if (__instance.datable.Value && !friendship.IsDating() && !friendship.IsDivorced())
                     {
-                        if (Game1.random.NextBool())
+                        if (friendship.Points < Config.MinPointsToDate / 2f)
                         {
-                            Game1.drawObjectDialogue(Game1.content.LoadString("Strings\\StringsFromCSFiles:NPC.cs.3955", __instance.displayName));
-                        }
-                        else
-                        {
-                            __instance.CurrentDialogue.Push(Game1.random.NextBool() ? new Dialogue(__instance, "Strings\\StringsFromCSFiles:NPC.cs.3956", false) : new Dialogue(__instance, "Strings\\StringsFromCSFiles:NPC.cs.3957", true));
-                        }
-                        Game1.drawDialogue(__instance);
-                        return false;
-                    }
-                    else
-                    {
-                        if (friendship?.IsDating() == true)
-                        {
-                            Game1.drawObjectDialogue(Game1.content.LoadString("Strings\\UI:AlreadyDatingBouquet", __instance.displayName));
-                            return false;
-                        }
-                        if (friendship?.IsDivorced() == true)
-                        {
-                            __instance.CurrentDialogue.Push(new Dialogue(__instance, "Strings\\Characters:Divorced_bouquet", true));
-                            Game1.drawDialogue(__instance);
-                            return false;
-                        }
-                        if (friendship?.Points < Config.MinPointsToDate / 2f)
-                        {
-                            __instance.CurrentDialogue.Push(Game1.random.NextBool() ? new Dialogue(__instance, "Strings\\StringsFromCSFiles:NPC.cs.3958", false) : new Dialogue(__instance, "Strings\\StringsFromCSFiles:NPC.cs.3959", true));
-                            Game1.drawDialogue(__instance);
-                            return false;
-                        }
-                        if (friendship?.Points < Config.MinPointsToDate)
-                        {
-                            __instance.CurrentDialogue.Push(new Dialogue(__instance, "Strings\\StringsFromCSFiles:NPC.cs." + Game1.random.Choose("3960", "3961"), false));
-                            Game1.drawDialogue(__instance);
-                            return false;
-                        }
-                        if (friendship?.IsDating() == false)
-                        {
-                            friendship.Status = FriendshipStatus.Dating;
-                            Multiplayer mp = ModEntry.SHelper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
-                            mp.globalChatInfoMessage("Dating", new string[]
+                            Stack<Dialogue> currentDialogue = __instance.CurrentDialogue;
+                            Dialogue dialogue;
+                            if ((dialogue = __instance.TryGetDialogue("RejectBouquet_VeryLowHearts")) == null)
                             {
-                                    who.Name,
-                                    __instance.displayName
-                            });
+                                dialogue = __instance.TryGetDialogue("RejectBouquet") ?? (Game1.random.NextBool() ? new Dialogue(__instance, "Strings\\StringsFromCSFiles:NPC.cs.3958", false) : new Dialogue(__instance, "Strings\\StringsFromCSFiles:NPC.cs.3959", true));
+                            }
+                            currentDialogue.Push(dialogue);
+                            Game1.drawDialogue(__instance);
+                            __result = true;
+                            return false;
                         }
-                        __instance.CurrentDialogue.Push(new Dialogue(__instance, "Strings\\StringsFromCSFiles:NPC.cs." + Game1.random.Choose("3962", "3963"), true));
+                        if (friendship.Points < Config.MinPointsToDate)
+                        {
+                            Stack<Dialogue> currentDialogue = __instance.CurrentDialogue;
+                            Dialogue dialogue;
+                            if ((dialogue = __instance.TryGetDialogue("RejectBouquet_LowHearts")) == null)
+                            {
+                                dialogue = __instance.TryGetDialogue("RejectBouquet") ?? new Dialogue(__instance, "Strings\\StringsFromCSFiles:NPC.cs." + Game1.random.Choose("3960", "3961"), false);
+                            }
+                            currentDialogue.Push(dialogue);
+                            Game1.drawDialogue(__instance);
+                            __result = true;
+                            return false;
+                        }
+
+                        friendship.Status = FriendshipStatus.Dating;
+                        Multiplayer mp = ModEntry.SHelper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
+                        mp.globalChatInfoMessage("Dating", new string[]
+                        {
+                            Game1.player.Name,
+                            __instance.GetTokenizedDisplayName()
+                        });
+                        __instance.CurrentDialogue.Push(__instance.TryGetDialogue("AcceptBouquet") ?? new Dialogue(__instance, "Strings\\StringsFromCSFiles:NPC.cs." + Game1.random.Choose("3962", "3963"), true));
+                        who.autoGenerateActiveDialogueEvent("dating_" + __instance.Name, 4);
+                        who.autoGenerateActiveDialogueEvent("dating", 4);
                         who.changeFriendship(25, __instance);
                         who.reduceActiveItemByOne();
                         who.completelyStopAnimatingOrDoingAction();
                         __instance.doEmote(20, true);
                         Game1.drawDialogue(__instance);
+                        __result = true;
                         return false;
                     }
                 }
-                else if (who.ActiveObject.ParentSheetIndex == 460)
+                else if (who.ActiveObject.QualifiedItemId == "(O)460" && !who.isEngaged() && __instance.datable.Value && !__instance.isMarriedOrEngaged() && !friendship.IsDivorced())
                 {
                     Monitor.Log($"Try give pendant to {__instance.Name}");
-                    if (who.isEngaged())
-                    {
-                        Monitor.Log($"Tried to give pendant while engaged");
-
-                        __instance.CurrentDialogue.Push(new Dialogue(__instance, "Strings\\StringsFromCSFiles:NPC.cs." + Game1.random.Choose("3965", "3966"), true));
-                        Game1.drawDialogue(__instance);
-                        return false;
-                    }
-                    if (!__instance.datable.Value || __instance.isMarriedOrEngaged() || (who.friendshipData.ContainsKey(__instance.Name) && who.friendshipData[__instance.Name].Points < Config.MinPointsToMarry * 0.6f))
+                    if (who.friendshipData.ContainsKey(__instance.Name) && who.friendshipData[__instance.Name].Points < Config.MinPointsToMarry * 0.6f)
                     {
                         Monitor.Log($"Tried to give pendant to someone not datable");
 
-                        if (ModEntry.myRand.NextDouble() < 0.5)
+
+                        if (Game1.random.NextBool())
                         {
                             Game1.drawObjectDialogue(Game1.content.LoadString("Strings\\StringsFromCSFiles:NPC.cs.3969", __instance.displayName));
-                            return false;
                         }
-                        __instance.CurrentDialogue.Push(new Dialogue(__instance, "Strings\\StringsFromCSFiles:NPC.cs." + ((__instance.Gender == Gender.Female) ? "3970" : "3971"), false));
+                        else
+                        {
+                            Stack<Dialogue> currentDialogue = __instance.CurrentDialogue;
+                            Dialogue dialogue = __instance.TryGetDialogue("RejectMermaidPendant_Under8Hearts");
+                            if(dialogue == null)
+                            {
+                                dialogue = __instance.TryGetDialogue("RejectMermaidPendant");
+                            }
+                            if(dialogue == null)
+                            {
+                                dialogue = new Dialogue(__instance, "Strings\\StringsFromCSFiles:NPC.cs." + ((__instance.Gender == Gender.Female) ? "3970" : "3971"), false);
+                            }
+                            currentDialogue.Push(dialogue);
+                            Game1.drawDialogue(__instance);
+                        }
                         Game1.drawDialogue(__instance);
+                        __result = true;
                         return false;
                     }
-                    else if (__instance.datable.Value && who.friendshipData.ContainsKey(__instance.Name) && who.friendshipData[__instance.Name].Points < Config.MinPointsToMarry)
+                    else if (friendship.Points < Config.MinPointsToMarry)
                     {
                         Monitor.Log($"Tried to give pendant to someone not marriable");
 
-                        if (!who.friendshipData[__instance.Name].ProposalRejected)
+                        if (!friendship.ProposalRejected)
                         {
-                            __instance.CurrentDialogue.Push(new Dialogue(__instance, "Strings\\StringsFromCSFiles:NPC.cs." + Game1.random.Choose("3972", "3973"), false));
+                            __instance.CurrentDialogue.Push(__instance.TryGetDialogue("RejectMermaidPendant_Under10Hearts") ?? new Dialogue(__instance, "Strings\\StringsFromCSFiles:NPC.cs." + Game1.random.Choose("3972", "3973"), false));
                             Game1.drawDialogue(__instance);
                             who.changeFriendship(-20, __instance);
-                            who.friendshipData[__instance.Name].ProposalRejected = true;
-                            return false;
+                            friendship.ProposalRejected = true;
                         }
-                        __instance.CurrentDialogue.Push(new Dialogue(__instance, "Strings\\StringsFromCSFiles:NPC.cs." + Game1.random.Choose("3974", "3975"), true));
+                        else
+                        {
+                            Stack<Dialogue> currentDialogue4 = __instance.CurrentDialogue;
+                            Dialogue dialogue11;
+                            if ((dialogue11 = __instance.TryGetDialogue("RejectMermaidPendant_Under10Hearts_AskedAgain")) == null && (dialogue11 = __instance.TryGetDialogue("RejectMermaidPendant_Under10Hearts")) == null)
+                            {
+                                dialogue11 = __instance.TryGetDialogue("RejectMermaidPendant") ?? new Dialogue(__instance, "Strings\\StringsFromCSFiles:NPC.cs." + Game1.random.Choose("3974", "3975"), true);
+                            }
+                            currentDialogue4.Push(dialogue11);
+                            Game1.drawDialogue(__instance);
+                            who.changeFriendship(-50, __instance);
+                        }
                         Game1.drawDialogue(__instance);
                         who.changeFriendship(-50, __instance);
+                        __result = true;
                         return false;
                     }
                     else if (__instance.TryGetDialogue("RejectItem_(O)460") != null)
@@ -845,23 +878,37 @@ namespace FreeLove
                     else
                     {
                         Monitor.Log($"Tried to give pendant to someone marriable");
-                        if (!__instance.datable.Value || who.HouseUpgradeLevel >= 1)
+                        if (who.HouseUpgradeLevel >= 1)
                         {
                             typeof(NPC).GetMethod("engagementResponse", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { who, false });
+                            __result = true;
                             return false;
                         }
-                        Monitor.Log($"Can't marry");
-                        if (ModEntry.myRand.NextDouble() < 0.5)
+                        else
                         {
-                            Game1.drawObjectDialogue(Game1.content.LoadString("Strings\\StringsFromCSFiles:NPC.cs.3969", __instance.displayName));
-                            return false;
+                            Monitor.Log($"Can't marry");
+
+                            if (Game1.random.NextBool())
+                            {
+                                Game1.drawObjectDialogue(Game1.content.LoadString("Strings\\StringsFromCSFiles:NPC.cs.3969", __instance.displayName));
+                            }
+                            else
+                            {
+                                Stack<Dialogue> currentDialogue5 = __instance.CurrentDialogue;
+                                Dialogue dialogue12;
+                                if ((dialogue12 = __instance.TryGetDialogue("RejectMermaidPendant_NeedHouseUpgrade")) == null)
+                                {
+                                    dialogue12 = __instance.TryGetDialogue("RejectMermaidPendant") ?? new Dialogue(__instance, "Strings\\StringsFromCSFiles:NPC.cs.3972", false);
+                                }
+                                currentDialogue5.Push(dialogue12);
+                                Game1.drawDialogue(__instance);
+                                __result = true;
+                                return false;
+                            }
                         }
-                        __instance.CurrentDialogue.Push(new Dialogue(__instance, "Strings\\StringsFromCSFiles:NPC.cs.3972", false));
-                        Game1.drawDialogue(__instance);
-                        return false;
                     }
                 }
-                else if (who.ActiveObject.ParentSheetIndex == 809 && !who.ActiveObject.bigCraftable.Value)
+                else if (who.ActiveObject.QualifiedItemId == "(O)809")
                 {
                     Monitor.Log($"Tried to give movie ticket to {__instance.Name}");
                     if (ModEntry.GetSpouses(who, true).ContainsKey(__instance.Name) && Utility.doesMasterPlayerHaveMailReceivedButNotMailForTomorrow("ccMovieTheater") && !__instance.Name.Equals("Krobus") && who.lastSeenMovieWeek.Value < Game1.Date.TotalWeeks && !Utility.isFestivalDay(Game1.dayOfMonth, Game1.season) && Game1.timeOfDay <= 2100 && __instance.lastSeenMovieWeek.Value < Game1.Date.TotalWeeks && MovieTheater.GetResponseForMovie(__instance) != "reject")
@@ -884,12 +931,13 @@ namespace FreeLove
 
                         Monitor.Log($"Giving movie ticket to spouse");
 
-                        Dialogue dialogue5;
-                        if ((dialogue5 = Dialogue.TryGetDialogue(__instance, "Strings\\Characters:MovieInvite_Spouse_" + __instance.Name)) == null)
+                        Stack<Dialogue> currentDialogue14 = __instance.CurrentDialogue;
+                        Dialogue dialogue;
+                        if ((dialogue = Dialogue.TryGetDialogue(__instance, "Strings\\Characters:MovieInvite_Spouse_" + __instance.Name)) == null)
                         {
-                            dialogue5 = (__instance.TryGetDialogue("MovieInvitation") ?? new Dialogue(__instance, "Strings\\Characters:MovieInvite_Invited", __instance.GetDispositionModifiedString("Strings\\Characters:MovieInvite_Invited", Array.Empty<object>())));
+                            dialogue = (__instance.TryGetDialogue("MovieInvitation") ?? new Dialogue(__instance, "Strings\\Characters:MovieInvite_Invited", __instance.GetDispositionModifiedString("Strings\\Characters:MovieInvite_Invited", Array.Empty<object>())));
                         }
-                        Dialogue acceptDialogue = dialogue5;
+                        currentDialogue14.Push(dialogue);
                         Game1.drawDialogue(__instance);
                         who.reduceActiveItemByOne();
                         who.completelyStopAnimatingOrDoingAction();
@@ -900,7 +948,7 @@ namespace FreeLove
                             ModEntry.mp.globalChatInfoMessage("MovieInviteAccept", new string[]
                             {
                             Game1.player.displayName,
-                            __instance.displayName
+                            __instance.GetTokenizedDisplayName()
                             });
                             return false;
                         }
