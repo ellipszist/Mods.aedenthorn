@@ -32,14 +32,14 @@ namespace Wildflowers
                         
                         if (chance <= Config.wildflowerGrowChance)
                         {
-                            var flowers = Game1.objectInformation.Where(p => p.Value.Contains("/Basic -80/") && !Config.DisallowNames.Contains(p.Value.Split('/')[0])).Select(p => p.Key).ToArray();
-                            int idx = GetRandomFlowerSeed(flowers);
-                            if (idx < 0)
+                            var flowers = Game1.objectData.Where(p => p.Value.Category == Object.flowersCategory && !Config.DisallowNames.Contains(p.Value.Name)).Select(p => p.Key).ToArray();
+                            string idx = GetRandomFlowerSeed(flowers);
+                            if (idx == null)
                             {
                                 SMonitor.Log($"no flowers for this season");
                                 return;
                             }
-                            crop = new Crop(idx, (int)key.X, (int)key.Y);
+                            crop = new Crop(idx, (int)key.X, (int)key.Y, __instance);
                             crop.growCompletely();
                             SMonitor.Log($"Added new wild flower {crop.indexOfHarvest} to {__instance.Name} at {key}");
                         }
@@ -49,8 +49,8 @@ namespace Wildflowers
                     else
                     {
                         var cropData = JsonConvert.DeserializeObject<CropData>(data);
-                        crop = cropData.ToCrop();
-                        if(IsCropDataInvalid(crop, cropData))
+                        crop = cropData.ToCrop(__instance);
+                        if(crop is null || IsCropDataInvalid(crop, cropData))
                         {
                             SMonitor.Log($"Invalid wild flower data {data}, removing");
                             cropDict[__instance.Name].Remove(key);
@@ -58,7 +58,7 @@ namespace Wildflowers
                             continue;
                         }
                     }
-                    crop.newDay(1, 0, (int)key.X, (int)key.Y, __instance);
+                    crop.newDay(1);
                     cropDict[__instance.Name][key] = crop;
                 }
             }
@@ -66,12 +66,12 @@ namespace Wildflowers
         [HarmonyPatch(typeof(Grass), nameof(Grass.dayUpdate))]
         public class Grass_dayUpdate_Patch
         {
-            public static void Postfix(Grass __instance, GameLocation environment, Vector2 tileLocation)
+            public static void Postfix(Grass __instance)
             {
                 if (!Config.ModEnabled || Game1.dayOfMonth != 1 ||  !__instance.modData.TryGetValue(wildKey, out string data))
                     return;
                 var c = JsonConvert.DeserializeObject<CropData>(data);
-                if(c is not null && environment.IsOutdoors && !environment.SeedsIgnoreSeasonsHere() && !c.seasonsToGrowIn.Contains(environment.GetSeasonForLocation()))
+                if(c is not null && __instance.Location.IsOutdoors && !__instance.Location.SeedsIgnoreSeasonsHere() && !c.seasonsToGrowIn.Contains(__instance.Location.GetSeason()))
                 {
                     __instance.modData.Remove(wildKey);
                 }
@@ -80,30 +80,28 @@ namespace Wildflowers
         [HarmonyPatch(typeof(Grass), nameof(Grass.draw))]
         public class Grass_draw_Patch
         {
-            public static void Postfix(Grass __instance, SpriteBatch spriteBatch, Vector2 tileLocation)
+            public static void Postfix(Grass __instance, SpriteBatch spriteBatch)
             {
                 if (!Config.ModEnabled || !__instance.modData.TryGetValue(wildKey, out string data))
                     return;
-                if (!cropDict.TryGetValue(__instance.currentLocation.Name, out Dictionary<Vector2, Crop> locDict) || !locDict.TryGetValue(tileLocation, out Crop crop))
+                if (!cropDict.TryGetValue(__instance.Location.Name, out Dictionary<Vector2, Crop> locDict) || !locDict.TryGetValue(__instance.Tile, out Crop crop))
                 {
                     if (locDict is null)
                     {
-                        cropDict[__instance.currentLocation.Name] = new Dictionary<Vector2, Crop>();
+                        cropDict[__instance.Location.Name] = new Dictionary<Vector2, Crop>();
                     }
                     var cropData = JsonConvert.DeserializeObject<CropData>(data);
-                    crop = cropData.ToCrop();
-                    if (IsCropDataInvalid(crop, cropData))
+                    crop = cropData.ToCrop(__instance.Location);
+                    if (crop is null || IsCropDataInvalid(crop, cropData))
                     {
                         SMonitor.Log($"Invalid wild flower data {data}, removing");
-                        cropDict[__instance.currentLocation.Name].Remove(tileLocation);
+                        cropDict[__instance.Location.Name].Remove(__instance.Tile);
                         __instance.modData.Remove(wildKey);
                         return;
                     }
-                    cropDict[__instance.currentLocation.Name][tileLocation] = crop;
+                    cropDict[__instance.Location.Name][__instance.Tile] = crop;
                 }
-                //locDict.Remove(tileLocation);
-                //__instance.modData.Remove(wildKey);
-                crop.draw(spriteBatch, tileLocation, Color.White, 0);
+                crop.draw(spriteBatch, __instance.Tile, Color.White, 0);
             }
         }
         [HarmonyPatch(typeof(Utility), nameof(Utility.findCloseFlower), new Type[] { typeof(GameLocation), typeof(Vector2), typeof(int), typeof(Func<Crop, bool>)})]
@@ -113,7 +111,7 @@ namespace Wildflowers
             {
                 if (!Config.ModEnabled || !Config.WildFlowersMakeFlowerHoney || !cropDict.TryGetValue(location.Name, out Dictionary<Vector2, Crop> locDict))
                     return;
-                Vector2 tilePos = __result is null ? Vector2.Zero : AccessTools.FieldRefAccess<Crop, Vector2>(__result, "tilePosition");
+                Vector2 tilePos = __result is null ? new Vector2(float.MaxValue, float.MaxValue) : __result.tilePosition;
                 float closestDistance = Vector2.Distance(startTileLocation, tilePos);
                 foreach (var v in locDict.Keys.ToArray())
                 {
@@ -129,7 +127,7 @@ namespace Wildflowers
                         {
                             closestDistance = distance;
                             __result = locDict[v];
-                            AccessTools.FieldRefAccess<Crop, Vector2>(__result, "tilePosition") = v;
+                            __result.tilePosition = v;
                         }
                     }
                     else
@@ -140,14 +138,14 @@ namespace Wildflowers
                             {
                                 tilePos = v;
                                 __result = locDict[v];
-                                AccessTools.FieldRefAccess<Crop, Vector2>(__result, "tilePosition") = v;
+                                __result.tilePosition = v;
                             }
                         }
                         else if (Vector2.Distance(startTileLocation, v) < Vector2.Distance(tilePos, startTileLocation))
                         {
                             __result = locDict[v];
                             tilePos = v;
-                            AccessTools.FieldRefAccess<Crop, Vector2>(__result, "tilePosition") = v;
+                            __result.tilePosition = v;
                         }
                     }
                 }
@@ -167,7 +165,7 @@ namespace Wildflowers
                     locDict.Remove(t);
                     return;
                 }
-                __result = crop != null && (!crop.fullyGrown.Value || crop.dayOfCurrentPhase.Value <= 0) && crop.currentPhase.Value >= crop.phaseDays.Count - 1 && !crop.dead.Value && (!crop.forageCrop.Value || crop.whichForageCrop.Value != 2);
+                __result = crop != null && (!crop.fullyGrown.Value || crop.dayOfCurrentPhase.Value <= 0) && crop.currentPhase.Value >= crop.phaseDays.Count - 1 && !crop.dead.Value && (!crop.forageCrop.Value || crop.whichForageCrop.Value != "2");
                 if (__result)
                 {
                     Game1.mouseCursor = 6;
@@ -182,9 +180,9 @@ namespace Wildflowers
         [HarmonyPatch(typeof(TerrainFeature), nameof(TerrainFeature.performUseAction))]
         public class TerrainFeature_performUseAction_Patch
         {
-            public static void Postfix(TerrainFeature __instance, Vector2 tileLocation, GameLocation location, ref bool __result)
+            public static void Postfix(TerrainFeature __instance, Vector2 tileLocation, ref bool __result)
             {
-                if (!Config.ModEnabled || __result || __instance is not Grass || !__instance.modData.ContainsKey(wildKey) || location is null || !cropDict.TryGetValue(location.Name, out Dictionary<Vector2, Crop> locDict) || !locDict.TryGetValue(tileLocation, out Crop crop))
+                if (!Config.ModEnabled || __result || __instance is not Grass || !__instance.modData.ContainsKey(wildKey) || __instance.Location is null || !cropDict.TryGetValue(__instance.Location.Name, out Dictionary<Vector2, Crop> locDict) || !locDict.TryGetValue(tileLocation, out Crop crop))
                     return;
 
                 __result = crop.harvest((int)tileLocation.X, (int)tileLocation.Y, new HoeDirt(1, crop));
@@ -192,25 +190,25 @@ namespace Wildflowers
                 {
                     locDict.Remove(tileLocation);
                     __instance.modData.Remove(wildKey);
-                    SMonitor.Log($"harvested wild flower in {location.Name} at {tileLocation}");
+                    SMonitor.Log($"harvested wild flower in {__instance.Location.Name} at {tileLocation}");
                 }
             }
         }
         [HarmonyPatch(typeof(Grass), nameof(Grass.performToolAction))]
         public class Grass_performToolAction_Patch
         {
-            public static void Postfix(Grass __instance, Vector2 tileLocation, GameLocation location, bool __result)
+            public static void Postfix(Grass __instance, Vector2 tileLocation, bool __result)
             {
-                if (!Config.ModEnabled || !__result || !__instance.modData.ContainsKey(wildKey) || location is null || !cropDict.TryGetValue(location.Name, out Dictionary<Vector2, Crop> locDict) || !locDict.TryGetValue(tileLocation, out Crop crop))
+                if (!Config.ModEnabled || !__result || !__instance.modData.ContainsKey(wildKey) || __instance.Location is null || !cropDict.TryGetValue(__instance.Location.Name, out Dictionary<Vector2, Crop> locDict) || !locDict.TryGetValue(tileLocation, out Crop crop))
                     return;
                 SMonitor.Log($"Grass removed at {tileLocation}");
                 if (Config.WeaponsHarvestFlowers)
                 {
-                    crop.whichForageCrop.Value = -424242;
+                    crop.whichForageCrop.Value = "-424242";
                     crop.harvest((int)tileLocation.X, (int)tileLocation.Y, new HoeDirt(1, crop));
                     locDict.Remove(tileLocation);
                     __instance.modData.Remove(wildKey);
-                    SMonitor.Log($"harvested wild flower in {location.Name} at {tileLocation}");
+                    SMonitor.Log($"harvested wild flower in {__instance.Location.Name} at {tileLocation}");
                 }
             }
         }
