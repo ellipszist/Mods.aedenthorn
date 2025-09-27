@@ -28,6 +28,10 @@ namespace PersonalTravelingCart
 			foreach (TravelingCart travelingCart in travelingCartDictionary.Values)
 			{
 				travelingCart.spriteSheet = !string.IsNullOrEmpty(travelingCart.spriteSheetPath) ? SHelper.GameContent.Load<Texture2D>(travelingCart.spriteSheetPath) : SHelper.ModContent.Load<Texture2D>("assets/cart.png");
+				if(travelingCart.mapPath == null)
+				{
+					travelingCart.mapPath = SHelper.ModContent.GetInternalAssetName("assets/Cart.tmx").BaseName;
+                }
 			}
 			SMonitor.Log($"Loaded {travelingCartDictionary.Count} custom traveling carts");
 			travelingCartDictionary[defaultKey] = new TravelingCart

@@ -131,6 +131,8 @@ namespace PersonalTravelingCart
 
 		private void GameLoop_DayStarted(object sender, DayStartedEventArgs e)
 		{
+			LoadTravelingCarts();
+
 			HashSet<string> locations = new();
 			HashSet<DecoratableLocation> newLocations = new();
 
@@ -258,22 +260,10 @@ namespace PersonalTravelingCart
 			}
 		}
 
-		private static void GameLoop_OneTickAfterGameLaunched(object sender, UpdateTickedEventArgs e)
-		{
-			SHelper.Events.GameLoop.UpdateTicked -= GameLoop_OneTickAfterGameLaunched;
-			SHelper.Events.GameLoop.UpdateTicked += GameLoop_TwoTicksAfterGameLaunched;
-		}
-
-		private static void GameLoop_TwoTicksAfterGameLaunched(object sender, UpdateTickedEventArgs e)
-		{
-			LoadTravelingCarts();
-			SHelper.Events.GameLoop.UpdateTicked -= GameLoop_TwoTicksAfterGameLaunched;
-		}
 
 		private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
 		{
 			RegisterConsoleCommands();
-			SHelper.Events.GameLoop.UpdateTicked += GameLoop_OneTickAfterGameLaunched;
 
 			// Get Generic Mod Config Menu's API
 			IGenericModConfigMenuApi gmcm = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
