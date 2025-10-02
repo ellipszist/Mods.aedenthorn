@@ -20,6 +20,7 @@ namespace RobinWorkHours
         public static ModConfig Config;
         public static ModEntry context;
         public static bool startedWalking;
+        public static bool notBuildingToday;
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
@@ -56,6 +57,8 @@ namespace RobinWorkHours
         }
         private void GameLoop_DayStarted(object sender, StardewModdingAPI.Events.DayStartedEventArgs e)
         {
+            notBuildingToday = !Config.EnableMod || !Game1.IsMasterGame || Utility.isFestivalDay() || (!Game1.getFarm().isThereABuildingUnderConstruction() && Game1.player.daysUntilHouseUpgrade.Value <= 0 && (Game1.getLocationFromName("Town") as Town).daysUntilCommunityUpgrade.Value <= 0);
+
             startedWalking = false;
             if (!Config.EnableMod || Utility.isFestivalDay())
                 return;
@@ -75,6 +78,8 @@ namespace RobinWorkHours
 
         private void GameLoop_TimeChanged(object sender, StardewModdingAPI.Events.TimeChangedEventArgs e)
         {
+            if (notBuildingToday)
+                return;
             if (!Config.EnableMod || !Game1.IsMasterGame || Utility.isFestivalDay() || (!Game1.getFarm().isThereABuildingUnderConstruction() && Game1.player.daysUntilHouseUpgrade.Value <= 0 && (Game1.getLocationFromName("Town") as Town).daysUntilCommunityUpgrade.Value <= 0))
                 return;
             var robin = Game1.getCharacterFromName("Robin");
