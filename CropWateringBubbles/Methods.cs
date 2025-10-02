@@ -9,37 +9,37 @@ namespace CropWateringBubbles
 		public static void UpdateEmote()
 		{
 			GameTime time = Game1.currentGameTime;
-			if (isEmoting)
+			if (isEmoting.Value)
 			{
-				emoteInterval += time.ElapsedGameTime.Milliseconds;
-				if (emoteFading && emoteInterval > 20f)
+				emoteInterval.Value += time.ElapsedGameTime.Milliseconds;
+				if (emoteFading.Value && emoteInterval.Value > 20f)
 				{
-					emoteInterval = 0f;
-					currentEmoteFrame--;
-					if (currentEmoteFrame < 0)
+					emoteInterval.Value = 0f;
+					currentEmoteFrame.Value--;
+					if (currentEmoteFrame.Value < 0)
 					{
-						emoteFading = false;
-						isEmoting = false;
+						emoteFading.Value = false;
+						isEmoting.Value = false;
 					}
 				}
-				else if (!emoteFading && emoteInterval > 20f && currentEmoteFrame <= 3)
+				else if (!emoteFading.Value && emoteInterval.Value > 20f && currentEmoteFrame.Value <= 3)
 				{
-					emoteInterval = 0f;
-					currentEmoteFrame++;
-					if (currentEmoteFrame == 4)
+					emoteInterval.Value = 0f;
+					currentEmoteFrame.Value++;
+					if (currentEmoteFrame.Value == 4)
 					{
-						currentEmoteFrame = 28;
+						currentEmoteFrame.Value = 28;
 						return;
 					}
 				}
-				else if (!emoteFading && emoteInterval > 250f)
+				else if (!emoteFading.Value && emoteInterval.Value > 250f)
 				{
-					emoteInterval = 0f;
-					currentEmoteFrame++;
-					if (currentEmoteFrame >= 28 + 4)
+					emoteInterval.Value = 0f;
+					currentEmoteFrame.Value++;
+					if (currentEmoteFrame.Value >= 28 + 4)
 					{
-						emoteFading = true;
-						currentEmoteFrame = 3;
+						emoteFading.Value = true;
+						currentEmoteFrame.Value = 3;
 					}
 				}
 			}

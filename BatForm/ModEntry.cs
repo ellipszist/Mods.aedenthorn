@@ -306,7 +306,7 @@ namespace BatForm
 				getValue: () => Config.OutdoorsOnly,
 				setValue: value => {
 					Config.OutdoorsOnly = value;
-					if (value == true && !Game1.player.currentLocation.IsOutdoors)
+					if (value == true && !Game1.player?.currentLocation?.IsOutdoors == true)
 					{
 						Game1.player.modData[batFormKey] = BatForm.SwitchingFrom.ToString();
 					}

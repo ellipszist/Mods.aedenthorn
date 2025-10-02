@@ -27,6 +27,10 @@ namespace MobilePhone
 
         public static void Display_RenderedWorld(object sender, StardewModdingAPI.Events.RenderedWorldEventArgs e)
         {
+            if(ModEntry.appOrder.Count != ModEntry.apps.Count)
+            {
+                PhoneUtils.OrderApps();
+            }
             Point mousePos = Game1.getMousePosition();
             Point lastMousePos = ModEntry.lastMousePosition;
             ModEntry.lastMousePosition = mousePos;
@@ -384,7 +388,8 @@ namespace MobilePhone
                 
                 Vector2 appPos = PhoneUtils.GetAppPos(i);
                 Rectangle r = new Rectangle(0, 0, Config.IconWidth, Config.IconHeight);
-                Rectangle sourceRect = r;
+                Rectangle sourceRect = app.icon.Bounds;
+                float sourceScale = sourceRect.Height / (float)Config.IconHeight;
                 if (!ModEntry.movingAppIcon || i != ModEntry.clickingApp)
                 {
                     if (appPos.Y < screenPos.Y - r.Height * 2 || appPos.Y >= screenBottom)
@@ -394,17 +399,19 @@ namespace MobilePhone
                     if (appPos.Y < screenPos.Y)
                     {
                         int cutTop = (int)screenPos.Y - (int)appPos.Y;
-                        sourceRect = new Rectangle(r.X, r.Y + cutTop, r.Width, r.Height - cutTop);
+                        sourceRect = new Rectangle(0, (int)(cutTop * sourceScale), sourceRect.Width, sourceRect.Height - (int)(cutTop * sourceScale));
+                        r = new Rectangle(0, cutTop, r.Width, r.Height - cutTop);
                         appPos = new Vector2(appPos.X, screenPos.Y);
                     }
                     else if (appPos.Y > screenBottom - r.Height)
                     {
                         int cutBottom = screenBottom - r.Height - (int)appPos.Y;
-                        sourceRect = new Rectangle(r.X, r.Y, r.Width, r.Height + cutBottom);
+                        sourceRect = new Rectangle(0, 0, sourceRect.Width, sourceRect.Height + (int)(cutBottom * sourceScale));
+                        r = new Rectangle(0, 0, r.Width, r.Height + cutBottom);
                     }
                 }
 
-                e.SpriteBatch.Draw(app.icon, new Rectangle((int)appPos.X, (int)appPos.Y, sourceRect.Width, sourceRect.Height), sourceRect, Color.White, 0, Vector2.Zero, SpriteEffects.None, i == ModEntry.clickingApp && ModEntry.movingAppIcon ? 1f : 0.5f);
+                e.SpriteBatch.Draw(app.icon, new Rectangle((int)appPos.X, (int)appPos.Y, r.Width, r.Height), sourceRect, Color.White, 0, Vector2.Zero, SpriteEffects.None, i == ModEntry.clickingApp && ModEntry.movingAppIcon ? 1f : 0.5f);
 
                 Rectangle rect = new Rectangle((int)appPos.X, (int)appPos.Y, Config.IconWidth, sourceRect.Height);
                 if (hover && !Helper.Input.IsSuppressed(SButton.MouseLeft) && rect.Contains(mousePos))

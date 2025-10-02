@@ -1,6 +1,7 @@
 ﻿using System;
 using HarmonyLib;
 using StardewModdingAPI;
+using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Tools;
 
@@ -15,11 +16,11 @@ namespace CropWateringBubbles
 
 		internal static ModEntry context;
 
-		internal static bool isEmoting;
-		internal static bool emoteFading;
-		internal static int currentEmoteFrame;
-		internal static float emoteInterval;
-		internal static int repeatInterval;
+		internal static PerScreen<bool> isEmoting = new PerScreen<bool>();
+		internal static PerScreen<bool> emoteFading = new PerScreen<bool>();
+		internal static PerScreen<int> currentEmoteFrame = new PerScreen<int>();
+		internal static PerScreen<float> emoteInterval = new PerScreen<float>();
+		internal static PerScreen<int> repeatInterval = new PerScreen<int>();
 
 		/// <summary>The mod entry point, called after the mod is first loaded.</summary>
 		/// <param name="helper">Provides simplified APIs for writing mods.</param>
@@ -62,7 +63,7 @@ namespace CropWateringBubbles
 		{
 			if (!e.Player.IsLocalPlayer)
 				return;
-			isEmoting = false;
+			isEmoting.Value = false;
 		}
 
 		private void GameLoop_UpdateTicked(object sender, StardewModdingAPI.Events.UpdateTickedEventArgs e)
@@ -71,33 +72,33 @@ namespace CropWateringBubbles
 				return;
 			if (Config.OnlyWhenWatering && Game1.player.CurrentTool is not WateringCan)
 			{
-				isEmoting = false;
-				emoteFading = false;
-				currentEmoteFrame = 0;
-				emoteInterval = 0;
-				repeatInterval = 0;
+				isEmoting.Value = false;
+				emoteFading.Value = false;
+				currentEmoteFrame.Value = 0;
+				emoteInterval.Value = 0;
+				repeatInterval.Value = 0;
 				return;
 			}
-			if (isEmoting)
+			if (isEmoting.Value)
 			{
 				UpdateEmote();
 			}
 			else if (!Config.RequireKeyPress)
 			{
-				if (repeatInterval <= 0)
+				if (repeatInterval.Value <= 0)
 				{
-					repeatInterval = Config.RepeatInterval * 60;
-					isEmoting = true;
+					repeatInterval.Value = Config.RepeatInterval * 60;
+					isEmoting.Value = true;
 				}
-				repeatInterval--;
+				repeatInterval.Value--;
 			}
 		}
 
 		private void Input_ButtonsChanged(object sender, StardewModdingAPI.Events.ButtonsChangedEventArgs e)
 		{
-			if (Config.ModEnabled && Context.CanPlayerMove && !isEmoting && Config.RequireKeyPress && Config.PressKeys.JustPressed() && (!Config.OnlyWhenWatering || Game1.player.CurrentTool is WateringCan))
+			if (Config.ModEnabled && Context.CanPlayerMove && !isEmoting.Value && Config.RequireKeyPress && Config.PressKeys.JustPressed() && (!Config.OnlyWhenWatering || Game1.player.CurrentTool is WateringCan))
 			{
-				isEmoting = true;
+				isEmoting.Value = true;
 				Game1.playSound("dwoop");
 			}
 		}

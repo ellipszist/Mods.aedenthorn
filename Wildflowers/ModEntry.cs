@@ -96,6 +96,18 @@ namespace Wildflowers
             );
             configMenu.AddBoolOption(
                 mod: ModManifest,
+                name: () => "Flower Rarity",
+                getValue: () => Config.EnableFlowerRarity,
+                setValue: value => Config.EnableFlowerRarity = value
+            );
+            configMenu.AddBoolOption(
+                mod: ModManifest,
+                name: () => "Full Rarity",
+                getValue: () => Config.FullFlowerRarity,
+                setValue: value => Config.FullFlowerRarity = value
+            );
+            configMenu.AddBoolOption(
+                mod: ModManifest,
                 name: () => "Make Flower Honey",
                 getValue: () => Config.WildFlowersMakeFlowerHoney,
                 setValue: value => Config.WildFlowersMakeFlowerHoney = value

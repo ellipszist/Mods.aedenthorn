@@ -91,7 +91,7 @@ namespace RobinWorkHours
             {
                 dest = "BusStop";
                 travelTime = Config.FarmTravelTime;
-                destX = -1;
+                destX = 9;
                 destY = 23;
             }
             else if (Game1.MasterPlayer.mailReceived.Contains("pamHouseUpgrade"))
@@ -124,7 +124,7 @@ namespace RobinWorkHours
                 robin.reloadSprite();
                 robin.lastAttemptedSchedule = -1;
                 robin.temporaryController = null;
-                var sched = new Dictionary<int, SchedulePathDescription>() { { Game1.timeOfDay, (SchedulePathDescription)AccessTools.Method(typeof(NPC), "pathfindToNextScheduleLocation").Invoke(robin, new object[] { robin.ScheduleKey, robin.currentLocation.Name, (int)robin.Tile.X, (int)robin.Tile.Y, dest, destX, destY, 3, null, null }) } };
+                var sched = new Dictionary<int, SchedulePathDescription>() { { Game1.timeOfDay, robin.pathfindToNextScheduleLocation(robin.ScheduleKey, robin.currentLocation.Name, (int)robin.Tile.X, (int)robin.Tile.Y, dest, destX, destY, 3, null, null) } };
                 robin.TryLoadSchedule(robin.ScheduleKey, sched);
                 robin.checkSchedule(Game1.timeOfDay);
             }
@@ -134,7 +134,7 @@ namespace RobinWorkHours
                 robin.shouldPlayRobinHammerAnimation.Value = false;
                 robin.ignoreScheduleToday = false;
                 robin.resetCurrentDialogue();
-                Game1.warpCharacter(robin, "BusStop", new Vector2(0, 23));
+                Game1.warpCharacter(robin, "BusStop", new Vector2(10, 23));
                 Game1.getFarm().removeTemporarySpritesWithIDLocal(16846);
 
                 robin.reloadSprite();
@@ -160,7 +160,7 @@ namespace RobinWorkHours
                     if (Game1.timeOfDay > travelTime)
                     {
                         Monitor.Log($"Adding starting appointment at {Game1.timeOfDay}: {schedulesStrings[i]}");
-                        schedule.Add(Game1.timeOfDay, (SchedulePathDescription)AccessTools.Method(typeof(NPC), "pathfindToNextScheduleLocation").Invoke(robin, new object[] { "BusStop", 0, 23, parts[1], x, y, facing, animation, message }));
+                        schedule.Add(Game1.timeOfDay, robin.pathfindToNextScheduleLocation(robin.ScheduleKey, "BusStop", 10, 23, parts[1], x, y, facing, animation, message));
                         startIndex = i + 1;
                         break;
                     }
@@ -182,13 +182,13 @@ namespace RobinWorkHours
                         if (schedule.Count == 0)
                         {
                             Monitor.Log($"Adding starting appointment at {Game1.timeOfDay}: {schedulesStrings[i]}");
-                            schedule.Add(Game1.timeOfDay, (SchedulePathDescription)AccessTools.Method(typeof(NPC), "pathfindToNextScheduleLocation").Invoke(robin, new object[] { "BusStop", 0, 23, parts[1], x, y, facing, animation, message }));
+                            schedule.Add(Game1.timeOfDay, robin.pathfindToNextScheduleLocation(robin.ScheduleKey, "BusStop", 10, 23, parts[1], x, y, facing, animation, message));
                             break;
                         }
                         else
                         {
                             Monitor.Log($"Adding later appointment at {time}: {schedulesStrings[i]}");
-                            schedule.Add(time, (SchedulePathDescription)AccessTools.Method(typeof(NPC), "pathfindToNextScheduleLocation").Invoke(robin, new object[] { lastLoc, lastX, lastY, parts[1], x, y, facing, animation, message }));
+                            schedule.Add(time, robin.pathfindToNextScheduleLocation(robin.ScheduleKey, lastLoc, lastX, lastY, parts[1], x, y, facing, animation, message));
                         }
                         lastLoc = parts[1];
                         lastX = x;

@@ -6,6 +6,8 @@ namespace Wildflowers
     public class ModConfig
     {
         public bool ModEnabled { get; set; } = true;
+        public bool EnableFlowerRarity { get; set; } = true;
+        public bool FullFlowerRarity { get; set; } = false;
         public bool WildFlowersMakeFlowerHoney { get; set; } = true;
         public bool FixFlowerFind { get; set; } = true;
         public int BeeRange { get; set; } = 5;
