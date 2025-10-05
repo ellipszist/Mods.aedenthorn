@@ -73,6 +73,11 @@ namespace MapEdit
             {
                 ti.properties.Add(prop.Key, prop.Value.ToString());
             }
+            foreach (var prop in tile.Properties)
+            {
+                if(prop.Key == "@Rotation" || prop.Key == "@Flip")
+                    ti.properties.Add(prop.Key, prop.Value.ToString());
+            }
             return ti;
         }
     }

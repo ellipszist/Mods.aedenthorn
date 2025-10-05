@@ -165,6 +165,18 @@ namespace MapEdit
                     PasteCurrentTile();
 
                 }
+                else if (currentTileDict.Value.Count > 0 && e.Button == Config.RotateClockwiseButton)
+                {
+                    SHelper.Input.Suppress(e.Button);
+                    RotateOrFlipCurrentTile(true);
+
+                }
+                else if (currentTileDict.Value.Count > 0 && e.Button == Config.RotateCounterClockwiseButton)
+                {
+                    SHelper.Input.Suppress(e.Button);
+                    RotateOrFlipCurrentTile(false);
+
+                }
                 else if (e.Button == Config.RevertButton)
                 {
                     if (SHelper.Input.IsDown(Config.RevertModButton))
@@ -254,7 +266,33 @@ namespace MapEdit
                        ts2?.TryGetValue(tile.TileSheet, out texture2D);
                     }
                     if (texture2D != null)
-                        e.SpriteBatch.Draw(texture2D, mouseTilePos, sourceRectangle, Color.White, 0f, Vector2.Zero, Layer.zoom, SpriteEffects.None, layerDepth);
+                    {
+                        Vector2 origin = Vector2.Zero;
+                        float r = 0;
+                        if(tile.Properties.TryGetValue("@Rotation", out var str) && int.TryParse(str, out var deg))
+                        {
+                            r = deg * (float)(Math.PI / 180f);
+                            switch (deg)
+                            {
+                                case 90:
+                                    origin = new Vector2(0, 16);
+                                    break;
+                                case 180:
+                                    origin = new Vector2(16, 16);
+                                    break;
+                                case 270:
+                                    origin = new Vector2(16, 0);
+                                    break;
+                            }
+                        }
+                        SpriteEffects flip = SpriteEffects.None;
+                        if(tile.Properties.TryGetValue("@Flip", out var str2) && int.TryParse(str2, out var which))
+                        {
+                            flip = (SpriteEffects)which;
+                        } 
+
+                        e.SpriteBatch.Draw(texture2D, mouseTilePos, sourceRectangle, Color.White, r, origin, Layer.zoom, flip, layerDepth);
+                    }
                 }
                 e.SpriteBatch.Draw(copiedTexture, mouseTilePos, Color.White);
 
@@ -395,6 +433,20 @@ namespace MapEdit
                     name: () => SHelper.Translation.Get("GMCM_Option_SheetModButton_Name"),
                     getValue: () => Config.SheetModButton,
                     setValue: value => Config.SheetModButton = value
+                );
+                
+                configMenu.AddKeybind(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM_Option_RotateClockwiseButton_Name"),
+                    getValue: () => Config.RotateClockwiseButton,
+                    setValue: value => Config.RotateClockwiseButton = value
+                );
+                
+                configMenu.AddKeybind(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM_Option_RotateCounterClockwiseButton_Name"),
+                    getValue: () => Config.RotateCounterClockwiseButton,
+                    setValue: value => Config.RotateCounterClockwiseButton = value
                 );
                 
 

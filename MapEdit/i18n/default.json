@@ -15,6 +15,8 @@
   "GMCM_Option_ScrollDownButton_Name": "Scroll Down Button",
   "GMCM_Option_LayerModButton_Name": "Layer Modifier",
   "GMCM_Option_SheetModButton_Name": "Sheet Modifier",
+  "GMCM_Option_RotateClockwiseButton_Name": "Rotate CW",
+  "GMCM_Option_RotateCounterClockwiseButton_Name": "Rotate CCW",
   "GMCM_Option_Sounds_Text": "Sounds",
   "GMCM_Option_CopySound_Name": "Copy Sound",
   "GMCM_Option_PasteSound_Name": "Paste Sound",

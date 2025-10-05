@@ -26,6 +26,8 @@ namespace MapEdit
         public SButton ScrollDownButton { get; set; } = SButton.Down;
         public SButton LayerModButton { get; set; } = SButton.LeftShift;
         public SButton SheetModButton { get; set; } = SButton.LeftAlt;
+        public SButton RotateClockwiseButton { get; set; } = SButton.Right;
+        public SButton RotateCounterClockwiseButton { get; set; } = SButton.Left;
         public string CopySound { get; set; } = "bigSelect";
         public string PasteSound { get; set; } = "hoeHit";
         public string ScrollSound { get; set; } = "toolSwap";

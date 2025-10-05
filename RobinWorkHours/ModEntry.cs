@@ -57,7 +57,7 @@ namespace RobinWorkHours
         }
         private void GameLoop_DayStarted(object sender, StardewModdingAPI.Events.DayStartedEventArgs e)
         {
-            notBuildingToday = !Config.EnableMod || !Game1.IsMasterGame || Utility.isFestivalDay() || (!Game1.getFarm().isThereABuildingUnderConstruction() && Game1.player.daysUntilHouseUpgrade.Value <= 0 && (Game1.getLocationFromName("Town") as Town).daysUntilCommunityUpgrade.Value <= 0);
+            notBuildingToday = !Config.EnableMod || !Game1.IsMasterGame || Utility.isFestivalDay() || (!isThereABuildingUnderConstruction(Game1.getFarm()) && Game1.player.daysUntilHouseUpgrade.Value <= 0 && (Game1.getLocationFromName("Town") as Town).daysUntilCommunityUpgrade.Value <= 0);
 
             startedWalking = false;
             if (!Config.EnableMod || Utility.isFestivalDay())
@@ -80,7 +80,7 @@ namespace RobinWorkHours
         {
             if (notBuildingToday)
                 return;
-            if (!Config.EnableMod || !Game1.IsMasterGame || Utility.isFestivalDay() || (!Game1.getFarm().isThereABuildingUnderConstruction() && Game1.player.daysUntilHouseUpgrade.Value <= 0 && (Game1.getLocationFromName("Town") as Town).daysUntilCommunityUpgrade.Value <= 0))
+            if (!Config.EnableMod || !Game1.IsMasterGame || Utility.isFestivalDay() || (!isThereABuildingUnderConstruction(Game1.getFarm()) && Game1.player.daysUntilHouseUpgrade.Value <= 0 && (Game1.getLocationFromName("Town") as Town).daysUntilCommunityUpgrade.Value <= 0))
                 return;
             var robin = Game1.getCharacterFromName("Robin");
             if(robin is null)
@@ -92,7 +92,7 @@ namespace RobinWorkHours
             string dest;
             int destX, destY;
             int travelTime;
-            if(Game1.getFarm().isThereABuildingUnderConstruction() || Game1.player.daysUntilHouseUpgrade.Value > 0)
+            if(isThereABuildingUnderConstruction(Game1.getFarm()) || Game1.player.daysUntilHouseUpgrade.Value > 0)
             {
                 dest = "BusStop";
                 travelTime = Config.FarmTravelTime;
@@ -203,115 +203,6 @@ namespace RobinWorkHours
                 robin.TryLoadSchedule(robin.ScheduleKey, schedule);
                 robin.checkSchedule(Game1.timeOfDay);
             }
-        }
-
-        private string GetTodayScheduleString(NPC robin)
-        {
-            if (robin.isMarried())
-            {
-                if (robin.hasMasterScheduleEntry("marriage_" + Game1.currentSeason + "_" + Game1.dayOfMonth))
-                {
-                    return robin.getMasterScheduleEntry("marriage_" + Game1.currentSeason + "_" + Game1.dayOfMonth);
-                }
-                string day = Game1.shortDayNameFromDayOfSeason(Game1.dayOfMonth);
-                if (!Game1.isRaining && robin.hasMasterScheduleEntry("marriage_" + Game1.shortDayNameFromDayOfSeason(Game1.dayOfMonth)))
-                {
-                    return robin.getMasterScheduleEntry("marriage_" + Game1.shortDayNameFromDayOfSeason(Game1.dayOfMonth));
-                }
-            }
-            else
-            {
-                if (robin.hasMasterScheduleEntry(Game1.currentSeason + "_" + Game1.dayOfMonth))
-                {
-                    return robin.getMasterScheduleEntry(Game1.currentSeason + "_" + Game1.dayOfMonth);
-                }
-                int friendship = Utility.GetAllPlayerFriendshipLevel(robin);
-                if (friendship >= 0)
-                {
-                    friendship /= 250;
-                }
-                while (friendship > 0)
-                {
-                    if (robin.hasMasterScheduleEntry(Game1.dayOfMonth.ToString() + "_" + friendship))
-                    {
-                        return robin.getMasterScheduleEntry(Game1.dayOfMonth.ToString() + "_" + friendship);
-                    }
-                    friendship--;
-                }
-                if (robin.hasMasterScheduleEntry(Game1.dayOfMonth.ToString()))
-                {
-                    return robin.getMasterScheduleEntry(Game1.dayOfMonth.ToString());
-                }
-                if (Game1.IsRainingHere(Game1.getLocationFromName(robin.DefaultMap)))
-                {
-                    if (Game1.random.NextDouble() < 0.5 && robin.hasMasterScheduleEntry("rain2"))
-                    {
-                        return robin.getMasterScheduleEntry("rain2");
-                    }
-                    if (robin.hasMasterScheduleEntry("rain"))
-                    {
-                        return robin.getMasterScheduleEntry("rain");
-                    }
-                }
-                List<string> key = new List<string>
-                {
-                    Game1.currentSeason,
-                    Game1.shortDayNameFromDayOfSeason(Game1.dayOfMonth)
-                };
-                friendship = Utility.GetAllPlayerFriendshipLevel(robin);
-                if (friendship >= 0)
-                {
-                    friendship /= 250;
-                }
-                while (friendship > 0)
-                {
-                    key.Add(friendship.ToString());
-                    if (robin.hasMasterScheduleEntry(string.Join("_", key)))
-                    {
-                        return robin.getMasterScheduleEntry(string.Join("_", key));
-                    }
-                    friendship--;
-                    key.RemoveAt(key.Count - 1);
-                }
-                if (robin.hasMasterScheduleEntry(string.Join("_", key)))
-                {
-                    return robin.getMasterScheduleEntry(string.Join("_", key));
-                }
-                if (robin.hasMasterScheduleEntry(Game1.shortDayNameFromDayOfSeason(Game1.dayOfMonth)))
-                {
-                    return robin.getMasterScheduleEntry(Game1.shortDayNameFromDayOfSeason(Game1.dayOfMonth));
-                }
-                if (robin.hasMasterScheduleEntry(Game1.currentSeason))
-                {
-                    return robin.getMasterScheduleEntry(Game1.currentSeason);
-                }
-                if (robin.hasMasterScheduleEntry("spring_" + Game1.shortDayNameFromDayOfSeason(Game1.dayOfMonth)))
-                {
-                    return robin.getMasterScheduleEntry("spring_" + Game1.shortDayNameFromDayOfSeason(Game1.dayOfMonth));
-                }
-                key.RemoveAt(key.Count - 1);
-                key.Add("spring");
-                friendship = Utility.GetAllPlayerFriendshipLevel(robin);
-                if (friendship >= 0)
-                {
-                    friendship /= 250;
-                }
-                while (friendship > 0)
-                {
-                    key.Add(string.Empty + friendship.ToString());
-                    if (robin.hasMasterScheduleEntry(string.Join("_", key)))
-                    {
-                        return robin.getMasterScheduleEntry(string.Join("_", key));
-                    }
-                    friendship--;
-                    key.RemoveAt(key.Count - 1);
-                }
-                if (robin.hasMasterScheduleEntry("spring"))
-                {
-                    return robin.getMasterScheduleEntry("spring");
-                }
-            }
-            return null;
         }
 
         private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)

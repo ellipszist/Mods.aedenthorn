@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using StardewValley;
+using StardewValley.Extensions;
 using System.Linq;
 using xTile.Layers;
 using xTile.Tiles;
@@ -69,6 +70,53 @@ namespace MapEdit
             pastedTileLoc.Value = Game1.currentCursorTile;
             Game1.playSound(Config.PasteSound);
             SMonitor.Log($"Pasted tile to {Game1.currentCursorTile}");
+        }
+
+        public static void RotateOrFlipCurrentTile(bool cw)
+        {
+            string mapName = Game1.player.currentLocation.mapPath.Value.Replace("Maps\\", "");
+            var tileDict = currentTileDict.Value;
+            bool mod = SHelper.Input.IsDown(Config.LayerModButton);
+            string key = mod ? "@Flip" : "@Rotation";
+            foreach (var t in tileDict.Values)
+            {
+                int amount = 0;
+                if (t.Properties.TryGetValue(key, out var value))
+                {
+                    int.TryParse(value, out amount);
+                }
+                if (cw)
+                {
+                    if (mod)
+                    {
+                        amount = (amount + 1) % 3;
+                    }
+                    else
+                    {
+                        amount = (amount / 90 * 90 + 90) % 360;
+                    }
+                }
+                else
+                {
+                    if (mod)
+                    {
+                        amount--;
+                        if (amount < 0)
+                            amount = 2;
+                    }
+                    else
+                    {
+                        amount = (amount / 90 * 90 - 90);
+                        if(amount < 0)
+                        {
+                            amount = 270;
+                        }
+                    }
+
+                }
+                t.Properties[key] = amount + "";
+            }
+            Game1.playSound(Config.ScrollSound);
         }
     }
 }
