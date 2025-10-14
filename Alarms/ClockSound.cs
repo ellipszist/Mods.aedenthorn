@@ -4,6 +4,7 @@
 	{
 		public string sound = ModEntry.Config.DefaultSound;
 		public bool enabled;
+		public bool menu;
 		public string notification;
 		public int hours = 6;
 		public int minutes;

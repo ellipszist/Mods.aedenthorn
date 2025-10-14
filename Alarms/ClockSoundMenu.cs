@@ -85,7 +85,9 @@ namespace Alarms
 					upNeighborID = baseID + 8,
 					downNeighborID = baseID + 1000
 				});
-				var set = new SoundComponentSet()
+				soundList[i].minutes = soundList[i].minutes / 10 * 10;
+
+                var set = new SoundComponentSet()
 				{
 					hourText = new TextBox(textBox, null, Game1.smallFont, Game1.textColor)
 					{
@@ -218,10 +220,18 @@ namespace Alarms
 						leftNeighborID = baseID + 21,
 						downNeighborID = baseID + 44
 					},
-					deleteCC = new ClickableTextureComponent("Delete " + i, new Rectangle(xStart + clockWidth + seasonWidth + weekWidth + monthWidth, yStart + lineHeight + 16, 36, 36), "", ModEntry.SHelper.Translation.Get("delete"), Game1.mouseCursors, new Rectangle(322, 498, 12, 12), 3)
+					menuIcon = new ClickableTextureComponent($"Menu {i}", new Rectangle(xStart + clockWidth + seasonWidth + weekWidth + monthWidth, yStart + 4 + 36 + 8, 36, 36), "", ModEntry.SHelper.Translation.Get("menu"), Game1.mouseCursors, new Rectangle(677, 84, 9, 8), 4)
 					{
 						myID = baseID + 44,
 						upNeighborID = baseID + 43,
+						rightNeighborID = count < setsPerPage / 2 ? -1 : -2,
+						leftNeighborID = baseID + 21,
+						downNeighborID = baseID + 45
+					},
+					deleteCC = new ClickableTextureComponent("Delete " + i, new Rectangle(xStart + clockWidth + seasonWidth + weekWidth + monthWidth, yStart + lineHeight + 16, 36, 36), "", ModEntry.SHelper.Translation.Get("delete"), Game1.mouseCursors, new Rectangle(322, 498, 12, 12), 3)
+					{
+						myID = baseID + 45,
+						upNeighborID = baseID + 44,
 						leftNeighborID = baseID + 42,
 						rightNeighborID = count < setsPerPage / 2 ? -1 : -2,
 						downNeighborID = baseID + 1000
@@ -231,6 +241,7 @@ namespace Alarms
 				allComponents.AddRange(set.seasonCCs);
 				allComponents.AddRange(set.weekCCs);
 				allComponents.Add(set.enabledBox);
+				allComponents.Add(set.menuIcon);
 				allComponents.Add(set.deleteCC);
 
 				List<ClickableComponent> days = new();
@@ -322,6 +333,7 @@ namespace Alarms
 				set.soundCC.draw(b);
 				set.notifCC.draw(b);
 				set.enabledBox.draw(b);
+				set.menuIcon.draw(b, set.sound.menu ? Color.White : Color.White * 0.5f, 1);
 				set.deleteCC.draw(b);
 				b.Draw(Game1.menuTexture, new Rectangle(xPositionOnScreen + 32, yPositionOnScreen + 84 + (count + 1) * 192, width - 64, 16), new Rectangle(40, 16, 1, 16), Color.White);
 				count++;
@@ -410,6 +422,15 @@ namespace Alarms
 					RepopulateComponentList();
 					return;
 				}
+				if(set.menuIcon.containsPoint(x, y))
+				{
+					soundComponentSets[i].sound.menu = !soundComponentSets[i].sound.menu;
+					Game1.playSound(soundComponentSets[i].sound.menu ? "bigSelect" : "bigDeSelect");
+					soundList[i + scrolled] = soundComponentSets[i].sound;
+					SaveSounds();
+					RepopulateComponentList();
+					return;
+				}
 				if(set.deleteCC.containsPoint(x, y))
 				{
 					Game1.playSound("trashcan");
@@ -490,24 +511,64 @@ namespace Alarms
 					if (soundComponentSets[i].hourText.Selected && (!close || hc))
 					{
 						Game1.playSound("cowboy_monsterhit");
-						if (hc && int.TryParse(soundComponentSets[i].hourText.Text, out int h) && ((h >= 6 && h < 26) || h < 0))
+                        if (string.IsNullOrEmpty(soundComponentSets[i].hourText.Text))
+                        {
+                            return;
+                        }
+                        if (hc)
 						{
-							soundList[i + scrolled].hours = h;
-							SaveSounds();
-						}
+                            if (soundComponentSets[i].hourText.Text.Length > 2)
+                            {
+                                soundComponentSets[i].hourText.Text = soundComponentSets[i].hourText.Text.Substring(0, 2);
+                            }
+                            if (!int.TryParse(soundComponentSets[i].hourText.Text, out int h))
+							{
+                                soundComponentSets[i].hourText.Text = soundList[i + scrolled].hours + "";
+								return;
+                            }
+							if(h >= 26)
+							{
+								h = 25;
+                                soundList[i + scrolled].hours = h;
+								soundComponentSets[i].hourText.Text = h + "";
+								SaveSounds();
+                            }
+                            if (h >= 6 || h < 0)
+							{
+                                soundList[i + scrolled].hours = h;
+                                SaveSounds();
+                            }
+                        }
 						return;
 					}
-					var mc = soundComponentSets[i].minText.Text != soundList[i + scrolled].minutes + "";
-					if (soundComponentSets[i].minText.Selected && (!close || mc))
+					
+					if (soundComponentSets[i].minText.Selected && !close)
 					{
-						Game1.playSound("cowboy_monsterhit");
-						if (mc && int.TryParse(soundComponentSets[i].minText.Text, out int m) && m < 60)
+                        Game1.playSound("cowboy_monsterhit");
+                        if (string.IsNullOrEmpty(soundComponentSets[i].minText.Text))
 						{
-							soundList[i + scrolled].minutes = m;
-							SaveSounds();
+                            return;
 						}
+						if(soundComponentSets[i].minText.Text.Length > 2)
+							soundComponentSets[i].minText.Text = soundComponentSets[i].minText.Text.Substring(0, 2);
+                        if (!int.TryParse(soundComponentSets[i].minText.Text, out var m))
+						{
+                            m = soundList[i + scrolled].minutes;
+                            soundComponentSets[i].minText.Text = m == 0 ? "00" : m + "";
+                            return;
+                        }
+                        if (m != soundList[i + scrolled].minutes)
+                        {
+                            if (soundComponentSets[i].minText.Text.Length == 2 && m < 60)
+                            {
+                                m = m / 10 * 10;
+                                soundComponentSets[i].minText.Text = m == 0 ? "00" : m + "";
+                                soundList[i + scrolled].minutes = m;
+                                SaveSounds();
+                            }
+                        }
 						return;
-					}
+                    }
 					var nc = soundComponentSets[i].notificationText.Text != soundList[i + scrolled].notification;
 					if (soundComponentSets[i].notificationText.Selected && (!close || nc))
 					{
@@ -634,6 +695,11 @@ namespace Alarms
 					hoverText = set.enabledBox.hoverText;
 					return;
 				}
+				if(set.menuIcon.containsPoint(x, y))
+				{
+					hoverText = set.menuIcon.hoverText;
+					return;
+				}
 				if(set.deleteCC.containsPoint(x, y))
 				{
 					hoverText = set.deleteCC.hoverText;
@@ -662,7 +728,7 @@ namespace Alarms
 			base.emergencyShutDown();
 		}
 
-		private static void ReloadSounds()
+		public static void ReloadSounds()
 		{
 			var path = Path.Combine(ModEntry.SHelper.DirectoryPath, "assets", $"sounds-{Constants.SaveFolderName}.json");
 			if (!File.Exists(path))

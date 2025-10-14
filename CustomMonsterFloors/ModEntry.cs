@@ -468,7 +468,8 @@ namespace CustomMonsterFloors
         {
             if(!___createLadderDownEvent.ContainsKey(new Point(x, y)))
             {
-                double chanceForLadderDown = 0.02 + 1.0 / (double)Math.Max(1, ___netStonesLeftOnThisLevel.Value) + (double)who.LuckLevel / 100.0 + Game1.player.DailyLuck / 5.0;
+                int farmerLuckLevel = ((who != null) ? who.LuckLevel : 0);
+                double chanceForLadderDown = 0.02 + 1.0 / (double)Math.Max(1, ___netStonesLeftOnThisLevel.Value) + (double)farmerLuckLevel / 100.0 + Game1.player.DailyLuck / 5.0;
                 if (__instance.EnemyCount == 0)
                 {
                     chanceForLadderDown += 0.04;

@@ -382,7 +382,7 @@ namespace SDVExplorer.UI
 			}
 			if (!hoverText.Equals(""))
 			{
-                drawHoverText(b, hoverText, Game1.smallFont, 0, 0, -1, null, -1, null, null, 0, -1, -1, -1, -1, 1f, null, null);
+                drawHoverText(b, hoverText, Game1.smallFont, 0, 0, -1, null, -1, null, null, 0, null, -1, -1, -1, 1f, null, null);
 			}
 			if (!GameMenu.forcePreventClose && shouldDrawCloseButton())
 			{

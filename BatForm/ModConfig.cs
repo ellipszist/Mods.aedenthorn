@@ -6,6 +6,7 @@ namespace BatForm
 	public class ModConfig
 	{
 		public bool ModEnabled { get; set; } = true;
+		public string BatSprite { get; set; } = "Characters\\Monsters\\Bat";
 		public bool NightOnly { get; set; } = false;
 		public bool OutdoorsOnly { get; set; } = true;
 		public KeybindList TransformKey { get; set; } = new KeybindList(SButton.NumPad5);

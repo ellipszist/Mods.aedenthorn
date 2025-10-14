@@ -45,6 +45,7 @@ namespace FarmerPortraits
 
         private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
         {
+            return;
             if (e.Button == SButton.OemCloseBrackets)
             {
                 Game1.DrawDialogue(Game1.getCharacterFromName("Clint"), "Data\\ExtraDialogue:Clint_NoInventorySpace");
@@ -53,7 +54,8 @@ namespace FarmerPortraits
 
         private void Display_MenuChanged(object sender, MenuChangedEventArgs e)
         {
-
+            if (!Config.EnableMod)
+                return;
             ReloadTextures();
         }
 
@@ -63,17 +65,15 @@ namespace FarmerPortraits
             backgroundTexture.Value = null;
             try
             {
-                var files = Directory.GetFiles(SHelper.DirectoryPath, $"portrait_{Game1.player.Name}.png");
-                if (files.Any())
+                if (File.Exists(Path.Combine(SHelper.DirectoryPath, $"portrait_{Game1.player.Name}.png")))
                 {
-                    portraitTexture.Value = SHelper.ModContent.Load<Texture2D>(files[0].Substring(SHelper.DirectoryPath.Length + 1));
+                    portraitTexture.Value = SHelper.ModContent.Load<Texture2D>($"portrait_{Game1.player.Name}.png");
                 }
                 if (portraitTexture.Value is null)
                 {
-                    files = Directory.GetFiles(SHelper.DirectoryPath, "portrait.png");
-                    if (files.Any())
+                    if (File.Exists(Path.Combine(SHelper.DirectoryPath, "portrait.png")))
                     {
-                        portraitTexture.Value = SHelper.ModContent.Load<Texture2D>(files[0].Substring(SHelper.DirectoryPath.Length + 1));
+                        portraitTexture.Value = SHelper.ModContent.Load<Texture2D>("portrait.png");
                     }
                 }
                 if (portraitTexture.Value is null)
@@ -102,17 +102,15 @@ namespace FarmerPortraits
             }
             try
             {
-                var files = Directory.GetFiles(SHelper.DirectoryPath, $"background_{Game1.player.Name}.png");
-                if (files.Any())
+                if (File.Exists(Path.Combine(SHelper.DirectoryPath, $"background_{Game1.player.Name}.png")))
                 {
-                    backgroundTexture.Value = SHelper.ModContent.Load<Texture2D>(files[0].Substring(SHelper.DirectoryPath.Length + 1));
+                    backgroundTexture.Value = SHelper.ModContent.Load<Texture2D>($"background_{Game1.player.Name}.png");
                 }
                 if (backgroundTexture.Value is null)
                 {
-                    files = Directory.GetFiles(SHelper.DirectoryPath, "background.png");
-                    if (files.Any())
+                    if (File.Exists(Path.Combine(SHelper.DirectoryPath, "background.png")))
                     {
-                        backgroundTexture.Value = SHelper.ModContent.Load<Texture2D>(files[0].Substring(SHelper.DirectoryPath.Length + 1));
+                        backgroundTexture.Value = SHelper.ModContent.Load<Texture2D>("background.png");
                     }
                 }
                 if (backgroundTexture.Value is null)

@@ -179,7 +179,7 @@ namespace DMT
         internal static void Farmer_GetMovementSpeed_Postfix(Farmer __instance, ref float __result)
         {
 
-            if (!Enabled || (!context.Config.TriggerDuringEvents && Game1.eventUp) || __instance.currentLocation is null)
+            if (!Enabled  || __instance.currentLocation is null || (!context.Config.TriggerDuringEvents && Game1.eventUp) || __instance.currentLocation is null)
                 return;
 
             var tilePos = __instance.TilePoint;

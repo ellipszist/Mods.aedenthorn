@@ -28,7 +28,6 @@ namespace Alarms
 
 			Helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
 			Helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
-			Helper.Events.GameLoop.Saving += GameLoop_Saving;
 			Helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
 			Helper.Events.GameLoop.TimeChanged += GameLoop_TimeChanged;
 		}
@@ -36,19 +35,9 @@ namespace Alarms
 		private void GameLoop_SaveLoaded(object sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)
 		{
 			if(!Config.ModEnabled)
-			{
-				return;
-			}
-			if(Game1.player.modData.TryGetValue(modKey, out var dataString))
-			{
-				ClockSoundMenu.soundList = JsonConvert.DeserializeObject<List<ClockSound>>(dataString);
-			}
-		}
-
-		private void GameLoop_Saving(object sender, StardewModdingAPI.Events.SavingEventArgs e)
-		{
-			Game1.player.modData[modKey] = JsonConvert.SerializeObject(ClockSoundMenu.soundList);
-		}
+                return;
+            ClockSoundMenu.ReloadSounds();
+        }
 
 		private void Input_ButtonsChanged(object sender, StardewModdingAPI.Events.ButtonsChangedEventArgs e)
 		{

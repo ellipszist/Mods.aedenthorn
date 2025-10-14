@@ -7,6 +7,7 @@ using xTile.Layers;
 using xTile.Tiles;
 using xTile;
 using System.Linq;
+using HarmonyLib;
 
 namespace MapEdit
 {
@@ -47,7 +48,8 @@ namespace MapEdit
                 {
                     name += "_" + which;
                 }
-                map.AddTileSheet(new TileSheet(name, map, kvp.Value.path, new xTile.Dimensions.Size(kvp.Value.width, kvp.Value.height), new xTile.Dimensions.Size(16, 16)));
+                var sheet = new TileSheet(name, map, kvp.Value.path, new xTile.Dimensions.Size(kvp.Value.width, kvp.Value.height), new xTile.Dimensions.Size(16, 16));
+                map.AddTileSheet(sheet);
             }
             int count = 0;
             foreach (var kvp in data.tileDataDict)

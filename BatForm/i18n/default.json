@@ -1,6 +1,7 @@
 {
 	// GMCM
 	"GMCM.ModEnabled.Name": "Mod Enabled",
+	"GMCM.BatSprite.Name": "Bat Sprite",
 	"GMCM.NightOnly.Name": "Night Only",
 	"GMCM.OutdoorsOnly.Name": "Outdoors Only",
 	"GMCM.TransformKey.Name": "Transform Key",

@@ -1,10 +1,13 @@
-﻿using Microsoft.Xna.Framework;
+﻿using HarmonyLib;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using StardewValley;
 using StardewValley.Menus;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace SDVExplorer.UI
 {
@@ -92,5 +95,39 @@ namespace SDVExplorer.UI
 			}
 			Utility.drawTextWithShadow(b, displayed_text, font, new Vector2((float)label_start_x, (float)label_start_y), this.greyedOut ? (Game1.textColor * 0.33f) : Game1.textColor, 1f, 0.1f, -1, -1, 1f, 3);
 		}
-	}
+
+        public static object GetChildObject(List<object> hier, out string objName)
+        {
+            object obj = Game1.game1;
+			objName = "game1";
+            foreach (var i in hier)
+            {
+                if (i is FieldInfo)
+                {
+                    obj = AccessTools.Field(obj.GetType(), (i as FieldInfo).Name).GetValue(obj);
+					objName = (i as FieldInfo).Name;
+                }
+                else if (i is PropertyInfo)
+                {
+                    obj = AccessTools.Property(obj.GetType(), (i as PropertyInfo).Name).GetValue(obj);
+                    objName = (i as PropertyInfo).Name;
+                }
+				else if (i is int)
+				{
+					var idx = 0;
+					foreach(var obj2 in obj as IEnumerable)
+					{
+                        if (idx == (int)i)
+                        {
+                            obj = obj2;
+                            objName = i.ToString();
+							break;
+                        }
+                        idx++;
+					}
+                }
+            }
+			return obj;
+        }
+    }
 }

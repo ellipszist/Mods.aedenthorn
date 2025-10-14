@@ -22,7 +22,7 @@ namespace CustomMounts
             var bd = stable.GetData();
             foreach (var kvp in MountDict)
             {
-                if (bd.Name == kvp.Value.Stable)
+                if (bd.Name == kvp.Value.Stable || stable.buildingType.Value == kvp.Value.Stable)
                 {
                     __instance.modData[modKey] = kvp.Key;
                     __instance.Name = kvp.Value.Name;

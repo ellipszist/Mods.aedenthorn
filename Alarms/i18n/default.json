@@ -9,6 +9,7 @@
 	"notification": "Notification Text",
 	"delete": "Delete Alarm",
 	"enabled": "Enable Alarm",
+	"menu": "Show Popup on Alarm",
 	"monday": "Monday",
 	"tuesday": "Tuesday",
 	"wednesday": "Wednesday",

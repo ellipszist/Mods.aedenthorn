@@ -1,8 +1,10 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Netcode;
 using StardewValley;
 using StardewValley.Menus;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -12,26 +14,21 @@ namespace SDVExplorer.UI
 	{
 		public FieldCheckbox(string label, object obj, List<object> hier, int x = -1, int y = -1) : base(label, obj, hier, x, y, 36, 36)
 		{
-			object obj2 = Game1.game1;
-			foreach (var i in hier)
-			{
-				if (i is FieldInfo)
-				{
-					obj2 = AccessTools.Field(obj2.GetType(), (i as FieldInfo).Name).GetValue(obj2);
-				}
-				else if (i is PropertyInfo)
-				{
-					obj2 = AccessTools.Property(obj2.GetType(), (i as PropertyInfo).Name).GetValue(obj2);
-				}
-			}
+			object obj2 = GetChildObject(hier);
 			if (obj2 is bool)
 			{
 				//ModEntry.SMonitor.Log($"Set {label} to {(bool)obj2}");
 				isChecked = (bool)obj2;
 			}
+			else if (obj2 is NetBool)
+			{
+				//ModEntry.SMonitor.Log($"Set {label} to {(bool)obj2}");
+				isChecked = ((NetBool)obj2).Value;
+			}
 		}
 
-		public override void receiveLeftClick(int x, int y)
+
+        public override void receiveLeftClick(int x, int y)
 		{
 			if (!greyedOut)
 			{
@@ -39,10 +36,10 @@ namespace SDVExplorer.UI
 				selected = this;
 				base.receiveLeftClick(x, y);
 				isChecked = !isChecked;
-				object obj = Game1.game1;
 				object lastObject = null;
-				string objName = "game1";
-				foreach(var i in hierarchy)
+                object obj = GetChildObject(hierarchy, out string objName);
+
+                foreach (var i in hierarchy)
                 {
 					lastObject = obj;
 					if(i is FieldInfo)
@@ -58,10 +55,15 @@ namespace SDVExplorer.UI
 						objName = r.Name;
 					}
 				}
-				if(obj is bool)
+				if(obj is bool b)
                 {
-					ModEntry.SMonitor.Log($"Setting {label} for {AccessTools.Field(lastObject.GetType(), objName)} to {(bool)obj}");
+					ModEntry.SMonitor.Log($"Setting {label} for {AccessTools.Field(lastObject.GetType(), objName)} to {b}");
 					AccessTools.Field(lastObject.GetType(), objName).SetValue(lastObject, isChecked);
+                }
+				else if(obj is NetBool nb)
+                {
+					ModEntry.SMonitor.Log($"Setting {label} for {AccessTools.Field(lastObject.GetType(), objName)} to {nb}");
+					nb.Value = isChecked;
                 }
 				selected = null;
 			}

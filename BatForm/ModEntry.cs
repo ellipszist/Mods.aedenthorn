@@ -161,7 +161,7 @@ namespace BatForm
 			if (!Config.ModEnabled || BatFormStatus(Game1.player) == BatForm.Inactive)
 				return;
 
-			batSprite.Value ??= new AnimatedSprite("Characters\\Monsters\\Bat");
+			batSprite.Value ??= new AnimatedSprite(Config.BatSprite);
 			e.SpriteBatch.Draw(batSprite.Value.Texture, Game1.player.getLocalPosition(Game1.viewport) + new Vector2(32f, -height.Value * 8), new Rectangle?(batSprite.Value.SourceRect), Color.White, 0f, new Vector2(8f, 16f), (1 + height.Value / 50f) * 4f, SpriteEffects.None, Game1.player.StandingPixel.Y / 10000 + 0.05f + height.Value / 750f);
 			batSprite.Value.Animate(Game1.currentGameTime, 0, 4, 80f);
 			if (batSprite.Value.currentFrame % 3 == 0 && Game1.soundBank != null && (batSound.Value is null || !batSound.Value.IsPlaying) && Game1.player.currentLocation == Game1.currentLocation)
@@ -266,106 +266,117 @@ namespace BatForm
 
 			// get Generic Mod Config Menu's API (if it's installed)
 			var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
-			if (configMenu is null)
-				return;
+			if (configMenu is not null)
+            {
+                // register mod
+                configMenu.Register(
+                    mod: ModManifest,
+                    reset: () => Config = new ModConfig(),
+                    save: () => Helper.WriteConfig(Config)
+                );
 
-			// register mod
-			configMenu.Register(
-				mod: ModManifest,
-				reset: () => Config = new ModConfig(),
-				save: () => Helper.WriteConfig(Config)
-			);
+                configMenu.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM.ModEnabled.Name"),
+                    getValue: () => Config.ModEnabled,
+                    setValue: value => {
+                        if (value == false)
+                        {
+                            ResetBat();
+                        }
+                        Config.ModEnabled = value;
+                    }
+                );
+                configMenu.AddTextOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM.BatSprite.Name"),
+                    getValue: () => Config.BatSprite,
+                    setValue: value => {
+                        Config.BatSprite = value;
+						batSprite.Value = null;
+                    }
+                );
+                configMenu.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM.NightOnly.Name"),
+                    getValue: () => Config.NightOnly,
+                    setValue: value => {
+                        Config.NightOnly = value;
+                        if (value == true && Game1.timeOfDay < 1800)
+                        {
+                            Game1.player.modData[batFormKey] = BatForm.SwitchingFrom.ToString();
+                        }
+                    }
+                );
+                configMenu.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM.OutdoorsOnly.Name"),
+                    getValue: () => Config.OutdoorsOnly,
+                    setValue: value => {
+                        Config.OutdoorsOnly = value;
+                        if (value == true && !Game1.player?.currentLocation?.IsOutdoors == true)
+                        {
+                            Game1.player.modData[batFormKey] = BatForm.SwitchingFrom.ToString();
+                        }
+                    }
+                );
+                configMenu.AddKeybindList(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM.TransformKey.Name"),
+                    getValue: () => Config.TransformKey,
+                    setValue: value => Config.TransformKey = value
+                );
+                configMenu.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM.ActionsEnabled.Name"),
+                    getValue: () => Config.ActionsEnabled,
+                    setValue: value => {
+                        Config.ActionsEnabled = value;
+                        if (value == false && Game1.player.isRidingHorse())
+                        {
+                            Game1.player.modData[batFormKey] = BatForm.SwitchingFrom.ToString();
+                        }
+                    }
+                );
+                configMenu.AddNumberOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM.MoveSpeed.Name"),
+                    getValue: () => Config.MoveSpeed,
+                    setValue: value => Config.MoveSpeed = value
+                );
+                configMenu.AddNumberOption(
+                    mod: ModManifest,
+                    name: () => CompatibilityUtility.IsManaBarLoaded ? SHelper.Translation.Get("GMCM.StaminaManaUse.Name") : SHelper.Translation.Get("GMCM.StaminaUse.Name"),
+                    getValue: () => Config.StaminaUse,
+                    setValue: value => Config.StaminaUse = value
+                );
 
-			configMenu.AddBoolOption(
-				mod: ModManifest,
-				name: () => SHelper.Translation.Get("GMCM.ModEnabled.Name"),
-				getValue: () => Config.ModEnabled,
-				setValue: value => {
-					if (value == false)
-					{
-						ResetBat();
-					}
-					Config.ModEnabled = value;
-				}
-			);
-			configMenu.AddBoolOption(
-				mod: ModManifest,
-				name: () => SHelper.Translation.Get("GMCM.NightOnly.Name"),
-				getValue: () => Config.NightOnly,
-				setValue: value => {
-					Config.NightOnly = value;
-					if (value == true && Game1.timeOfDay < 1800)
-					{
-						Game1.player.modData[batFormKey] = BatForm.SwitchingFrom.ToString();
-					}
-				}
-			);
-			configMenu.AddBoolOption(
-				mod: ModManifest,
-				name: () => SHelper.Translation.Get("GMCM.OutdoorsOnly.Name"),
-				getValue: () => Config.OutdoorsOnly,
-				setValue: value => {
-					Config.OutdoorsOnly = value;
-					if (value == true && !Game1.player?.currentLocation?.IsOutdoors == true)
-					{
-						Game1.player.modData[batFormKey] = BatForm.SwitchingFrom.ToString();
-					}
-				}
-			);
-			configMenu.AddKeybindList(
-				mod: ModManifest,
-				name: () => SHelper.Translation.Get("GMCM.TransformKey.Name"),
-				getValue: () => Config.TransformKey,
-				setValue: value => Config.TransformKey = value
-			);
-			configMenu.AddBoolOption(
-				mod: ModManifest,
-				name: () => SHelper.Translation.Get("GMCM.ActionsEnabled.Name"),
-				getValue: () => Config.ActionsEnabled,
-				setValue: value => {
-					Config.ActionsEnabled = value;
-					if (value == false && Game1.player.isRidingHorse())
-					{
-						Game1.player.modData[batFormKey] = BatForm.SwitchingFrom.ToString();
-					}
-				}
-			);
-			configMenu.AddNumberOption(
-				mod: ModManifest,
-				name: () => SHelper.Translation.Get("GMCM.MoveSpeed.Name"),
-				getValue: () => Config.MoveSpeed,
-				setValue: value => Config.MoveSpeed = value
-			);
-			configMenu.AddNumberOption(
-				mod: ModManifest,
-				name: () => CompatibilityUtility.IsManaBarLoaded ? SHelper.Translation.Get("GMCM.StaminaManaUse.Name") : SHelper.Translation.Get("GMCM.StaminaUse.Name"),
-				getValue: () => Config.StaminaUse,
-				setValue: value => Config.StaminaUse = value
-			);
+                if (CompatibilityUtility.IsManaBarLoaded)
+                {
+                    configMenu.AddBoolOption(
+                        mod: ModManifest,
+                        name: () => SHelper.Translation.Get("GMCM.UseMana.Name"),
+                        tooltip: () => SHelper.Translation.Get("GMCM.UseMana.Tooltip"),
+                        getValue: () => Config.UseMana,
+                        setValue: value => Config.UseMana = value
+                    );
+                }
 
-			if (CompatibilityUtility.IsManaBarLoaded)
-			{
-				configMenu.AddBoolOption(
-					mod: ModManifest,
-					name: () => SHelper.Translation.Get("GMCM.UseMana.Name"),
-					tooltip: () => SHelper.Translation.Get("GMCM.UseMana.Tooltip"),
-					getValue: () => Config.UseMana,
-					setValue: value => Config.UseMana = value
-				);
-			}
+                configMenu.AddTextOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM.TransformSound.Name"),
+                    getValue: () => Config.TransformSound,
+                    setValue: value => Config.TransformSound = value
+                );
+                configMenu.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM.ZoomOutEnabled.Name"),
+                    getValue: () => Config.ZoomOutEnabled,
+                    setValue: value => Config.ZoomOutEnabled = value
+                );
 
-			configMenu.AddTextOption(
-				mod: ModManifest,
-				name: () => SHelper.Translation.Get("GMCM.TransformSound.Name"),
-				getValue: () => Config.TransformSound,
-				setValue: value => Config.TransformSound = value
-			);
-			configMenu.AddBoolOption(
-				mod: ModManifest,
-				name: () => SHelper.Translation.Get("GMCM.ZoomOutEnabled.Name"),
-				getValue: () => Config.ZoomOutEnabled,
-				setValue: value => Config.ZoomOutEnabled = value
-			);
+            }
+
 		}
 	}
 }

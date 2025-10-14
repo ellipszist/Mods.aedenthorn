@@ -1,11 +1,13 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework.Graphics;
+using Netcode;
 using SDVExplorer.UI;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Menus;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -77,26 +79,39 @@ namespace SDVExplorer
 
         public static List<FieldElement> LoadFields(object obj, List<object> hier)
         {
-            currentHeirarchy = new List<object>(hier);
+            currentHeirarchy = new List<object>();
+            currentHeirarchy.AddRange(hier);
             Dictionary<string, FieldElement> fields = new Dictionary<string, FieldElement>();
             var type = obj.GetType();
-            while (true)
+            if (typeof(IEnumerable).IsAssignableFrom(type))
             {
-                foreach (var field in AccessTools.GetDeclaredFields(type))
+                int i = 0;
+                foreach(var c in obj as IEnumerable)
                 {
-                    if (field.Name == null)
-                        continue;
-                    AddField(type, field, field.FieldType, field.Name, hier, fields);
+                    AddField(obj.GetType(), i, c.GetType(), i+"", hier, fields);
+                    i++;
                 }
-                foreach (var field in AccessTools.GetDeclaredProperties(type))
+            }
+            else
+            {
+                while (true)
                 {
-                    if (field.Name == null)
-                        continue;
-                    AddField(type, field, field.PropertyType, field.Name, hier, fields);
+                    foreach (var field in AccessTools.GetDeclaredFields(type))
+                    {
+                        if (field.Name == null)
+                            continue;
+                        AddField(type, field, field.FieldType, field.Name, hier, fields);
+                    }
+                    foreach (var field in AccessTools.GetDeclaredProperties(type))
+                    {
+                        if (field.Name == null)
+                            continue;
+                        AddField(type, field, field.PropertyType, field.Name, hier, fields);
+                    }
+                    if (type.BaseType == null || type.BaseType == typeof(object))
+                        break;
+                    type = type.BaseType;
                 }
-                if (type.BaseType == null || type.BaseType == typeof(object))
-                    break;
-                type = type.BaseType;
             }
 
             var list = fields.Values.ToList();
@@ -106,17 +121,22 @@ namespace SDVExplorer
 
         private static void AddField(Type type, object field, Type fieldType, string name, List<object> hier, Dictionary<string, FieldElement> fields)
         {
-            var h = new List<object>(hier);
+            var h = new List<object>();
+            h.AddRange(hier);
             h.Add(field);
             if (fields.ContainsKey(name))
                 return;
             if (fieldType == typeof(bool))
             {
-                fields[name] = new FieldCheckbox(name, AccessTools.Field(type, name), h);
+                fields[name] = new FieldCheckbox(name, field, h);
+            }
+            else if (fieldType == typeof(NetBool))
+            {
+                fields[name] = new FieldCheckbox(name, field, h);
             }
             else
             {
-                fields[name] = new FieldElement(name, AccessTools.Field(type, name), h);
+                fields[name] = new FieldElement(name, field, h);
             }
         }
     }

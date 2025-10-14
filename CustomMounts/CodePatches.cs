@@ -73,7 +73,7 @@ namespace CustomMounts
             var bd = __instance.GetData();
             foreach (var kvp in MountDict)
             {
-                if (bd.Name == kvp.Value.Stable)
+                if (bd.Name == kvp.Value.Stable || __instance.buildingType.Value == kvp.Value.Stable)
                 {
                     __result = new Point(__instance.tileX.Value + kvp.Value.SpawnOffset.X, __instance.tileY.Value + kvp.Value.SpawnOffset.Y);
                     return false;

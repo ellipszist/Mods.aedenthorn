@@ -17,7 +17,16 @@ namespace Alarms
 					)
 				{
 					if (sound.notification is not null)
-						Game1.addHUDMessage(new HUDMessage(sound.notification, 2));
+					{
+						if (sound.menu)
+						{
+                            Game1.activeClickableMenu = new AlarmPopupMenu(sound.notification);
+                        }
+                        else
+						{
+                            Game1.addHUDMessage(new HUDMessage(sound.notification, 2));
+                        }
+                    }
 					if(sound.sound is not null)
 					{
 						try

@@ -15,6 +15,7 @@ namespace Alarms
 		public ClickableTextureComponent notifCC;
 		public ClickableTextureComponent soundCC;
 		public ClickableTextureComponent enabledBox;
+		public ClickableTextureComponent menuIcon;
 		public ClickableTextureComponent deleteCC;
 	}
 }

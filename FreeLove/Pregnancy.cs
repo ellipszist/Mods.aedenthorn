@@ -86,32 +86,30 @@ namespace FreeLove
 
         public static bool QuestionEvent_setUp_Prefix(int ___whichQuestion, ref bool __result)
         {
-            if(Config.EnableMod && ___whichQuestion == 1)
+            if (!Config.EnableMod || ___whichQuestion != 1 || lastPregnantSpouse == null)
+                return true;
+            if (lastPregnantSpouse == null)
             {
-                if (lastPregnantSpouse == null)
-                {
-                    __result = true;
-                    return false;
-                }
-                Response[] answers = new Response[]
-                {
-                    new Response("Yes", Game1.content.LoadString("Strings\\Events:HaveBabyAnswer_Yes")),
-                    new Response("Not", Game1.content.LoadString("Strings\\Events:HaveBabyAnswer_No"))
-                };
-
-                if (!lastPregnantSpouse.isAdoptionSpouse() || Config.GayPregnancies)
-                {
-                    Game1.currentLocation.createQuestionDialogue(Game1.content.LoadString("Strings\\Events:HavePlayerBabyQuestion", lastPregnantSpouse.Name), answers, new GameLocation.afterQuestionBehavior(answerPregnancyQuestion), lastPregnantSpouse);
-                }
-                else
-                {
-                    Game1.currentLocation.createQuestionDialogue(Game1.content.LoadString("Strings\\Events:HavePlayerBabyQuestion_Adoption", lastPregnantSpouse.Name), answers, new GameLocation.afterQuestionBehavior(answerPregnancyQuestion), lastPregnantSpouse);
-                }
-                Game1.messagePause = true;
-                __result = false;
+                __result = true;
                 return false;
             }
-            return true;
+            Response[] answers = new Response[]
+            {
+                    new Response("Yes", Game1.content.LoadString("Strings\\Events:HaveBabyAnswer_Yes")),
+                    new Response("Not", Game1.content.LoadString("Strings\\Events:HaveBabyAnswer_No"))
+            };
+
+            if (!lastPregnantSpouse.isAdoptionSpouse() || Config.GayPregnancies)
+            {
+                Game1.currentLocation.createQuestionDialogue(Game1.content.LoadString("Strings\\Events:HavePlayerBabyQuestion", lastPregnantSpouse.Name), answers, new GameLocation.afterQuestionBehavior(answerPregnancyQuestion), lastPregnantSpouse);
+            }
+            else
+            {
+                Game1.currentLocation.createQuestionDialogue(Game1.content.LoadString("Strings\\Events:HavePlayerBabyQuestion_Adoption", lastPregnantSpouse.Name), answers, new GameLocation.afterQuestionBehavior(answerPregnancyQuestion), lastPregnantSpouse);
+            }
+            Game1.messagePause = true;
+            __result = false;
+            return false;
         }
 
         public static bool BirthingEvent_tickUpdate_Prefix(GameTime time, BirthingEvent __instance, ref bool __result, ref int ___timer, string ___soundName, ref bool ___playedSound, string ___message, ref bool ___naming, bool ___getBabyName, bool ___isMale, string ___babyName)
@@ -243,7 +241,7 @@ namespace FreeLove
                 WorldDate birthingDate = new WorldDate(Game1.Date);
                 birthingDate.TotalDays += 14;
                 who.friendshipData[lastPregnantSpouse.Name].NextBirthingDate = birthingDate;
-                lastPregnantSpouse.isAdoptionSpouse();
+                SMonitor.Log($"Created birthing date for {lastPregnantSpouse.Name} {birthingDate.ToString()}!");
             }
         }
     }
