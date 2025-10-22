@@ -179,7 +179,7 @@ namespace DMT
         internal static void Farmer_GetMovementSpeed_Postfix(Farmer __instance, ref float __result)
         {
 
-            if (!Enabled  || __instance.currentLocation is null || (!context.Config.TriggerDuringEvents && Game1.eventUp) || __instance.currentLocation is null)
+            if (!Enabled  || __instance.currentLocation?.Map?.GetLayer("Back") is null || (!context.Config.TriggerDuringEvents && Game1.eventUp))
                 return;
 
             var tilePos = __instance.TilePoint;
@@ -198,7 +198,7 @@ namespace DMT
             var tileLoc = __instance.Tile;
             if (__instance.currentLocation.isTileOnMap(tileLoc))
             {
-                var tile = __instance.currentLocation.Map.GetLayer("Back").Tiles[(int)tileLoc.X, (int)tileLoc.Y];
+                var tile = __instance.currentLocation.Map?.GetLayer("Back")?.Tiles[(int)tileLoc.X, (int)tileLoc.Y];
                 if (tile?.HasProperty(Keys.MoveKey, out var prop) ?? false)
                 {
                     var split = prop.ToString().Split(' ');
@@ -218,13 +218,13 @@ namespace DMT
             var tilePos = new Point(center.X / 64, center.Y / 64);
             var oldTilePos = Utility.Vector2ToPoint(__state[1]);
             var layer = f.currentLocation.Map.GetLayer("Back");
-            if (oldTilePos != tilePos)
+            if (layer is not null && oldTilePos != tilePos)
             {
                 TriggerActions([layer], f, __instance.currentLocation, oldTilePos, ["Off"]);
                 TriggerActions([layer], f, __instance.currentLocation, tilePos, ["On"]);
             }
 
-            if (f.currentLocation.isTileOnMap(tilePos))
+            if (layer is not null && f.currentLocation.isTileOnMap(tilePos))
             {
                 var tile = layer.Tiles[tilePos.X, tilePos.Y];
                 var oldTile = layer.Tiles[oldTilePos.X, oldTilePos.Y];
@@ -256,12 +256,12 @@ namespace DMT
                 xLocation startLoc = new(startTile.X, startTile.Y);
 
                 var buildings = f.currentLocation.Map.GetLayer("Buildings");
-                var tile = buildings.PickTile(startLoc * 64, Game1.viewport.Size);
+                var tile = buildings?.PickTile(startLoc * 64, Game1.viewport.Size);
 
                 if (tile is null)
                     return;
 
-                if (!(tile?.HasProperty(Keys.PushKey, out var prop) ?? false) && !(tile?.HasProperty(Keys.PushableKey, out prop) ?? false))
+                if (!tile.HasProperty(Keys.PushKey, out var prop) && !tile.HasProperty(Keys.PushableKey, out prop))
                     return;
                 var destination = startTile + GetNextTile(f.FacingDirection);
                 foreach (var item in prop.ToString().Split(','))

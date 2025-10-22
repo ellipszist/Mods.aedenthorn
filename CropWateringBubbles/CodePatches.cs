@@ -36,7 +36,7 @@ namespace CropWateringBubbles
 			float yOffset = 4f * (float)Math.Round(Math.Sin(Game1.currentGameTime.TotalGameTime.TotalMilliseconds / 250.0), 2) + offset;
 			float movePercent = (100 - Config.SizePercent) / 100f;
 
-			b.Draw(Game1.emoteSpriteSheet, Game1.GlobalToLocal(Game1.viewport, new Vector2(tileLocation.X * 64 + movePercent * 32, tileLocation.Y * 64 - 64 - 16 + yOffset + movePercent * 64)), new Rectangle?(new Rectangle(currentEmoteFrame.Value * 16 % Game1.emoteSpriteSheet.Width, currentEmoteFrame.Value * 16 / Game1.emoteSpriteSheet.Width * 16, 16, 16)), Color.White * (Config.OpacityPercent / 100f), 0f, Vector2.Zero, 4f * Config.SizePercent / 100f, SpriteEffects.None, base_sort + 1E-06f);
+			b.Draw(Game1.emoteSpriteSheet, Game1.GlobalToLocal(Game1.viewport, new Vector2(tileLocation.X * 64 + movePercent * 32 + Config.XOffset, tileLocation.Y * 64 - 64 - 16 + yOffset + movePercent * 64 + Config.YOffset)), new Rectangle?(new Rectangle(currentEmoteFrame.Value * 16 % Game1.emoteSpriteSheet.Width, currentEmoteFrame.Value * 16 / Game1.emoteSpriteSheet.Width * 16, 16, 16)), Color.White * (Config.OpacityPercent / 100f), 0f, Vector2.Zero, 4f * Config.SizePercent / 100f, SpriteEffects.None, base_sort + 1E-06f);
 		}
 	}
 }

@@ -6,5 +6,7 @@
 	"GMCM.RepeatInterval.Name": "Repeat Interval",
 	"GMCM.RequireKeyPress.Name": "Require Key Press",
 	"GMCM.IncludeGiantable.Name": "Show For Giantable",
-	"GMCM.OnlyWhenWatering.Name": "Only When Watering"
+	"GMCM.OnlyWhenWatering.Name": "Only When Watering",
+	"GMCM.XOffset.Name": "X Offset",
+	"GMCM.YOffset.Name": "Y Offset"
 }

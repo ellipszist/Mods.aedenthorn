@@ -71,6 +71,8 @@ namespace CustomMounts
             if (!Config.ModEnabled)
                 return true;
             var bd = __instance.GetData();
+            if (bd is null)
+                return true;
             foreach (var kvp in MountDict)
             {
                 if (bd.Name == kvp.Value.Stable || __instance.buildingType.Value == kvp.Value.Stable)

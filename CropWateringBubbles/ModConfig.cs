@@ -12,6 +12,8 @@ namespace CropWateringBubbles
 		public int RepeatInterval { get; set; } = 3;
 		public int OpacityPercent { get; set; } = 75;
 		public int SizePercent { get; set; } = 100;
+		public int XOffset { get; set; } = 0;
+		public int YOffset { get; set; } = 0;
 		public KeybindList PressKeys { get; set; } = new KeybindList(new Keybind(SButton.LeftShift, SButton.OemPeriod));
 	}
 }

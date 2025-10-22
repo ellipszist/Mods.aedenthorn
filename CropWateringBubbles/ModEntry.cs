@@ -171,6 +171,18 @@ namespace CropWateringBubbles
 				min: 1,
 				max: 100
 			);
+			configMenu.AddNumberOption(
+				mod: ModManifest,
+				name: () => SHelper.Translation.Get("GMCM.XOffset.Name"),
+				getValue: () => Config.XOffset,
+				setValue: value => Config.XOffset = value
+			);
+			configMenu.AddNumberOption(
+				mod: ModManifest,
+				name: () => SHelper.Translation.Get("GMCM.YOffset.Name"),
+				getValue: () => Config.YOffset,
+				setValue: value => Config.YOffset = value
+			);
 		}
 	}
 }

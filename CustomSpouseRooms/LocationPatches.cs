@@ -13,6 +13,7 @@ using xTile;
 using xTile.Dimensions;
 using xTile.Layers;
 using xTile.Tiles;
+using static System.Net.Mime.MediaTypeNames;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace CustomSpouseRooms
@@ -332,21 +333,16 @@ namespace CustomSpouseRooms
                     }
                 }
 
-                Dictionary<string, CharacterData> characterData = SHelper.GameContent.Load<Dictionary<string, CharacterData>>("Data\\Characters");
-                CharacterData spouseData = characterData[spouse];
-                string map_path = spouseData.SpouseRoom.MapAsset;
-                if (map_path == "" || map_path == null)
-                {
-                    map_path = "spouseRooms";
-                }
+                CharacterData spouseData;
+                CharacterSpouseRoomData roomData = (NPC.TryGetData(spouse, out spouseData) ? ((spouseData != null) ? spouseData.SpouseRoom : null) : null);
+                string assetName = ((roomData != null) ? roomData.MapAsset : null) ?? "spouseRooms";
+                Rectangle sourceArea = ((roomData != null) ? roomData.MapSourceRect : CharacterSpouseRoomData.DefaultMapSourceRect);
 
-                SMonitor.Log("Map Path: |" + map_path + "|");
+                SMonitor.Log("Map Path: |" + assetName + "|");
 
-                int width = spouseData.SpouseRoom.MapSourceRect.Width;
-                int height = spouseData.SpouseRoom.MapSourceRect.Height;
+                Map refurbishedMap = Game1.game1.xTileContent.Load<Map>("Maps\\" + assetName);
 
-                Rectangle areaToRefurbish = new Rectangle(corner.X, corner.Y, width, height);
-                Map refurbishedMap = Game1.game1.xTileContent.Load<Map>("Maps\\" + map_path);
+                Rectangle areaToRefurbish = new Rectangle(corner.X, corner.Y, sourceArea.Width, sourceArea.Height);
                 List<KeyValuePair<Point, Tile>> bottom_row_tiles = new List<KeyValuePair<Point, Tile>>();
                 Layer front_layer = location.map.GetLayer("Front");
                 for (int x = areaToRefurbish.Left; x < areaToRefurbish.Right; x++)
@@ -364,18 +360,18 @@ namespace CustomSpouseRooms
                     appliedMapOverrides.Remove("spouse_room_" + spouse);
                 }
 
-                location.ApplyMapOverride(map_path, "spouse_room_" + spouse, spouseData.SpouseRoom.MapSourceRect, new Rectangle?(areaToRefurbish));
+                location.ApplyMapOverride(assetName, "spouse_room_" + spouse, sourceArea, new Rectangle?(areaToRefurbish));
                 for (int x = 0; x < areaToRefurbish.Width; x++)
                 {
                     for (int y = 0; y < areaToRefurbish.Height; y++)
                     {
-                        if (refurbishedMap.GetLayer("Buildings")?.Tiles[spouseData.SpouseRoom.MapSourceRect.X + x, spouseData.SpouseRoom.MapSourceRect.Y + y] != null)
+                        if (refurbishedMap.GetLayer("Buildings")?.Tiles[sourceArea.X + x, sourceArea.Y + y] != null)
                         {
-                            SHelper.Reflection.GetMethod(location, "adjustMapLightPropertiesForLamp").Invoke(refurbishedMap.GetLayer("Buildings").Tiles[spouseData.SpouseRoom.MapSourceRect.X + x, spouseData.SpouseRoom.MapSourceRect.Y + y].TileIndex, areaToRefurbish.X + x, areaToRefurbish.Y + y, "Buildings");
+                            SHelper.Reflection.GetMethod(location, "adjustMapLightPropertiesForLamp").Invoke(refurbishedMap.GetLayer("Buildings").Tiles[sourceArea.X + x, sourceArea.Y + y].TileIndex, areaToRefurbish.X + x, areaToRefurbish.Y + y, "Buildings");
                         }
-                        if (y < areaToRefurbish.Height - 1 && refurbishedMap.GetLayer("Front")?.Tiles[spouseData.SpouseRoom.MapSourceRect.X + x, spouseData.SpouseRoom.MapSourceRect.Y + y] != null)
+                        if (y < areaToRefurbish.Height - 1 && refurbishedMap.GetLayer("Front")?.Tiles[sourceArea.X + x, sourceArea.Y + y] != null)
                         {
-                            SHelper.Reflection.GetMethod(location, "adjustMapLightPropertiesForLamp").Invoke(refurbishedMap.GetLayer("Front").Tiles[spouseData.SpouseRoom.MapSourceRect.X + x, spouseData.SpouseRoom.MapSourceRect.Y + y].TileIndex, areaToRefurbish.X + x, areaToRefurbish.Y + y, "Front");
+                            SHelper.Reflection.GetMethod(location, "adjustMapLightPropertiesForLamp").Invoke(refurbishedMap.GetLayer("Front").Tiles[sourceArea.X + x, sourceArea.Y + y].TileIndex, areaToRefurbish.X + x, areaToRefurbish.Y + y, "Front");
                         }
                         /*
                         if (fh.map.GetLayer("Back").Tiles[corner.X + x, corner.Y + y] != null)

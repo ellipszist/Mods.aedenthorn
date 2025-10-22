@@ -42,7 +42,8 @@ namespace GenieLamp
 				foreach (var kvp in dict)
 				{
 					var data = kvp.Value.GetParsedData();
-
+					if (data is null)
+						continue;
 					if (data.DisplayName.ToLower().StartsWith(lower) && !names.Contains(data.DisplayName) && data.InternalName != ModEntry.Config.LampItem)
 					{
 						names.Add(data.DisplayName);

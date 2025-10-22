@@ -58,8 +58,8 @@ namespace InventoryIndicators
                 else
                 {
                     spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)location.X + 4, (int)location.Y + 4, 56, Config.OutlineWidth), null, color, 0f, Vector2.Zero, SpriteEffects.None, layerDepth);
-                    spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)location.X + 4, (int)location.Y + Config.OutlineWidth, Config.OutlineWidth, 56), null, color, 0f, Vector2.Zero, SpriteEffects.None, layerDepth);
-                    spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)location.X + 60 - Config.OutlineWidth, (int)location.Y + 4 + Config.OutlineWidth, Config.OutlineWidth, 56), null, color, 0f, Vector2.Zero, SpriteEffects.None, layerDepth);
+                    spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)location.X + 4, (int)location.Y + 4 + Config.OutlineWidth, Config.OutlineWidth, 56 - Config.OutlineWidth), null, color, 0f, Vector2.Zero, SpriteEffects.None, layerDepth);
+                    spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)location.X + 60 - Config.OutlineWidth, (int)location.Y + 4 + Config.OutlineWidth, Config.OutlineWidth, 56 - Config.OutlineWidth), null, color, 0f, Vector2.Zero, SpriteEffects.None, layerDepth);
                     spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)location.X + 4 + Config.OutlineWidth, (int)location.Y + 60 - Config.OutlineWidth, 56 - Config.OutlineWidth * 2, Config.OutlineWidth), null, color, 0f, Vector2.Zero, SpriteEffects.None, layerDepth);
                 }
             }
@@ -103,7 +103,10 @@ namespace InventoryIndicators
                     var npc = list[i];
                     if (Config.ShowUngiftedFavorites || (Game1.player.giftedItems.TryGetValue(npc, out var giftData) && giftData.TryGetValue(__instance.ItemId, out var value) && value > 0))
                     {
-                        spriteBatch.Draw(Game1.getCharacterFromName(npc).Portrait, location + new Vector2(i * 2 + offset, offset), new Rectangle(0, 0, 64, 64), Color.White, 0, Vector2.Zero, 0.5f, SpriteEffects.None, layerDepth);
+                        var portrait = Game1.getCharacterFromName(npc)?.Portrait;
+                        if (portrait == null)
+                            continue;
+                        spriteBatch.Draw(portrait, location + new Vector2(i * 2 + offset, offset), new Rectangle(0, 0, 64, 64), Color.White, 0, Vector2.Zero, 0.5f, SpriteEffects.None, layerDepth);
                         if (hover && hoverItem != __instance.ItemId)
                         {
                             if (!foundLove)

@@ -19,7 +19,7 @@ namespace Email
                 Texture2D appIcon;
                 bool success;
 
-                appIcon = Helper.Content.Load<Texture2D>(Path.Combine("assets", "app_icon.png"));
+                appIcon = Helper.ModContent.Load<Texture2D>(Path.Combine("assets", "app_icon.png"));
                 success = api.AddApp(Helper.ModRegistry.ModID, Helper.Translation.Get("email"), OpenEmailApp, appIcon);
                 Monitor.Log($"loaded email app successfully: {success}", LogLevel.Debug);
 
