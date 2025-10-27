@@ -4,22 +4,25 @@ using System.Linq;
 
 namespace CustomOreNodes
 {
-    public class CustomOreNodesAPI
+    public interface ICustomOreNodeAPI
     {
-        public int GetCustomOreNodeIndex(string id)
+        public ICustomOreNode GetCustomOreNode(string itemId);
+        public List<ICustomOreNode> GetCustomOreNodes();
+
+    }
+    public class CustomOreNodesAPI : ICustomOreNodeAPI
+    {
+        public ICustomOreNode GetCustomOreNode(string itemId)
         {
-            var node = ModEntry.customOreNodesList.Find(n => n.id == id);
-            if (node == null)
-                return -1;
-            return node.parentSheetIndex;
+            return ModEntry.customOreNodesList.Find(n => n.itemId == itemId);
         }
-        public List<object> GetCustomOreNodes()
+        public void AddCustomOreNode(ICustomOreNode node)
         {
-            return new List<object>(ModEntry.customOreNodesList);
+            ModEntry.customOreNodesList.Add(node);
         }
-        public List<string> GetCustomOreNodeIDs() 
+        public List<ICustomOreNode> GetCustomOreNodes()
         {
-            return ModEntry.customOreNodesList.Select(n => n.id).ToList();
+            return new List<ICustomOreNode>(ModEntry.customOreNodesList);
         }
     }
 }

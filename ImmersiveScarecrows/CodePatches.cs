@@ -368,6 +368,31 @@ namespace ImmersiveScarecrows
                 }
             }
         }
+        [HarmonyPatch(typeof(Utility), nameof(Utility.doesItemExistAnywhere))]
+        public class Utility_doesItemExistAnywhere_Patch
+        {
+            public static void Postfix(string itemId, ref bool __result)
+            {
+                if (!Config.EnableMod || __result || (!new string[] { "(BC)136", "(BC)137", "(BC)138", "(BC)139", "(BC)140", "(BC)126", "(BC)110", "(BC)113" }.Contains(itemId)) || Game1.getFarm() is null)
+                    return;
+                foreach(var kvp in Game1.getFarm().terrainFeatures.Pairs)
+                {
+                    if (kvp.Value is not HoeDirt)
+                        continue;
+                    for (int i = 0; i < 4; i++)
+                    {
+                        var id = GetScarecrow(kvp.Value, i)?.QualifiedItemId;
+                        if (id is null)
+                            continue;
+                        if (id == itemId)
+                        {
+                            __result = true;
+                            return;
+                        }
+                    }
+                }
+            }
+        }
 
     }
 }

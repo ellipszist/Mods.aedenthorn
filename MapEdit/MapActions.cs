@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using xTile;
+using xTile.Layers;
 using xTile.Tiles;
 
 namespace MapEdit

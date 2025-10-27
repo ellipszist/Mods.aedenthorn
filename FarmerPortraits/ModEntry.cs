@@ -4,6 +4,8 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -19,8 +21,7 @@ namespace FarmerPortraits
         public static ModConfig Config;
         public static ModEntry context;
 
-        private static PerScreen<Texture2D> portraitTexture = new(() => null);
-        private static PerScreen<Texture2D> backgroundTexture = new(() => null);
+        private static PerScreen<Dictionary<string, Texture2D>> portraitTextures = new(() => new Dictionary<string, Texture2D>());
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
@@ -45,97 +46,19 @@ namespace FarmerPortraits
 
         private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
         {
-            return;
-            if (e.Button == SButton.OemCloseBrackets)
+            if (false && e.Button == SButton.OemCloseBrackets)
             {
-                Game1.DrawDialogue(Game1.getCharacterFromName("Clint"), "Data\\ExtraDialogue:Clint_NoInventorySpace");
+                Dialogue d = new Dialogue(Game1.getCharacterFromName("Clint"), "Data\\ExtraDialogue:Clint_NoInventorySpace");
+                d.CurrentEmotion = "$0";
+                Game1.DrawDialogue(d);
             }
         }
 
         private void Display_MenuChanged(object sender, MenuChangedEventArgs e)
         {
-            if (!Config.EnableMod)
+            if (!Config.EnableMod || Game1.activeClickableMenu is null)
                 return;
             ReloadTextures();
-        }
-
-        private static void ReloadTextures()
-        {
-            portraitTexture.Value = null;
-            backgroundTexture.Value = null;
-            try
-            {
-                if (File.Exists(Path.Combine(SHelper.DirectoryPath, $"portrait_{Game1.player.Name}.png")))
-                {
-                    portraitTexture.Value = SHelper.ModContent.Load<Texture2D>($"portrait_{Game1.player.Name}.png");
-                }
-                if (portraitTexture.Value is null)
-                {
-                    if (File.Exists(Path.Combine(SHelper.DirectoryPath, "portrait.png")))
-                    {
-                        portraitTexture.Value = SHelper.ModContent.Load<Texture2D>("portrait.png");
-                    }
-                }
-                if (portraitTexture.Value is null)
-                {
-                    try
-                    {
-                        portraitTexture.Value = SHelper.GameContent.Load<Texture2D>($"aedenthorn.FarmerPortraits/portrait_{Game1.player.Name}");
-                    }
-                    catch
-                    {
-                        try
-                        {
-                            portraitTexture.Value = SHelper.GameContent.Load<Texture2D>("aedenthorn.FarmerPortraits/portrait");
-                        }
-                        catch
-                        {
-                            portraitTexture.Value = null;
-                        }
-                    }
-                }
-
-            }
-            catch
-            {
-                portraitTexture.Value = null;
-            }
-            try
-            {
-                if (File.Exists(Path.Combine(SHelper.DirectoryPath, $"background_{Game1.player.Name}.png")))
-                {
-                    backgroundTexture.Value = SHelper.ModContent.Load<Texture2D>($"background_{Game1.player.Name}.png");
-                }
-                if (backgroundTexture.Value is null)
-                {
-                    if (File.Exists(Path.Combine(SHelper.DirectoryPath, "background.png")))
-                    {
-                        backgroundTexture.Value = SHelper.ModContent.Load<Texture2D>("background.png");
-                    }
-                }
-                if (backgroundTexture.Value is null)
-                {
-                    try
-                    {
-                        backgroundTexture.Value = SHelper.GameContent.Load<Texture2D>($"aedenthorn.FarmerPortraits/background_{Game1.player.Name}");
-                    }
-                    catch
-                    {
-                        try
-                        {
-                            backgroundTexture.Value = SHelper.GameContent.Load<Texture2D>("aedenthorn.FarmerPortraits/background");
-                        }
-                        catch
-                        {
-                            backgroundTexture.Value = null;
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                backgroundTexture.Value = null;
-            }
         }
 
         private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)

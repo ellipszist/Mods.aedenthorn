@@ -3,23 +3,24 @@ using System.Collections.Generic;
 
 namespace CustomOreNodes
 {
-    public class CustomOreNode
+    public interface ICustomOreNode
     {
-        public string id;
-        public int parentSheetIndex;
-        public List<DropItem> dropItems = new List<DropItem>();
-        public List<OreLevelRange> oreLevelRanges = new List<OreLevelRange>();
-        public string nodeDesc;
-        public string spritePath;
-        public string spriteType = "game";
-        public int spriteX;
-        public int spriteY;
-        public int spriteW;
-        public int spriteH;
-        public float spawnChance;
-        public int durability;
-        public int exp;
-        public Texture2D texture;
+        public string itemId { get; set; }
+        public List<DropItem> dropItems { get; set; }
+        public List<OreLevelRange> oreLevelRanges { get; set; }
+        public float spawnChance { get; set; }
+        public int durability { get; set; }
+        public int exp { get; set; }
+
+    }
+    public class CustomOreNode : ICustomOreNode
+    {
+        public string itemId { get; set; }
+        public List<DropItem> dropItems { get; set; } = new List<DropItem>();
+        public List<OreLevelRange> oreLevelRanges { get; set; } = new List<OreLevelRange>();
+        public float spawnChance { get; set; }
+        public int durability { get; set; }
+        public int exp { get; set; }
 
         public CustomOreNode()
         {
@@ -35,13 +36,6 @@ namespace CustomOreNodes
                 ModEntry.context.Monitor.Log($"improper syntax in ore node string: number of elements is {infos.Length} but should be 10", StardewModdingAPI.LogLevel.Error);
                 throw new System.ArgumentException();
             }
-            nodeDesc = infos[i++];
-            spritePath = infos[i++];
-            spriteType = infos[i++];
-            spriteX = int.Parse(infos[i].Split(',')[0]);
-            spriteY = int.Parse(infos[i++].Split(',')[1]);
-            spriteW = int.Parse(infos[i].Split(',')[0]);
-            spriteH = int.Parse(infos[i++].Split(',')[1]);
             string[] levelRanges = infos[i++].Split('|');
             foreach (string levelRange in levelRanges)
             {

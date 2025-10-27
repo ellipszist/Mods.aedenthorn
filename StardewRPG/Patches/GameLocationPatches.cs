@@ -1,13 +1,16 @@
-﻿using StardewValley;
+﻿using HarmonyLib;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Newtonsoft.Json.Linq;
+using StardewValley;
+using StardewValley.Extensions;
+using StardewValley.GameData.Locations;
 using StardewValley.Tools;
 using System;
-using HarmonyLib;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Emit;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace StardewRPG
 {
@@ -41,11 +44,10 @@ namespace StardewRPG
             SMonitor.Log($"Transpiling GameLocation.performOrePanTenMinuteUpdate");
 
             var codes = new List<CodeInstruction>(instructions);
-            if (codes[18].opcode == OpCodes.Ldc_R8 && (double)codes[18].operand == 0.5)
+            if (codes[16].opcode == OpCodes.Ldarg_1)
             {
                 SMonitor.Log("Overriding pan spot chance");
-                codes[18].opcode = OpCodes.Call;
-                codes[18].operand = AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetPanSpotChance));
+                codes[17].operand = AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetPanSpotChance));
             }
             else
             {
@@ -54,9 +56,11 @@ namespace StardewRPG
             return codes.AsEnumerable();
         }
 
-        private static double GetPanSpotChance()
+        private static bool GetPanSpotChance(Random r)
         {
-            return 0.5 + GetStatMod(GetStatValue(Game1.player, "int", Config.BaseStatValue)) * Config.IntPanSpotChanceBonus;
+            if (!Config.EnableMod)
+                return r.NextBool();
+            return r.NextDouble() < 0.5 + GetStatMod(GetStatValue(Game1.player, "int", Config.BaseStatValue)) * Config.IntPanSpotChanceBonus;
         }
 
         public static IEnumerable<CodeInstruction> GameLocation_spawnObjects_Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -76,15 +80,12 @@ namespace StardewRPG
                     codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
                     found1 = true; 
                 }
-                else if (!found2 && i < codes.Count - 5 && codes[i].opcode == OpCodes.Ldloc_0 && codes[i + 1].opcode == OpCodes.Ldc_I4_1 && codes[i + 2].opcode == OpCodes.Ldc_I4_5 && codes[i + 3].opcode == OpCodes.Ldc_I4_7 && codes[i + 4].opcode == OpCodes.Ldarg_0)
+                else if (!found2 && i < codes.Count - 3 && codes[i].opcode == OpCodes.Ldfld && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(LocationData), nameof(LocationData.MinDailyForageSpawn)))
                 {
                     SMonitor.Log("Overriding number of foraging spots");
-                    codes[i+1].opcode = OpCodes.Call;
-                    codes[i+1].operand = AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetMinForagingSpots));
-                    codes[i+2].opcode = OpCodes.Call;
-                    codes[i+2].operand = AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetMaxForagingSpots1));
-                    codes[i+3].opcode = OpCodes.Call;
-                    codes[i+3].operand = AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetMaxForagingSpots2));
+                    codes.Insert(i + 3, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetMaxForagingSpots))));
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetMinForagingSpots))));
+                    i += 5;
                     found2 = true;
                 }
                 if (found1 && found2)
@@ -93,23 +94,23 @@ namespace StardewRPG
             return codes.AsEnumerable();
         }
 
-        private static int GetMinForagingSpots()
+        private static int GetMinForagingSpots(int value)
         {
-            return 1 + GetStatMod(GetStatValue(Game1.player, "int", Config.BaseStatValue)) * Config.IntForagingSpotChanceBonus;
+            if (!Config.EnableMod)
+                return value;
+            return value + GetStatMod(GetStatValue(Game1.player, "int", Config.BaseStatValue)) * Config.IntForagingSpotChanceBonus;
         }
-        private static int GetMaxForagingSpots1()
+        private static int GetMaxForagingSpots(int value)
         {
-            return 5 + GetStatMod(GetStatValue(Game1.player, "int", Config.BaseStatValue)) * Config.IntForagingSpotChanceBonus;
-        }
-        private static int GetMaxForagingSpots2()
-        {
-            return 7 + GetStatMod(GetStatValue(Game1.player, "int", Config.BaseStatValue)) * Config.IntForagingSpotChanceBonus;
+            if (!Config.EnableMod)
+                return value;
+            return value + GetStatMod(GetStatValue(Game1.player, "int", Config.BaseStatValue)) * Config.IntForagingSpotChanceBonus;
         }
 
         private static double GetChanceForNewArtifactMult(GameLocation location)
         {
             double chance = 0.75 + GetStatMod(GetStatValue(Game1.player, "int", Config.BaseStatValue)) * Config.IntArtifactSpotChanceBonus;
-            return Math.Min(location.GetSeasonForLocation().Equals("winter") ? 0.85 : 0.95, chance);
+            return Math.Min(location.GetSeason() == Season.Winter ? 0.85 : 0.95, chance);
         }
 
         private static void GameLocation_damageMonster_Prefix(ref int minDamage, ref int maxDamage, bool isBomb, ref int addedPrecision, ref float critChance, ref float critMultiplier, Farmer who)

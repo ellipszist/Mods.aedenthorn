@@ -24,7 +24,7 @@ namespace StardewRPG
 			Game1.player.health = (int)Math.Round(health);
 			Game1.player.maxHealth = 100;
 			Game1.player.stamina = stamina;
-			Game1.player.MaxStamina = 270;
+			Game1.player.maxStamina.Value = 270;
 		}
 
         private static void Game1_drawHUD_Postfix(float[] __state)
@@ -34,7 +34,7 @@ namespace StardewRPG
 			Game1.player.health = (int)__state[0];
 			Game1.player.maxHealth = (int)__state[1];
 			Game1.player.stamina = __state[2];
-			Game1.player.MaxStamina = (int)__state[3];
+			Game1.player.maxStamina.Value = (int)__state[3];
 
 		}
 		private static void Game1_UpdateOther_Prefix(ref float[] __state)
@@ -50,7 +50,7 @@ namespace StardewRPG
 			Game1.player.health = (int)Math.Round(health);
 			Game1.player.maxHealth = 100;
 			Game1.player.stamina = stamina;
-			Game1.player.MaxStamina = 270;
+			Game1.player.maxStamina.Value = 270;
 		}
 
         private static void Game1_UpdateOther_Postfix(float[] __state)
@@ -60,7 +60,7 @@ namespace StardewRPG
 			Game1.player.health = (int)__state[0];
 			Game1.player.maxHealth = (int)__state[1];
 			Game1.player.stamina = __state[2];
-			Game1.player.MaxStamina = (int)__state[3];
+			Game1.player.maxStamina.Value = (int)__state[3];
 
 		}
 

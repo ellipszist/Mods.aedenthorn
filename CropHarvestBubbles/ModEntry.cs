@@ -26,6 +26,7 @@ namespace CropHarvestBubbles
 			SHelper = helper;
 
 			Helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
+            Helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
 
 			// Load Harmony patches
 			try
@@ -48,7 +49,18 @@ namespace CropHarvestBubbles
 			}
 		}
 
-		private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
+        private void Input_ButtonsChanged(object sender, StardewModdingAPI.Events.ButtonsChangedEventArgs e)
+        {
+			if (!Config.ModEnabled)
+				return;
+			if(Config.KeyPressToggle && Config.PressKeys.JustPressed())
+			{
+				Config.Toggled = !Config.Toggled;
+				Helper.WriteConfig(Config);
+			}
+        }
+
+        private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
 		{
 			// get Generic Mod Config Menu's API (if it's installed)
 			var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
@@ -75,9 +87,21 @@ namespace CropHarvestBubbles
 			);
 			configMenu.AddBoolOption(
 				mod: ModManifest,
+				name: () => SHelper.Translation.Get("GMCM_Option_IgnorePots_Name"),
+				getValue: () => Config.IgnorePots,
+				setValue: value => Config.IgnorePots = value
+			);
+			configMenu.AddBoolOption(
+				mod: ModManifest,
 				name: () => SHelper.Translation.Get("GMCM_Option_RequireKeyPress_Name"),
 				getValue: () => Config.RequireKeyPress,
 				setValue: value => Config.RequireKeyPress = value
+			);
+			configMenu.AddBoolOption(
+				mod: ModManifest,
+				name: () => SHelper.Translation.Get("GMCM_Option_KeyPressToggle_Name"),
+				getValue: () => Config.KeyPressToggle,
+				setValue: value => Config.KeyPressToggle = value
 			);
 			configMenu.AddKeybindList(
 				mod: ModManifest,

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Buffs;
 using StardewValley.Tools;
 using System;
 using Object = StardewValley.Object;
@@ -76,7 +77,7 @@ namespace StardewRPG
 				__instance.currentLocation.debris.Add(new Debris(SHelper.Translation.Get("miss"), 1, __instance.GetBoundingBox().Center.ToVector2(), Color.LightGray, 1f, 0f));
 				__instance.temporarilyInvincible = true;
 				__instance.temporaryInvincibilityTimer = 0;
-				__instance.currentTemporaryInvincibilityDuration = 1200 + __instance.GetEffectsOfRingMultiplier(861) * 400;
+				__instance.currentTemporaryInvincibilityDuration = 1200 + __instance.GetEffectsOfRingMultiplier("861") * 400;
 				__result = false;
 				SMonitor.Log($"successful dex roll, missed!");
 			}
@@ -112,21 +113,15 @@ namespace StardewRPG
 				return;
 			SetStats(ref __instance, true);
 		}
-		private static void Farmer_takeDamage_Prefix(Farmer __instance, ref int __state)
+		private static void BuffManager_Defense_Postfix(BuffManager __instance, Farmer ___Player, ref int __result)
 		{
 			if (!Config.EnableMod)
 				return;
-			__state = __instance.resilience;
-			__instance.resilience += GetStatMod(GetStatValue(__instance, "con", Config.BaseStatValue)) * Config.ConDefenseBonus;
-			SMonitor.Log($"Modifying resilience {__state} => {__instance.resilience }");
-		}
-		private static void Farmer_takeDamage_Prefix(Farmer __instance, int __state)
-		{
-			if (!Config.EnableMod)
-				return;
-			__instance.resilience = __state;
-
-		}
+			
+			var amount = GetStatMod(GetStatValue(___Player, "con", Config.BaseStatValue)) * Config.ConDefenseBonus;
+			SMonitor.Log($"Modifying defence {__result} => {__result + amount}");
+			__result += amount;
+        }
 		private static void Farmer_changeFriendship_Prefix(Farmer __instance, ref int amount)
 		{
 			if (!Config.EnableMod)

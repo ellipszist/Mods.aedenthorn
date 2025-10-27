@@ -16,12 +16,37 @@ namespace StardewRPG
 		private static int statsX = 79;
 		private static int ccStatY = 85;
 		private static int ccStatsY = 237;
-		private static void CharacterCustomization_setUpPositions_Postfix(CharacterCustomization __instance)
+
+        public static IEnumerable<CodeInstruction> CharacterCustomization_ResetComponents_Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
+        {
+            SMonitor.Log($"Transpiling CharacterCustomization_ResetComponents");
+
+            var codes = new List<CodeInstruction>(instructions);
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (codes[i].opcode == OpCodes.Stfld && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(IClickableMenu), nameof(IClickableMenu.xPositionOnScreen)))
+                {
+                    SMonitor.Log("Adding xPositionOnScreen Adjustment");
+                    codes.Insert(i, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.AdjustXPositionOnScreen))));
+                    codes.Insert(i, new CodeInstruction(OpCodes.Ldarg_0));
+					i += 2;
+                }
+            }
+            return codes.AsEnumerable();
+        }
+
+        private static int AdjustXPositionOnScreen(int value, CharacterCustomization __instance)
+        {
+			if (!Config.EnableMod || __instance.source != CharacterCustomization.Source.NewGame)
+				return value;
+			return value - 300;
+        }
+
+		private static void CharacterCustomization_ResetComponents_Postfix(CharacterCustomization __instance)
 		{
 			if (!Config.EnableMod || __instance.source != CharacterCustomization.Source.NewGame)
 				return;
-
-			int x = __instance.xPositionOnScreen + __instance.width + 4 + 8 + 88 + 4 + 8;
+            int x = __instance.xPositionOnScreen + __instance.width + 4 + 8 + 184 + 4 + 8;
 			int y = __instance.yPositionOnScreen;
 
 			for (int i = 0; i < skillNames.Length; i++)
@@ -50,6 +75,7 @@ namespace StardewRPG
 		{
 			if (!Config.EnableMod)
 				return;
+
 			coords = new Vector2(x, y);
 			for (int i = 0; i < skillNames.Length; i++)
 			{
@@ -65,23 +91,32 @@ namespace StardewRPG
 		private static void CharacterCustomization_selectionClick_Prefix(CharacterCustomization __instance, string name, int change)
 		{
 			if (!Config.EnableMod || __instance.source != CharacterCustomization.Source.NewGame || !name.StartsWith("SDRPG_") || (change == 1 && GetStatValue(Game1.player, "points") <= 0))
-				return;
-			string stat = name.Substring("SDRPG_".Length);
+			{
+                Game1.playSound("cancel", null);
+                return;
+			}
+
+            string stat = name.Substring("SDRPG_".Length);
 			int oldStat = GetStatValue(Game1.player, stat);
 			if ((change == 1 && oldStat >= Config.MaxStatValue) || (change == -1 && oldStat <= Config.MinStatValue))
-				return;
-			SetModData(Game1.player, stat, oldStat + change);
+			{
+                Game1.playSound("cancel", null);
+                return;
+			}
+            Game1.playSound(change == 1 ? "bigSelect" : "bigDeSelect", null);
+
+            SetModData(Game1.player, stat, oldStat + change);
 			SetModData(Game1.player, "points", GetStatValue(Game1.player, "points") - change);
 		}
 		private static void CharacterCustomization_draw_Prefix(CharacterCustomization __instance, SpriteBatch b)
-		{
-			if (!Config.EnableMod || __instance.source != CharacterCustomization.Source.NewGame)
+        {
+
+            if (!Config.EnableMod || __instance.source != CharacterCustomization.Source.NewGame)
 				return;
+            //Utility.drawTextWithShadow(b, coords.ToString(), Game1.smallFont, new Vector2(20,20), Color.Black, 1f, -1f, -1, -1, 1f, 3);
 
-			Utility.drawTextWithShadow(b, coords.ToString(), Game1.smallFont, new Vector2(20,20), Color.Black, 1f, -1f, -1, -1, 1f, 3);
 
-
-			int x = __instance.xPositionOnScreen + __instance.width + 4 + 8 + 88 + 4 + 8;
+            int x = __instance.xPositionOnScreen + __instance.width + 4 + 8 + 184 + 4 + 8;
 			int y = __instance.yPositionOnScreen;
 
 			Game1.drawDialogueBox(x, __instance.yPositionOnScreen, 400, __instance.height, false, true, null, false, true, -1, -1, -1);
@@ -211,7 +246,7 @@ namespace StardewRPG
 				var rect = new Rectangle(Utility.Vector2ToPoint(new Vector2(__instance.xPositionOnScreen + __instance.width - 24 + statsX, __instance.yPositionOnScreen + skillStatsY + 17 + i * skillStatY)), Utility.Vector2ToPoint(Game1.smallFont.MeasureString(SHelper.Translation.Get(skillNames[i]))));
 				if (rect.Contains(mx, my))
 				{
-					IClickableMenu.drawHoverText(b, Game1.parseText(SHelper.Translation.Get(skillNames[i] + "-desc"), Game1.smallFont, 256), Game1.smallFont, 0, 0, -1, SHelper.Translation.Get(skillNames[i] + "-full"), -1, null, null, 0, -1, -1, -1, -1, 1f, null, null);
+					IClickableMenu.drawHoverText(b, Game1.parseText(SHelper.Translation.Get(skillNames[i] + "-desc"), Game1.smallFont, 256), Game1.smallFont, 0, 0, -1, SHelper.Translation.Get(skillNames[i] + "-full"), -1, null, null, 0, null, -1, -1, -1, 1f, null, null);
 					break;
 				}
 			}
@@ -219,12 +254,12 @@ namespace StardewRPG
 
 			int playerLevel = GetExperienceLevel(Game1.player);
 			string levelString = string.Format(SHelper.Translation.Get("level-x"), playerLevel);
-			b.DrawString(Game1.smallFont, levelString, new Vector2((float)(__instance.xPositionOnScreen + 64 - 12 + 64) - Game1.smallFont.MeasureString(levelString).X / 2f, __instance.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + 4 + 252), Game1.textColor);
+			b.DrawString(Game1.smallFont, levelString, new Vector2((float)(__instance.xPositionOnScreen + 64 - 24), __instance.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + 4 + 252), Game1.textColor);
 			var levels = GetExperienceLevels();
 			if (playerLevel < levels.Length + 1)
             {
 				string expString = string.Format(SHelper.Translation.Get("x/y-exp-to-next"), GetStatValue(Game1.player, "exp", 0), levels[playerLevel - 1]);
-				b.DrawString(Game1.smallFont, expString, new Vector2((float)(__instance.xPositionOnScreen + 64 - 12 + 64) - Game1.smallFont.MeasureString(levelString).X / 2f, __instance.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + 4 + 280), Game1.textColor);
+				b.DrawString(Game1.smallFont, expString, new Vector2((float)(__instance.xPositionOnScreen + 64 - 24), __instance.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + 4 + 280), Game1.textColor);
 			}
 
 
@@ -249,17 +284,18 @@ namespace StardewRPG
 			// draw skill changes
 
 			string pointString = string.Format(SHelper.Translation.Get("x-points"), newLevels);
-			b.DrawString(Game1.smallFont, pointString, new Vector2((float)(__instance.xPositionOnScreen + 64 - 12 + 64) - Game1.smallFont.MeasureString(pointString).X / 2f, __instance.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder - 28), Game1.textColor);
+			b.DrawString(Game1.smallFont, pointString, new Vector2((float)(__instance.xPositionOnScreen + __instance.width / 2) - Game1.smallFont.MeasureString(pointString).X / 2f, __instance.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder - 40), Game1.textColor);
 
 			x = ((LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.ru || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.it) ? (__instance.xPositionOnScreen + __instance.width - 448 - 48) : (__instance.xPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + 256 - 8));
 			y = __instance.yPositionOnScreen + IClickableMenu.spaceToClearTopBorder + IClickableMenu.borderWidth - 8;
 
 			int addedXSource = 0;
-			for (int i = 0; i < 10; i++)
+            int verticalSpacing = 68;
+            for (int i = 0; i < 10; i++)
 			{
 				for (int j = 0; j < 5; j++)
 				{
-					Rectangle boundary = (i + 1) % 5 == 0 ? new Rectangle(new Point(addedXSource + x - 4 + i * 36, y + j * 56), new Point(14 * 4, 9 * 4)) : new Rectangle(new Point(addedXSource + x - 4 + i * 36, y + j * 56), new Point(8 * 4, 9 * 4));
+					Rectangle boundary = (i + 1) % 5 == 0 ? new Rectangle(new Point(addedXSource + x - 4 + i * 36, y + j * verticalSpacing), new Point(14 * 4, 9 * 4)) : new Rectangle(new Point(addedXSource + x - 4 + i * 36, y + j * verticalSpacing), new Point(8 * 4, 9 * 4));
 					if(!boundary.Contains(Game1.getMousePosition(true)))
 						continue;
 					int which = j;
@@ -283,26 +319,26 @@ namespace StardewRPG
 								switch (which)
 								{
 									case 0:
-										Game1.player.FarmingLevel++;
+										Game1.player.farmingLevel.Value++;
 										break;
 									case 1:
-										Game1.player.FishingLevel++;
+										Game1.player.fishingLevel.Value++;
 										break;
 									case 2:
-										Game1.player.ForagingLevel++;
+										Game1.player.foragingLevel.Value++;
 										break;
 									case 3:
-										Game1.player.MiningLevel++;
+										Game1.player.miningLevel.Value++;
 										break;
 									case 4:
-										Game1.player.CombatLevel++;
+										Game1.player.combatLevel.Value++;
 										break;
 								}
 								if((i + 1) % 5 == 0)
 								{
 									int drawX = (LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.ru || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.it) ? (__instance.xPositionOnScreen + __instance.width - 448 - 48 + 4) : (__instance.xPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + 256 - 4);
 									int drawY = __instance.yPositionOnScreen + IClickableMenu.spaceToClearTopBorder + IClickableMenu.borderWidth - 12;
-									__instance.skillBars.Add(new ClickableTextureComponent("", new Rectangle(drawX - 4 + (i == 9 ? 348 : 144), drawY + j * 56, 56, 36), null, "", Game1.mouseCursors, new Rectangle(159, 338, 14, 9), 4f, true)
+									__instance.skillBars.Add(new ClickableTextureComponent("", new Rectangle(drawX - 4 + (i == 9 ? 348 : 144), drawY + j * verticalSpacing, 56, 36), null, "", Game1.mouseCursors, new Rectangle(159, 338, 14, 9), 4f, true)
 									{
 										myID = ((i + 1 == 5) ? (100 + j) : (200 + j)),
 										leftNeighborID = ((i + 1 == 5) ? j : (100 + j)),
@@ -317,11 +353,11 @@ namespace StardewRPG
 					}
 					if ((i + 1) % 5 == 0)
 					{
-						b.Draw(Game1.mouseCursors, new Vector2(addedXSource + x + i * 36, y - 4 + j * 56), new Rectangle?(new Rectangle(145 + 14, 338, 14, 9)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.871f);
+						b.Draw(Game1.mouseCursors, new Vector2(addedXSource + x + i * 36, y - 4 + j * verticalSpacing), new Rectangle?(new Rectangle(145 + 14, 338, 14, 9)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.871f);
 					}
 					else if ((i + 1) % 5 != 0)
 					{
-						b.Draw(Game1.mouseCursors, new Vector2(addedXSource + x + i * 36, y - 4 + j * 56), new Rectangle?(new Rectangle(129 + 8 , 338, 8, 9)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.871f);
+						b.Draw(Game1.mouseCursors, new Vector2(addedXSource + x + i * 36, y - 4 + j * verticalSpacing), new Rectangle?(new Rectangle(129 + 8 , 338, 8, 9)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.871f);
 					}
 				}
 				if ((i + 1) % 5 == 0)
@@ -331,20 +367,20 @@ namespace StardewRPG
 			}
 		}
 
-		public static bool ChatBox_runCommand_Prefix(string command)
+		public static bool ChatBox_runCommand_Prefix(string commandText)
 		{
 			if (!Config.EnableMod)
 				return true;
 
-			if (command.StartsWith("levelup"))
+			if (commandText.StartsWith("levelup"))
 			{
 				int num = 1;
-				if (command.Contains(" "))
-					int.TryParse(command.Split(' ')[1], out num);
+				if (commandText.Contains(" "))
+					int.TryParse(commandText.Split(' ')[1], out num);
 				LevelUp(num);
 				return false;
 			}
-			if (command.Equals("respec"))
+			if (commandText.Equals("respec"))
 			{
 				Respec();
 				return false;

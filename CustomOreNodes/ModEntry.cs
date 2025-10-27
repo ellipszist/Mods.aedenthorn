@@ -19,7 +19,7 @@ namespace CustomOreNodes
         public static ModEntry context;
 
         public static ModConfig Config;
-        public static List<CustomOreNode> customOreNodesList = new List<CustomOreNode>();
+        public static List<ICustomOreNode> customOreNodesList = new List<ICustomOreNode>();
         public static readonly string dictPath = "aedenthorn.CustomOreNodes/dict";
         public static IMonitor SMonitor;
         
@@ -34,8 +34,8 @@ namespace CustomOreNodes
             var harmony = new Harmony(ModManifest.UniqueID);
 
             harmony.Patch(
-               original: AccessTools.Method(typeof(MineShaft), "chooseStoneType"),
-               postfix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.chooseStoneType_Postfix))
+               original: AccessTools.Method(typeof(MineShaft), "createLitterObject"),
+               postfix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.createLitterObject_Postfix))
             );
 
             harmony.Patch(
@@ -43,21 +43,12 @@ namespace CustomOreNodes
                postfix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.breakStone_Postfix))
             );
 
+            ConstructorInfo ci = typeof(Object).GetConstructor(new Type[] { typeof(Vector2), typeof(string), typeof(bool) });
             harmony.Patch(
-               original: AccessTools.Method(typeof(Object), nameof(Object.draw), new Type[] { typeof(SpriteBatch), typeof(int), typeof(int), typeof(float) }),
-               prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.Object_draw_Prefix))
+               original: ci,
+               prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.Object_Prefix)),
+               postfix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.Object_Postfix))
             );
-
-            if (Config.AllowCustomOreNodesAboveGround)
-            {
-                ConstructorInfo ci = typeof(Object).GetConstructor(new Type[] { typeof(Vector2), typeof(int), typeof(string), typeof(bool), typeof(bool), typeof(bool), typeof(bool) });
-                harmony.Patch(
-                   original: ci,
-                   prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.Object_Prefix)),
-                   postfix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.Object_Postfix))
-                );
-            }
-
 
             helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
             helper.Events.Player.Warped += Player_Warped;
@@ -68,7 +59,7 @@ namespace CustomOreNodes
         {
             if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
             {
-                e.LoadFrom(() => new Dictionary<string, object>(), StardewModdingAPI.Events.AssetLoadPriority.Exclusive);
+                e.LoadFrom(() => new Dictionary<string, CustomOreNode>(), StardewModdingAPI.Events.AssetLoadPriority.Exclusive);
             }
         }
 

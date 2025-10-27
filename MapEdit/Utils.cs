@@ -51,6 +51,7 @@ namespace MapEdit
                 var sheet = new TileSheet(name, map, kvp.Value.path, new xTile.Dimensions.Size(kvp.Value.width, kvp.Value.height), new xTile.Dimensions.Size(16, 16));
                 map.AddTileSheet(sheet);
             }
+            map.LoadTileSheets(Game1.mapDisplayDevice);
             int count = 0;
             foreach (var kvp in data.tileDataDict)
             {
@@ -98,6 +99,10 @@ namespace MapEdit
 
                     }
                 }
+            }
+            for (int i = 0; i < map.Layers.Count; i++)
+            {
+                AccessTools.FieldRefAccess<Layer, TileArray>(map.Layers[i], "m_tileArray") = new TileArray(map.Layers[i], AccessTools.FieldRefAccess<Layer, Tile[,]>(map.Layers[i], "m_tiles"));
             }
             SMonitor.Log($"Added {count} custom tiles to map {mapPath}");
             cleanMaps.Add(mapPath);

@@ -75,13 +75,13 @@ namespace StardewRPG
             }
 			int level = GetExperienceLevel(instance);
 			instance.maxHealth = (int)Math.Max(1, level * Config.BaseHealthPerLevel * (1 + Config.ConHealthBonus * GetStatMod(skillSet["con"])));
-			instance.MaxStamina = (int)Math.Max(1, level * Config.BaseStaminaPerLevel * (1 + Config.ConStaminaBonus * GetStatMod(skillSet["con"])));
+			instance.maxStamina.Value = (int)Math.Max(1, level * Config.BaseStaminaPerLevel * (1 + Config.ConStaminaBonus * GetStatMod(skillSet["con"])));
 			if (newFarmer)
             {
 				instance.health = instance.maxHealth;
-				instance.stamina = instance.MaxStamina;
+				instance.stamina = instance.maxStamina.Value;
             }
-			SMonitor.Log($"Farmer health {instance.health}/{instance.maxHealth}, stamina {instance.stamina}/{instance.MaxStamina}");
+			SMonitor.Log($"Farmer health {instance.health}/{instance.maxHealth}, stamina {instance.stamina}/{instance.maxStamina.Value}");
 		}
 
         public static int GetStatValue(Farmer instance, string key, int defaultValue = -1)
@@ -175,11 +175,11 @@ namespace StardewRPG
 		}
 		private static void Respec()
 		{
-			Game1.player.FarmingLevel = 0;
-			Game1.player.FishingLevel = 0;
-			Game1.player.ForagingLevel = 0;
-			Game1.player.MiningLevel = 0;
-			Game1.player.CombatLevel = 0;
+			Game1.player.farmingLevel.Value = 0;
+			Game1.player.fishingLevel.Value = 0;
+			Game1.player.foragingLevel.Value = 0;
+			Game1.player.miningLevel.Value = 0;
+			Game1.player.combatLevel.Value = 0;
 			Game1.player.experiencePoints[0] = 0;
 			Game1.player.experiencePoints[1] = 0;
 			Game1.player.experiencePoints[2] = 0;
@@ -194,7 +194,7 @@ namespace StardewRPG
 			SetModData(Game1.player, "points", totalPoints);
 			Farmer f = Game1.player;
 			SetStats(ref f, true);
-			Game1.player = f;
+			AccessTools.PropertySetter(typeof(Game1), nameof(Game1.player)).Invoke(null, new object[] { f });
 		}
 	}
 }

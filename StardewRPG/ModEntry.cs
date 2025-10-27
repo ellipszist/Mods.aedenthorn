@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Buffs;
 using StardewValley.Menus;
 using StardewValley.Projectiles;
 using StardewValley.Tools;
@@ -43,14 +44,15 @@ namespace StardewRPG
             blackTexture.SetData(new Color[] { Color.Black });
 
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
+            helper.Events.Input.ButtonPressed += Input_ButtonPressed;
 
             var harmony = new Harmony(ModManifest.UniqueID);
 
             // Buff patches
 
             harmony.Patch(
-               original: AccessTools.Method(typeof(BuffsDisplay), nameof(BuffsDisplay.addOtherBuff)),
-               prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.BuffsDisplay_addOtherBuff_Prefix))
+               original: AccessTools.Method(typeof(BuffManager), nameof(BuffManager.Apply)),
+               prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.BuffManager_Apply_Prefix))
             );
 
             // Crafting patches
@@ -109,6 +111,11 @@ namespace StardewRPG
                postfix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.Farmer_CanBeDamaged_Postfix))
             );
 
+            harmony.Patch(
+               original: AccessTools.PropertyGetter(typeof(BuffManager), nameof(BuffManager.Defense)),
+               postfix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.BuffManager_Defense_Postfix))
+            );
+
 
             harmony.Patch(
                original: AccessTools.Method(typeof(Farmer), nameof(Farmer.changeFriendship)),
@@ -125,7 +132,7 @@ namespace StardewRPG
             // Fishing patches
 
             harmony.Patch(
-               original: AccessTools.Constructor(typeof(BobberBar), new Type[] { typeof(int), typeof(float), typeof(bool), typeof(int) }),
+               original: AccessTools.Constructor(typeof(BobberBar), new Type[] { typeof(string), typeof(float), typeof(bool), typeof(List<string>), typeof(string), typeof(bool), typeof(string), typeof(bool) }),
                postfix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.BobberBar_Postfix))
             );
 
@@ -138,7 +145,7 @@ namespace StardewRPG
             // GameLocation patches
 
             harmony.Patch(
-               original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.damageMonster), new Type[] { typeof(Rectangle), typeof(int), typeof(int), typeof(bool), typeof(float), typeof(int), typeof(float), typeof(float), typeof(bool), typeof(Farmer) }),
+               original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.damageMonster), new Type[] { typeof(Rectangle), typeof(int), typeof(int), typeof(bool), typeof(float), typeof(int), typeof(float), typeof(float), typeof(bool), typeof(Farmer), typeof(bool) }),
                prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.GameLocation_damageMonster_Prefix))
             );
 
@@ -245,7 +252,7 @@ namespace StardewRPG
             );
 
             harmony.Patch(
-               original: AccessTools.Constructor(typeof(BasicProjectile), new Type[] { typeof(int), typeof(int), typeof(int), typeof(int), typeof(float), typeof(float), typeof(float), typeof(Vector2), typeof(string), typeof(string), typeof(bool), typeof(bool), typeof(GameLocation), typeof(Character), typeof(bool), typeof(BasicProjectile.onCollisionBehavior) }),
+               original: AccessTools.Constructor(typeof(BasicProjectile), new Type[] { typeof(int), typeof(int), typeof(int), typeof(int), typeof(float), typeof(float), typeof(float), typeof(Vector2), typeof(string), typeof(string), typeof(string), typeof(bool), typeof(bool), typeof(GameLocation), typeof(Character), typeof(BasicProjectile.onCollisionBehavior), typeof(string) }),
                postfix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.BasicProjectile_Postfix))
             );
 
@@ -277,8 +284,9 @@ namespace StardewRPG
                prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.CharacterCustomization_draw_Prefix))
             );
             harmony.Patch(
-               original: AccessTools.Method(typeof(CharacterCustomization), "setUpPositions"),
-               postfix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.CharacterCustomization_setUpPositions_Postfix))
+               original: AccessTools.Method(typeof(CharacterCustomization), "ResetComponents"),
+               transpiler: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.CharacterCustomization_ResetComponents_Transpiler)),
+               postfix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.CharacterCustomization_ResetComponents_Postfix))
             );
             harmony.Patch(
                original: AccessTools.Method(typeof(CharacterCustomization), "selectionClick"),
@@ -290,6 +298,16 @@ namespace StardewRPG
                prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.ChatBox_runCommand_Prefix))
             );
             Monitor.Log("Mod loaded");
+        }
+
+        private void Input_ButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
+        {
+            if (Config.EnableMod && Config.IsDebug && Context.IsWorldReady && Game1.activeClickableMenu == null && e.Button == SButton.X)
+            {
+                var farmer = Game1.player;
+                GainExperience(ref farmer, 100);
+                Monitor.Log($"Added 100 xp: {GetModData(farmer, "exp")}");
+            }
         }
 
         public override object GetApi()

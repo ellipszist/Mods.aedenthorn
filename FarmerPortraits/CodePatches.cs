@@ -61,10 +61,10 @@ namespace FarmerPortraits
                     return;
                 int boxHeight = 384;
                 int boxWidth = 448;
-                drawBox(b, __instance.x - boxWidth - 32, __instance.y + __instance.height - boxHeight, boxWidth, boxHeight);
+                drawBox(b, __instance.x - boxWidth - 32, __instance.y + __instance.height - boxHeight, boxWidth, boxHeight, __instance.isPortraitBox() ? __instance.characterDialogue.getPortraitIndex() : -1);
             }
 
-            private static void drawBox(SpriteBatch b, int xPos, int yPos, int boxWidth, int boxHeight)
+            private static void drawBox(SpriteBatch b, int xPos, int yPos, int boxWidth, int boxHeight, int which)
             {
                 b.Draw(Game1.mouseCursors, new Rectangle(xPos, yPos - 20, boxWidth, 24), new Rectangle?(new Rectangle(275, 313, 1, 6)), Color.White);
                 b.Draw(Game1.mouseCursors, new Rectangle(xPos + 12, yPos + boxHeight, boxWidth - 20, 32), new Rectangle?(new Rectangle(275, 328, 1, 8)), Color.White);
@@ -74,31 +74,39 @@ namespace FarmerPortraits
                 b.Draw(Game1.mouseCursors, new Rectangle(xPos + boxWidth, yPos, 28, boxHeight), new Rectangle?(new Rectangle(293, 324, 7, 1)), Color.White);
                 b.Draw(Game1.mouseCursors, new Vector2(xPos + boxWidth - 8, yPos - 28), new Rectangle?(new Rectangle(291, 311, 12, 11)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.87f);
                 b.Draw(Game1.mouseCursors, new Vector2(xPos + boxWidth - 8, yPos + boxHeight - 8), new Rectangle?(new Rectangle(291, 326, 12, 12)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.87f);
-
-                if (backgroundTexture.Value != null && Config.UseCustomBackground)
-                    b.Draw(backgroundTexture.Value, new Rectangle(xPos - 4, yPos, boxWidth + 12, boxHeight + 4), null, Color.White);
-                else
-                    b.Draw(Game1.mouseCursors, new Vector2(xPos - 4, yPos), new Rectangle?(new Rectangle(583, 411, 115, 97)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.88f); // background
-
+                
+                if (Config.UseCustomBackground)
+                {
+                    Texture2D bk = GetCachedTexture("background", which);
+                    if (bk != null)
+                    {
+                        b.Draw(bk, new Rectangle(xPos - 4, yPos, boxWidth + 12, boxHeight + 4), null, Color.White);
+                        goto skipbk;
+                    }
+                }
+                b.Draw(Game1.mouseCursors, new Vector2(xPos - 4, yPos), new Rectangle?(new Rectangle(583, 411, 115, 97)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.88f); // background
+            skipbk:
                 int portraitBoxX = xPos + 76;
                 int portraitBoxY = yPos + boxHeight / 2 - 148 - 36;
                 int frame = Config.FacingFront ? 0 : 6;
-                if (portraitTexture.Value != null && Config.UseCustomPortrait)
+                if (Config.UseCustomPortrait)
                 {
-                    b.Draw(portraitTexture.Value, new Rectangle(portraitBoxX + 20, portraitBoxY + 24, 256, 256), null, Color.White, 0f, Vector2.Zero, SpriteEffects.None, 0.88f);
-                }
-                else
-                {
-                    FarmerRenderer.isDrawingForUI = true;
-                    drawFarmer(b, frame, new Rectangle((frame % 6) * 16, Game1.player.bathingClothes.Value ? 576 : frame / 6 * 32, 16, 16), new Vector2(xPos + boxWidth / 2 - 128, yPos + boxHeight / 2 - 208), Color.White);
-                    if (Game1.timeOfDay >= 1900)
+                    Texture2D pt = GetCachedTexture("portrait", which);
+                    if (pt != null)
                     {
-                        drawFarmer(b, frame, new Rectangle((frame % 6) * 16, Game1.player.bathingClothes.Value ? 576 : frame / 6 * 32, 16, 16), new Vector2(xPos + boxWidth / 2 - 128, yPos + boxHeight / 2 - 192), Color.DarkBlue * 0.3f);
+                        b.Draw(pt, new Rectangle(portraitBoxX + 20, portraitBoxY + 24, 256, 256), null, Color.White, 0f, Vector2.Zero, SpriteEffects.None, 0.88f);
+                        goto skippt;
                     }
-                    FarmerRenderer.isDrawingForUI = false;
                 }
+                FarmerRenderer.isDrawingForUI = true;
+                drawFarmer(b, frame, new Rectangle((frame % 6) * 16, Game1.player.bathingClothes.Value ? 576 : frame / 6 * 32, 16, 16), new Vector2(xPos + boxWidth / 2 - 128, yPos + boxHeight / 2 - 208), Color.White);
+                if (Game1.timeOfDay >= 1900)
+                {
+                    drawFarmer(b, frame, new Rectangle((frame % 6) * 16, Game1.player.bathingClothes.Value ? 576 : frame / 6 * 32, 16, 16), new Vector2(xPos + boxWidth / 2 - 128, yPos + boxHeight / 2 - 192), Color.DarkBlue * 0.3f);
+                }
+                FarmerRenderer.isDrawingForUI = false;
+            skippt:
                 SpriteText.drawStringHorizontallyCenteredAt(b, Game1.player.Name, xPos + boxWidth / 2, portraitBoxY + 296 + 16, 999999, -1, 999999, 1f, 0.88f, false, null, 99999);
-
             }
 
             private static void drawFarmer(SpriteBatch b, int currentFrame, Rectangle sourceRect, Vector2 position, Color overrideColor)

@@ -12,7 +12,7 @@ namespace FarmerPortraits
         public bool ShowWithNPCPortrait { get; set; } = true;
         public bool ShowMisc { get; set; } = false;
         public bool FacingFront { get; set; } = false;
-        public bool UseCustomPortrait { get; set; } = false;
+        public bool UseCustomPortrait { get; set; } = true;
         public bool UseCustomBackground { get; set; } = true;
     }
 }

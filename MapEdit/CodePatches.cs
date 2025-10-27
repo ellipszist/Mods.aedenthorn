@@ -9,6 +9,7 @@ using StardewValley.Menus;
 using StardewValley.Objects;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Xml.Linq;
 using xTile;
 using xTile.Layers;
@@ -74,6 +75,19 @@ namespace MapEdit
                 if (!mapCollectionData.mapDataDict.TryGetValue("Maps/" + __instance.NameOrUniqueName, out var dict) && !mapCollectionData.mapDataDict.TryGetValue(__instance.NameOrUniqueName, out dict))
                     return;
                 EditMap(__instance.mapPath.Value, __instance.Map, dict);
+            }
+        }
+        public static void TileArray_Item_Set_Prefix(TileArray __instance, Tile value, ReadOnlyCollection<TileSheet> ___m_tileSheets, Layer ___m_layer)
+        {
+            if (value is StaticTile && !___m_tileSheets.Contains(value.TileSheet))
+            {
+                foreach(var s in ___m_layer.Map.TileSheets)
+                {
+                    if (s.ImageSource == value.TileSheet.ImageSource)
+                    {
+                        AccessTools.Field(typeof(StaticTile), "m_tileSheet").SetValue(value, s);
+                    }
+                }
             }
         }
     }

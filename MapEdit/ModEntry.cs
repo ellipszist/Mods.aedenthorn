@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Utilities;
 using StardewValley;
+using System;
 using System.Collections.Generic;
 using xTile;
 using xTile.Layers;
@@ -63,6 +64,12 @@ namespace MapEdit
             var harmony = new Harmony(ModManifest.UniqueID);
 
             harmony.PatchAll();
+            harmony.Patch
+                (
+                    original: typeof(TileArray).GetProperty("Item", new Type[] { typeof(int), typeof(int) }).GetSetMethod(),
+                    prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.TileArray_Item_Set_Prefix))
+                );
+            
         }
 
     }

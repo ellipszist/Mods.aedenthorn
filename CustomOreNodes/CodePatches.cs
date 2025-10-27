@@ -1,13 +1,10 @@
-﻿using HarmonyLib;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Locations;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
 using Object = StardewValley.Object;
 
 namespace CustomOreNodes
@@ -16,27 +13,7 @@ namespace CustomOreNodes
     public partial class ModEntry : Mod
     {
 
-        private static bool Object_draw_Prefix(Object __instance, SpriteBatch spriteBatch, int x, int y, float alpha = 1f)
-        {
-            CustomOreNode node = customOreNodesList.Find(n => n.parentSheetIndex == __instance.ParentSheetIndex);
-            if (node == null)
-                return true;
-
-            if (__instance.Fragility != 2)
-            {
-                spriteBatch.Draw(Game1.shadowTexture, Game1.GlobalToLocal(Game1.viewport, new Vector2(x * 64 + 32, y * 64 + 51 + 4)), new Rectangle?(Game1.shadowTexture.Bounds), Color.White * alpha, 0f, new Vector2(Game1.shadowTexture.Bounds.Center.X, Game1.shadowTexture.Bounds.Center.Y), 4f, SpriteEffects.None, __instance.getBoundingBox(new Vector2(x, y)).Bottom / 15000f);
-            }
-            Vector2 position3 = Game1.GlobalToLocal(Game1.viewport, new Vector2(x * 64 + 32 + ((__instance.shakeTimer > 0) ? Game1.random.Next(-1, 2) : 0), y * 64 + 32 + ((__instance.shakeTimer > 0) ? Game1.random.Next(-1, 2) : 0)));
-            Rectangle? sourceRectangle2 = new Rectangle(node.spriteX, node.spriteY, node.spriteW, node.spriteH);
-            Color color2 = Color.White * alpha;
-            float rotation2 = 0f;
-            Vector2 origin2 = new Vector2(8f, 8f);
-            Vector2 vector2 = __instance.scale;
-            spriteBatch.Draw(node.texture, position3, sourceRectangle2, color2, rotation2, origin2, (__instance.scale.Y > 1f) ? __instance.getScale().Y : 4f, __instance.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, (__instance.isPassable() ? __instance.getBoundingBox(new Vector2(x, y)).Top : __instance.getBoundingBox(new Vector2(x, y)).Bottom) / 10000f);
-            return false;
-        }
-
-        private static void chooseStoneType_Postfix(MineShaft __instance, ref Object __result, Vector2 tile)
+        private static void createLitterObject_Postfix(MineShaft __instance, ref Object __result, Vector2 tile)
         {
             if (__result == null)
                 return;
@@ -49,11 +26,11 @@ namespace CustomOreNodes
                 float totalChance = 0;
                 for (int i = 0; i < customOreNodesList.Count; i++)
                 {
-                    CustomOreNode node = customOreNodesList[i];
+                    ICustomOreNode node = customOreNodesList[i];
                     foreach(OreLevelRange range in node.oreLevelRanges)
                     {
-                        if ((range.minLevel < 1 || __instance.mineLevel >= range.minLevel) && (range.maxLevel < 1 || __instance.mineLevel <= range.maxLevel) && (range.minDifficulty <= difficulty) && (range.maxDifficulty < 0 || range.maxDifficulty >= difficulty))
-                        {
+                        if (IsInRange(range, __instance, true)) 
+                        { 
                             totalChance += node.spawnChance * range.spawnChanceMult;
                             break;
                         }
@@ -66,7 +43,7 @@ namespace CustomOreNodes
                     float cumulativeChance = 0f;
                     for (int i = 0; i < customOreNodesList.Count; i++)
                     {
-                        CustomOreNode node = customOreNodesList[i];
+                        ICustomOreNode node = customOreNodesList[i];
                         OreLevelRange gotRange = null;
                         foreach (OreLevelRange range in node.oreLevelRanges)
                         {
@@ -83,11 +60,10 @@ namespace CustomOreNodes
                         cumulativeChance += node.spawnChance * gotRange.spawnChanceMult;
                         if (ourChance < cumulativeChance)
                         {
-                            SMonitor.Log($"Switching to custom ore \"{node.nodeDesc}\": {cumulativeChance}% / {ourChance}% (rolled)");
+                            SMonitor.Log($"Switching to custom ore \"{node.itemId}\": {cumulativeChance} / {ourChance} (rolled)");
 
-                            int index = node.parentSheetIndex;
                             //SMonitor.Log($"Displaying stone at index {index}", LogLevel.Debug);
-                            __result = new Object(tile, index, "Stone", true, false, false, false)
+                            __result = new Object(node.itemId, 1, false, -1, 0)
                             {
                                 MinutesUntilReady = node.durability
                             };
@@ -99,68 +75,66 @@ namespace CustomOreNodes
             }
         }
 
-        private static void Object_Prefix(ref int parentSheetIndex, string Givenname)
+        private static void Object_Prefix(ref string itemId)
         {
-            if (Environment.StackTrace.Contains("chooseStoneType"))
+            if (!Config.AllowCustomOreNodesAboveGround || Environment.StackTrace.Contains("createLitterObject") || !new List<string>() { "32", "38", "40", "42", "668", "670" }.Contains(itemId))
             {
                 return;
             }
-            if (Givenname == "Stone" || parentSheetIndex == 294 || parentSheetIndex == 295)
+
+            float currentChance = 0;
+            for (int i = 0; i < customOreNodesList.Count; i++)
             {
-                float currentChance = 0;
-                for (int i = 0; i < customOreNodesList.Count; i++)
+                ICustomOreNode node = customOreNodesList[i];
+                OreLevelRange gotRange = null;
+                foreach (OreLevelRange range in node.oreLevelRanges)
                 {
-                    CustomOreNode node = customOreNodesList[i];
-                    OreLevelRange gotRange = null;
-                    foreach (OreLevelRange range in node.oreLevelRanges)
+                    if (range.minLevel < 1)
                     {
-                        if (range.minLevel < 1)
-                        {
-                            gotRange = range;
-                            break;
-                        }
-                    }
-                    if (gotRange == null)
-                    {
-                        continue;
-                    }
-                    currentChance += node.spawnChance * gotRange.spawnChanceMult;
-                    if (Game1.random.NextDouble() < currentChance / 100f)
-                    {
-                        int index = node.parentSheetIndex;
-                        parentSheetIndex = index;
+                        gotRange = range;
                         break;
                     }
+                }
+                if (gotRange == null)
+                {
+                    continue;
+                }
+                currentChance += node.spawnChance * gotRange.spawnChanceMult;
+                if (Game1.random.NextDouble() < currentChance / 100f)
+                {
+                    itemId = node.itemId;
+                    break;
                 }
             }
         }
         
-        private static void Object_Postfix(Object __instance, ref int parentSheetIndex, ref string Givenname)
+        private static void Object_Postfix(Object __instance, ref string itemId)
         {
-            if (Givenname == "Stone")
+            if (!Config.AllowCustomOreNodesAboveGround || Environment.StackTrace.Contains("createLitterObject") || !new List<string>() { "32", "38", "40", "42", "668", "670" }.Contains(itemId))
             {
-                for (int i = 0; i < customOreNodesList.Count; i++)
+                return;
+            }
+            for (int i = 0; i < customOreNodesList.Count; i++)
+            {
+                if (itemId == customOreNodesList[i].itemId)
                 {
-                    if(parentSheetIndex == customOreNodesList[i].parentSheetIndex)
-                    {
-                        __instance.MinutesUntilReady = customOreNodesList[i].durability;
-                        break;
-                    }
+                    __instance.MinutesUntilReady = customOreNodesList[i].durability;
+                    break;
                 }
             }
         }
 
 
-        private static void breakStone_Postfix(GameLocation __instance, ref bool __result, int indexOfStone, int x, int y, Farmer who, Random r)
+        private static void breakStone_Postfix(GameLocation __instance, ref bool __result, string stoneId, int x, int y, Farmer who, Random r)
         {
-            SMonitor.Log($"Checking for custom ore in stone {indexOfStone}");
+            SMonitor.Log($"Checking for custom ore in stone {stoneId}");
 
-            CustomOreNode node = customOreNodesList.Find(n => n.parentSheetIndex == indexOfStone);
+            ICustomOreNode node = customOreNodesList.Find(n => n.itemId == stoneId);
 
             if (node == null)
                 return;
 
-            SMonitor.Log($"Got custom ore in stone {indexOfStone}");
+            SMonitor.Log($"Got custom ore in stone {stoneId}");
 
 
             OreLevelRange gotRange = null;
@@ -174,7 +148,7 @@ namespace CustomOreNodes
             }
             if (gotRange == null)
             {
-                SMonitor.Log($"No range for {indexOfStone}!", LogLevel.Warn);
+                SMonitor.Log($"No range for {stoneId}!", LogLevel.Warn);
 
                 return;
             }
@@ -187,18 +161,20 @@ namespace CustomOreNodes
                 {
                     SMonitor.Log($"dropping item {item.itemIdOrName}");
 
-                    if(!int.TryParse(item.itemIdOrName, out int itemId))
+                    string itemId = null;
+                    foreach (var kvp in Game1.objectData)
                     {
-                        foreach(KeyValuePair<int,string> kvp in Game1.objectInformation)
+                        if (kvp.Key == item.itemIdOrName || kvp.Value.Name == item.itemIdOrName)
                         {
-                            if (kvp.Value.StartsWith(item.itemIdOrName + "/"))
-                            {
-                                itemId = kvp.Key;
-                                break;
-                            }
+                            itemId = kvp.Key;
+                            break;
                         }
                     }
-
+                    if (itemId == null)
+                    {
+                        SMonitor.Log($"couldn't find item: {item.itemIdOrName}");
+                        continue;
+                    }
                     Game1.createMultipleObjectDebris(itemId, x, y, addedOres + (int)Math.Round(r.Next(item.minAmount, (Math.Max(item.minAmount + 1, item.maxAmount + 1)) + ((r.NextDouble() < who.LuckLevel / 100f) ? item.luckyAmount : 0) + ((r.NextDouble() < who.MiningLevel / 100f) ? item.minerAmount : 0)) * gotRange.dropMult), who.UniqueMultiplayerID, __instance);
                 }
             }

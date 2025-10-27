@@ -89,7 +89,7 @@ namespace BossCreatures
 				TryAddBoss(e.NewLocation);
 				Game1.updateWeatherIcon();
 			}
-			else
+			else if(Game1.CurrentEvent?.exitLocation is not null)
 			{
 				GameLocation exitLocation = Game1.CurrentEvent.exitLocation.Location;
 

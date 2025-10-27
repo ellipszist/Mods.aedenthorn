@@ -18,10 +18,10 @@ namespace StardewRPG
             SMonitor.Log($"Transpiling CraftingRecipe.consumeIngredients");
 
             var codes = new List<CodeInstruction>(instructions);
-            if (codes[15].opcode == OpCodes.Stloc_1)
+            if (codes[13].opcode == OpCodes.Stloc_3)
             {
                 SMonitor.Log("Overriding required amount");
-                codes.Insert(15, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetRecipeRequiredAmount))));
+                codes.Insert(13, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetRecipeRequiredAmount))));
             }
             else
             {

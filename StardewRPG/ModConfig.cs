@@ -4,6 +4,7 @@ namespace StardewRPG
     public class ModConfig
     {
         public bool EnableMod { get; set; } = true;
+        public bool IsDebug { get; set; } = true;
 
 
         // leveling
