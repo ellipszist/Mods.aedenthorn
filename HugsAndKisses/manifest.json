@@ -1,9 +1,10 @@
 ﻿{
   "Name": "Hugs and Kisses",
   "Author": "aedenthorn",
-  "Version": "0.5.4",
+  "Version": "0.5.5",
   "Description": "Hugs and kisses.",
   "UniqueID": "aedenthorn.HugsAndKisses",
   "EntryDll": "HugsAndKisses.dll",
-  "MinimumApiVersion": "4.0.0"
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [ "Nexus:10062" ]
 }

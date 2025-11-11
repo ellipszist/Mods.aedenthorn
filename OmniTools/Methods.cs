@@ -422,14 +422,15 @@ namespace OmniTools
             return null;
         }
 
-        public static Tool CycleTool(Tool currentTool, string toolsString)
+        public static Tool CycleTool(Tool currentTool, string toolsString, bool back = false)
         {
             List<ToolInfo> tools = JsonConvert.DeserializeObject<List<ToolInfo>>(toolsString);
-            Tool t = GetToolFromInfo(tools[0]);
+            int which = back ? tools.Count - 1 : 0;
+            Tool t = GetToolFromInfo(tools[which]);
+            tools.RemoveAt(which);
             if (t is null)
             {
-                SMonitor.Log($"Invalid tool {tools[0].displayName}, removing", StardewModdingAPI.LogLevel.Warn);
-                tools.RemoveAt(0);
+                SMonitor.Log($"Invalid tool {tools[which].displayName}, removing", StardewModdingAPI.LogLevel.Warn);
                 if (tools.Count > 0)
                 {
                     currentTool.modData[toolsKey] = JsonConvert.SerializeObject(tools);
@@ -440,9 +441,15 @@ namespace OmniTools
                 }
                 return currentTool;
             }
-
-            tools.Add(new ToolInfo(currentTool));
-            t.modData[toolsKey] = JsonConvert.SerializeObject(tools.Skip(1));
+            if (back)
+            {
+                tools.Insert(0, new ToolInfo(currentTool));
+            }
+            else
+            {
+                tools.Add(new ToolInfo(currentTool));
+            }
+            t.modData[toolsKey] = JsonConvert.SerializeObject(tools);
             t.modData[toolCountKey] = (tools.Count - 1) + "";
             Game1.playSound(GetToolSound(t));
             return t;

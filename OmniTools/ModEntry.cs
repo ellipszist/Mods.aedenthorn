@@ -99,7 +99,7 @@ namespace OmniTools
                 return;
             if(e.Button == Config.CycleButton)
             {
-                var newTool = CycleTool(Game1.player.CurrentTool, toolsString);
+                var newTool = CycleTool(Game1.player.CurrentTool, toolsString, SHelper.Input.IsDown(Config.ModButton));
                 if(newTool != null) 
                 {
                     UpdateEnchantments(Game1.player, Game1.player.CurrentTool, newTool);

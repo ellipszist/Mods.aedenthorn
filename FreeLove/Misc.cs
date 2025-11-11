@@ -375,7 +375,14 @@ namespace FreeLove
 
 
             Color[] colors = new Color[tex.Width * tex.Height];
-            tex.GetData(colors);
+            try
+            {
+                tex.GetData(colors);
+            }
+            catch
+            {
+                return 0;
+            }
 
             //SMonitor.Log($"sleep index for {name} {sleepidx}");
 

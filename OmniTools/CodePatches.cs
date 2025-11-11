@@ -103,7 +103,7 @@ namespace OmniTools
                             int slotNumber = Convert.ToInt32(c.name);
                             if (slotNumber >= inv.actualInventory.Count || inv.actualInventory[slotNumber] is not Tool || !inv.actualInventory[slotNumber].modData.TryGetValue(toolsKey, out string toolsString))
                                 return;
-                            var newTool = CycleTool(inv.actualInventory[slotNumber] as Tool, toolsString);
+                            var newTool = CycleTool(inv.actualInventory[slotNumber] as Tool, toolsString, SHelper.Input.IsDown(Config.ModButton));
                             if(slotNumber == Game1.player.CurrentToolIndex)
                                 UpdateEnchantments(Game1.player, inv.actualInventory[slotNumber] as Tool, newTool);
                             inv.actualInventory[slotNumber] = newTool;
