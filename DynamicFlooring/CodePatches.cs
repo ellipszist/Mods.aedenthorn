@@ -37,9 +37,9 @@ namespace DynamicFlooring
                     drawingTiles.Value = false;
                     Wallpaper w = (Game1.player.ActiveObject as Wallpaper);
                     string id;
-                    if (w.GetModData() != null)
+                    if (w.setId.Value != null)
                     {
-                        id = w.GetModData().ID + ":" + w.ParentSheetIndex.ToString();
+                        id = w.setId.Value + ":" + w.ParentSheetIndex.ToString();
                     }
                     else
                     {

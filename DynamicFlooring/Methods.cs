@@ -1,13 +1,9 @@
-﻿using HarmonyLib;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.GameData;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using xTile.Dimensions;
 using xTile.Layers;
 using xTile.ObjectModel;
@@ -51,7 +47,7 @@ namespace DynamicFlooring
                                 if ((data.ignore && !wall) || (!data.ignore && floor))
                                 {
                                     Tile old_tile = location.map.GetLayer(layer).Tiles[x, y];
-                                    location.setMapTile(x, y, GetFlooringIndex(location, floor_pattern_id, x, y, data, tilesheet_index), layer, null, tilesheet_index);
+                                    location.setMapTile(x, y, GetFlooringIndex(location, floor_pattern_id, x, y, data, tilesheet_index), layer, id);
                                     Tile new_tile = location.map.GetLayer(layer).Tiles[x, y];
                                     if (old_tile != null)
                                     {
@@ -114,7 +110,7 @@ namespace DynamicFlooring
                 ModWallpaperOrFlooring found_mod_data = null;
                 foreach (ModWallpaperOrFlooring mod_data_entry in list)
                 {
-                    if (mod_data_entry.ID == id)
+                    if (mod_data_entry.Id == id)
                     {
                         found_mod_data = mod_data_entry;
                         break;
