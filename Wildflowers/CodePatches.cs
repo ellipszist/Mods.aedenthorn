@@ -184,8 +184,9 @@ namespace Wildflowers
             {
                 if (!Config.ModEnabled || __result || __instance is not Grass || !__instance.modData.ContainsKey(wildKey) || __instance.Location is null || !cropDict.TryGetValue(__instance.Location.Name, out Dictionary<Vector2, Crop> locDict) || !locDict.TryGetValue(tileLocation, out Crop crop))
                     return;
-
-                __result = crop.harvest((int)tileLocation.X, (int)tileLocation.Y, new HoeDirt(1, crop));
+                var dirt = new HoeDirt(1, crop);
+                dirt.modData[wildKey] = "T";
+                __result = crop.harvest((int)tileLocation.X, (int)tileLocation.Y, dirt);
                 if (__result)
                 {
                     locDict.Remove(tileLocation);
@@ -225,7 +226,9 @@ namespace Wildflowers
                     {
                         SMonitor.Log($"adding method to switch exp type");
                         codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(SwitchExpType))));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_3));
                         codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                        i += 3;
                     }
                 }
 

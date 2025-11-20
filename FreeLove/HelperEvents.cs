@@ -67,9 +67,16 @@ namespace FreeLove
 
             configMenu.AddNumberOption(
                 mod: ModManifest,
-                name: () => "Max children",
+                name: () => "Max Children",
                 getValue: () => Config.MaxChildren,
                 setValue: value => Config.MaxChildren = value
+            );
+
+            configMenu.AddNumberOption(
+                mod: ModManifest,
+                name: () => "Min Days Before Pregnancy",
+                getValue: () => Config.MinMarriedDaysForPregnancy,
+                setValue: value => Config.MinMarriedDaysForPregnancy = value
             );
             configMenu.AddBoolOption(
                 mod: ModManifest,

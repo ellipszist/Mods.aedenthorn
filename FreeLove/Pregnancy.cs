@@ -40,7 +40,6 @@ namespace FreeLove
             {
                 if (spouse == null)
                 {
-                    SMonitor.Log($"Utility_pickPersonalFarmEvent_Prefix spouse is null");
                     continue;
                 }
                 Farmer f = spouse.getSpouse();
@@ -51,9 +50,27 @@ namespace FreeLove
                 {
                     lastPregnantSpouse = null;
                     lastBirthingSpouse = spouse;
+                    SMonitor.Log($"Utility_pickPersonalFarmEvent_Prefix birthing event");
                     __result = new BirthingEvent();
                     return;
                 }
+            }
+            List<Child> children = Game1.player.getChildren();
+            if (children?.Any() == true && (children.Count >= Config.MaxChildren || children[0].Age <= 2))
+            {
+                SMonitor.Log($"Utility_pickPersonalFarmEvent_Prefix children blocking pregnancy");
+                return;
+            }
+            FarmHouse homeOfFarmer = Utility.getHomeOfFarmer(Game1.player);
+            if (homeOfFarmer.cribStyle.Value <= 0 || homeOfFarmer.upgradeLevel < 2)
+            {
+                SMonitor.Log($"Utility_pickPersonalFarmEvent_Prefix house blocking pregnancy");
+                return;
+            }
+            if (Game1.player.currentLocation != homeOfFarmer)
+            {
+                SMonitor.Log($"Utility_pickPersonalFarmEvent_Prefix farmer not at home");
+                return;
             }
 
             if (plannedParenthoodAPI is not null && plannedParenthoodAPI.GetPartnerTonight() is not null)
@@ -70,8 +87,7 @@ namespace FreeLove
                 if (!Config.RoommateRomance && f.friendshipData[spouse.Name].RoommateMarriage)
                     continue;
 
-                bool can = spouse.canGetPregnant();
-                if (can && Game1.player.currentLocation == Game1.getLocationFromName(Game1.player.homeLocation.Value) && myRand.NextDouble() <  0.05)
+                if (canGetPregnant(spouse) && myRand.NextDouble() <  0.05)
                 {
                     SMonitor.Log("Requesting a baby!");
                     lastPregnantSpouse = spouse;
@@ -79,6 +95,12 @@ namespace FreeLove
                     return;
                 }
             }
+        }
+
+
+        public static bool canGetPregnant(NPC spouse)
+        {
+            return spouse != null && !Game1.player.divorceTonight.Value && Game1.player.friendshipData.TryGetValue(spouse.Name, out var friendship) && friendship.DaysUntilBirthing < 0 && friendship.Points >= Config.MinPointsToMarry && friendship.DaysMarried >= Config.MinMarriedDaysForPregnancy;
         }
 
         public static NPC lastPregnantSpouse;

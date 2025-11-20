@@ -3,6 +3,7 @@ using System.Linq;
 using HarmonyLib;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
+using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.TerrainFeatures;
 
@@ -28,7 +29,7 @@ namespace WeaponsIgnoreGrass
 			SModManifest = ModManifest;
 
 			Helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
-			Helper.Events.Input.ButtonPressed += Input_ButtonPressed;
+            Helper.Events.Input.ButtonsChanged += Input_ButtonsChanged; ;
 
 			// Load Harmony patches
 			try
@@ -47,28 +48,25 @@ namespace WeaponsIgnoreGrass
 			}
 		}
 
-		private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
-		{
-			if (!Context.IsPlayerFree)
-				return;
-
-			if (Config.ToggleKeys.Keybinds[0].Buttons.Any(button => button == e.Button) && Config.ToggleKeys.Keybinds[0].Buttons.All(button => SHelper.Input.IsDown(button) || SHelper.Input.IsSuppressed(button)))
+        private void Input_ButtonsChanged(object sender, ButtonsChangedEventArgs e)
+        {
+			if (Config.ToggleKey.GetState() == SButtonState.Pressed)
 			{
-				Config.ModEnabled = !Config.ModEnabled;
-				Helper.WriteConfig(Config);
 
-				if (Config.ModEnabled && !Config.ShowEnabledMessage)
-					return;
-				if (!Config.ModEnabled && !Config.ShowDisabledMessage)
-					return;
+                Config.IgnoreEnabled = !Config.IgnoreEnabled;
+                Helper.WriteConfig(Config);
 
-				string text = Config.ModEnabled ? Helper.Translation.Get("enabled-message") : Helper.Translation.Get("disabled-message");
+                if (!Config.ShowEnabledMessage)
+                    return;
 
-				Game1.hudMessages.RemoveAll(m => m.number == MessageID);
-				Game1.addHUDMessage(new HUDMessage(text, HUDMessage.error_type) { noIcon = true, number = MessageID });
-				Config.ToggleKeys.Keybinds[0].Buttons.ToList().ForEach(button => SHelper.Input.Suppress(button));
-			}
-		}
+                string text = Config.IgnoreEnabled ? Helper.Translation.Get("enabled-message") : Helper.Translation.Get("disabled-message");
+
+                Game1.hudMessages.RemoveAll(m => m.number == MessageID);
+                Game1.addHUDMessage(new HUDMessage(text, HUDMessage.error_type) { noIcon = true, number = MessageID });
+                Config.ToggleKey.Buttons.ToList().ForEach(button => SHelper.Input.Suppress(button));
+            }
+        }
+
 
 		private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
 		{
@@ -117,8 +115,8 @@ namespace WeaponsIgnoreGrass
 			configMenu.AddKeybindList(
 				mod: ModManifest,
 				name: () => Helper.Translation.Get("GMCM.ToggleKeys.Name"),
-				getValue: () => Config.ToggleKeys,
-				setValue: value => Config.ToggleKeys = value
+				getValue: () => new KeybindList(Config.ToggleKey),
+				setValue: value => { if(value?.Keybinds.Any() == true) Config.ToggleKey = value.Keybinds[0]; }
 			);
 		}
 	}
