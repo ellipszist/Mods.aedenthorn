@@ -80,22 +80,56 @@ namespace ImmersiveScarecrows
 
         private void Display_RenderedWorld(object sender, StardewModdingAPI.Events.RenderedWorldEventArgs e)
         {
-            if (!Config.EnableMod || !Context.IsPlayerFree || !Helper.Input.IsDown(Config.ShowRangeButton) || Game1.currentLocation?.terrainFeatures?.TryGetValue(Game1.currentCursorTile, out var tf) != true || tf is not HoeDirt)
+            if (!Config.EnableMod || !Context.IsPlayerFree)
                 return;
-            var which = GetMouseCorner();
-            var scarecrowTile = Game1.currentCursorTile;
-            if (!GetScarecrowTileBool(Game1.currentLocation, ref scarecrowTile, ref which))
-                return;
-            if (!Game1.currentLocation.terrainFeatures.TryGetValue(scarecrowTile, out tf))
-                return;
-            var obj = GetScarecrow(tf, which);
-            if(obj is not null)
+            if (Helper.Input.IsDown(Config.ShowAllRangeButton))
             {
-                var tiles = GetScarecrowTiles(scarecrowTile, which, obj.GetRadiusForScarecrow());
-                foreach (var tile in tiles)
+                List<Vector2> tiles = new List<Vector2>();
+                foreach (var kvp in Game1.currentLocation.terrainFeatures.Pairs)
+                {
+                    if (kvp.Value is not HoeDirt)
+                        continue;
+                    var scarecrowTile = kvp.Key;
+                    var tf = kvp.Value;
+                    for (int i = 0; i < 4; i++)
+                    {
+                        var which = i;
+                        if (!GetScarecrowTileBool(Game1.currentLocation, ref scarecrowTile, ref which))
+                            continue;
+                        if (!Game1.currentLocation.terrainFeatures.TryGetValue(scarecrowTile, out tf))
+                            continue;
+                        var obj = GetScarecrow(tf, which);
+                        if (obj is not null)
+                        {
+                            tiles.AddRange(GetScarecrowTiles(scarecrowTile, which, obj.GetRadiusForScarecrow()));
+                        }
+                    }
+                }
+                foreach (var tile in tiles.Distinct())
                 {
                     e.SpriteBatch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(new Vector2(tile.X * 64, tile.Y * 64)), new Rectangle?(new Rectangle(194, 388, 16, 16)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.01f);
                 }
+            }
+            else if(Helper.Input.IsDown(Config.ShowRangeButton))
+            {
+                if (Game1.currentLocation?.terrainFeatures?.TryGetValue(Game1.currentCursorTile, out var tf) != true || tf is not HoeDirt)
+                    return;
+                var which = GetMouseCorner();
+                var scarecrowTile = Game1.currentCursorTile;
+                if (!GetScarecrowTileBool(Game1.currentLocation, ref scarecrowTile, ref which))
+                    return;
+                if (!Game1.currentLocation.terrainFeatures.TryGetValue(scarecrowTile, out tf))
+                    return;
+                var obj = GetScarecrow(tf, which);
+                if (obj is not null)
+                {
+                    var tiles = GetScarecrowTiles(scarecrowTile, which, obj.GetRadiusForScarecrow());
+                    foreach (var tile in tiles)
+                    {
+                        e.SpriteBatch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(new Vector2(tile.X * 64, tile.Y * 64)), new Rectangle?(new Rectangle(194, 388, 16, 16)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.01f);
+                    }
+                }
+
             }
         }
 
@@ -176,16 +210,23 @@ namespace ImmersiveScarecrows
             );
             configMenu.AddKeybind(
                 mod: ModManifest,
-                name: () => "Pickup Key",
+                name: () => "Pickup",
                 getValue: () => Config.PickupButton,
                 setValue: value => Config.PickupButton = value
             );
             
             configMenu.AddKeybind(
                 mod: ModManifest,
-                name: () => "Show Range Key",
+                name: () => "Show Range",
                 getValue: () => Config.ShowRangeButton,
                 setValue: value => Config.ShowRangeButton = value
+            );
+            
+            configMenu.AddKeybind(
+                mod: ModManifest,
+                name: () => "Show All Range",
+                getValue: () => Config.ShowAllRangeButton,
+                setValue: value => Config.ShowAllRangeButton = value
             );
 
             configMenu.AddTextOption(

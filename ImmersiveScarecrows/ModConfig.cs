@@ -15,6 +15,6 @@ namespace ImmersiveScarecrows
         public SButton PickupButton { get; set; } = SButton.E;
         public bool PickupNearby { get; set; } = false;
         public SButton ShowRangeButton { get; set; } = SButton.LeftAlt;
-
+        public SButton ShowAllRangeButton { get; set; } = SButton.RightAlt;
     }
 }

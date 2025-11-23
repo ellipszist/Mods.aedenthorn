@@ -64,6 +64,8 @@ namespace ImmersiveSprinklers
             List<Vector2> tiles = new List<Vector2>();
             foreach(var kvp in Game1.currentLocation.terrainFeatures.Pairs)
             {
+                if (kvp.Value is not HoeDirt)
+                    continue;
                 for(int i = 0; i < 4; i++)
                 {
                     var which = i;
