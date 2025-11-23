@@ -15,7 +15,10 @@ namespace ImmersiveSprinklers
         public int DrawOffsetY { get; set; } = 0;
         public int DrawOffsetZ { get; set; } = 0;
         public SButton PickupButton { get; set; } = SButton.E;
+        public bool PickupNearby { get; set; } = false;
         public SButton ActivateButton { get; set; } = SButton.Enter;
+        public bool ActivateNearby { get; set; } = false;
+        public int ActivateNearbyRange { get; set; } = 2;
         public SButton ShowRangeButton { get; set; } = SButton.LeftControl;
         public Dictionary<string, int> SprinklerRadii { get; set; } = new()
         {

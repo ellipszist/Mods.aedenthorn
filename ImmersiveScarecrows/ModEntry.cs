@@ -7,6 +7,7 @@ using StardewValley.TerrainFeatures;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using Object = StardewValley.Object;
 
@@ -115,6 +116,27 @@ namespace ImmersiveScarecrows
                 if (ReturnScarecrow(Game1.player, Game1.currentLocation, Game1.currentCursorTile, which))
                 {
                     Helper.Input.Suppress(e.Button);
+                }
+                else if (Config.PickupNearby || Constants.TargetPlatform == GamePlatform.Android)
+                {
+                    var list = Game1.currentLocation.terrainFeatures.Pairs.Where(t => t.Value is HoeDirt).ToList();
+                    if (!list.Any())
+                        return;
+
+                    foreach (var kvp in list)
+                    {
+                        var distance = Vector2.Distance(kvp.Key * 64, Game1.player.position.Value);
+                        if (distance > 64)
+                            continue;
+                        for (int i = 0; i < 4; i++)
+                        {
+                            if (ReturnScarecrow(Game1.player, Game1.currentLocation, kvp.Key, i))
+                            {
+                                Helper.Input.Suppress(e.Button);
+                                return;
+                            }
+                        }
+                    }
                 }
             }
         }

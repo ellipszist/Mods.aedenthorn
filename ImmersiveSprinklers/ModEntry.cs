@@ -101,6 +101,7 @@ namespace ImmersiveSprinklers
         {
             if (!Config.EnableMod)
                 return;
+            Config.ActivateNearby = true;
             if (e.Button == Config.PickupButton && Context.CanPlayerMove)
             {
                 int which = GetMouseCorner();
@@ -108,8 +109,29 @@ namespace ImmersiveSprinklers
                 {
                     Helper.Input.Suppress(e.Button);
                 }
+                else if (Config.PickupNearby || Constants.TargetPlatform == GamePlatform.Android)
+                {
+                    var list = Game1.currentLocation.terrainFeatures.Pairs.Where(t => t.Value is HoeDirt).ToList();
+                    if (!list.Any())
+                        return;
+                    
+                    foreach(var kvp in list)
+                    {
+                        var distance = Vector2.Distance(kvp.Key * 64, Game1.player.position.Value);
+                        if (distance > 64)
+                            continue;
+                        for (int i = 0; i < 4; i++)
+                        {
+                            if (ReturnSprinkler(Game1.player, Game1.currentLocation, kvp.Key, i))
+                            {
+                                Helper.Input.Suppress(e.Button);
+                                return;
+                            }
+                        }
+                    }
+                }
             }
-            if (e.Button == Config.ActivateButton && Context.CanPlayerMove)
+            else if (e.Button == Config.ActivateButton && Context.CanPlayerMove)
             {
                 int which = GetMouseCorner();
                 Vector2 tile = Game1.currentCursorTile;
@@ -122,6 +144,37 @@ namespace ImmersiveSprinklers
                         obj.Location = Game1.currentLocation;
                         ActivateSprinkler(Game1.currentLocation, tile, obj, which, false);
                         Helper.Input.Suppress(e.Button);
+                    }
+                }
+                else if (Config.ActivateNearby || Constants.TargetPlatform == GamePlatform.Android)
+                {
+                    var list = Game1.currentLocation.terrainFeatures.Pairs.Where(t => t.Value is HoeDirt).ToList();
+                    if (!list.Any())
+                        return;
+
+                    foreach (var kvp in list)
+                    {
+                        if(Config.ActivateNearbyRange > 0)
+                        {
+                            var distance = Vector2.Distance(kvp.Key * 64, Game1.player.position.Value);
+                            if (distance > 64 * Config.ActivateNearbyRange)
+                                continue;
+                        }
+                        for (int i = 0; i < 4; i++)
+                        {
+                            which = i;
+                            tile = kvp.Key;
+                            if (GetSprinklerTileBool(Game1.currentLocation, ref tile, ref which, out sprinklerString))
+                            {
+                                var obj = GetSprinkler(Game1.currentLocation.terrainFeatures[tile], which, Game1.currentLocation.terrainFeatures[tile].modData.ContainsKey(nozzleKey + which));
+                                if (obj is not null)
+                                {
+                                    obj.Location = Game1.currentLocation;
+                                    ActivateSprinkler(Game1.currentLocation, tile, obj, which, false);
+                                    Helper.Input.Suppress(e.Button);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -166,11 +219,29 @@ namespace ImmersiveSprinklers
                 getValue: () => Config.PickupButton,
                 setValue: value => Config.PickupButton = value
             );
+            configMenu.AddBoolOption(
+                mod: ModManifest,
+                name: () => "Pickup Nearby",
+                getValue: () => Config.PickupNearby,
+                setValue: value => Config.PickupNearby = value
+            );
             configMenu.AddKeybind(
                 mod: ModManifest,
                 name: () => "Activate Key",
                 getValue: () => Config.ActivateButton,
                 setValue: value => Config.ActivateButton = value
+            );
+            configMenu.AddBoolOption(
+                mod: ModManifest,
+                name: () => "Activate Nearby",
+                getValue: () => Config.ActivateNearby,
+                setValue: value => Config.ActivateNearby = value
+            );
+            configMenu.AddNumberOption(
+                mod: ModManifest,
+                name: () => "Activation Range",
+                getValue: () => Config.ActivateNearbyRange,
+                setValue: value => Config.ActivateNearbyRange = value
             );
             configMenu.AddKeybind(
                 mod: ModManifest,
