@@ -70,6 +70,13 @@ namespace PlannedParenthood
                 getValue: () => Config.InBed,
                 setValue: value => Config.InBed = value
             );
+            
+            configMenu.AddBoolOption(
+                mod: ModManifest,
+                name: () => "Roommate Pregnancy",
+                getValue: () => Config.RoommatePregnancy,
+                setValue: value => Config.RoommatePregnancy = value
+            );
 
             configMenu.AddNumberOption(
                 mod: ModManifest,

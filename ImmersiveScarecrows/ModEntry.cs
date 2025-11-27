@@ -82,9 +82,9 @@ namespace ImmersiveScarecrows
         {
             if (!Config.EnableMod || !Context.IsPlayerFree)
                 return;
+            List<Vector2> tiles = new List<Vector2>();
             if (Helper.Input.IsDown(Config.ShowAllRangeButton))
             {
-                List<Vector2> tiles = new List<Vector2>();
                 foreach (var kvp in Game1.currentLocation.terrainFeatures.Pairs)
                 {
                     if (kvp.Value is not HoeDirt)
@@ -105,10 +105,6 @@ namespace ImmersiveScarecrows
                         }
                     }
                 }
-                foreach (var tile in tiles.Distinct())
-                {
-                    e.SpriteBatch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(new Vector2(tile.X * 64, tile.Y * 64)), new Rectangle?(new Rectangle(194, 388, 16, 16)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.01f);
-                }
             }
             else if(Helper.Input.IsDown(Config.ShowRangeButton))
             {
@@ -123,14 +119,17 @@ namespace ImmersiveScarecrows
                 var obj = GetScarecrow(tf, which);
                 if (obj is not null)
                 {
-                    var tiles = GetScarecrowTiles(scarecrowTile, which, obj.GetRadiusForScarecrow());
-                    foreach (var tile in tiles)
-                    {
-                        e.SpriteBatch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(new Vector2(tile.X * 64, tile.Y * 64)), new Rectangle?(new Rectangle(194, 388, 16, 16)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.01f);
-                    }
+                    tiles = GetScarecrowTiles(scarecrowTile, which, obj.GetRadiusForScarecrow());
                 }
-
             }
+            if(tiles?.Any() == true)
+            {
+                foreach (var tile in tiles.Distinct())
+                {
+                    e.SpriteBatch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(new Vector2(tile.X * 64, tile.Y * 64)), new Rectangle?(new Rectangle(194, 388, 16, 16)), Config.RangeTint * Config.RangeAlpha, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.01f);
+                }
+            }
+
         }
 
         private void Input_ButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
@@ -240,6 +239,12 @@ namespace ImmersiveScarecrows
                 name: () => "Alpha",
                 getValue: () => Config.Alpha + "",
                 setValue: delegate (string value) { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out float f)) { Config.Alpha = f; } }
+            );
+            configMenu.AddTextOption(
+                mod: ModManifest,
+                name: () => "RangeAlpha",
+                getValue: () => Config.RangeAlpha + "",
+                setValue: delegate (string value) { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out float f)) { Config.RangeAlpha = f; } }
             );
             configMenu.AddNumberOption(
                 mod: ModManifest,

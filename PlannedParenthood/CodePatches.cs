@@ -17,13 +17,13 @@ namespace PlannedParenthood
 
         private static List<string> GetSpouseNames()
         {
-            List<string> names = Game1.player.friendshipData.Keys.Where(k => Game1.player.friendshipData[k].IsMarried() && !Game1.player.friendshipData[k].RoommateMarriage && Game1.player.friendshipData[k].Points / 250 >= Config.MinHearts).ToList();
+            List<string> names = Game1.player.friendshipData.Keys.Where(k => Game1.player.friendshipData[k].IsMarried() && (Config.RoommatePregnancy || !Game1.player.friendshipData[k].RoommateMarriage) && Game1.player.friendshipData[k].Points / 250 >= Config.MinHearts).ToList();
             SMonitor.Log($"Got {names.Count} spouses");
             for (int i = names.Count - 1; i >= 0; i--)
             {
-                if(Game1.player.friendshipData[names[i]].DaysUntilBirthing >= 0)
+                if(Game1.player.friendshipData[names[i]].DaysUntilBirthing > 0)
                 {
-                    SMonitor.Log($"Found existing birth event with {names[0]}, preventing birth questions", LogLevel.Debug);
+                    SMonitor.Log($"Found existing birth event with {names[0]} (days until birth: {Game1.player.friendshipData[names[i]].DaysUntilBirthing}), preventing birth questions", LogLevel.Debug);
                     return new List<string>();
                 }
                 var npc = Game1.getCharacterFromName(names[i], true);
@@ -37,7 +37,7 @@ namespace PlannedParenthood
                     Farmer spouse = Game1.GetPlayer((kvp.Key.Farmer1 == Game1.player.UniqueMultiplayerID ? kvp.Key.Farmer2 : kvp.Key.Farmer1));
                     if (kvp.Value.NextBirthingDate is not null)
                     {
-                        SMonitor.Log($"Found existing birth event with {spouse.Name}, preventing birth questions", LogLevel.Debug);
+                        SMonitor.Log($"Found existing birth event with {spouse.Name} (next birthing date: {kvp.Value.NextBirthingDate}), preventing birth questions", LogLevel.Debug);
                         return new List<string>();
                     }
                     if (spouse != null)

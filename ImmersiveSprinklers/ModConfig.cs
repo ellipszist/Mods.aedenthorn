@@ -1,4 +1,5 @@
-﻿using StardewModdingAPI;
+﻿using Microsoft.Xna.Framework;
+using StardewModdingAPI;
 using StardewModdingAPI.Utilities;
 using System.Collections.Generic;
 
@@ -11,6 +12,8 @@ namespace ImmersiveSprinklers
         public bool ShowRangeWhenPlacing { get; set; } = true;
         public float Scale { get; set; } = 4;
         public float Alpha { get; set; } = 1;
+        public Color RangeTint { get; set; } = Color.White;
+        public float RangeAlpha { get; set; } = 1;
         public int DrawOffsetX { get; set; } = 0;
         public int DrawOffsetY { get; set; } = 0;
         public int DrawOffsetZ { get; set; } = 0;
