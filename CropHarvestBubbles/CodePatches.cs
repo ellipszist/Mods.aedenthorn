@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.ItemTypeDefinitions;
+using Object = StardewValley.Object;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace CropHarvestBubbles
@@ -29,7 +30,7 @@ namespace CropHarvestBubbles
 
 		private static void DrawHarvestBubble(Crop __instance, SpriteBatch b, Vector2 tileLocation, int offset = 0)
 		{
-			if (!Config.ModEnabled || (Config.KeyPressToggle && !Config.Toggled)  || (Config.RequireKeyPress && !Config.KeyPressToggle && !Config.PressKeys.IsDown()) || __instance.forageCrop.Value || __instance.dead.Value || __instance.currentPhase.Value < __instance.phaseDays.Count - 1 || (__instance.fullyGrown.Value && __instance.dayOfCurrentPhase.Value > 0) || !Game1.objectData.TryGetValue(__instance.indexOfHarvest.Value, out var value) || (Config.IgnoreFlowers && value.ContextTags?.Contains("flower_item") == true))
+			if (!Config.ModEnabled || (Config.KeyPressToggle && !Config.Toggled)  || (Config.RequireKeyPress && !Config.KeyPressToggle && !Config.PressKeys.IsDown()) || __instance.forageCrop.Value || __instance.dead.Value || __instance.currentPhase.Value < __instance.phaseDays.Count - 1 || (__instance.fullyGrown.Value && __instance.dayOfCurrentPhase.Value > 0) || !Game1.objectData.TryGetValue(__instance.indexOfHarvest.Value, out var value) || (Config.IgnoreFlowers && (value.ContextTags?.Contains("flower_item") == true || value.Category == Object.flowersCategory)))
 				return;
 
 			ParsedItemData item = ItemRegistry.GetDataOrErrorItem(__instance.indexOfHarvest.Value);
