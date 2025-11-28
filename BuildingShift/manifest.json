@@ -1,0 +1,10 @@
+﻿{
+  "Name": "Building Shift",
+  "Author": "aedenthorn",
+  "Version": "0.1.0",
+  "Description": "Building Shift.",
+  "UniqueID": "aedenthorn.BuildingShift",
+  "EntryDll": "BuildingShift.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [ "Nexus:" ]
+}

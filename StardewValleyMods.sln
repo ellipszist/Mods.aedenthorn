@@ -615,6 +615,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InventoryIndicators", "Inve
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortableFurnace", "PortableFurnace\PortableFurnace.csproj", "{F616DFB7-3FAB-FE50-3AE4-9B818C9225FA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildingShift", "BuildingShift\BuildingShift.csproj", "{63EFB954-4172-4E32-F6A6-4E165506349B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3039,6 +3041,14 @@ Global
 		{F616DFB7-3FAB-FE50-3AE4-9B818C9225FA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F616DFB7-3FAB-FE50-3AE4-9B818C9225FA}.Release|x64.ActiveCfg = Release|x64
 		{F616DFB7-3FAB-FE50-3AE4-9B818C9225FA}.Release|x64.Build.0 = Release|x64
+		{63EFB954-4172-4E32-F6A6-4E165506349B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63EFB954-4172-4E32-F6A6-4E165506349B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63EFB954-4172-4E32-F6A6-4E165506349B}.Debug|x64.ActiveCfg = Debug|x64
+		{63EFB954-4172-4E32-F6A6-4E165506349B}.Debug|x64.Build.0 = Debug|x64
+		{63EFB954-4172-4E32-F6A6-4E165506349B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63EFB954-4172-4E32-F6A6-4E165506349B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63EFB954-4172-4E32-F6A6-4E165506349B}.Release|x64.ActiveCfg = Release|x64
+		{63EFB954-4172-4E32-F6A6-4E165506349B}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

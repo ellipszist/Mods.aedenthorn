@@ -81,7 +81,7 @@ namespace PortableFurnace
         {
             public static void Postfix(Item __instance, ref int __result)
             {
-                if (!Config.EnableMod || __instance is not Object obj || !obj.ItemId.StartsWith(SHelper.ModRegistry.ModID) || !__instance.modData.ContainsKey(timeKey))
+                if (!Config.EnableMod || __result < 0 || __instance is not Object obj || !obj.ItemId.StartsWith(SHelper.ModRegistry.ModID) || !__instance.modData.ContainsKey(timeKey))
                     return;
                 __result++;
             }

@@ -1,10 +1,10 @@
 ﻿{
   "Name": "Portable Furnace",
   "Author": "aedenthorn",
-  "Version": "0.1.0",
+  "Version": "0.1.2",
   "Description": "Portable Furnace.",
   "UniqueID": "aedenthorn.PortableFurnace",
   "EntryDll": "PortableFurnace.dll",
   "MinimumApiVersion": "4.0.0",
-  "UpdateKeys": [ "Nexus:14865" ]
+  "UpdateKeys": [ "Nexus:39710" ]
 }
