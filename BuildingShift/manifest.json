@@ -6,5 +6,5 @@
   "UniqueID": "aedenthorn.BuildingShift",
   "EntryDll": "BuildingShift.dll",
   "MinimumApiVersion": "4.0.0",
-  "UpdateKeys": [ "Nexus:" ]
+  "UpdateKeys": [ "Nexus:39761" ]
 }

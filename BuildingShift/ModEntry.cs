@@ -67,7 +67,7 @@ namespace BuildingShift
         {
             if (!Config.EnableMod || !Context.IsPlayerFree || Game1.currentLocation?.buildings  == null)
                 return;
-            Config.Reset = SButton.RightControl;
+            Config.ResetKey = SButton.RightControl;
             SHelper.WriteConfig(Config);
             if (e.Button == Config.ShiftDown)
             {
@@ -101,7 +101,7 @@ namespace BuildingShift
                     ShiftBuilding(b, -1, 0);
                 }
             }
-            else if (e.Button == Config.Reset)
+            else if (e.Button == Config.ResetKey)
             {
                 Building b = GetHoveredBuilding();
                 if (b != null)
@@ -150,18 +150,60 @@ namespace BuildingShift
 
             configMenu.AddBoolOption(
                 mod: ModManifest,
-                name: () => "Mod Enabled",
+                name: () => SHelper.Translation.Get("Config.EnableMod"),
                 getValue: () => Config.EnableMod,
                 setValue: value => Config.EnableMod = value
             );
 
             configMenu.AddNumberOption(
                 mod: ModManifest,
-                name: () => "Shift Amount",
-                getValue: () => Config.ShiftAmount,
-                setValue: value => Config.ShiftAmount = value
+                name: () => SHelper.Translation.Get("Config.ShiftAmountNormal"),
+                getValue: () => Config.ShiftAmountNormal,
+                setValue: value => Config.ShiftAmountNormal = value
             );
-            
+
+            configMenu.AddNumberOption(
+                mod: ModManifest,
+                name: () => SHelper.Translation.Get("Config.ShiftAmountMod"),
+                getValue: () => Config.ShiftAmountMod,
+                setValue: value => Config.ShiftAmountMod = value
+            );
+            configMenu.AddKeybind(
+                mod: ModManifest,
+                name: () => SHelper.Translation.Get("Config.ShiftUp"),
+                getValue: () => Config.ShiftUp,
+                setValue: value => Config.ShiftUp = value
+            );
+            configMenu.AddKeybind(
+                mod: ModManifest,
+                name: () => SHelper.Translation.Get("Config.ShiftDown"),
+                getValue: () => Config.ShiftDown,
+                setValue: value => Config.ShiftDown = value
+            );
+            configMenu.AddKeybind(
+                mod: ModManifest,
+                name: () => SHelper.Translation.Get("Config.ShiftLeft"),
+                getValue: () => Config.ShiftLeft,
+                setValue: value => Config.ShiftLeft = value
+            );
+            configMenu.AddKeybind(
+                mod: ModManifest,
+                name: () => SHelper.Translation.Get("Config.ShiftRight"),
+                getValue: () => Config.ShiftRight,
+                setValue: value => Config.ShiftRight = value
+            );
+            configMenu.AddKeybind(
+                mod: ModManifest,
+                name: () => SHelper.Translation.Get("Config.ModKey"),
+                getValue: () => Config.ModKey,
+                setValue: value => Config.ModKey = value
+            );
+            configMenu.AddKeybind(
+                mod: ModManifest,
+                name: () => SHelper.Translation.Get("Config.ResetKey"),
+                getValue: () => Config.ResetKey,
+                setValue: value => Config.ResetKey = value
+            );
         }
     }
 }

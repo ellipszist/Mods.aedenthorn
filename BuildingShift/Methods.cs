@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using StardewValley.Buildings;
-using System;
 
 namespace BuildingShift
 {
@@ -29,12 +28,46 @@ namespace BuildingShift
         {
             if (SHelper.Input.IsDown(Config.ModKey))
             {
-                x *= Config.ShiftAmount;
-                y *= Config.ShiftAmount;
+                x *= Config.ShiftAmountMod;
+                y *= Config.ShiftAmountMod;
+            }
+            else
+            {
+                x *= Config.ShiftAmountNormal;
+                y *= Config.ShiftAmountNormal;
             }
             TryGetShift(b, out var shift);
             shift += new Vector2(x, y);
-            SMonitor.Log($"{b.buildingType.Value} is shifted by {x},{y}");
+            bool moved = false;
+            if(shift.X > 15)
+            {
+                moved = true;
+                b.tileX.Value++;
+                shift.X %= 16;
+            }
+            else if(shift.X < -15)
+            {
+                moved = true;
+                b.tileX.Value--;
+                shift.X %= -16;
+            }
+            if(shift.Y > 15)
+            {
+                moved = true;
+                b.tileY.Value++;
+                shift.Y %= 16;
+            }
+            else if(shift.Y < -15)
+            {
+                moved = true;
+                b.tileY.Value--;
+                shift.Y %= -16;
+            }
+            if (moved)
+            {
+                SMonitor.Log($"{b.buildingType.Value} moved to tile {b.tileX.Value},{b.tileY.Value}");
+            }
+            SMonitor.Log($"{b.buildingType.Value} is shifted by {shift}");
             b.modData[shiftKey] = $"{shift.X},{shift.Y}";
         }
     }

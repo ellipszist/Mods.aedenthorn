@@ -5,8 +5,9 @@ namespace BuildingShift
     public class ModConfig
     {
         public bool EnableMod { get; set; } = true;
-        public int ShiftAmount { get; set; } = 32;
-        public SButton Reset { get; set; } = SButton.NumPad5;
+        public int ShiftAmountNormal { get; set; } = 1;
+        public int ShiftAmountMod { get; set; } = 8;
+        public SButton ResetKey { get; set; } = SButton.RightShift;
         public SButton ShiftDown { get; set; } = SButton.Down;
         public SButton ShiftUp { get; set; } = SButton.Up;
         public SButton ShiftRight { get; set; } = SButton.Right;
