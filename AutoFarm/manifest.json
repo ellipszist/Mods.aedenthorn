@@ -1,0 +1,10 @@
+﻿{
+  "Name": "Auto Farm",
+  "Author": "aedenthorn",
+  "Version": "0.1.0",
+  "Description": "Auto Farm.",
+  "UniqueID": "aedenthorn.AutoFarm",
+  "EntryDll": "AutoFarm.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [ "Nexus:" ]
+}

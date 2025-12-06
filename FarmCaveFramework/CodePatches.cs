@@ -37,52 +37,15 @@ namespace FarmCaveFramework
 
         private static Object GetObjectFromID(string id, Vector2 tile, int amount = 1, bool spawned = false)
         {
-            SMonitor.Log($"Trying to get object {id}, DGA {apiDGA != null}, JA {apiJA != null}");
 
             Object obj = null;
             try
             {
-
-                if (int.TryParse(id, out int index))
+                SMonitor.Log($"Spawning object with index {id}");
+                return spawned ? new Object(id, amount, false, -1, 0)
                 {
-                    SMonitor.Log($"Spawning object with index {id}");
-                    return spawned ? new Object(index, amount, false, -1, 0)
-                    {
-                        IsSpawnedObject = true
-                    } : new Object(tile, index, false);
-                }
-                if (apiDGA != null && id.Contains("/"))
-                {
-                    object o = apiDGA.SpawnDGAItem(id);
-                    if (o is Object)
-                    {
-                        SMonitor.Log($"Spawning DGA object {id}");
-                        obj = (Object)o;
-                        if (spawned)
-                        {
-                            obj.IsSpawnedObject = true;
-                            obj.Stack = amount;
-                        }
-                        else
-                        {
-                            obj.TileLocation = tile;
-                        }
-                        return obj;
-                    }
-                }
-                if (apiJA != null)
-                {
-                    int idx = apiJA.GetObjectId(id);
-                    if (idx != -1)
-                    {
-                        SMonitor.Log($"Spawning JA object {id}");
-                        obj = spawned ? new Object(index, amount, false, -1, 0)
-                        {
-                            IsSpawnedObject = true
-                        } : new Object(tile, idx, false);
-                        return obj;
-                    }
-                }
+                    IsSpawnedObject = true
+                } : new Object(tile, id, false);
             }
             catch
             {
@@ -148,7 +111,7 @@ namespace FarmCaveFramework
                             {
                                 for (int i = 1; i < s.count; i++)
                                 {
-                                    DelayedAction.playSoundAfterDelay(s.id, s.delayMult * i + s.delayAdd, null, s.pitch);
+                                    DelayedAction.playSoundAfterDelay(s.id, s.delayMult * i + s.delayAdd, null, null, s.pitch);
                                 }
                             }
                         }
@@ -191,7 +154,7 @@ namespace FarmCaveFramework
                         scale = a.scale,
                         delayBeforeAnimationStart = a.delay,
                         layerDepth = 1f,
-                        light = a.light,
+                        lightId = "8989",
                         lightRadius = a.lightRadius
                     });
                 }
@@ -229,7 +192,7 @@ namespace FarmCaveFramework
                         if(chance < currentWeight / totalWeight)
                         {
                             Vector2 v = new Vector2(Game1.random.Next(1, __instance.map.Layers[0].LayerWidth - 1), Game1.random.Next(1, __instance.map.Layers[0].LayerHeight - 4));
-                            if (__instance.isTileLocationTotallyClearAndPlaceable(v))
+                            if ((!__instance.IsTileBlockedBy(v)) && __instance.isTilePlaceable(v))
                             {
                                 spawned++;
                                 int amount = Game1.random.Next(r.min, r.max + 1);

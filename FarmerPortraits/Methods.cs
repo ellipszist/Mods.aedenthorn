@@ -18,7 +18,7 @@ namespace FarmerPortraits
                 int i = 0;
                 for ( ; ; )
                 {
-                    texture = GetTexture(key+i);
+                    texture = GetAssetTexture(key+i);
                     if (texture != null)
                     {
                         portraitTextures.Value[key + i] = texture;
@@ -29,7 +29,7 @@ namespace FarmerPortraits
                     }
                     i++;
                 }
-                texture = GetTexture(key);
+                texture = GetAssetTexture(key);
                 if (texture != null)
                 {
                     portraitTextures.Value[key] = texture;
@@ -51,7 +51,7 @@ namespace FarmerPortraits
             return null;
         }
 
-        public static Texture2D GetTexture(string v)
+        public static Texture2D GetAssetTexture(string v)
         {
             if (SHelper.ModContent.DoesAssetExist<Texture2D>($"{v}_{Game1.player.Name}.png"))
             {

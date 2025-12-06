@@ -67,8 +67,6 @@ namespace BuildingShift
         {
             if (!Config.EnableMod || !Context.IsPlayerFree || Game1.currentLocation?.buildings  == null)
                 return;
-            Config.ResetKey = SButton.RightControl;
-            SHelper.WriteConfig(Config);
             if (e.Button == Config.ShiftDown)
             {
                 Building b = GetHoveredBuilding();

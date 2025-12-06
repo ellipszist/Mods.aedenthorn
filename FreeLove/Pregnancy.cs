@@ -87,7 +87,7 @@ namespace FreeLove
                 if (!Config.RoommateRomance && f.friendshipData[spouse.Name].RoommateMarriage)
                     continue;
 
-                if (canGetPregnant(spouse) && myRand.NextDouble() <  0.05)
+                if (CanGetPregnant(spouse) && myRand.NextDouble() <  0.05)
                 {
                     SMonitor.Log("Requesting a baby!");
                     lastPregnantSpouse = spouse;
@@ -98,7 +98,7 @@ namespace FreeLove
         }
 
 
-        public static bool canGetPregnant(NPC spouse)
+        public static bool CanGetPregnant(NPC spouse)
         {
             return spouse != null && !Game1.player.divorceTonight.Value && Game1.player.friendshipData.TryGetValue(spouse.Name, out var friendship) && friendship.DaysUntilBirthing <= 0 && friendship.Points >= Config.MinPointsToMarry && friendship.DaysMarried >= Config.MinMarriedDaysForPregnancy;
         }

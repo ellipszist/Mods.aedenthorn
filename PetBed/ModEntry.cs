@@ -166,9 +166,9 @@ namespace PetBed
                         List<Furniture> flist = new List<Furniture>();
                         foreach (Furniture furniture in location.furniture)
                         {
-                            SMonitor.Log($"Checking furniture {furniture.Name} is {name}");
+                            //SMonitor.Log($"Checking furniture {furniture.Name} is {name}");
 
-                            if ((furniture.Name == name || furniture.Name.EndsWith($"/{name}") ) && location.isCharacterAtTile(furniture.TileLocation) == null)
+                            if ((furniture.Name == name || furniture.Name.EndsWith($"_{name}")) && location.isCharacterAtTile(furniture.TileLocation) == null)
                                 flist.Add(furniture);
                         }
                         if (flist.Count > 0)
@@ -194,7 +194,7 @@ namespace PetBed
                         pet.position.Value += offset;
 
                         pet.UpdateSleepingOnBed();
-                        AccessTools.FieldRefAccess<Pet, int>(pet, "_currentBehavior") = pet.CurrentBehavior;
+                        AccessTools.FieldRefAccess<Pet, string>(pet, "_currentBehavior") = pet.CurrentBehavior;
 
                         pet.Halt();
                         pet.Sprite.CurrentAnimation = null;

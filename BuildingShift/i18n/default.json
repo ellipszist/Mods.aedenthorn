@@ -1,11 +1,11 @@
 {
-  "EnableMod": "Enable Mod",
-  "ShiftAmountNormal": "Shift Normal",
-  "ShiftAmountMod": "Shift Mod",
-  "ResetKey": "Reset Key",
-  "ShiftDown": "Shift Down",
-  "ShiftUp": "Shift Up",
-  "ShiftRight": "Shift Right",
-  "ShiftLeft": "Shift Left",
-  "ModKey": "Mod Key"
+  "Config.EnableMod": "Enable Mod",
+  "Config.ShiftAmountNormal": "Shift Normal",
+  "Config.ShiftAmountMod": "Shift Mod",
+  "Config.ResetKey": "Reset Key",
+  "Config.ShiftDown": "Shift Down",
+  "Config.ShiftUp": "Shift Up",
+  "Config.ShiftRight": "Shift Right",
+  "Config.ShiftLeft": "Shift Left",
+  "Config.ModKey": "Mod Key"
 }

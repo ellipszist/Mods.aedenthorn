@@ -17,8 +17,6 @@ namespace FarmCaveFramework
         public static ModConfig Config;
 
         public static ModEntry context;
-        private static IDynamicGameAssetsApi apiDGA;
-        private static IJsonAssetsApi apiJA;
 
         public static CaveChoice caveChoice;
 
@@ -60,8 +58,7 @@ namespace FarmCaveFramework
                prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.FarmCave_UpdateReadyFlag_Prefix))
             );
             harmony.Patch(
-               original: AccessTools.Method(typeof(Event), nameof(Event.command_cave)),
-               prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.Event_command_cave_Prefix))
+            original: AccessTools.Method(typeof(Event.DefaultCommands), nameof(Event.DefaultCommands.Cave)), prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.Event_command_cave_Prefix))
             );
             harmony.Patch(
                original: AccessTools.Method(typeof(Event), nameof(Event.answerDialogue)),
@@ -492,6 +489,12 @@ namespace FarmCaveFramework
                                 X = 8,
                                 Y = 7,
                                 id = "128"
+                            },
+                            new CaveObject()
+                            {
+                                X = 10,
+                                Y = 5,
+                                id = "Dehydrator"
                             }
                         }
                     }
@@ -509,7 +512,7 @@ namespace FarmCaveFramework
             {
                 Config.ResetEvent = false;
                 Helper.WriteConfig(Config);
-                Game1.player.eventsSeen.Remove(65);
+                Game1.player.eventsSeen.Remove("65");
                 string choiceId = SHelper.Data.ReadSaveData<string>("farm-cave-framework-choice");
                 Game1.getLocationFromName("FarmCave").objects.Clear();
                 if (choiceId != null && choiceId.Length > 0)
@@ -537,8 +540,6 @@ namespace FarmCaveFramework
 
         private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
         {
-            apiDGA = Helper.ModRegistry.GetApi<IDynamicGameAssetsApi>("spacechase0.DynamicGameAssets");
-            apiJA = Helper.ModRegistry.GetApi<IJsonAssetsApi>("spacechase0.JsonAssets");
 
 
             // get Generic Mod Config Menu's API (if it's installed)
