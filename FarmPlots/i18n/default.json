@@ -1,0 +1,11 @@
+{
+  "Config.EnableMod": "Enable Mod",
+  "Config.MenuKey": "Menu Key",
+  "Config.CreateKey": "Create Key",
+  "Select": "Select or create a plot",
+  "Harvest": "Harvest",
+  "Till": "Till",
+  "Buy": "Buy",
+  "Active": "Active",
+  "Update": "Update Now"
+}

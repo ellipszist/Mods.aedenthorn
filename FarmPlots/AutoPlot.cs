@@ -1,18 +1,18 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 
-namespace AutoFarm
+namespace FarmPlots
 {
     public class AutoPlot
     {
         public HashSet<Vector2> tiles = new HashSet<Vector2>();
-        public bool harvest;
-        public bool till;
-        public bool removeDead;
-        public bool buySeed;
-        public bool buyFertilizer;
-        public string[] fertilizer = new string[4];
-        public string[] seed = new string[4];
+        public bool[] harvest = new bool[4];
+        public bool[] till = new bool[4];
+        public bool[] buy = new bool[4];
+        public bool[] active = new bool[4];
+        public string[] fertilizers = new string[4];
+        public string[] seeds = new string[4];
+        public long creator;
         public Vector2 GetKeyTile()
         {
             Vector2 tile = new Vector2(float.MaxValue, float.MaxValue);
