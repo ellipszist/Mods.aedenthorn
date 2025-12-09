@@ -14,33 +14,40 @@ namespace FarmPlots
     public class FarmPlotsMenu : IClickableMenu
     {
 
-        internal static int windowWidth = 64 * 16;
+        public static int windowWidth = 64 * 16;
 
         public int perRow = 8;
+        public int rows = 3;
         public int lineHeight = 72;
         public int maxHeight;
+        public int seedScroll;
+        public int fertScroll;
 
         public List<ClickableTextureComponent> tabs = new List<ClickableTextureComponent>();
-        internal List<ParsedItemData>[] seedList = new List<ParsedItemData>[4];
-        internal List<ParsedItemData> fertilizerList = new List<ParsedItemData>();
-        internal List<ClickableTextureComponent> seedButtons = new List<ClickableTextureComponent>();
-        internal List<ClickableTextureComponent> fertilizerButtons = new List<ClickableTextureComponent>();
-        internal ClickableTextureComponent harvestButton;
-        internal ClickableTextureComponent tillButton;
-        internal ClickableTextureComponent buyButton;
-        internal ClickableTextureComponent activeButton;
-        internal ClickableTextureComponent updateButton;
+        public List<ParsedItemData>[] seedList = new List<ParsedItemData>[4];
+        public List<ParsedItemData> fertilizerList = new List<ParsedItemData>();
+        public List<ClickableTextureComponent> seedButtons = new List<ClickableTextureComponent>();
+        public List<ClickableTextureComponent> fertilizerButtons = new List<ClickableTextureComponent>();
+        public ClickableTextureComponent harvestButton;
+        public ClickableTextureComponent tillButton;
+        public ClickableTextureComponent buyButton;
+        public ClickableTextureComponent activeButton;
+        public ClickableTextureComponent updateButton;
+        
+        public Rectangle seedRect;
+        public Rectangle fertRect;
+        
         public int[] heights = new int[4];
         public int currentSeason;
 
         public int baseID = 1000;
 
-        internal string hoverText;
-        internal string hoveredItem;
+        public string hoverText;
+        public string hoveredItem;
 
         public FarmPlotsMenu() : base(0, -borderWidth, windowWidth + borderWidth * 2, Game1.uiViewport.Height, false)
         {
-            width = 64 * 8 + borderWidth * 2 + 32;
+            width = 64 * 8 + borderWidth * 2 + 40;
             if(ModEntry.currentPlot.Value == null && ModEntry.TryGetAutoPlots(Game1.currentLocation, out var list))
             {
                 foreach(var p in list)
@@ -64,16 +71,22 @@ namespace FarmPlots
             {
                 foreach (var s in d.Value.Seasons)
                 {
-                    ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem("(O)" + d.Key);
-                    seedList[(int)s].Add(itemData);
+                    for(int i = 0; i < 5; i++)
+                    {
+                        ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem("(O)" + d.Key);
+                        seedList[(int)s].Add(itemData);
+                    }
                 }
             }
 
             fertilizerList.Clear();
             foreach (var d in Game1.objectData.Where(d => d.Value.Category == -19))
             {
-                ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem("(O)" + d.Key);
-                fertilizerList.Add(itemData);
+                for (int i = 0; i < 5; i++)
+                {
+                    ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem("(O)" + d.Key);
+                    fertilizerList.Add(itemData);
+                }
             }
             heights = new int[4];
             perRow = 8;
@@ -81,14 +94,14 @@ namespace FarmPlots
             maxHeight = 0;
             foreach (var s in Enum.GetValues(typeof(Season)))
             {
-                var h = 400 + (seedList[(int)s].Count / perRow) * lineHeight + (fertilizerList.Count / perRow + 2) * lineHeight;
+                var h = 400 + rows * 2 * lineHeight;
                 if (h > maxHeight)
                     maxHeight = h;
                 heights[(int)s] = h;
             }
 
+            ScrollToSelected();
             RepopulateComponentList();
-
             exitFunction = emergencyShutDown;
 
             snapToDefaultClickableComponent();
@@ -102,41 +115,6 @@ namespace FarmPlots
             int xStart = xPositionOnScreen + spaceToClearSideBorder + borderWidth;
             int yStart = yPositionOnScreen + borderWidth + spaceToClearTopBorder + 24;
 
-            seedButtons.Clear();
-
-            for (int i = 0; i < seedList[currentSeason].Count; i++)
-            {
-                var s = seedList[currentSeason][i];
-                int xoff = xStart + 64 * (i % perRow);
-                int yoff = yStart + lineHeight * (i / perRow);
-                seedButtons.Add(new ClickableTextureComponent(s.ItemId, new Rectangle(xoff, yoff, 64, 64), "", s.DisplayName, s.GetTexture(), s.GetSourceRect(), 4)
-                {
-                    myID = baseID + 1000 + i,
-                    upNeighborID = baseID,
-                    leftNeighborID = baseID + 1000 - 1,
-                    rightNeighborID = baseID + 1000 + 1,
-                    downNeighborID = baseID + 2000
-                });
-            }
-
-            fertilizerButtons = new();
-            int j = 0;
-            foreach(var itemData in fertilizerList)
-            { 
-                int xoff = xStart + 64 * (j % perRow);
-                int yoff = yStart + lineHeight * (j / perRow) + lineHeight * (seedButtons.Count / perRow + 2);
-
-                fertilizerButtons.Add(new ClickableTextureComponent(itemData.ItemId, new Rectangle(xoff, yoff, 64, 64), "", itemData.DisplayName, itemData.GetTexture(), itemData.GetSourceRect(), 4)
-                {
-                    myID = baseID + 2000 + j,
-                    upNeighborID = baseID + 1000,
-                    leftNeighborID = baseID + 2000 - 1,
-                    rightNeighborID = baseID + 2000 + 1,
-                    downNeighborID = baseID + 3000
-                });
-                j++;
-            }
-
             tabs.Clear();
             foreach (int s in Enum.GetValues(typeof(Season)))
             {
@@ -149,8 +127,49 @@ namespace FarmPlots
                 });
             }
 
+            seedButtons.Clear();
+            for (int i = seedScroll * perRow; i < seedList[currentSeason].Count && i < (seedScroll + rows) * perRow; i++)
+            {
+                int iOff = i - seedScroll * perRow;
+                var s = seedList[currentSeason][i];
+                int xoff = xStart + 64 * (iOff % perRow);
+                int yoff = yStart + lineHeight * (iOff / perRow);
+                seedButtons.Add(new ClickableTextureComponent(s.ItemId, new Rectangle(xoff, yoff, 64, 64), "", s.DisplayName, s.GetTexture(), s.GetSourceRect(), 4)
+                {
+                    myID = baseID + 1000 + iOff,
+                    upNeighborID = baseID,
+                    leftNeighborID = baseID + 1000 - 1,
+                    rightNeighborID = baseID + 1000 + 1,
+                    downNeighborID = baseID + 2000
+                });
+            }
+
+            seedRect = new Rectangle(xStart, yStart, 64 * perRow, lineHeight * rows);
+
+            fertilizerButtons = new();
+            for (int j = fertScroll * perRow; j < fertilizerList.Count && j < (fertScroll + rows) * perRow; j++)
+            {
+                int jOff = j - fertScroll * perRow;
+
+                var itemData = fertilizerList[j];
+                int xoff = xStart + 64 * (jOff % perRow);
+                int yoff = yStart + lineHeight * (jOff / perRow) + lineHeight * (rows + 1);
+
+                fertilizerButtons.Add(new ClickableTextureComponent(itemData.ItemId, new Rectangle(xoff, yoff, 64, 64), "", itemData.DisplayName, itemData.GetTexture(), itemData.GetSourceRect(), 4)
+                {
+                    myID = baseID + 2000 + jOff,
+                    upNeighborID = baseID + 1000,
+                    leftNeighborID = baseID + 2000 - 1,
+                    rightNeighborID = baseID + 2000 + 1,
+                    downNeighborID = baseID + 3000
+                });
+            }
+
+            fertRect = new Rectangle(xStart, yStart + lineHeight * (rows + 1), 64 * perRow, lineHeight * rows);
+
+
             int buttonWidth = 64;
-            int buttonStartY = yStart + lineHeight * (seedButtons.Count / perRow + fertilizerButtons.Count / perRow + 2 + 2);
+            int buttonStartY = yStart + lineHeight * (rows * 2 + 2);
 
             harvestButton = new ClickableTextureComponent("harvest", new Rectangle(xStart, buttonStartY, 44, 44), "", ModEntry.SHelper.Translation.Get("Harvest"), Game1.mouseCursors, new Rectangle(76, 73, 40, 44), 1)
             {
@@ -212,6 +231,24 @@ namespace FarmPlots
             {
                 s.draw(b,(s.name == ModEntry.currentPlot.Value?.seeds[currentSeason] ? Color.White : Color.Gray * 0.5f), 0.86f);
             }
+            if (seedButtons.Count < seedList[currentSeason].Count)
+            {
+                int xStart = xPositionOnScreen + width - borderWidth - 8;
+                int yStart = yPositionOnScreen + borderWidth + spaceToClearTopBorder + 24;
+                int totalRows = (int)Math.Ceiling(seedList[currentSeason].Count / (float)perRow);
+                int height = (int)Math.Ceiling((float)(rows * lineHeight) / (totalRows - rows + 1));
+                b.Draw(Game1.staminaRect, new Rectangle(xStart, yStart, 8, rows * lineHeight), Color.Gray);
+                b.Draw(Game1.staminaRect, new Rectangle(xStart, yStart + seedScroll * height, 8, height), Color.DarkOrange);
+            }
+            if(fertilizerButtons.Count < fertilizerList.Count)
+            {
+                int xStart = xPositionOnScreen + width - borderWidth - 8;
+                int yStart = yPositionOnScreen + borderWidth + spaceToClearTopBorder + 24 + lineHeight * (rows + 1);
+                int totalRows = (int)Math.Ceiling(fertilizerList.Count / (float)perRow);
+                int height = (int)Math.Ceiling((float)(rows * lineHeight) / (totalRows - rows + 1));
+                b.Draw(Game1.staminaRect, new Rectangle(xStart, yStart, 8, rows * lineHeight), Color.Gray);
+                b.Draw(Game1.staminaRect, new Rectangle(xStart, yStart + fertScroll * height, 8, height), Color.DarkOrange);
+            }
             foreach (var s in fertilizerButtons)
             {
                 s.draw(b, s.name == ModEntry.currentPlot.Value?.fertilizers[currentSeason] ? Color.White : Color.Gray * 0.5f, 0.86f);
@@ -245,7 +282,7 @@ namespace FarmPlots
 
                 if (seedButtons[i].containsPoint(x, y))
                 {
-                    ModEntry.currentPlot.Value.seeds[currentSeason] = seedList[currentSeason][i].ItemId;
+                    ModEntry.currentPlot.Value.seeds[currentSeason] = seedList[currentSeason][i + seedScroll * perRow].ItemId;
                     Game1.playSound("bigSelect");
                     SaveToLocation();
                     return;
@@ -256,7 +293,7 @@ namespace FarmPlots
 
                 if (fertilizerButtons[i].containsPoint(x, y))
                 {
-                    ModEntry.currentPlot.Value.fertilizers[currentSeason] = fertilizerList[i].ItemId;
+                    ModEntry.currentPlot.Value.fertilizers[currentSeason] = fertilizerList[i + fertScroll * perRow].ItemId;
                     Game1.playSound("bigSelect");
                     SaveToLocation();
                     return;
@@ -268,6 +305,7 @@ namespace FarmPlots
                 {
                     currentSeason = i;
                     Game1.playSound("bigSelect");
+                    ScrollToSelected();
                     RepopulateComponentList();
                     return;
                 }
@@ -309,12 +347,6 @@ namespace FarmPlots
             }
         }
 
-
-        private void SaveToLocation()
-        {
-            Game1.currentLocation.modData[ModEntry.plotsKey] = JsonConvert.SerializeObject(ModEntry.locationDict[Game1.currentLocation]);
-        }
-
         public override void receiveRightClick(int x, int y, bool playSound = true)
         {
             base.receiveRightClick(x, y, playSound);
@@ -333,6 +365,42 @@ namespace FarmPlots
                 applyMovementKey(key);
             }
         }
+
+        public override void receiveScrollWheelAction(int direction)
+        {
+            if (seedButtons.Count < seedList[currentSeason].Count && seedRect.Contains(Game1.getMousePosition(true)))
+            {
+                if (direction < 0 && seedScroll < Math.Ceiling(seedList[currentSeason].Count / (float)perRow) - rows)
+                {
+                    Game1.playSound("shiny4", null);
+                    seedScroll++;
+                    RepopulateComponentList();
+                }
+                else if (direction > 0 && seedScroll > 0)
+                {
+                    Game1.playSound("shiny4", null);
+                    seedScroll--;
+                    RepopulateComponentList();
+                }
+            }
+            else if (fertilizerButtons.Count < fertilizerList.Count && fertRect.Contains(Game1.getMousePosition(true)))
+            {
+                if (direction < 0 && fertScroll < Math.Ceiling(fertilizerList.Count / (float)perRow) - rows)
+                {
+                    Game1.playSound("shiny4", null);
+                    fertScroll++;
+                    RepopulateComponentList();
+                }
+                else if (direction > 0 && fertScroll > 0)
+                {
+                    Game1.playSound("shiny4", null);
+                    fertScroll--;
+                    RepopulateComponentList();
+                }
+            }
+            base.receiveScrollWheelAction(direction);
+        }
+
 
         public override void snapToDefaultClickableComponent()
         {
@@ -372,6 +440,33 @@ namespace FarmPlots
                 }
             }
         }
+        private void ScrollToSelected()
+        {
+            if (ModEntry.currentPlot.Value == null)
+                return;
+            if (ModEntry.currentPlot.Value.seeds[currentSeason] is string id && seedList[currentSeason].Count > rows * perRow)
+            {
+                seedScroll = seedList[currentSeason].FindIndex(d => d.ItemId == id) / perRow;
+            }
+            else
+            {
+                seedScroll = 0;
+            }
+            if (ModEntry.currentPlot.Value.fertilizers[currentSeason] is string fid && fertilizerList.Count > rows * perRow)
+            {
+                fertScroll = fertilizerList.FindIndex(d => d.ItemId == fid) / perRow;
+            }
+            else
+            {
+                fertScroll = 0;
+            }
+        }
+
+        private void SaveToLocation()
+        {
+            Game1.currentLocation.modData[ModEntry.plotsKey] = JsonConvert.SerializeObject(ModEntry.locationDict[Game1.currentLocation]);
+        }
+
 
         public override void update(GameTime time)
         {
