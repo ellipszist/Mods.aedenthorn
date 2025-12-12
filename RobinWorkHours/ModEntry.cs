@@ -133,7 +133,7 @@ namespace RobinWorkHours
                 robin.TryLoadSchedule(robin.ScheduleKey, sched);
                 robin.checkSchedule(Game1.timeOfDay);
             }
-            else if (e.NewTime >= Config.EndTime && isRobinAtPlayerFarm())
+            else if (e.NewTime >= Config.EndTime && IsRobinAtPlayerFarm())
             {
                 Monitor.Log($"Robin is ending work at {e.NewTime}", LogLevel.Debug);
                 robin.shouldPlayRobinHammerAnimation.Value = false;
