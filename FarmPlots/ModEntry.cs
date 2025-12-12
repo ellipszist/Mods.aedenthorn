@@ -42,14 +42,14 @@ namespace FarmPlots
             Helper.Events.Display.MenuChanged += Display_MenuChanged;
             Helper.Events.Display.RenderedWorld += Display_RenderedWorld;
             
-            var harmony = new Harmony(ModManifest.UniqueID);
-            harmony.PatchAll();
+            //var harmony = new Harmony(ModManifest.UniqueID);
+            //harmony.PatchAll();
 
         }
 
         private void GameLoop_DayStarted(object sender, StardewModdingAPI.Events.DayStartedEventArgs e)
         {
-            if (!Config.EnableMod)
+            if (!Config.EnableMod || !Context.IsMainPlayer)
                 return; 
             foreach(var l in Game1.locations)
             {
@@ -209,6 +209,20 @@ namespace FarmPlots
                 name: () => SHelper.Translation.Get("Config.MenuKey"),
                 getValue: () => Config.MenuKey,
                 setValue: value => Config.MenuKey= value
+            );
+
+            configMenu.AddKeybind(
+                mod: ModManifest,
+                name: () => SHelper.Translation.Get("Config.CreateKey"),
+                getValue: () => Config.CreateKey,
+                setValue: value => Config.CreateKey = value
+            );
+
+            configMenu.AddKeybind(
+                mod: ModManifest,
+                name: () => SHelper.Translation.Get("Config.DeleteKey"),
+                getValue: () => Config.DeleteKey,
+                setValue: value => Config.DeleteKey = value
             );
         }
     }

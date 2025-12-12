@@ -1,12 +1,15 @@
-﻿using System;
-using System.IO;
-using HarmonyLib;
+﻿using HarmonyLib;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Characters;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Object = StardewValley.Object;
 
 namespace YetAnotherJumpMod
 {
@@ -71,8 +74,8 @@ namespace YetAnotherJumpMod
 			Helper.Events.Content.AssetRequested += Content_AssetRequested;
 			Helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
 
-			// Load Harmony patches
-			try
+            // Load Harmony patches
+            try
 			{
 				Harmony harmony = new(ModManifest.UniqueID);
 

@@ -619,6 +619,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildingShift", "BuildingSh
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FarmPlots", "FarmPlots\FarmPlots.csproj", "{D76E10AB-6468-207C-7226-1D049B0141FE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdvancedSmoking", "AdvancedSmoking\AdvancedSmoking.csproj", "{5B43F0A1-7F55-5DC2-6B6E-312280FC88BE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3059,6 +3061,14 @@ Global
 		{D76E10AB-6468-207C-7226-1D049B0141FE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D76E10AB-6468-207C-7226-1D049B0141FE}.Release|x64.ActiveCfg = Release|x64
 		{D76E10AB-6468-207C-7226-1D049B0141FE}.Release|x64.Build.0 = Release|x64
+		{5B43F0A1-7F55-5DC2-6B6E-312280FC88BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B43F0A1-7F55-5DC2-6B6E-312280FC88BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B43F0A1-7F55-5DC2-6B6E-312280FC88BE}.Debug|x64.ActiveCfg = Debug|x64
+		{5B43F0A1-7F55-5DC2-6B6E-312280FC88BE}.Debug|x64.Build.0 = Debug|x64
+		{5B43F0A1-7F55-5DC2-6B6E-312280FC88BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B43F0A1-7F55-5DC2-6B6E-312280FC88BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B43F0A1-7F55-5DC2-6B6E-312280FC88BE}.Release|x64.ActiveCfg = Release|x64
+		{5B43F0A1-7F55-5DC2-6B6E-312280FC88BE}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
