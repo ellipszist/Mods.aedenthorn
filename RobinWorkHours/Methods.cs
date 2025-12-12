@@ -141,6 +141,29 @@ namespace RobinWorkHours
             }
             return null;
         }
-
+        private bool isRobinAtPlayerFarm()
+        {
+            NPC robin = Game1.getCharacterFromName("Robin");
+            Farm farm = Game1.getFarm();
+            if (robin == null || robin.currentLocation == null)
+            {
+                Monitor.Log("Robin is not found or has no current location.", LogLevel.Warn);
+                return false;
+            }
+            if (robin.currentLocation == farm)
+            {
+                Monitor.Log("Robin is at the farm.", LogLevel.Trace);
+                return true;
+            }
+            foreach (Building b in farm.buildings)
+            {
+                if (b.indoors.Value != null && robin.currentLocation == b.indoors.Value)
+                {
+                    Monitor.Log("Robin is inside a building at the farm.", LogLevel.Trace);
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 }

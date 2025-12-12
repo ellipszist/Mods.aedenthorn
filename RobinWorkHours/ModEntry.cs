@@ -83,7 +83,7 @@ namespace RobinWorkHours
             if (!Config.EnableMod || !Game1.IsMasterGame || Utility.isFestivalDay() || (!isThereABuildingUnderConstruction(Game1.getFarm()) && Game1.player.daysUntilHouseUpgrade.Value <= 0 && (Game1.getLocationFromName("Town") as Town).daysUntilCommunityUpgrade.Value <= 0))
                 return;
             var robin = Game1.getCharacterFromName("Robin");
-            if(robin is null)
+            if (robin is null)
             {
                 Monitor.Log($"Couldn't find Robin", LogLevel.Warn);
                 return;
@@ -92,7 +92,7 @@ namespace RobinWorkHours
             string dest;
             int destX, destY;
             int travelTime;
-            if(isThereABuildingUnderConstruction(Game1.getFarm()) || Game1.player.daysUntilHouseUpgrade.Value > 0)
+            if (isThereABuildingUnderConstruction(Game1.getFarm()) || Game1.player.daysUntilHouseUpgrade.Value > 0)
             {
                 dest = "BusStop";
                 travelTime = Config.FarmTravelTime;
@@ -124,7 +124,7 @@ namespace RobinWorkHours
                     AccessTools.Method(typeof(NPC), "updateConstructionAnimation").Invoke(robin, new object[0]);
                     return;
                 }
-                Monitor.Log($"Robin is walking to work in {dest} at {e.NewTime}");
+                Monitor.Log($"Robin is walking to work in {dest} at {e.NewTime}", LogLevel.Trace);
                 robin.ignoreScheduleToday = false;
                 robin.reloadSprite();
                 robin.lastAttemptedSchedule = -1;
@@ -133,7 +133,7 @@ namespace RobinWorkHours
                 robin.TryLoadSchedule(robin.ScheduleKey, sched);
                 robin.checkSchedule(Game1.timeOfDay);
             }
-            else if(e.NewTime >= Config.EndTime && robin.currentLocation == Game1.getFarm())
+            else if (e.NewTime >= Config.EndTime && isRobinAtPlayerFarm())
             {
                 Monitor.Log($"Robin is ending work at {e.NewTime}", LogLevel.Debug);
                 robin.shouldPlayRobinHammerAnimation.Value = false;
@@ -146,14 +146,14 @@ namespace RobinWorkHours
                 robin.temporaryController = null;
 
                 string scheduleString = GetTodayScheduleString(robin);
-                if(scheduleString is null)
+                if (scheduleString is null)
                 {
                     scheduleString = "800 ScienceHouse 8 18 2/1700 Mountain 29 36 2/1930 ScienceHouse 16 5 0/2100 ScienceHouse 21 4 1 robin_sleep";
                 }
                 var schedule = new Dictionary<int, SchedulePathDescription>();
                 var schedulesStrings = scheduleString.Split('/');
                 int startIndex = 0;
-                for(int i = schedulesStrings.Length - 1; i >= 0; i--)
+                for (int i = schedulesStrings.Length - 1; i >= 0; i--)
                 {
                     string[] parts = schedulesStrings[i].Split(' ');
                     if (!int.TryParse(parts[0], out int time) || !int.TryParse(parts[2], out int x) || !int.TryParse(parts[3], out int y))
@@ -164,13 +164,13 @@ namespace RobinWorkHours
                     string message = parts.Length > 6 ? parts[6] : null;
                     if (Game1.timeOfDay > travelTime)
                     {
-                        Monitor.Log($"Adding starting appointment at {Game1.timeOfDay}: {schedulesStrings[i]}");
+                        Monitor.Log($"Adding starting appointment at {Game1.timeOfDay}: {schedulesStrings[i]}", LogLevel.Trace);
                         schedule.Add(Game1.timeOfDay, robin.pathfindToNextScheduleLocation(robin.ScheduleKey, "BusStop", 10, 23, parts[1], x, y, facing, animation, message));
                         startIndex = i + 1;
                         break;
                     }
                 }
-                if(startIndex < schedulesStrings.Length)
+                if (startIndex < schedulesStrings.Length)
                 {
                     string lastLoc = null;
                     int lastX = -1;
@@ -186,13 +186,13 @@ namespace RobinWorkHours
                         string message = parts.Length > 6 ? parts[6] : null;
                         if (schedule.Count == 0)
                         {
-                            Monitor.Log($"Adding starting appointment at {Game1.timeOfDay}: {schedulesStrings[i]}");
+                            Monitor.Log($"Adding starting appointment at {Game1.timeOfDay}: {schedulesStrings[i]}", LogLevel.Trace);
                             schedule.Add(Game1.timeOfDay, robin.pathfindToNextScheduleLocation(robin.ScheduleKey, "BusStop", 10, 23, parts[1], x, y, facing, animation, message));
                             break;
                         }
                         else
                         {
-                            Monitor.Log($"Adding later appointment at {time}: {schedulesStrings[i]}");
+                            Monitor.Log($"Adding later appointment at {time}: {schedulesStrings[i]}", LogLevel.Trace);
                             schedule.Add(time, robin.pathfindToNextScheduleLocation(robin.ScheduleKey, lastLoc, lastX, lastY, parts[1], x, y, facing, animation, message));
                         }
                         lastLoc = parts[1];
