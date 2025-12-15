@@ -26,5 +26,6 @@ namespace CustomSigns
         public string fontPath;
         public float scale;
         public Color color = Color.White;
+        public string editableName;
     }
 }

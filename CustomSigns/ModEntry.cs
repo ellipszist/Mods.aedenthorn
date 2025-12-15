@@ -16,7 +16,7 @@ using Rectangle = Microsoft.Xna.Framework.Rectangle;
 namespace CustomSigns
 {
     /// <summary>The mod entry point.</summary>
-    public partial class ModEntry : Mod, IAssetLoader
+    public partial class ModEntry : Mod
     {
 
         public static IMonitor SMonitor;
@@ -24,12 +24,15 @@ namespace CustomSigns
         public static ModConfig Config;
         public static ModEntry context;
 
-        private static List<string> loadedContentPacks = new List<string>();
-        private static Dictionary<string, CustomSignData> customSignDataDict = new Dictionary<string, CustomSignData>();
-        private static Dictionary<string, List<string>> customSignTypeDict = new Dictionary<string, List<string>>();
-        private static Dictionary<string, SpriteFont> fontDict = new Dictionary<string, SpriteFont>();
+        public static HashSet<string> loadedContentPacks = new HashSet<string>();
+        public static Dictionary<string, CustomSignData> customSignDataDict = new Dictionary<string, CustomSignData>();
+        public static Dictionary<string, List<string>> customSignTypeDict = new Dictionary<string, List<string>>();
+        public static Dictionary<string, SpriteFont> fontDict = new Dictionary<string, SpriteFont>();
+        public static NamingMenu textMenu;
         public static readonly string templateKey = "aedenthorn.CustomSigns/template";
+        public static readonly string textKey = "aedenthorn.CustomSigns/text";
         public static readonly string dictPath = "aedenthorn.CustomSigns/dictionary";
+        public static readonly char splitChar = '¶';
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
@@ -44,9 +47,25 @@ namespace CustomSigns
 
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
             helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
+            
             helper.Events.Input.ButtonPressed += Input_ButtonPressed;
+
+            helper.Events.Content.AssetRequested += Content_AssetRequested;
+
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
+        }
+        public int count = 0;
+
+        private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
+        {
+
+            if (!Config.EnableMod)
+                return;
+            if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
+            {
+                e.LoadFrom(() => new Dictionary<string, CustomSignData>(), AssetLoadPriority.Exclusive);
+            }
         }
 
         private void GameLoop_SaveLoaded(object sender, SaveLoadedEventArgs e)
@@ -96,43 +115,54 @@ namespace CustomSigns
 
                 DialogueBox db = menu as DialogueBox;
                 int resp = db.selectedResponse;
-                List<Response> resps = db.responses;
+                Response[] resps = db.responses;
 
-                if (resp < 0 || resps == null || resp >= resps.Count || resps[resp] == null || resps[resp].responseKey == "cancel")
+                if (resp < 0 || resps == null || resp >= resps.Length || resps[resp] == null || resps[resp].responseKey == "cancel")
                     return;
                 Monitor.Log($"Answered {Game1.player.currentLocation.lastQuestionKey} with {resps[resp].responseKey}");
 
                 placedSign.modData[templateKey] = resps[resp].responseKey;
                 placedSign = null;
             }
+            else if (placedSign != null && Game1.activeClickableMenu != null && Game1.player?.currentLocation?.lastQuestionKey?.Equals("CS_Edit_Text") == true)
+            {
+
+                IClickableMenu menu = Game1.activeClickableMenu;
+                if (menu == null || menu.GetType() != typeof(DialogueBox))
+                    return;
+
+                DialogueBox db = menu as DialogueBox;
+                int resp = db.selectedResponse;
+                Response[] resps = db.responses;
+
+                if (resp < 0 || resps == null || resp >= resps.Length || resps[resp] == null || resps[resp].responseKey == "cancel")
+                    return;
+                if (!placedSign.modData.TryGetValue(templateKey, out string template) || !customSignDataDict.TryGetValue(template, out var data))
+                {
+                    SMonitor.Log($"Template {template} not found.", LogLevel.Warn);
+                    return;
+                }
+
+                var respKey = resps[resp].responseKey;
+                Monitor.Log($"Answered {Game1.player.currentLocation.lastQuestionKey} with {respKey}");
+
+                var dataKey = textKey + respKey;
+                string textString = placedSign.modData.TryGetValue(dataKey, out var str) ? str : "";
+                db.closeDialogue();
+                Game1.activeClickableMenu = new NamingMenu(delegate (string newText)
+                {
+                    placedSign.modData[dataKey] = newText;
+                    placedSign = null;
+                    Game1.exitActiveMenu();
+                    Game1.playSound("newArtifact", null);
+                }, SHelper.Translation.Get("enter-text"), textString);
+            }
             else if (Helper.Input.IsDown(Config.ModKey) && e.Button == Config.ResetKey)
             {
-                foreach(var pack in loadedContentPacks)
-                {
-                    Helper.ConsoleCommands.Trigger("patch", new string[] { "reload", pack });
-                }
                 ReloadSignData();
                 Helper.Input.Suppress(Config.ResetKey);
             }
         }
 
-        /// <summary>Get whether this instance can load the initial version of the given asset.</summary>
-        /// <param name="asset">Basic metadata about the asset being loaded.</param>
-        public bool CanLoad<T>(IAssetInfo asset)
-        {
-            if (!Config.EnableMod)
-                return false;
-
-            return asset.AssetNameEquals(dictPath);
-        }
-
-        /// <summary>Load a matched asset.</summary>
-        /// <param name="asset">Basic metadata about the asset being loaded.</param>
-        public T Load<T>(IAssetInfo asset)
-        {
-            Monitor.Log("Loading dictionary");
-
-            return (T)(object)new Dictionary<string, CustomSignData>();
-        }
     }
 }

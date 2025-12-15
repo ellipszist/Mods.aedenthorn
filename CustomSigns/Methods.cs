@@ -1,14 +1,11 @@
 ﻿using HarmonyLib;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using StardewModdingAPI;
 using StardewValley;
-using StardewValley.Menus;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
+using Object = StardewValley.Object;
 
 namespace CustomSigns
 {
@@ -30,18 +27,21 @@ namespace CustomSigns
             responses.Add(new Response("cancel", SHelper.Translation.Get("cancel")));
             Game1.player.currentLocation.createQuestionDialogue(SHelper.Translation.Get("which-template"), responses.ToArray(), "CS_Choose_Template");
         }
-
         private static void ReloadSignData()
         {
             customSignDataDict.Clear();
             customSignTypeDict.Clear();
             fontDict.Clear();
-            var dict = SHelper.Content.Load<Dictionary<string, CustomSignData>>(dictPath, ContentSource.GameContent);
-            if (dict == null)
+
+            foreach (var pack in loadedContentPacks)
             {
-                SMonitor.Log($"No custom signs found", LogLevel.Debug);
-                return;
+                var cm = AccessTools.Field(SHelper.ConsoleCommands.GetType(), "CommandManager").GetValue(SHelper.ConsoleCommands);
+                var cmd = AccessTools.Method(cm.GetType(), "Get").Invoke(cm, new object[]{ "patch" });
+                Action<string, string[]> action = (Action<string, string[]>)AccessTools.Property(cmd.GetType(), "Callback").GetValue(cmd);
+                action.Invoke("patch", new string[] { "reload", pack });
             }
+            SHelper.GameContent.InvalidateCache(dictPath);
+            var dict = SHelper.GameContent.Load<Dictionary<string, CustomSignData>>(dictPath);
             foreach (var kvp in dict)
             {
                 CustomSignData data = kvp.Value;
@@ -56,9 +56,8 @@ namespace CustomSigns
                         customSignTypeDict[type].Add(type);
                     }
                 }
-                if (data.packID != null && !loadedContentPacks.Contains(data.packID))
-                    loadedContentPacks.Add(data.packID);
-                data.texture = SHelper.Content.Load<Texture2D>(data.texturePath, ContentSource.GameContent);
+                data.texture = SHelper.GameContent.Load<Texture2D>(data.texturePath);
+                loadedContentPacks.Add(data.packID);
                 foreach(var text in data.text)
                 {
                     if (!fontDict.ContainsKey(text.fontPath))
