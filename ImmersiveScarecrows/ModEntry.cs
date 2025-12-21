@@ -214,6 +214,13 @@ namespace ImmersiveScarecrows
                 setValue: value => Config.PickupButton = value
             );
             
+            configMenu.AddBoolOption(
+                mod: ModManifest,
+                name: () => "Pickup Nearby",
+                getValue: () => Config.PickupNearby,
+                setValue: value => Config.PickupNearby = value
+            );
+            
             configMenu.AddKeybind(
                 mod: ModManifest,
                 name: () => "Show Range",

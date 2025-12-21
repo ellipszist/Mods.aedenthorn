@@ -247,12 +247,6 @@ namespace WeddingTweaks
                 );
                 configMenu.AddBoolOption(
                     mod: ModManifest,
-                    name: () => "Fix Wedding Event Start",
-                    getValue: () => Config.FixWeddingStart,
-                    setValue: value => Config.FixWeddingStart = value
-                );
-                configMenu.AddBoolOption(
-                    mod: ModManifest,
                     name: () => "Other spouses join weddings",
                     getValue: () => Config.AllSpousesJoinWeddings,
                     setValue: value => Config.AllSpousesJoinWeddings = value

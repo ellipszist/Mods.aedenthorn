@@ -246,6 +246,20 @@ namespace DMT
                 who.mailbox.Add(value);
         }
 
+        public static void DoAddQuest(Farmer who, string value)
+        {
+            if (who == null)
+                return;
+            who.addQuest(value);
+        }
+
+        public static void DoRemoveQuest(Farmer who, string value)
+        {
+            if (who == null)
+                return;
+            who.removeQuest(value);
+        }
+
         public static void DoInvalidateAsset(string value)
         {
             foreach (var asset in value.Split('|'))

@@ -7,6 +7,7 @@ namespace DMT.Data
     {
         public const string ActionKey = "DMT/action";
         public const string AddLayerKey = "DMT/addLayer";
+        public const string AddQuestKey = "DMT/addQuest";
         public const string AddTilesheetKey = "DMT/addTilesheet";
         public const string AnimationKey = "DMT/animation";
         public const string AnimationOffKey = "DMT/animationOff";
@@ -36,6 +37,7 @@ namespace DMT.Data
         public const string PushableKey = "DMT/pushable";
         public const string PushAlsoKey = "DMT/pushAlso";
         public const string PushOthersKey = "DMT/pushOthers";
+        public const string RemoveQuestKey = "DMT/removeQuest";
         public const string SoundKey = "DMT/sound";
         public const string SlipperyKey = "DMT/slippery";
         public const string SpeedKey = "DMT/speed";
