@@ -3,8 +3,8 @@
   "Author": "aedenthorn",
   "Version": "0.1.0",
   "Description": "Customizable Luau Soup.",
-  "UniqueID": "aedenthorn.CustomizableLuauSoup",
-  "EntryDll": "CustomizableLuauSoup.dll",
+  "UniqueID": "aedenthorn.LuauSoup",
+  "EntryDll": "LuauSoup.dll",
   "MinimumApiVersion": "4.0.0",
   "UpdateKeys": [ "Nexus:" ]
 }

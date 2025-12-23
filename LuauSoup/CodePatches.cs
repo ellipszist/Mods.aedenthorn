@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using Object = StardewValley.Object;
 
-namespace CustomizableLuauSoup
+namespace LuauSoup
 {
     public partial class ModEntry
     {
@@ -42,7 +42,7 @@ namespace CustomizableLuauSoup
                     {
                         SMonitor.Log($"adding method to show reactions");
                         codes[i].opcode = OpCodes.Call;
-                        codes[i].operand = AccessTools.Method(typeof(ModEntry), nameof(ModEntry.GetDescription));
+                        codes[i].operand = AccessTools.Method(typeof(ModEntry), nameof(GetDescription));
                     }
                 }
 

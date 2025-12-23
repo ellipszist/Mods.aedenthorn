@@ -621,7 +621,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FarmPlots", "FarmPlots\Farm
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdvancedSmoking", "AdvancedSmoking\AdvancedSmoking.csproj", "{5B43F0A1-7F55-5DC2-6B6E-312280FC88BE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomizableLuauSoup", "CustomizableLuauSoup\CustomizableLuauSoup.csproj", "{74DF44A0-3ED6-E598-3AC9-29A294AE3D37}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LuauSoup", "LuauSoup\LuauSoup.csproj", "{5CEA8137-74CF-F723-F357-E6B3967656AE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -3071,14 +3071,14 @@ Global
 		{5B43F0A1-7F55-5DC2-6B6E-312280FC88BE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5B43F0A1-7F55-5DC2-6B6E-312280FC88BE}.Release|x64.ActiveCfg = Release|x64
 		{5B43F0A1-7F55-5DC2-6B6E-312280FC88BE}.Release|x64.Build.0 = Release|x64
-		{74DF44A0-3ED6-E598-3AC9-29A294AE3D37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{74DF44A0-3ED6-E598-3AC9-29A294AE3D37}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{74DF44A0-3ED6-E598-3AC9-29A294AE3D37}.Debug|x64.ActiveCfg = Debug|x64
-		{74DF44A0-3ED6-E598-3AC9-29A294AE3D37}.Debug|x64.Build.0 = Debug|x64
-		{74DF44A0-3ED6-E598-3AC9-29A294AE3D37}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{74DF44A0-3ED6-E598-3AC9-29A294AE3D37}.Release|Any CPU.Build.0 = Release|Any CPU
-		{74DF44A0-3ED6-E598-3AC9-29A294AE3D37}.Release|x64.ActiveCfg = Release|x64
-		{74DF44A0-3ED6-E598-3AC9-29A294AE3D37}.Release|x64.Build.0 = Release|x64
+		{5CEA8137-74CF-F723-F357-E6B3967656AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5CEA8137-74CF-F723-F357-E6B3967656AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5CEA8137-74CF-F723-F357-E6B3967656AE}.Debug|x64.ActiveCfg = Debug|x64
+		{5CEA8137-74CF-F723-F357-E6B3967656AE}.Debug|x64.Build.0 = Debug|x64
+		{5CEA8137-74CF-F723-F357-E6B3967656AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5CEA8137-74CF-F723-F357-E6B3967656AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5CEA8137-74CF-F723-F357-E6B3967656AE}.Release|x64.ActiveCfg = Release|x64
+		{5CEA8137-74CF-F723-F357-E6B3967656AE}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -3,14 +3,14 @@ using StardewValley;
 using System.Collections.Generic;
 using Object = StardewValley.Object;
 
-namespace CustomizableLuauSoup
+namespace LuauSoup
 {
     public partial class ModEntry
     {
         public static string GetDescription(Item hoveredItem)
         {
             var desc = hoveredItem.getDescription();
-            if(!Config.EnableMod || Game1.season != Season.Summer || Game1.dayOfMonth != 11 || Game1.currentLocation.mapPath.Value != "Maps\\Beach-Luau" || !Config.ShowItemInfo || hoveredItem is not Object o)
+            if(!Config.EnableMod || Game1.season != Season.Summer || Game1.dayOfMonth != 11 || Game1.currentLocation.mapPath.Value != "Maps\\Beach-Luau" || !Config.ShowItemInfo || hoveredItem is not Object o || !Utility.highlightLuauSoupItems(hoveredItem))
                 return desc;
             int itemLevel = 5;
             int friendship = 0;

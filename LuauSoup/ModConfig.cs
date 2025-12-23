@@ -4,7 +4,7 @@ using StardewModdingAPI;
 using StardewModdingAPI.Utilities;
 using System.Collections.Generic;
 
-namespace CustomizableLuauSoup
+namespace LuauSoup
 {
     public class ModConfig
     {

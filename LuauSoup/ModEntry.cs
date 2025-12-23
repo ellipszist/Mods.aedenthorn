@@ -2,7 +2,7 @@
 using StardewModdingAPI;
 using System.Collections.Generic;
 
-namespace CustomizableLuauSoup
+namespace LuauSoup
 {
     /// <summary>The mod entry point.</summary>
     public partial class ModEntry : Mod
@@ -12,7 +12,7 @@ namespace CustomizableLuauSoup
         public static IModHelper SHelper;
         public static ModConfig Config;
         public static ModEntry context;
-        public static string dictPath = "aedenthorn.CustomizableLuauSoup/dict";
+        public static string dictPath = "aedenthorn.LuauSoup/dict";
 
         public override void Entry(IModHelper helper)
         {

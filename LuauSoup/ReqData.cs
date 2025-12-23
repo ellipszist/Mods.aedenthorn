@@ -1,4 +1,4 @@
-﻿namespace CustomizableLuauSoup
+﻿namespace LuauSoup
 {
     public class ReqData
     {
