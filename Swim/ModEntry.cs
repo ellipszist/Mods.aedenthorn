@@ -97,6 +97,11 @@ namespace Swim
             var harmony = new Harmony(this.ModManifest.UniqueID);
 
             harmony.Patch(
+               original: AccessTools.Method(typeof(Game1), nameof(Game1.pressUseToolButton)),
+               prefix: new HarmonyMethod(typeof(SwimPatches), nameof(SwimPatches.Game1_pressUseToolButton_Prefix))
+            );
+
+            harmony.Patch(
                original: AccessTools.Method(typeof(FarmerRenderer), nameof(FarmerRenderer.draw), new Type[] { typeof(SpriteBatch), typeof(FarmerSprite.AnimationFrame), typeof(int), typeof(Rectangle), typeof(Vector2), typeof(Vector2), typeof(float), typeof(int), typeof(Color), typeof(float), typeof(float), typeof(Farmer) }),
                prefix: new HarmonyMethod(typeof(SwimPatches), nameof(SwimPatches.FarmerRenderer_draw_Prefix)),
                postfix: new HarmonyMethod(typeof(SwimPatches), nameof(SwimPatches.FarmerRenderer_draw_Postfix))

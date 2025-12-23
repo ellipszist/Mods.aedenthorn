@@ -26,21 +26,6 @@ namespace Swim
             Config = config;
             Helper = helper;
         }
-        public static void FarmerRenderer_draw_Prefix(Farmer who, ref bool __state)
-        {
-            try
-            {
-                if(who.swimming.Value && Game1.player.currentLocation.Name.StartsWith("Custom_Underwater"))
-                {
-                    who.swimming.Value = false;
-                    __state = true;
-                }
-            }
-            catch (Exception ex)
-            {
-                Monitor.Log($"Failed in {nameof(FarmerRenderer_draw_Prefix)}:\n{ex}", LogLevel.Error);
-            }
-        }
         public static bool FarmerSprite_checkForFootstep_Prefix()
         {
             try
@@ -55,6 +40,21 @@ namespace Swim
                 Monitor.Log($"Failed in {nameof(FarmerSprite_checkForFootstep_Prefix)}:\n{ex}", LogLevel.Error);
             }
             return true;
+        }
+        public static void FarmerRenderer_draw_Prefix(Farmer who, ref bool __state)
+        {
+            try
+            {
+                if (who.swimming.Value && Game1.player.currentLocation.Name.StartsWith("Custom_Underwater"))
+                {
+                    who.swimming.Value = false;
+                    __state = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Monitor.Log($"Failed in {nameof(FarmerRenderer_draw_Prefix)}:\n{ex}", LogLevel.Error);
+            }
         }
         internal static void FarmerRenderer_draw_Postfix(Farmer who, bool __state)
         {
@@ -257,6 +257,21 @@ namespace Swim
             }
 
             return codes.AsEnumerable();
+        }
+
+        public static void Game1_pressUseToolButton_Prefix(Game1 __instance)
+        {
+            try
+            {
+                if (!Game1.player.currentLocation.Name.StartsWith("Custom_Underwater"))
+                    return;
+                if(Game1.player.bathingClothes.Value == false || Config.AllowActionsWhileInSwimsuit)
+                    Game1.player.canOnlyWalk = false;
+            }
+            catch (Exception ex)
+            {
+                Monitor.Log($"Failed in {nameof(Game1_pressUseToolButton_Prefix)}:\n{ex}", LogLevel.Error);
+            }
         }
 
         public static void Farmer_changeIntoSwimsuit_Postfix(Farmer __instance)

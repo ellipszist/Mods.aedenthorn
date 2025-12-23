@@ -397,7 +397,6 @@ namespace Swim
             {
                 return;
             }
-
             if (false && e.Button == SButton.Q)
             {
                 SwimUtils.SeaMonsterSay("The quick brown fox jumped over the slow lazy dog.");
@@ -516,7 +515,7 @@ namespace Swim
                 {
                     Monitor.Log("Playing breathe sound");
                     lastBreatheSound.Value = ticksWearingScubaGear.Value;
-                    breatheEffect.Value.Play(0.5f * Game1.options.soundVolumeLevel, 0f, 0f);
+                    breatheEffect.Value.Play(0.25f * Game1.options.soundVolumeLevel, 0f, 0f);
                 }
             }
             else

@@ -114,7 +114,7 @@ namespace Swim
         }
         public static int MaxOxygen()
         {
-            return Game1.player.MaxStamina * Math.Max(1, Config.OxygenMult);
+            return Game1.player.MaxStamina * Math.Max(1, Config.OxygenMult) * 8;
         }
 
         public static bool IsMapUnderwater(string name)
