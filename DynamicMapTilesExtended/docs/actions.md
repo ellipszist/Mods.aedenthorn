@@ -355,6 +355,34 @@ The mail flag you wish to remove, if it's known by the player.
 
 ---
 
+## Add Quest
+Give a player a quest.
+
+### Key
+"DMT/addQuest"
+
+### Accepted Value
+The quest ID you wish to add.
+
+### Example
+"DMT/addQuest_Once_MonsterSlain(GoopAlienBrood)": "MindMeltMax.WeirdEvents/FriendOfTheGoop"
+
+---
+
+## Remove Quest
+Remove a quest from a player.
+
+### Key
+"DMT/removeQuest"
+
+### Accepted Value
+The quest ID you wish to remove.
+
+### Example
+"DMT/removeQuest_Once_MonsterSlain(GoopAlienBrood)": "MindMeltMax.WeirdEvents/FriendOfTheGoop"
+
+---
+
 ## Add Mail To Mailbox
 Add mail for tomorrow to the players mailbox.
 

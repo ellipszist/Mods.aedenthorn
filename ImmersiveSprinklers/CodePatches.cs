@@ -1,25 +1,26 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Netcode;
+using Newtonsoft.Json.Linq;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Extensions;
 using StardewValley.ItemTypeDefinitions;
+using StardewValley.Network;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 using StardewValley.Tools;
 using System;
 using System.Collections.Generic;
-using System.Reflection.Emit;
+using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using xTile.Dimensions;
+using xTile.Tiles;
 using Color = Microsoft.Xna.Framework.Color;
 using Object = StardewValley.Object;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
-using System.Linq;
-using Netcode;
-using StardewValley.Network;
-using Newtonsoft.Json.Linq;
-using StardewValley.Extensions;
 
 namespace ImmersiveSprinklers
 {
@@ -391,6 +392,19 @@ namespace ImmersiveSprinklers
                 if (!Config.EnableMod || power > 1)
                     return true;
                 Vector2 placementTile = new Vector2(x, y);
+
+                Rectangle boundingBox = new Rectangle(x * 64, y * 64, 64, 64);
+                using (List<ResourceClump>.Enumerator enumerator2 = location.resourceClumps.GetEnumerator())
+                {
+                    while (enumerator2.MoveNext())
+                    {
+                        if (enumerator2.Current.getBoundingBox().Intersects(boundingBox))
+                        {
+                            return true;
+                        }
+                    }
+                }
+
                 int which = GetMouseCorner();
                 if (ReturnSprinkler(Game1.player, location, Game1.currentCursorTile, which))
                 {

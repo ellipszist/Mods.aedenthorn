@@ -1,0 +1,10 @@
+﻿{
+  "Name": "Customizable Luau Soup",
+  "Author": "aedenthorn",
+  "Version": "0.1.0",
+  "Description": "Customizable Luau Soup.",
+  "UniqueID": "aedenthorn.CustomizableLuauSoup",
+  "EntryDll": "CustomizableLuauSoup.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [ "Nexus:" ]
+}

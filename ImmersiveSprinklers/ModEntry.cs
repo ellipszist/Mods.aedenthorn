@@ -3,6 +3,9 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.GameData.GiantCrops;
+using StardewValley.GameData.Machines;
+using StardewValley.GameData.Objects;
 using StardewValley.TerrainFeatures;
 using System.Collections.Generic;
 using System.Globalization;
@@ -57,6 +60,8 @@ namespace ImmersiveSprinklers
 
         }
 
+
+
         private void Display_RenderedWorld(object sender, StardewModdingAPI.Events.RenderedWorldEventArgs e)
         {
             if (!Config.EnableMod || !Context.IsPlayerFree || !Helper.Input.IsDown(Config.ShowRangeButton) || Game1.currentLocation?.terrainFeatures is null)
@@ -103,7 +108,17 @@ namespace ImmersiveSprinklers
         {
             if (!Config.EnableMod)
                 return;
-            Config.ActivateNearby = true;
+            if(e.Button == SButton.OemOpenBrackets && Context.IsWorldReady)
+            {
+                //foreach(var key in Game1.currentLocation.terrainFeatures.Keys)
+                //{
+                //    if (Game1.currentLocation.terrainFeatures[key] is HoeDirt dirt && dirt.crop != null)
+                //    {
+                //        dirt.crop.growCompletely();
+                //        Game1.currentLocation.terrainFeatures[key] = dirt;
+                //    }
+                //}
+            }
             if (e.Button == Config.PickupButton && Context.CanPlayerMove)
             {
                 int which = GetMouseCorner();

@@ -2,10 +2,10 @@
 using Netcode;
 using StardewValley;
 using StardewValley.Monsters;
-using StardewValley.Network;
 using StardewValley.Tools;
 using System;
 using System.Collections.Generic;
+using System.Xml.Serialization;
 
 namespace Swim
 {
@@ -16,8 +16,6 @@ namespace Swim
             "HermitCrab",
             "ChestCrab",
         };
-        private NetBool shellGone = new NetBool();
-        private NetInt shellHealth = new NetInt(5);
 
         public SeaCrab() : base()
         {

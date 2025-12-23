@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.Monsters;
 using System.Collections.Generic;
+using System.Xml.Serialization;
 
 namespace Swim
 {

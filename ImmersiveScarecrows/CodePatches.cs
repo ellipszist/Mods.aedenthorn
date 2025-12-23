@@ -282,6 +282,19 @@ namespace ImmersiveScarecrows
                 if (!Config.EnableMod || power > 1)
                     return true;
                 Vector2 placementTile = new Vector2(x, y);
+
+                Rectangle boundingBox = new Rectangle(x * 64, y * 64, 64, 64);
+                using (List<ResourceClump>.Enumerator enumerator2 = location.resourceClumps.GetEnumerator())
+                {
+                    while (enumerator2.MoveNext())
+                    {
+                        if (enumerator2.Current.getBoundingBox().Intersects(boundingBox))
+                        {
+                            return true;
+                        }
+                    }
+                }
+
                 int which = GetMouseCorner();
                 if (ReturnScarecrow(Game1.player, location, Game1.currentCursorTile, which))
                 {

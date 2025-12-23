@@ -5,6 +5,7 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
+using StardewValley.GameData.Shirts;
 using StardewValley.Menus;
 using StardewValley.Tools;
 using System;
@@ -86,7 +87,7 @@ namespace Swim
             helper.Events.Input.ButtonPressed += SwimHelperEvents.Input_ButtonPressed;
             helper.Events.GameLoop.DayStarted += SwimHelperEvents.GameLoop_DayStarted;
             helper.Events.GameLoop.SaveLoaded += SwimHelperEvents.GameLoop_SaveLoaded;
-            helper.Events.GameLoop.Saving += SwimHelperEvents.GameLoop_Saving;
+            helper.Events.GameLoop.DayEnding += SwimHelperEvents.GameLoop_DayEnding;
             helper.Events.Display.RenderedHud += SwimHelperEvents.Display_RenderedHud;
             helper.Events.Display.RenderedWorld += SwimHelperEvents.Display_RenderedWorld;
             helper.Events.Player.InventoryChanged += SwimHelperEvents.Player_InventoryChanged;
@@ -202,6 +203,55 @@ namespace Swim
             else if (e.NameWithoutLocale.IsEquivalentTo("Portraits\\Mariner"))
             {
                 e.LoadFrom(() => {return Game1.content.Load<Texture2D>("Portraits\\Gil");}, AssetLoadPriority.Low);
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo("Data/Shirts"))
+            {
+                e.Edit(delegate (IAssetData assetData)
+                {
+
+                    var dict = assetData.AsDictionary<string, ShirtData>().Data;
+                    dict["Swim_ScubaTank"] = new ShirtData(){
+                        Name = "Swim_ScubaTank",
+                        DisplayName = SHelper.Translation.Get("scubatank-name"),
+                        Description = SHelper.Translation.Get("scubatank-desc"),
+                        Price = 50000,
+                        Texture = "aedenthorn.Swim/shirts",
+                        SpriteIndex = 0
+                    };
+                });
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo("Data/Boots"))
+            {
+                e.Edit(delegate (IAssetData assetData)
+                {
+
+                    var dict = assetData.AsDictionary<string, string>().Data;
+                    dict["Swim_ScubaFins"] = $"Swim_ScubaFins/{SHelper.Translation.Get("scubafins-desc")}/50000/0/0/2/{SHelper.Translation.Get("scubafins-name")}/aedenthorn.Swim\\shoeColors/0/aedenthorn.Swim\\boots";
+                });
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo("Data/Hats"))
+            {
+                e.Edit(delegate (IAssetData assetData)
+                {
+                    var dict = assetData.AsDictionary<string, string>().Data;
+                    dict["Swim_ScubaMask"] = $"Scuba Mask/{SHelper.Translation.Get("scubamask-desc")}/true/true//{SHelper.Translation.Get("scubamask-name")}/0/aedenthorn.Swim\\hats";
+                });
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo("aedenthorn.Swim\\hats"))
+            {
+                e.LoadFromModFile<Texture2D>("assets/hats.png", AssetLoadPriority.Exclusive);
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo("aedenthorn.Swim\\boots"))
+            {
+                e.LoadFromModFile<Texture2D>("assets/boots.png", AssetLoadPriority.Exclusive);
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo("aedenthorn.Swim\\shirts"))
+            {
+                e.LoadFromModFile<Texture2D>("assets/shirts.png", AssetLoadPriority.Exclusive);
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo("aedenthorn.Swim\\shoeColors"))
+            {
+                e.LoadFromModFile<Texture2D>("assets/shoeColors.png", AssetLoadPriority.Exclusive);
             }
         }
 

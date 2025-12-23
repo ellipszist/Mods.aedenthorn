@@ -1,4 +1,10 @@
 ﻿{
+	"scubatank-name": "Tanque de bueco",
+	"scubatank-desc": "Un tanque de bueco para su respirador.",
+	"scubamask-name": "Máscara de bueco",
+	"scubamask-desc": "Un respirador para su tanque de bueco.",
+	"scubafins-name": "Aletas de bueco",
+	"scubafins-desc": "¡Le hacen nadar más rápido!",
 	"scuba-fins": "Aletas de buceo",
 	"SwimMod_Mariner_Questions": "Viejo Marinero: Ah, veo que atrapaste un bicho de buceo, {0}. Puede ser que tenga algo que puedas usar en tu viaje submarino... ¿estás interesado?",
 	"SwimMod_Mariner_Questions_Old": "Viejo Marinero: Ah, ya veo... ¿estás listo para demostrar tu valía y tomar mi tesoro enterrado?",
