@@ -4,7 +4,6 @@ using System.Collections.Generic;
 
 namespace LuauSoup
 {
-    /// <summary>The mod entry point.</summary>
     public partial class ModEntry : Mod
     {
 

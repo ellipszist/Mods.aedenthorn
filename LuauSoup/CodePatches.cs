@@ -96,6 +96,7 @@ namespace LuauSoup
                     if (itemLevel < likeLevel)
                     {
                         likeLevel = itemLevel;
+                        loved = null;
                     }
                 }
 
