@@ -135,8 +135,7 @@ namespace InventoryIndicators
             }
             if (Config.ShowPlantableSeeds && __instance is Object && __instance.Category == Object.SeedsCategory)
             {
-                var itemId = Crop.ResolveSeedId(__instance.ItemId, Game1.currentLocation);
-                if(Crop.TryGetData(itemId, out var cropData) && cropData.Seasons.Contains(Game1.currentLocation.GetSeason()))
+                if(__instance.Name.Contains("Mixed") || Crop.TryGetData(Crop.ResolveSeedId(__instance.ItemId, Game1.currentLocation), out var cropData) && cropData.Seasons.Contains(Game1.currentLocation.GetSeason()))
                 {
                     spriteBatch.Draw(Game1.mouseCursors, location + new Vector2(offset, 32 - offset), new Rectangle(18, 625, 13, 15), new Color(1f,1f,1f,Config.PlantableOpacity), 0, Vector2.Zero, 2f, SpriteEffects.None, layerDepth);
 
