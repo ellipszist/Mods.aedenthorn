@@ -2,10 +2,8 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Netcode;
-using Newtonsoft.Json.Linq;
 using StardewModdingAPI;
 using StardewValley;
-using StardewValley.Extensions;
 using StardewValley.ItemTypeDefinitions;
 using StardewValley.Network;
 using StardewValley.Objects;
@@ -17,7 +15,6 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using xTile.Dimensions;
-using xTile.Tiles;
 using Color = Microsoft.Xna.Framework.Color;
 using Object = StardewValley.Object;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
@@ -192,14 +189,20 @@ namespace ImmersiveSprinklers
 
                         if (obj is not null)
                         {
-                            var globalPosition = tileLocation * 64 + new Vector2(32 - 8 * Config.Scale + Config.DrawOffsetX, (obj.bigCraftable.Value ? -32 : 32) - 8 * Config.Scale + Config.DrawOffsetY) + GetSprinklerCorner(i) * 32;
+                            Vector2 globalPosition = __instance.Tile * 64 + GetSprinklerCorner(i) * 32f + new Vector2(0, -16);
+                            if (obj.bigCraftable.Value)
+                                globalPosition -= new Vector2(0, 64);
+                            var layerDepth = (globalPosition.Y + (obj.bigCraftable.Value ? 81 : 33) + Config.DrawOffsetZ) / 10000f;
                             var position = Game1.GlobalToLocal(globalPosition);
-                            var layerDepth = (globalPosition.Y + (obj.bigCraftable.Value ? 80 : 16) + Config.DrawOffsetZ) / 10000f;
+
                             Texture2D texture = null;
                             ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem(obj.QualifiedItemId);
                             Rectangle sourceRect = itemData.GetSourceRect(obj is Mannequin ? 2 : 0, new int?(obj.ParentSheetIndex));
                             texture = itemData.GetTexture();
-
+                            if (atApi is not null && obj.modData.ContainsKey("AlternativeTextureName"))
+                            {
+                                texture = GetAltTextureForObject(obj, out sourceRect);
+                            }
                             if (texture is null)
                             {
                                 texture = obj.bigCraftable.Value ? Game1.bigCraftableSpriteSheet : Game1.objectSpriteSheet;
@@ -219,7 +222,6 @@ namespace ImmersiveSprinklers
                     }
                 }
             }
-
         }
         //[HarmonyPatch(typeof(GameLocation), nameof(GameLocation.isTileLocationOpen))]
         public class GameLocation_isTileOccupiedForPlacement_Patch
@@ -288,6 +290,15 @@ namespace ImmersiveSprinklers
                 ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem(__instance.QualifiedItemId);
                 Rectangle sourceRect = itemData.GetSourceRect(__instance is Mannequin ? 2 : 0, new int?(__instance.ParentSheetIndex));
                 texture = itemData.GetTexture();
+                if (atApi is not null && __instance.modData.ContainsKey("AlternativeTextureName"))
+                {
+                    texture = GetAltTextureForObject(__instance, out sourceRect);
+                }
+                if (texture is null)
+                {
+                    texture = Game1.bigCraftableSpriteSheet;
+                    sourceRect = Object.getSourceRectForBigCraftable(__instance.ParentSheetIndex);
+                }
                 spriteBatch.Draw(texture, pos, sourceRect, Color.White * Config.Alpha, 0, Vector2.Zero, Config.Scale, __instance.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0.02f);
 
                 return false;

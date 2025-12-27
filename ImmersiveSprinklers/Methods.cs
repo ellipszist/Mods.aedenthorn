@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Netcode;
 using StardewValley;
+using StardewValley.ConsoleAsync;
 using StardewValley.Network;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
@@ -424,125 +425,26 @@ namespace ImmersiveSprinklers
             });
         }
 
-
-        private static void SetAltTextureForObject(Object obj)
+        public static void SetAltTextureForObject(Object obj)
         {
             if (atApi is null)
                 return;
             try
             {
-
-                var textureMgr = AccessTools.Field(atApi.GetType().Assembly.GetType("AlternativeTextures.AlternativeTextures"), "textureManager").GetValue(null);
-
-                var modelType = "Craftable";
-                var baseName = AccessTools.Method(atApi.GetType().Assembly.GetType("AlternativeTextures.Framework.Patches.PatchTemplate"), "GetObjectName").Invoke(null, new object[] { obj });
-                var instanceName = $"{modelType}_{baseName}";
-                var instanceSeasonName = $"{instanceName}_{Game1.currentSeason}";
-
-                bool hasAlt = (bool)AccessTools.Method(textureMgr.GetType(), "DoesObjectHaveAlternativeTextureById", new Type[] { typeof(string) }).Invoke(textureMgr, new object[] { instanceName });
-                bool hasAltSeason = (bool)AccessTools.Method(textureMgr.GetType(), "DoesObjectHaveAlternativeTextureById", new System.Type[] { typeof(string) }).Invoke(textureMgr, new object[] { instanceSeasonName });
-                MethodInfo assignModData = AccessTools.Method(atApi.GetType().Assembly.GetType("AlternativeTextures.Framework.Patches.PatchTemplate"), "AssignModData").MakeGenericMethod(typeof(Object));
-                if ((bool)AccessTools.Method(atApi.GetType().Assembly.GetType("AlternativeTextures.Framework.Patches.PatchTemplate"), "HasCachedTextureName").MakeGenericMethod(typeof(Object)).Invoke(null, new object[] { obj, false }))
-                {
-                    return;
-                }
-                else if (hasAlt && hasAltSeason)
-                {
-                    var result = Game1.random.Next(2) > 0 ? assignModData.Invoke(null, new object[] { obj, instanceSeasonName, true, obj.bigCraftable.Value }) : assignModData.Invoke(null, new object[] { obj, instanceName, false, obj.bigCraftable.Value });
-                    return;
-                }
-                else
-                {
-                    if (hasAlt)
-                    {
-                        assignModData.Invoke(null, new object[] { obj, instanceName, false, obj.bigCraftable.Value });
-                        return;
-                    }
-
-                    if (hasAltSeason)
-                    {
-                        assignModData.Invoke(null, new object[] { obj, instanceSeasonName, true, obj.bigCraftable.Value });
-                        return;
-                    }
-                }
-
-                AccessTools.Method(atApi.GetType().Assembly.GetType("AlternativeTextures.Framework.Patches.PatchTemplate"), "AssignDefaultModData").MakeGenericMethod(typeof(Object)).Invoke(null, new object[] { obj, instanceSeasonName, true, obj.bigCraftable.Value });
+                AccessTools.Method(atApi.GetType(), "SetTextureForObject").Invoke(atApi, new object[] { obj });
             }
-            catch (Exception ex)
+            catch
             {
-                ex = null;
             }
-
         }
 
-
-        private static Texture2D GetAltTextureForObject(Object obj, out Rectangle sourceRect)
+        public static Texture2D GetAltTextureForObject(Object obj, out Rectangle sourceRect)
         {
             sourceRect = new Rectangle();
-            if (!obj.modData.TryGetValue("AlternativeTextureName", out var str))
-                return null;
-            var textureMgr = AccessTools.Field(atApi.GetType().Assembly.GetType("AlternativeTextures.AlternativeTextures"), "textureManager").GetValue(null);
-            var textureModel = AccessTools.Method(textureMgr.GetType(),"GetSpecificTextureModel").Invoke(textureMgr, new object[] { str } );
-            if (textureModel is null)
-            {
-                return null;
-            }
-            var textureVariation = int.Parse(obj.modData["AlternativeTextureVariation"]);
-            var modConfig = AccessTools.Field(atApi.GetType().Assembly.GetType("AlternativeTextures.AlternativeTextures"), "modConfig").GetValue(null);
-            if (textureVariation == -1 || (bool)AccessTools.Method(modConfig.GetType(), "IsTextureVariationDisabled").Invoke(modConfig, new object[] { AccessTools.Method(textureModel.GetType(), "GetId").Invoke(textureModel, new object[] { }), textureVariation } ))
-            {
-                return null;
-            }
-            var textureOffset = (int)AccessTools.Method(textureModel.GetType(), "GetTextureOffset").Invoke(textureModel, new object[] { textureVariation });
-
-            // Get the current X index for the source tile
-            var xTileOffset = obj.modData.ContainsKey("AlternativeTextureSheetId") ? obj.ParentSheetIndex - int.Parse(obj.modData["AlternativeTextureSheetId"]) : 0;
-            if (obj.showNextIndex.Value)
-            {
-                xTileOffset += 1;
-            }
-
-            // Override xTileOffset if AlternativeTextureModel has an animation
-            if ((bool)AccessTools.Method(textureModel.GetType(), "HasAnimation").Invoke(textureModel, new object[] { textureVariation }))
-            {
-                if (!obj.modData.ContainsKey("AlternativeTextureCurrentFrame") || !obj.modData.ContainsKey("AlternativeTextureFrameIndex") || !obj.modData.ContainsKey("AlternativeTextureFrameDuration") || !obj.modData.ContainsKey("AlternativeTextureElapsedDuration"))
-                {
-                    var animationData = AccessTools.Method(textureModel.GetType(), "GetAnimationDataAtIndex").Invoke(textureModel, new object[] { textureVariation, 0 });
-                    obj.modData["AlternativeTextureCurrentFrame"] = "0";
-                    obj.modData["AlternativeTextureFrameIndex"] = "0";
-                    obj.modData["AlternativeTextureFrameDuration"] = AccessTools.Property(animationData.GetType(), "Duration").GetValue(animationData).ToString();// Animation.ElementAt(0).Duration.ToString();
-                    obj.modData["AlternativeTextureElapsedDuration"] = "0";
-                }
-
-                var currentFrame = int.Parse(obj.modData["AlternativeTextureCurrentFrame"]);
-                var frameIndex = int.Parse(obj.modData["AlternativeTextureFrameIndex"]);
-                var frameDuration = int.Parse(obj.modData["AlternativeTextureFrameDuration"]);
-                var elapsedDuration = int.Parse(obj.modData["AlternativeTextureElapsedDuration"]);
-
-                if (elapsedDuration >= frameDuration)
-                {
-                    var animationDataList = (IEnumerable<object>)AccessTools.Method(textureModel.GetType(), "GetAnimationData").Invoke(textureModel, new object[] { textureVariation });
-                    frameIndex = frameIndex + 1 >= animationDataList.Count() ? 0 : frameIndex + 1;
-
-                    var animationData = AccessTools.Method(textureModel.GetType(), "GetAnimationDataAtIndex").Invoke(textureModel, new object[] { textureVariation, frameIndex });
-                    currentFrame = (int)AccessTools.Property(animationData.GetType(), "Frame").GetValue(animationData);
-
-                    obj.modData["AlternativeTextureCurrentFrame"] = currentFrame.ToString();
-                    obj.modData["AlternativeTextureFrameIndex"] = frameIndex.ToString();
-                    obj.modData["AlternativeTextureFrameDuration"] = AccessTools.Property(animationData.GetType(), "Duration").GetValue(animationData).ToString();
-                    obj.modData["AlternativeTextureElapsedDuration"] = "0";
-                }
-                else
-                {
-                    obj.modData["AlternativeTextureElapsedDuration"] = (elapsedDuration + Game1.currentGameTime.ElapsedGameTime.Milliseconds).ToString();
-                }
-
-                xTileOffset = currentFrame;
-            }
-            var w = (int)AccessTools.Property(textureModel.GetType(), "TextureWidth").GetValue(textureModel);
-            var h = (int)AccessTools.Property(textureModel.GetType(), "TextureHeight").GetValue(textureModel);
-            sourceRect = new Rectangle(xTileOffset * w, textureOffset, w, h);
-            return (Texture2D)AccessTools.Method(textureModel.GetType(), "GetTexture").Invoke(textureModel, new object[] { textureVariation });
+            var inputParams = new object[] { obj, sourceRect };
+            Texture2D result = (Texture2D)AccessTools.Method(atApi.GetType(), "GetTextureForObject").Invoke(atApi, inputParams);
+            sourceRect = (Rectangle)inputParams[1];
+            return result;
         }
 
         public static Func<KeyValuePair<Vector2, TerrainFeature>, bool> RemoveWhere(Func<KeyValuePair<Vector2, TerrainFeature>, bool> match)

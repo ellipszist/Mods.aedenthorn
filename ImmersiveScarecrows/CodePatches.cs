@@ -129,8 +129,8 @@ namespace ImmersiveScarecrows
                         if (obj is not null)
                         {
                             Vector2 scaleFactor = obj.getScale();
-                            var globalPosition = __instance.Tile * 64 + new Vector2(32 - 8 * Config.Scale - scaleFactor.X / 2f + Config.DrawOffsetX, 32 - 8 * Config.Scale - 80 - scaleFactor.Y / 2f + Config.DrawOffsetY) + GetScarecrowCorner(i) * 32;
-                            var position = Game1.GlobalToLocal(globalPosition);
+
+
                             ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem(obj.QualifiedItemId);
                             Rectangle sourceRect = itemData.GetSourceRect(obj is Mannequin ? 2 : 0, new int?(obj.ParentSheetIndex));
                             Texture2D texture = itemData.GetTexture();
@@ -143,7 +143,11 @@ namespace ImmersiveScarecrows
                                 texture = Game1.bigCraftableSpriteSheet;
                                 sourceRect = Object.getSourceRectForBigCraftable(obj.ParentSheetIndex);
                             }
-                            var layerDepth = (globalPosition.Y + 81 + 16 + Config.DrawOffsetZ) / 10000f;
+                            Vector2 globalPosition = __instance.Tile * 64 + GetScarecrowCorner(i) * 32f + new Vector2(0, -16);
+                            if (obj.bigCraftable.Value)
+                                globalPosition -= new Vector2(0, 64);
+                            var layerDepth = (globalPosition.Y + (obj.bigCraftable.Value ? 81 : 33 ) + Config.DrawOffsetZ) / 10000f;
+                            var position = Game1.GlobalToLocal(globalPosition);
                             dirt_batch.Draw(texture, position, sourceRect, Color.White * Config.Alpha, 0, Vector2.Zero, Config.Scale, SpriteEffects.None, layerDepth);
                             if (__instance.modData.TryGetValue(hatKey + i, out string hatString) && int.TryParse(hatString, out var hat))
                             {
@@ -218,7 +222,20 @@ namespace ImmersiveScarecrows
                 }
                 if (__instance.bigCraftable.Value)
                     pos -= new Vector2(0, 64);
-                spriteBatch.Draw(__instance.bigCraftable.Value ? Game1.bigCraftableSpriteSheet : Game1.objectSpriteSheet, pos + new Vector2(0, -16), __instance.bigCraftable.Value ? Object.getSourceRectForBigCraftable(__instance.ParentSheetIndex) : GameLocation.getSourceRectForObject(__instance.ParentSheetIndex), Color.White * Config.Alpha, 0, Vector2.Zero, Config.Scale, __instance.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0.02f);
+                Texture2D texture = null;
+                ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem(__instance.QualifiedItemId);
+                Rectangle sourceRect = itemData.GetSourceRect(__instance is Mannequin ? 2 : 0, new int?(__instance.ParentSheetIndex));
+                texture = itemData.GetTexture();
+                if (atApi is not null && __instance.modData.ContainsKey("AlternativeTextureName"))
+                {
+                    texture = GetAltTextureForObject(__instance, out sourceRect);
+                }
+                if (texture is null)
+                {
+                    texture = Game1.bigCraftableSpriteSheet;
+                    sourceRect = Object.getSourceRectForBigCraftable(__instance.ParentSheetIndex);
+                }
+                spriteBatch.Draw(texture, pos + new Vector2(0, -16), __instance.bigCraftable.Value ? Object.getSourceRectForBigCraftable(__instance.ParentSheetIndex) : GameLocation.getSourceRectForObject(__instance.ParentSheetIndex), Color.White * Config.Alpha, 0, Vector2.Zero, Config.Scale, __instance.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0.02f);
 
                 return false;
             }
