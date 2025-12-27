@@ -29,7 +29,7 @@ namespace ImmersiveScarecrows
         {
             public static bool Prefix(Object __instance, GameLocation location, int x, int y, Farmer who, ref bool __result)
             {
-                if (!Config.EnableMod || !__instance.IsScarecrow())
+                if (!Config.EnableMod || !__instance.IsScarecrow() || (__instance.IsSprinkler() && SHelper.ModRegistry.IsLoaded("aedenthorn.ImmersiveSprinklers")))
                     return true;
                 Vector2 placementTile = new Vector2((float)(x / 64), (float)(y / 64));
                 if (!location.terrainFeatures.TryGetValue(placementTile, out var tf) || tf is not HoeDirt)
@@ -202,7 +202,7 @@ namespace ImmersiveScarecrows
         {
             public static bool Prefix(Object __instance, SpriteBatch spriteBatch, GameLocation location)
             {
-                if (!Config.EnableMod || !Context.IsPlayerFree || !__instance.IsScarecrow() || Game1.currentLocation?.terrainFeatures?.TryGetValue(Game1.currentCursorTile, out var tf) != true || tf is not HoeDirt)
+                if (!Config.EnableMod || !Context.IsPlayerFree || !__instance.IsScarecrow() || (__instance.IsSprinkler() && SHelper.ModRegistry.IsLoaded("aedenthorn.ImmersiveSprinklers")) || Game1.currentLocation?.terrainFeatures?.TryGetValue(Game1.currentCursorTile, out var tf) != true || tf is not HoeDirt)
                     return true;
                 var which = GetMouseCorner();
                 var scarecrowTile = Game1.currentCursorTile;

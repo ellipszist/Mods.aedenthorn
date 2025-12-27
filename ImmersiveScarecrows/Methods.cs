@@ -2,28 +2,32 @@
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Netcode;
 using StardewValley;
-using StardewValley.Network;
 using StardewValley.TerrainFeatures;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using xTile.Tiles;
 using Object = StardewValley.Object;
 
 namespace ImmersiveScarecrows
 {
     public partial class ModEntry
     {
-        private static Object GetScarecrow(TerrainFeature tf, int which)
+        public static Object GetScarecrow(TerrainFeature tf, int which)
         {
-            if (!tf.modData.TryGetValue(scarecrowKey + which, out string scarecrowString))
+            if (tf is not HoeDirt)
                 return null;
+            Object obj;
+            if (tf.modData.TryGetValue(scarecrowKey + which, out string scarecrowString))
+            {
+                obj = (Object)ItemRegistry.Create(scarecrowString, 1, 0, true);
 
-            Object obj = (Object)ItemRegistry.Create(scarecrowString, 1, 0, true);
-            if(obj == null)
+            }
+            else
+            {
+                return null;
+            }
+                
+            if(obj == null && scarecrowString != null)
             {
                 foreach (var kvp in Game1.bigCraftableData)
                 {
@@ -34,7 +38,7 @@ namespace ImmersiveScarecrows
                     }
                 }
             }
-            if (obj is null)
+            if (obj == null && scarecrowString != null)
             {
                 scarecrowString = scarecrowString.Split('/')[0];
                 foreach (var kvp in Game1.bigCraftableData)
@@ -69,11 +73,11 @@ namespace ImmersiveScarecrows
 
             return obj;
         }
-        private static string GetScarecrowString(Object instance)
+        public static string GetScarecrowString(Object instance)
         {
             return instance.QualifiedItemId;
         }
-        private static Vector2 GetScarecrowCorner(int i)
+        public static Vector2 GetScarecrowCorner(int i)
         {
             switch (i)
             {
@@ -88,7 +92,7 @@ namespace ImmersiveScarecrows
             }
         }
 
-        private static int GetMouseCorner()
+        public static int GetMouseCorner()
         {
             var x = Game1.getMouseX() + Game1.viewport.X;
             var y = Game1.getMouseY() + Game1.viewport.Y;
@@ -116,7 +120,22 @@ namespace ImmersiveScarecrows
             }
         }
 
-        private static bool GetScarecrowTileBool(GameLocation location, ref Vector2 tile, ref int which)
+        public static Object GetScarecrowAtMouse()
+        {
+            if (Game1.currentLocation == null)
+                return null;
+
+            var tile = Game1.currentCursorTile;
+            int corner = GetMouseCorner();
+
+            if (!GetScarecrowTileBool(Game1.currentLocation, ref tile, ref corner))
+            return null;
+
+            Game1.currentLocation.terrainFeatures.TryGetValue(tile, out var tf);
+            return GetScarecrow(tf, corner);
+        }
+
+        public static bool GetScarecrowTileBool(GameLocation location, ref Vector2 tile, ref int which)
         {
             if (TileHasScarecrow(location, tile, which))
             { 
@@ -162,12 +181,12 @@ namespace ImmersiveScarecrows
             return false;
         }
 
-        private static bool TileHasScarecrow(GameLocation location, Vector2 tile, int which)
+        public static bool TileHasScarecrow(GameLocation location, Vector2 tile, int which)
         {
             return location.terrainFeatures.TryGetValue(tile, out var tf) && tf.modData.ContainsKey(scarecrowKey + which);
         }
 
-        private static bool ReturnScarecrow(Farmer who, GameLocation location, Vector2 placementTile, int which)
+        public static bool ReturnScarecrow(Farmer who, GameLocation location, Vector2 placementTile, int which)
         {
             if (location.terrainFeatures.TryGetValue(placementTile, out var tf) && tf is HoeDirt && TryReturnScarecrow(who, location, tf, placementTile, which))
             { 
@@ -210,7 +229,7 @@ namespace ImmersiveScarecrows
             return false;
         }
 
-        private static bool TryReturnScarecrow(Farmer who, GameLocation location, TerrainFeature tf, Vector2 placementTile, int which)
+        public static bool TryReturnScarecrow(Farmer who, GameLocation location, TerrainFeature tf, Vector2 placementTile, int which)
         {
             Object scarecrow = null;
             if (tf.modData.TryGetValue(scarecrowKey + which, out var scarecrowString))
@@ -229,7 +248,7 @@ namespace ImmersiveScarecrows
             return false;
         }
 
-        private static List<Vector2> GetScarecrowTiles(Vector2 tileLocation, int which, int radius)
+        public static List<Vector2> GetScarecrowTiles(Vector2 tileLocation, int which, int radius)
         {
             Vector2 start = tileLocation + new Vector2(-1, -1) * (radius - 2);
             Vector2 position = tileLocation + GetScarecrowCorner(which) * 0.5f;
@@ -259,27 +278,33 @@ namespace ImmersiveScarecrows
             return list;
 
         }
-        private static bool IsScarecrowInRange(bool scarecrow, Farm f, Vector2 v)
+        public static bool IsScarecrowInRange(bool scarecrow, Farm f, Vector2 v)
         {
             if (!Config.EnableMod || scarecrow)
-                return true;
-            //SMonitor.Log("Checking for scarecrows near crop");
+                return scarecrow;
             foreach (var kvp in f.terrainFeatures.Pairs)
             {
-                if (kvp.Value is HoeDirt)
+                if (kvp.Value is HoeDirt tf)
                 {
                     for (int i = 0; i < 4; i++)
                     {
-                        if (kvp.Value.modData.ContainsKey(scarecrowKey + i))
+                        var obj = GetScarecrow(kvp.Value, i);
+                        if(obj is null && sprinklerApi is not null && tf.modData.ContainsKey(sprinklerKey + i))
                         {
-                            var obj = GetScarecrow(kvp.Value, i);
-                            if (obj is not null)
+                            Vector2 tile = tf.Tile;
+                            int corner = i;
+                            var sprinkler = sprinklerApi.GetObjectAtTileCorner(tf.Location, ref tile, ref corner);
+                            if (sprinkler?.IsScarecrow() == true)
                             {
-                                var tiles = GetScarecrowTiles(kvp.Key, i, obj.GetRadiusForScarecrow());
-                                if(tiles.Contains(v))
-                                {
-                                    return true;
-                                }
+                                obj = sprinkler;
+                            }
+                        }
+                        if (obj is not null)
+                        {
+                            var tiles = GetScarecrowTiles(kvp.Key, i, obj.GetRadiusForScarecrow());
+                            if (tiles.Contains(v))
+                            {
+                                return true;
                             }
                         }
                     }

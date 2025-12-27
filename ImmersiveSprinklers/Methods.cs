@@ -19,7 +19,7 @@ namespace ImmersiveSprinklers
     public partial class ModEntry
     {
 
-        private static Object GetSprinklerCached(TerrainFeature tf, int which, bool nozzle)
+        public static Object GetSprinklerCached(TerrainFeature tf, int which, bool nozzle)
         {
             if (!tf.modData.TryGetValue(guidKey + which, out var guid))
             {
@@ -34,9 +34,9 @@ namespace ImmersiveSprinklers
             }
             return obj;
         }
-        private static Object GetSprinkler(TerrainFeature tf, int which, bool nozzle)
+        public static Object GetSprinkler(TerrainFeature tf, int which, bool nozzle)
         {
-            if(!tf.modData.TryGetValue(sprinklerKey + which, out string sprinklerName))
+            if(tf?.modData.TryGetValue(sprinklerKey + which, out string sprinklerName) != true)
                 return null;
             Object obj = null;
             if(tf.modData.ContainsKey(bigCraftableKey + which))
@@ -76,7 +76,7 @@ namespace ImmersiveSprinklers
             }
             return obj;
         }
-        private static Vector2 GetSprinklerCorner(int i)
+        public static Vector2 GetSprinklerCorner(int i)
         {
             switch (i)
             {
@@ -91,7 +91,7 @@ namespace ImmersiveSprinklers
             }
         }
 
-        private static int GetMouseCorner()
+        public static int GetMouseCorner()
         {
             var x = Game1.getMouseX() + Game1.viewport.X;
             var y = Game1.getMouseY() + Game1.viewport.Y;
@@ -118,8 +118,21 @@ namespace ImmersiveSprinklers
                 }
             }
         }
+        public static Object GetSprinklerAtMouse()
+        {
+            if (Game1.currentLocation == null)
+                return null;
 
-        private static bool GetSprinklerTileBool(GameLocation location, ref Vector2 tile, ref int which, out string sprinklerString)
+            var tile = Game1.currentCursorTile;
+            int corner = GetMouseCorner();
+
+            if (!GetSprinklerTileBool(Game1.currentLocation, ref tile, ref corner, out string sprinklerString))
+                return null;
+
+            Game1.currentLocation.terrainFeatures.TryGetValue(tile, out var tf);
+            return GetSprinkler(tf, corner, false);
+        }
+        public static bool GetSprinklerTileBool(GameLocation location, ref Vector2 tile, ref int which, out string sprinklerString)
         {
             if ((sprinklerString = TileSprinklerString(location, tile, which)) is not null)
             { 
@@ -165,12 +178,12 @@ namespace ImmersiveSprinklers
             return false;
         }
 
-        private static string TileSprinklerString(GameLocation location, Vector2 tile, int which)
+        public static string TileSprinklerString(GameLocation location, Vector2 tile, int which)
         {
             return (location.terrainFeatures.TryGetValue(tile, out var tf) && tf.modData.TryGetValue(sprinklerKey + which, out var sprinklerString)) ? sprinklerString : null;
         }
 
-        private static bool ReturnSprinkler(Farmer who, GameLocation location, Vector2 placementTile, int which)
+        public static bool ReturnSprinkler(Farmer who, GameLocation location, Vector2 placementTile, int which)
         {
             if (location.terrainFeatures.TryGetValue(placementTile, out var tf) && tf is HoeDirt && TryReturnSprinkler(who, location, tf, which))
             { 
@@ -213,7 +226,7 @@ namespace ImmersiveSprinklers
             return false;
         }
 
-        private static bool DropSprinkler(TerrainFeature tf, int which)
+        public static bool DropSprinkler(TerrainFeature tf, int which)
         {
             Object sprinkler = null;
             if (tf.modData.ContainsKey(sprinklerKey + which))
@@ -247,7 +260,7 @@ namespace ImmersiveSprinklers
             }
             return false;
         }
-        private static bool TryReturnSprinkler(Farmer who, GameLocation location, TerrainFeature tf, int which)
+        public static bool TryReturnSprinkler(Farmer who, GameLocation location, TerrainFeature tf, int which)
         {
             Object sprinkler = null;
             if (tf.modData.ContainsKey(sprinklerKey + which))
@@ -282,7 +295,7 @@ namespace ImmersiveSprinklers
             return false;
         }
 
-        private static void TryReturnObject(Object obj, Farmer who)
+        public static void TryReturnObject(Object obj, Farmer who)
         {
             if (obj is null)
                 return;
@@ -293,12 +306,12 @@ namespace ImmersiveSprinklers
             }
         }
 
-        private static Object GetFertilizer(string fertString)
+        public static Object GetFertilizer(string fertString)
         {
             var fertData = fertString.Split(',');
             return new Object(fertData[0], int.Parse(fertData[1]));
         }
-        private static int GetSprinklerRadius(Object obj)
+        public static int GetSprinklerRadius(Object obj)
         {
             if (!Config.SprinklerRadii.TryGetValue(obj.Name, out int radius))
                 return obj.GetModifiedRadiusForSprinkler();
@@ -309,7 +322,7 @@ namespace ImmersiveSprinklers
             return radius;
         }
 
-        private static List<Vector2> GetSprinklerTiles(Vector2 tileLocation, int which, int radius)
+        public static List<Vector2> GetSprinklerTiles(Vector2 tileLocation, int which, int radius)
         {
             
             Vector2 start = tileLocation + new Vector2(-1, -1) * radius;
@@ -338,7 +351,7 @@ namespace ImmersiveSprinklers
 
         }
 
-        private static void ActivateSprinkler(GameLocation environment, Vector2 tileLocation, Object obj, int which, bool delay)
+        public static void ActivateSprinkler(GameLocation environment, Vector2 tileLocation, Object obj, int which, bool delay)
         {
             if (Game1.player.team.SpecialOrderRuleActive("NO_SPRINKLER", null))
             {
@@ -361,10 +374,10 @@ namespace ImmersiveSprinklers
             }
             ApplySprinklerAnimation(tileLocation, which, radius, environment, delay ? Game1.random.Next(1000) : 0);
         }
-        private static void ApplySprinklerAnimation(Vector2 tileLocation, int which, int radius, GameLocation location, int delay)
+        public static void ApplySprinklerAnimation(Vector2 tileLocation, int which, int radius, GameLocation location, int delay)
         {
-
-            if (radius < 0 || location.getTemporarySpriteByID((int)(tileLocation.X * 4000f + tileLocation.Y)) is not null)
+            int id = (int)(tileLocation.X * 4000f + tileLocation.Y * 10 + which);
+            if (radius < 0 || location.getTemporarySpriteByID(id) is not null)
             {
                 return;
             }
@@ -380,25 +393,25 @@ namespace ImmersiveSprinklers
                 {
                     rotation = rotation,
                     delayBeforeAnimationStart = delay,
-                    id = (int)(tileLocation.X * 4000f + tileLocation.Y)
+                    id = id
                 });
                 location.temporarySprites.Add(new TemporaryAnimatedSprite(29, position + new Vector2(b, a), Color.White * 0.5f, 4, false, 60f, 100, -1, layerDepth, -1, 0)
                 {
                     rotation = 1.57079637f + rotation,
                     delayBeforeAnimationStart = delay,
-                    id = (int)(tileLocation.X * 4000f + tileLocation.Y)
+                    id = id
                 });
                 location.temporarySprites.Add(new TemporaryAnimatedSprite(29, position + new Vector2(-a, b), Color.White * 0.5f, 4, false, 60f, 100, -1, layerDepth, -1, 0)
                 {
                     rotation = 3.14159274f + rotation,
                     delayBeforeAnimationStart = delay,
-                    id = (int)(tileLocation.X * 4000f + tileLocation.Y)
+                    id = id
                 });
                 location.temporarySprites.Add(new TemporaryAnimatedSprite(29, position + new Vector2(-b, -a), Color.White * 0.5f, 4, false, 60f, 100, -1, layerDepth, -1, 0)
                 {
                     rotation = 4.712389f + rotation,
                     delayBeforeAnimationStart = delay,
-                    id = (int)(tileLocation.X * 4000f + tileLocation.Y)
+                    id = id
                 });
                 return;
             }
@@ -408,7 +421,7 @@ namespace ImmersiveSprinklers
                 {
                     color = Color.White * 0.4f,
                     delayBeforeAnimationStart = delay,
-                    id = (int)(tileLocation.X * 4000f + tileLocation.Y),
+                    id = id,
                     layerDepth = layerDepth,
                     scale = 1.3f
                 });
@@ -419,7 +432,7 @@ namespace ImmersiveSprinklers
             {
                 color = Color.White * 0.4f,
                 delayBeforeAnimationStart = delay,
-                id = (int)(tileLocation.X * 4000f + tileLocation.Y),
+                id = id,
                 layerDepth = layerDepth,
                 scale = scale
             });

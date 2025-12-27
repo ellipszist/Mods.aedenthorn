@@ -24,9 +24,12 @@ namespace ImmersiveScarecrows
         public static ModEntry context;
 
         public static object atApi;
+        public static IImmersiveApi sprinklerApi;
+        public static ImmersiveApi api;
 
         public static string prefixKey = "aedenthorn.ImmersiveScarecrows/";
         public static string scarecrowKey = "aedenthorn.ImmersiveScarecrows/scarecrow";
+        public static string sprinklerKey = "aedenthorn.ImmersiveSprinklers/sprinkler";
         public static string scaredKey = "aedenthorn.ImmersiveScarecrows/scared";
         public static string hatKey = "aedenthorn.ImmersiveScarecrows/hat";
         public static string guidKey = "aedenthorn.ImmersiveScarecrows/guid";
@@ -78,7 +81,11 @@ namespace ImmersiveScarecrows
             }
         }
 
-        private void Display_RenderedWorld(object sender, StardewModdingAPI.Events.RenderedWorldEventArgs e)
+        public override object GetApi()
+        {
+            return new ImmersiveApi();
+        }
+        public void Display_RenderedWorld(object sender, StardewModdingAPI.Events.RenderedWorldEventArgs e)
         {
             if (!Config.EnableMod || !Context.IsPlayerFree)
                 return;
@@ -132,7 +139,7 @@ namespace ImmersiveScarecrows
 
         }
 
-        private void Input_ButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
+        public void Input_ButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
         {
             if (!Config.EnableMod)
                 return;
@@ -174,14 +181,15 @@ namespace ImmersiveScarecrows
             }
         }
 
-        private void GameLoop_SaveLoaded(object sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)
+        public void GameLoop_SaveLoaded(object sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)
         {
             scarecrowDict.Clear();
         }
 
-        private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
+        public void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
         {
             atApi = Helper.ModRegistry.GetApi("PeacefulEnd.AlternativeTextures");
+            sprinklerApi = Helper.ModRegistry.GetApi<IImmersiveApi>("aedenthorn.ImmersiveSprinklers");
 
             // get Generic Mod Config Menu's API (if it's installed)
             var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");

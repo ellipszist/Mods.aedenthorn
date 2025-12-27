@@ -189,7 +189,7 @@ namespace ImmersiveSprinklers
 
                         if (obj is not null)
                         {
-                            Vector2 globalPosition = __instance.Tile * 64 + GetSprinklerCorner(i) * 32f + new Vector2(0, -16);
+                            Vector2 globalPosition = __instance.Tile * 64 + GetSprinklerCorner(i) * 32f - new Vector2(0, 16);
                             if (obj.bigCraftable.Value)
                                 globalPosition -= new Vector2(0, 64);
                             var layerDepth = (globalPosition.Y + (obj.bigCraftable.Value ? 81 : 33) + Config.DrawOffsetZ) / 10000f;
@@ -273,7 +273,7 @@ namespace ImmersiveSprinklers
 
                 GetSprinklerTileBool(Game1.currentLocation, ref sprinklerTile, ref which, out string str);
 
-                Vector2 pos = Game1.GlobalToLocal(sprinklerTile * 64 + GetSprinklerCorner(which) * 32f);
+                Vector2 pos = Game1.GlobalToLocal(sprinklerTile * 64 + GetSprinklerCorner(which) * 32f - new Vector2(0, 16));
 
                 spriteBatch.Draw(Game1.mouseCursors, pos, new Rectangle(Utility.withinRadiusOfPlayer((int)Game1.currentCursorTile.X * 64, (int)Game1.currentCursorTile.Y * 64, 1, Game1.player) ? 194 : 210, 388, 16, 16), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.01f);
 

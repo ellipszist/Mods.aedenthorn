@@ -56,10 +56,11 @@ namespace ImmersiveSprinklers
             harmony.PatchAll();
 
         }
-
-
-
-        private void Display_RenderedWorld(object sender, StardewModdingAPI.Events.RenderedWorldEventArgs e)
+        public override object GetApi()
+        {
+            return new ImmersiveApi();
+        }
+        public void Display_RenderedWorld(object sender, StardewModdingAPI.Events.RenderedWorldEventArgs e)
         {
             if (!Config.EnableMod || !Context.IsPlayerFree || !Helper.Input.IsDown(Config.ShowRangeButton) || Game1.currentLocation?.terrainFeatures is null)
                 return;
@@ -101,7 +102,7 @@ namespace ImmersiveSprinklers
             }
         }
 
-        private void Input_ButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
+        public void Input_ButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
         {
             if (!Config.EnableMod)
                 return;
@@ -194,12 +195,12 @@ namespace ImmersiveSprinklers
             }
         }
 
-        private void GameLoop_SaveLoaded(object sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)
+        public void GameLoop_SaveLoaded(object sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)
         {
             sprinklerDict.Clear();
         }
 
-        private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
+        public void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
         {
             atApi = Helper.ModRegistry.GetApi("PeacefulEnd.AlternativeTextures");
             // get Generic Mod Config Menu's API (if it's installed)
