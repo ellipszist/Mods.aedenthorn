@@ -2,6 +2,7 @@
 
 	// GMCM
 	"GMCM.ModEnabled.Name": "Mod Enabled",
+	"GMCM.ShowOnlyInMenu.Name": "Only In Menu",
 	"GMCM.ShowGiftedFavorites.Name": "Gifted Favorites",
 	"GMCM.ShowUngiftedFavorites.Name": "Ungifted Favorites",
 	"GMCM.ShowBundleItems.Name": "Bundle Items",

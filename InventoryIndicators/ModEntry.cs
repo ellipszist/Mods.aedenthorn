@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Menus;
 using StardewValley.Objects;
 using StardewValley.Objects.Trinkets;
 using StardewValley.Tools;
@@ -20,8 +21,9 @@ namespace InventoryIndicators
 		public static ModConfig Config;
 		public static ModEntry context;
 		public static Dictionary<string, List<string>> favoriteThings = new Dictionary<string, List<string>>();
+        public static bool refreshValues = true;
 
-		public override void Entry(IModHelper helper)
+        public override void Entry(IModHelper helper)
 		{
 			Config = Helper.ReadConfig<ModConfig>();
 
@@ -31,10 +33,17 @@ namespace InventoryIndicators
 			SModManifest = ModManifest;
 
 			helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
-            helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
+            helper.Events.GameLoop.DayStarted += GameLoop_DayStarted;
+            helper.Events.Display.MenuChanged += Display_MenuChanged;
 
             Harmony harmony = new Harmony(ModManifest.UniqueID);
-			var drawPrefix = new HarmonyMethod(typeof(ModEntry), nameof(drawInMenu_Prefix));
+
+            harmony.Patch
+            (
+                original: AccessTools.Method(typeof(InventoryMenu), nameof(InventoryMenu.hover)),
+                prefix: new HarmonyMethod(typeof(ModEntry), nameof(InventoryMenu_hover_Prefix))
+            );
+            var drawPrefix = new HarmonyMethod(typeof(ModEntry), nameof(drawInMenu_Prefix));
 			var drawPostfix = new HarmonyMethod(typeof(ModEntry), nameof(drawInMenu_Postfix));
 			var descPostfix = new HarmonyMethod(typeof(ModEntry), nameof(getDescription_Postfix));
 
@@ -65,22 +74,29 @@ namespace InventoryIndicators
 
         }
 
-        private void GameLoop_SaveLoaded(object sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)
+        private void Display_MenuChanged(object sender, StardewModdingAPI.Events.MenuChangedEventArgs e)
         {
-			favoriteThings.Clear();
-            foreach (var npc in Game1.NPCGiftTastes)
+            dataDict.Clear();
+        }
+
+        private void GameLoop_DayStarted(object sender, StardewModdingAPI.Events.DayStartedEventArgs e)
+        {
+            dataDict.Clear();
+            universalLoves = null;
+            favoriteThings.Clear();
+            foreach (var kvp in Game1.NPCGiftTastes)
             {
                 try
                 {
-                    var favs = ArgUtility.SplitBySpace(npc.Value.Split('/', StringSplitOptions.None)[1]);
+                    var favs = ArgUtility.SplitBySpace(kvp.Value.Split('/', StringSplitOptions.None)[1]);
                     foreach (var fav in favs)
                     {
-						if(!favoriteThings.TryGetValue(fav, out var list))
-						{
-							list = new List<string>();
-							favoriteThings[fav] = list;
-							list.Add(npc.Key);
-						}
+                        if (!favoriteThings.TryGetValue(fav, out var list))
+                        {
+                            list = new List<string>();
+                            favoriteThings[fav] = list;
+                            list.Add(kvp.Key);
+                        }
                     }
                 }
                 catch
@@ -88,7 +104,7 @@ namespace InventoryIndicators
 
                 }
             }
-		}
+        }
 
         public void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
 		{
@@ -112,13 +128,19 @@ namespace InventoryIndicators
 				);
                 gmcm.AddBoolOption(
 					mod: ModManifest,
+					name: () => SHelper.Translation.Get("GMCM.ShowOnlyInMenu.Name"),
+					getValue: () => Config.ShowOnlyInMenu,
+					setValue: value => Config.ShowOnlyInMenu = value
+				);
+                gmcm.AddBoolOption(
+					mod: ModManifest,
 					name: () => SHelper.Translation.Get("GMCM.ShowGiftedFavorites.Name"),
 					getValue: () => Config.ShowGiftedFavorites,
 					setValue: value => Config.ShowGiftedFavorites = value
 				);
                 gmcm.AddBoolOption(
 					mod: ModManifest,
-					name: () => SHelper.Translation.Get("GMCM.ShowGiftedFavorites.Name"),
+					name: () => SHelper.Translation.Get("GMCM.ShowUngiftedFavorites.Name"),
 					getValue: () => Config.ShowUngiftedFavorites,
 					setValue: value => Config.ShowUngiftedFavorites = value
 				);

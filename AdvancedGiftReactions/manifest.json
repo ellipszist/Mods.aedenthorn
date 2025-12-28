@@ -1,0 +1,10 @@
+﻿{
+  "Name": "Advanced Gift Reactions",
+  "Author": "aedenthorn",
+  "Version": "0.1.0",
+  "Description": "Advanced Gift Reactions.",
+  "UniqueID": "aedenthorn.AdvancedGiftReactions",
+  "EntryDll": "AdvancedGiftReactions.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [ "Nexus:40588" ]
+}

@@ -1,7 +1,7 @@
 ﻿{
 	"Name": "Inventory Indicators",
 	"Author": "aedenthorn",
-	"Version": "0.2.3",
+	"Version": "0.3.3",
 	"Description": "Adds info to inventory icons.",
 	"UniqueID": "aedenthorn.InventoryIndicators",
 	"EntryDll": "InventoryIndicators.dll",

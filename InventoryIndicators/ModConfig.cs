@@ -6,6 +6,7 @@ namespace InventoryIndicators
 	public class ModConfig
 	{
 		public bool ModEnabled { get; set; } = true;
+		public bool ShowOnlyInMenu { get; set; } = true;
 		public bool ShowGiftedFavorites { get; set; } = true;
 		public bool ShowUngiftedFavorites { get; set; } = false;
 		public bool ShowBundleItems { get; set; } = true;
