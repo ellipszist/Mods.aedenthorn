@@ -20,7 +20,7 @@ namespace InventoryIndicators
 		public static IManifest SModManifest;
 		public static ModConfig Config;
 		public static ModEntry context;
-		public static Dictionary<string, List<string>> favoriteThings = new Dictionary<string, List<string>>();
+		public static Dictionary<string, HashSet<string>> favoriteThings = new Dictionary<string, HashSet<string>>();
         public static bool refreshValues = true;
 
         public override void Entry(IModHelper helper)
@@ -38,11 +38,6 @@ namespace InventoryIndicators
 
             Harmony harmony = new Harmony(ModManifest.UniqueID);
 
-            harmony.Patch
-            (
-                original: AccessTools.Method(typeof(InventoryMenu), nameof(InventoryMenu.hover)),
-                prefix: new HarmonyMethod(typeof(ModEntry), nameof(InventoryMenu_hover_Prefix))
-            );
             var drawPrefix = new HarmonyMethod(typeof(ModEntry), nameof(drawInMenu_Prefix));
 			var drawPostfix = new HarmonyMethod(typeof(ModEntry), nameof(drawInMenu_Postfix));
 			var descPostfix = new HarmonyMethod(typeof(ModEntry), nameof(getDescription_Postfix));
@@ -77,33 +72,15 @@ namespace InventoryIndicators
         private void Display_MenuChanged(object sender, StardewModdingAPI.Events.MenuChangedEventArgs e)
         {
             dataDict.Clear();
+            favoriteThings = null;
+            universalLoves = null;
         }
 
         private void GameLoop_DayStarted(object sender, StardewModdingAPI.Events.DayStartedEventArgs e)
         {
             dataDict.Clear();
+            favoriteThings = null;
             universalLoves = null;
-            favoriteThings.Clear();
-            foreach (var kvp in Game1.NPCGiftTastes)
-            {
-                try
-                {
-                    var favs = ArgUtility.SplitBySpace(kvp.Value.Split('/', StringSplitOptions.None)[1]);
-                    foreach (var fav in favs)
-                    {
-                        if (!favoriteThings.TryGetValue(fav, out var list))
-                        {
-                            list = new List<string>();
-                            favoriteThings[fav] = list;
-                            list.Add(kvp.Key);
-                        }
-                    }
-                }
-                catch
-                {
-
-                }
-            }
         }
 
         public void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)

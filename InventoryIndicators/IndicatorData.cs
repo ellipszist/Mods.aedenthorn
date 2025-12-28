@@ -9,8 +9,8 @@ namespace InventoryIndicators
         public Color color;
         public bool universalLove;
         public bool bundle;
-        public bool plantable;
+        public bool seed;
         public List<Texture2D> lovePortraits;
-        public string loveText;
+        public string hoverText;
     }
 }

@@ -12,16 +12,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using static System.Net.Mime.MediaTypeNames;
 using Object = StardewValley.Object;
 
 namespace InventoryIndicators
 {
 	public partial class ModEntry : Mod
 	{
-        public static string loveText;
-        public static bool seed;
-        public static bool bundle;
-        public static string hoverItem;
         public static IEnumerable<FieldInfo> fieldInfos;
         public static string[] universalLoves;
         public static Dictionary<string, IndicatorData> dataDict = new Dictionary<string, IndicatorData>();
@@ -54,10 +51,10 @@ namespace InventoryIndicators
         public static void DrawBefore(Item __instance, SpriteBatch spriteBatch, Vector2 location, float scaleSize, float transparency, float layerDepth)
         {
 
-            if (!Config.ModEnabled || (Config.ShowOnlyInMenu && (Game1.activeClickableMenu is null || Game1.activeClickableMenu is DialogueBox || Game1.activeClickableMenu is NamingMenu)))
+            if (!Config.ModEnabled)
                 return;
             Color? color = null;
-            if(dataDict.TryGetValue(__instance.QualifiedItemId, out var data))
+            if (dataDict.TryGetValue(__instance.QualifiedItemId, out var data))
             {
                 color = data.color;
             }
@@ -70,16 +67,47 @@ namespace InventoryIndicators
                     color = c;
                     data.color = c;
                 }
+                string loveText = null;
 
                 if (universalLoves is null)
                     universalLoves = ArgUtility.SplitBySpace(Game1.NPCGiftTastes["Universal_Love"]);
-                data.universalLove = Array.Exists(universalLoves, s => s.Equals(__instance.ItemId));
-                if (favoriteThings.TryGetValue(__instance.ItemId, out var list))
+
+                if (favoriteThings is null)
                 {
-                    bool foundLove = false;
-                    for (int i = 0; i < list.Count; i++)
+                    favoriteThings = new Dictionary<string, HashSet<string>>();
+                    foreach (var kvp in Game1.NPCGiftTastes)
                     {
-                        var npc = list[i];
+                        try
+                        {
+                            var favs = ArgUtility.SplitBySpace(kvp.Value.Split('/', StringSplitOptions.None)[1]);
+                            foreach (var fav in favs)
+                            {
+                                if (!favoriteThings.TryGetValue(fav, out var l))
+                                {
+                                    l = new HashSet<string>();
+                                    favoriteThings[fav] = l;
+                                }
+                                l.Add(kvp.Key);
+                            }
+                        }
+                        catch
+                        {
+
+                        }
+                    }
+
+                }
+
+                data.universalLove = Array.Exists(universalLoves, s => s.Equals(__instance.ItemId));
+                if (data.universalLove)
+                {
+                    loveText = SHelper.Translation.Get("universal_love");
+                }
+                else if (favoriteThings.TryGetValue(__instance.ItemId, out var list))
+                {
+                    List<string> names = new List<string>();
+                    foreach(var npc in list)
+                    {
                         if (Config.ShowUngiftedFavorites || (Game1.player.giftedItems.TryGetValue(npc, out var giftData) && giftData.TryGetValue(__instance.ItemId, out var value) && value > 0))
                         {
                             var portrait = Game1.getCharacterFromName(npc)?.Portrait;
@@ -89,12 +117,22 @@ namespace InventoryIndicators
                                     data.lovePortraits = new();
                                 data.lovePortraits.Add(portrait);
                             }
-                            data.loveText = (foundLove ? data.loveText + ", " : "") + (Game1.getCharacterFromName(npc, false, false)?.displayName ?? npc);
-                            foundLove = true;
+                            names.Add(Game1.getCharacterFromName(npc, false, false)?.displayName ?? npc);
                         }
                     }
-                    if(foundLove)
-                        data.loveText = string.Format(SHelper.Translation.Get("x_love"), data.loveText);
+                    if(names.Count == 1)
+                    {
+                        loveText = string.Format(SHelper.Translation.Get("x_love"), names[0]);
+                    }
+                    else if(names.Count == 2)
+                    {
+                        loveText = string.Format(SHelper.Translation.Get("x_love_duo"), names[0], names[1]);
+                    }
+                    else if(names.Count > 2)
+                    {
+                        string mult = string.Join(SHelper.Translation.Get("x_love_mult_separator"), names.GetRange(0, names.Count - 1));
+                        loveText = string.Format(SHelper.Translation.Get("x_love_mult"), mult, names[names.Count - 1]);
+                    }
                 }
                 if(__instance is Object && Game1.RequireLocation<CommunityCenter>("CommunityCenter", false).couldThisIngredienteBeUsedInABundle(__instance as Object))
                 {
@@ -104,10 +142,17 @@ namespace InventoryIndicators
                 {
                     if (__instance.Name.Contains("Mixed") || Crop.TryGetData(Crop.ResolveSeedId(__instance.ItemId, Game1.currentLocation), out var cropData) && cropData.Seasons.Contains(Game1.currentLocation.GetSeason()))
                     {
-                        data.plantable = true;
+                        data.seed = true;
                     }
                 }
-
+                string text = null;
+                if (loveText != null)
+                    text += loveText + " ";
+                if (data.seed)
+                    text += SHelper.Translation.Get("can_plant") + " ";
+                if (data.bundle)
+                    text += SHelper.Translation.Get("can_bundle");
+                data.hoverText = text?.Trim();
                 dataDict[__instance.QualifiedItemId] = data;
             }
             if (color != null)
@@ -131,28 +176,13 @@ namespace InventoryIndicators
                 return;
             bool hover = new Rectangle(location.ToPoint(), new Point(64, 64)).Contains(Game1.getMousePosition());
 
-            if (hover)
-            {
-                seed = false;
-                bundle = false;
-            }
-            bool foundLove = false;
-            bool setText = false;
-
             int offset = -2;
 
             if (data.universalLove)
             {
                 spriteBatch.Draw(Game1.mouseCursors, location + new Vector2(offset, offset), new Rectangle(172, 514, 9, 10), Color.White, 0, Vector2.Zero, 2f, SpriteEffects.None, layerDepth);
-                if (hover)
-                {
-                    loveText = SHelper.Translation.Get("universal_love");
-                    hoverItem = __instance.QualifiedItemId;
-                }
-                setText = true;
-                foundLove = true;
             }
-            if (!foundLove && data.lovePortraits != null)
+            else if (data.lovePortraits != null)
             {
                 for (int i = 0; i < data.lovePortraits.Count; i++)
                 {
@@ -160,50 +190,17 @@ namespace InventoryIndicators
 
                     if (portrait != null)
                     {
-                        spriteBatch.Draw(portrait, location + new Vector2(i * 2 + offset, offset), new Rectangle(0, 0, 64, 64), Color.White, 0, Vector2.Zero, 0.5f, SpriteEffects.None, layerDepth);
+                        spriteBatch.Draw(portrait, location + new Vector2(i * 8 + offset, offset), new Rectangle(0, 0, 64, 64), Color.White, 0, Vector2.Zero, 0.5f, SpriteEffects.None, layerDepth);
                     }
-                    if (hover && hoverItem != __instance.QualifiedItemId)
-                    {
-                        if (!foundLove)
-                            loveText = "";
-                    }
-                    foundLove = true;
-                    setText = true;
-                }
-
-                if (foundLove && hover)
-                {
-                    loveText = data.loveText;
-                    hoverItem = __instance.QualifiedItemId;
                 }
             }
             if(Config.ShowBundleItems && data.bundle)
             {
                 spriteBatch.Draw(SHelper.GameContent.Load<Texture2D>("Characters/Junimo"), location + new Vector2(32 - offset, offset), new Rectangle(0, 1, 16, 15), Config.JunimoColor, 0, Vector2.Zero, 2f, SpriteEffects.None, layerDepth);
-                if (hover)
-                {
-                    bundle = true;
-                    hoverItem = __instance.QualifiedItemId;
-                    setText = true;
-                }
             }
-            if (Config.ShowPlantableSeeds && data.plantable)
+            if (Config.ShowPlantableSeeds && data.seed)
             {
                 spriteBatch.Draw(Game1.mouseCursors, location + new Vector2(offset, 32 - offset), new Rectangle(18, 625, 13, 15), new Color(1f, 1f, 1f, Config.PlantableOpacity), 0, Vector2.Zero, 2f, SpriteEffects.None, layerDepth);
-
-                if (hover)
-                {
-                    seed = true;
-                    hoverItem = __instance.QualifiedItemId;
-                    setText = true;
-                }
-            }
-            if (!setText && hover)
-            {
-                hoverItem = null;
-                loveText = null;
-                seed = false;
-                bundle = false;
             }
         }
     }
