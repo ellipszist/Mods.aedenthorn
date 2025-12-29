@@ -3,7 +3,8 @@
 	// GMCM
 	"GMCM.ModEnabled.Name": "Mod Enabled",
 	"GMCM.ShowOnlyInMenu.Name": "Only In Menu",
-	"GMCM.ShowGiftedFavorites.Name": "Gifted Favorites",
+	"GMCM.ShowFavorites.Name": "Favorites",
+	"GMCM.ShowUniversalFavorites.Name": "Universal Favorites",
 	"GMCM.ShowUngiftedFavorites.Name": "Ungifted Favorites",
 	"GMCM.ShowBundleItems.Name": "Bundle Items",
 	"GMCM.ShowPlantableSeeds.Name": "Plantable Seeds",

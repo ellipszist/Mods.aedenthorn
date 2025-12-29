@@ -9,6 +9,7 @@ using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.GameData.Machines;
 using StardewValley.GameData.Objects;
+using StardewValley.ItemTypeDefinitions;
 using StardewValley.Menus;
 using StardewValley.TerrainFeatures;
 using StardewValley.Tools;
@@ -54,11 +55,40 @@ namespace PortableFurnace
             
             Helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
             Helper.Events.GameLoop.TimeChanged += GameLoop_TimeChanged;
+            Helper.Events.Input.ButtonPressed += Input_ButtonPressed;
             
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
         }
 
+        private void Input_ButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
+        {
+            if (e.Button == SButton.Left)
+            {
+                List<string> playerRecipes = new List<string>();
+
+                using (Dictionary<string, string>.KeyCollection.Enumerator enumerator = CraftingRecipe.craftingRecipes.Keys.GetEnumerator())
+                {
+                    while (enumerator.MoveNext())
+                    {
+                        string key = enumerator.Current;
+                        if (Game1.player.craftingRecipes.ContainsKey(key))
+                        {
+                            playerRecipes.Add(key);
+                        }
+                    }
+                }
+                foreach (string text in playerRecipes)
+                {
+                    if (text.StartsWith("aedenthorn"))
+                    {
+                        CraftingRecipe recipe = new CraftingRecipe(text, false);
+                        ParsedItemData itemData = recipe.GetItemData(true);
+                        Texture2D texture = itemData.GetTexture();
+                    }
+                }
+            }
+        }
 
         private void GameLoop_TimeChanged(object sender, StardewModdingAPI.Events.TimeChangedEventArgs e)
         {
@@ -167,9 +197,9 @@ namespace PortableFurnace
                 {
                     var dict = data.AsDictionary<string, string>();
                     dict.Data["aedenthorn.PortableFurnace_CopperFurnace"] = $"378 20 390 25/Home/aedenthorn.PortableFurnace_CopperFurnace/false/{Config.SkillCopper}/";
-                    dict.Data["aedenthorn.PortableFurnace_IronFurnace"] = $"380 20 390 25/Home/aedenthorn.PortableFurnace_IronFurnace/true/{Config.SkillIron}/";
-                    dict.Data["aedenthorn.PortableFurnace_GoldFurnace"] = $"384 20 390 25/Home/aedenthorn.PortableFurnace_GoldFurnace/true/{Config.SkillGold}/";
-                    dict.Data["aedenthorn.PortableFurnace_IridiumFurnace"] = $"386 20 390 25/Home/aedenthorn.PortableFurnace_IridiumFurnace/true/{Config.SkillIridium}/";
+                    dict.Data["aedenthorn.PortableFurnace_IronFurnace"] = $"380 20 390 25/Home/aedenthorn.PortableFurnace_IronFurnace/false/{Config.SkillIron}/";
+                    dict.Data["aedenthorn.PortableFurnace_GoldFurnace"] = $"384 20 390 25/Home/aedenthorn.PortableFurnace_GoldFurnace/false/{Config.SkillGold}/";
+                    dict.Data["aedenthorn.PortableFurnace_IridiumFurnace"] = $"386 20 390 25/Home/aedenthorn.PortableFurnace_IridiumFurnace/false/{Config.SkillIridium}/";
                 });
             }
         }

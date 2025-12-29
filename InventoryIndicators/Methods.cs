@@ -177,24 +177,26 @@ namespace InventoryIndicators
             bool hover = new Rectangle(location.ToPoint(), new Point(64, 64)).Contains(Game1.getMousePosition());
 
             int offset = -2;
-
-            if (data.universalLove)
+            if (Config.ShowFavorites)
             {
-                spriteBatch.Draw(Game1.mouseCursors, location + new Vector2(offset, offset), new Rectangle(172, 514, 9, 10), Color.White, 0, Vector2.Zero, 2f, SpriteEffects.None, layerDepth);
-            }
-            else if (data.lovePortraits != null)
-            {
-                for (int i = 0; i < data.lovePortraits.Count; i++)
+                if (Config.ShowUniversalFavorites && data.universalLove)
                 {
-                    var portrait = data.lovePortraits[i];
-
-                    if (portrait != null)
+                    spriteBatch.Draw(Game1.mouseCursors, location + new Vector2(offset, offset), new Rectangle(172, 514, 9, 10), Color.White, 0, Vector2.Zero, 2f, SpriteEffects.None, layerDepth);
+                }
+                else if (data.lovePortraits != null)
+                {
+                    for (int i = 0; i < data.lovePortraits.Count; i++)
                     {
-                        spriteBatch.Draw(portrait, location + new Vector2(i * 8 + offset, offset), new Rectangle(0, 0, 64, 64), Color.White, 0, Vector2.Zero, 0.5f, SpriteEffects.None, layerDepth);
+                        var portrait = data.lovePortraits[i];
+
+                        if (portrait != null)
+                        {
+                            spriteBatch.Draw(portrait, location + new Vector2(i * 8 + offset, offset), new Rectangle(0, 0, 64, 64), Color.White, 0, Vector2.Zero, 0.5f, SpriteEffects.None, layerDepth);
+                        }
                     }
                 }
             }
-            if(Config.ShowBundleItems && data.bundle)
+            if (Config.ShowBundleItems && data.bundle)
             {
                 spriteBatch.Draw(SHelper.GameContent.Load<Texture2D>("Characters/Junimo"), location + new Vector2(32 - offset, offset), new Rectangle(0, 1, 16, 15), Config.JunimoColor, 0, Vector2.Zero, 2f, SpriteEffects.None, layerDepth);
             }

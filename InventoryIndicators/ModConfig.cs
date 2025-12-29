@@ -7,7 +7,8 @@ namespace InventoryIndicators
 	{
 		public bool ModEnabled { get; set; } = true;
 		public bool ShowOnlyInMenu { get; set; } = true;
-		public bool ShowGiftedFavorites { get; set; } = true;
+		public bool ShowFavorites { get; set; } = true;
+		public bool ShowUniversalFavorites { get; set; } = true;
 		public bool ShowUngiftedFavorites { get; set; } = false;
 		public bool ShowBundleItems { get; set; } = true;
 		public bool ShowPlantableSeeds { get; set; } = true;

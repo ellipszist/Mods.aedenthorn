@@ -111,9 +111,15 @@ namespace InventoryIndicators
 				);
                 gmcm.AddBoolOption(
 					mod: ModManifest,
-					name: () => SHelper.Translation.Get("GMCM.ShowGiftedFavorites.Name"),
-					getValue: () => Config.ShowGiftedFavorites,
-					setValue: value => Config.ShowGiftedFavorites = value
+					name: () => SHelper.Translation.Get("GMCM.ShowFavorites.Name"),
+					getValue: () => Config.ShowFavorites,
+					setValue: value => Config.ShowFavorites = value
+				);
+                gmcm.AddBoolOption(
+					mod: ModManifest,
+					name: () => SHelper.Translation.Get("GMCM.ShowUniversalFavorites.Name"),
+					getValue: () => Config.ShowUniversalFavorites,
+					setValue: value => Config.ShowUniversalFavorites = value
 				);
                 gmcm.AddBoolOption(
 					mod: ModManifest,
