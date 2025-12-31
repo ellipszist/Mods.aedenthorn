@@ -627,6 +627,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdvancedGiftReactions", "Ad
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FarmSwitch", "FarmSwitch\FarmSwitch.csproj", "{51870EB7-B6CB-F169-8832-3CDF02C58974}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LadderSpawnOnEntry", "LadderSpawnOnEntry\LadderSpawnOnEntry.csproj", "{7421BF79-3B2E-BD87-784F-9DD149E603A3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3099,6 +3101,14 @@ Global
 		{51870EB7-B6CB-F169-8832-3CDF02C58974}.Release|Any CPU.Build.0 = Release|Any CPU
 		{51870EB7-B6CB-F169-8832-3CDF02C58974}.Release|x64.ActiveCfg = Release|x64
 		{51870EB7-B6CB-F169-8832-3CDF02C58974}.Release|x64.Build.0 = Release|x64
+		{7421BF79-3B2E-BD87-784F-9DD149E603A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7421BF79-3B2E-BD87-784F-9DD149E603A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7421BF79-3B2E-BD87-784F-9DD149E603A3}.Debug|x64.ActiveCfg = Debug|x64
+		{7421BF79-3B2E-BD87-784F-9DD149E603A3}.Debug|x64.Build.0 = Debug|x64
+		{7421BF79-3B2E-BD87-784F-9DD149E603A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7421BF79-3B2E-BD87-784F-9DD149E603A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7421BF79-3B2E-BD87-784F-9DD149E603A3}.Release|x64.ActiveCfg = Release|x64
+		{7421BF79-3B2E-BD87-784F-9DD149E603A3}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

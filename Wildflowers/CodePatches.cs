@@ -23,6 +23,38 @@ namespace Wildflowers
                 if (!Config.ModEnabled)
                     return;
                 cropDict[__instance.Name] = new Dictionary<Vector2, Crop>();
+                var flowers = Game1.objectData.Where(p => p.Value.Category == Object.flowersCategory && !Config.DisallowNames.Contains(p.Value.Name)).Select(p => p.Key).ToArray();
+
+                var crops = Game1.cropData;
+                var weights = new Dictionary<string, float>();
+                float totalWeight = 0;
+                SMonitor.Log($"Season is {Game1.season}");
+
+                foreach (var kvp in crops)
+                {
+                    if (!flowers.Contains(kvp.Value.HarvestItemId))
+                        continue;
+                    if (!kvp.Value.Seasons.Contains(Game1.season))
+                    {
+                        SMonitor.Log($"harvest item {kvp.Value.HarvestItemId} isn't in season");
+                        continue;
+                    }
+                    if (!Game1.objectData.TryGetValue(kvp.Value.HarvestItemId, out var data))
+                    {
+                        SMonitor.Log($"harvest item {kvp.Value.HarvestItemId} isn't in objectData");
+                        continue;
+                    }
+                    float weight = Config.EnableFlowerRarity ? 1 / (float)(Config.FullFlowerRarity ? data.Price : Math.Sqrt(data.Price)) : 1;
+                    totalWeight += weight;
+                    weights.Add(kvp.Key, totalWeight);
+                }
+                if(weights.Count == 0)
+                {
+                    SMonitor.Log($"no flowers for this season");
+                    return;
+                }
+                SMonitor.Log($"{weights.Count} flowers for this season");
+
                 foreach (var key in __instance.terrainFeatures.Pairs.Where(p => p.Value is Grass).Select(p => p.Key))
                 {
                     Crop crop;
@@ -32,12 +64,17 @@ namespace Wildflowers
                         
                         if (chance <= Config.wildflowerGrowChance)
                         {
-                            var flowers = Game1.objectData.Where(p => p.Value.Category == Object.flowersCategory && !Config.DisallowNames.Contains(p.Value.Name)).Select(p => p.Key).ToArray();
-                            string idx = GetRandomFlowerSeed(flowers);
+                            string idx = null;
+                            float roll = totalWeight * (float)Game1.random.NextDouble();
+                            foreach (var kvp in weights)
+                            {
+                                if (kvp.Value > roll)
+                                    idx = kvp.Key;
+                            }
                             if (idx == null)
                             {
-                                SMonitor.Log($"no flowers for this season");
-                                return;
+                                SMonitor.Log($"this shouldn't happen; weights {totalWeight}, roll {roll}");
+                                continue;
                             }
                             crop = new Crop(idx, (int)key.X, (int)key.Y, __instance);
                             crop.growCompletely();
