@@ -9,7 +9,7 @@ using System.Numerics;
 using xTile.Dimensions;
 using Object = StardewValley.Object;
 
-namespace LadderSpawner
+namespace LadderSpawnOnEntry
 {
     public partial class ModEntry
     {

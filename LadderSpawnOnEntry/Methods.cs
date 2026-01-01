@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LadderSpawner
+namespace LadderSpawnOnEntry
 {
     public partial class ModEntry
     {

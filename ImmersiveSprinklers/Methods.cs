@@ -313,7 +313,7 @@ namespace ImmersiveSprinklers
         }
         public static int GetSprinklerRadius(Object obj)
         {
-            if (!Config.SprinklerRadii.TryGetValue(obj.Name, out int radius))
+            if (!Config.SprinklerRadii.TryGetValue(obj.ItemId, out int radius) && !Config.SprinklerRadii.TryGetValue(obj.Name, out radius))
                 return obj.GetModifiedRadiusForSprinkler();
             if (obj.heldObject.Value != null && Utility.IsNormalObjectAtParentSheetIndex((Object)obj.heldObject.Value, "915"))
             {

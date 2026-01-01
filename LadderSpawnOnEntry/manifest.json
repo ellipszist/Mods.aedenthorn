@@ -1,10 +1,10 @@
 ﻿{
   "Name": "Ladder Spawner",
   "Author": "aedenthorn",
-  "Version": "0.1.0",
+  "Version": "0.2.0",
   "Description": "Ladder Spawner.",
-  "UniqueID": "aedenthorn.LadderSpawner",
-  "EntryDll": "LadderSpawner.dll",
+  "UniqueID": "aedenthorn.LadderSpawnOnEntry",
+  "EntryDll": "LadderSpawnOnEntry.dll",
   "MinimumApiVersion": "4.0.0",
-  "UpdateKeys": [ "Nexus:" ]
+  "UpdateKeys": [ "Nexus:40688" ]
 }

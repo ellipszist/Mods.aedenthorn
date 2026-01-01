@@ -629,6 +629,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FarmSwitch", "FarmSwitch\Fa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LadderSpawnOnEntry", "LadderSpawnOnEntry\LadderSpawnOnEntry.csproj", "{7421BF79-3B2E-BD87-784F-9DD149E603A3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PetCoats", "PetCoats\PetCoats.csproj", "{CF946EDD-BD86-32C8-1ECB-60C2F62A94E5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3109,6 +3111,14 @@ Global
 		{7421BF79-3B2E-BD87-784F-9DD149E603A3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7421BF79-3B2E-BD87-784F-9DD149E603A3}.Release|x64.ActiveCfg = Release|x64
 		{7421BF79-3B2E-BD87-784F-9DD149E603A3}.Release|x64.Build.0 = Release|x64
+		{CF946EDD-BD86-32C8-1ECB-60C2F62A94E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF946EDD-BD86-32C8-1ECB-60C2F62A94E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF946EDD-BD86-32C8-1ECB-60C2F62A94E5}.Debug|x64.ActiveCfg = Debug|x64
+		{CF946EDD-BD86-32C8-1ECB-60C2F62A94E5}.Debug|x64.Build.0 = Debug|x64
+		{CF946EDD-BD86-32C8-1ECB-60C2F62A94E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF946EDD-BD86-32C8-1ECB-60C2F62A94E5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF946EDD-BD86-32C8-1ECB-60C2F62A94E5}.Release|x64.ActiveCfg = Release|x64
+		{CF946EDD-BD86-32C8-1ECB-60C2F62A94E5}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

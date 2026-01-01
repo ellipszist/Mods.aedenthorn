@@ -1,4 +1,4 @@
-﻿namespace LadderSpawner
+﻿namespace LadderSpawnOnEntry
 {
     public class ModConfig
     {
