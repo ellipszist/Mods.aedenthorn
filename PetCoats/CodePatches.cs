@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using static StardewValley.Minigames.BoatJourney;
 
 namespace PetCoats
 {
@@ -93,7 +94,41 @@ namespace PetCoats
                     return true;
                 cachedPetCoatIcon = null;
                 MasterCoat = ChangePetCoat(1, Game1.MasterPlayer.whichPetType, Game1.MasterPlayer.whichPetBreed, MasterCoat);
-                Game1.playSound("grassyStep");
+                if(playSound)
+                    Game1.playSound("grassyStep");
+                return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(CharacterCustomization), "performHoverAction")]
+        public class CharacterCustomization_performHoverAction_Patch
+        {
+            public static bool Prefix(CharacterCustomization __instance, int x, int y, ref string ___hoverText, ref string ___hoverTitle)
+            {
+                if (!Config.EnableMod || __instance.petPortraitBox is null || !__instance.petPortraitBox.Value.Contains(x, y))
+                    return true;
+                var dict = GetDataDict();
+                if (dict?.Any() != true)
+                    return true;
+                int count = 0;
+
+                string title = null;
+                foreach(var kvp in dict)
+                {
+                    if (kvp.Value.PetType == Game1.player.whichPetType && kvp.Value.PetBreed == Game1.player.whichPetBreed)
+                    {
+                        count++;
+                        if(MasterCoat == kvp.Key && kvp.Value.DisplayName != null) 
+                        {
+                            title = kvp.Value.DisplayName != null ? kvp.Value.DisplayName : kvp.Key;
+                        }
+                    }
+                }
+                if (count > 0)
+                {
+                    ___hoverTitle = title == null ? Game1.player.whichPetType + " " + Game1.player.whichPetBreed : title;
+                    ___hoverText = string.Format(SHelper.Translation.Get(count == 1 ? "1-custom" : "x-custom"), count);
+                }
                 return false;
             }
         }
