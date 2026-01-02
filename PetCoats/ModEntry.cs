@@ -101,6 +101,27 @@ namespace PetCoats
                     getValue: () => Config.ModKey,
                     setValue: value => Config.ModKey = value
                 );
+
+                configMenu.AddKeybind(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("Config.CoatKey"),
+                    getValue: () => Config.CoatKey,
+                    setValue: value => Config.CoatKey = value
+                );
+
+                configMenu.AddKeybind(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("Config.BreedKey"),
+                    getValue: () => Config.BreedKey,
+                    setValue: value => Config.BreedKey = value
+                );
+
+                configMenu.AddKeybind(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("Config.TypeKey"),
+                    getValue: () => Config.TypeKey,
+                    setValue: value => Config.TypeKey = value
+                );
             }
         }
     }

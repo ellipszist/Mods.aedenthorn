@@ -70,6 +70,32 @@ namespace PetCoats
                         }
 
                     }
+                    else if (SHelper.Input.IsDown(Config.TypeKey))
+                    {
+                        var keys = Game1.petData.Keys.ToArray();
+
+                        for (int i = 0; i < keys.Length; i++)
+                        {
+                            var key = keys[i];
+                            if (pet.petType.Value == key)
+                            {
+                                int which = i + diff;
+                                if (which < 0)
+                                    which = keys.Length - 1;
+                                else if (which >= keys.Length)
+                                {
+                                    which = 0;
+                                }
+                                pet.petType.Value = keys[which];
+                                pet.whichBreed.Value = Game1.petData[keys[which]].Breeds[0].Id;
+                                pet.reloadBreedSprite();
+                                Game1.oldMouseState = Game1.input.GetMouseState();
+                                Game1.playSound("yoba");
+                                return;
+                            }
+                        }
+
+                    }
                     else if (SHelper.Input.IsDown(Config.CoatKey))
                     {
                         string coat = GetPetData(pet, out var data);
