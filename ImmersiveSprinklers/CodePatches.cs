@@ -306,66 +306,48 @@ namespace ImmersiveSprinklers
 
         }
 
-        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.DayUpdate))]
+        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.GetDirtDecayChance))]
         public class GameLocation_DayUpdate_Patch
         {
-            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            public static bool Prefix(GameLocation __instance, Vector2 tile, ref double __result)
             {
-                SMonitor.Log($"Transpiling GameLocation.DayUpdate");
-                var codes = new List<CodeInstruction>(instructions);
-                for (int i = 0; i < codes.Count; i++)
+                if (!Config.EnableMod || !__instance.terrainFeatures.TryGetValue(tile, out var tf) || tf is not HoeDirt dirt)
+                    return true;
+                for (int i = 0; i < 4; i++)
                 {
-                    if (codes[i].opcode == OpCodes.Callvirt && codes[i].operand is MethodInfo && ((MethodInfo)codes[i].operand == AccessTools.Method(typeof(NetDictionary<Vector2, TerrainFeature, NetRef<TerrainFeature>, SerializableDictionary<Vector2, TerrainFeature>, NetVector2Dictionary<TerrainFeature, NetRef<TerrainFeature>>>), nameof(NetVector2Dictionary<TerrainFeature, NetRef<TerrainFeature>>.RemoveWhere))))
+                    if (dirt.modData.TryGetValue(sprinklerKey + i, out var sprinklerString))
                     {
-                        SMonitor.Log($"overriding hoedirt removal");
-                        codes.Insert(i, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.RemoveWhere))));
-                        i++;
+                        SMonitor.Log($"Preventing hoedirt removal");
+                        __result = -1;
+                        return false;
                     }
                 }
-
-                return codes.AsEnumerable();
+                return true;
             }
         }
-        
+
+
+
         [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.HandleGrassGrowth))]
         public class GameLocation_HandleGrassGrowth_Patch
         {
             public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
             {
-                SMonitor.Log($"Transpiling GameLocation.DayUpdate");
+                SMonitor.Log($"Transpiling GameLocation.HandleGrassGrowth");
                 var codes = new List<CodeInstruction>(instructions);
                 for (int i = 0; i < codes.Count; i++)
                 {
-                    if (codes[i].opcode == OpCodes.Callvirt && codes[i].operand is MethodInfo && ((MethodInfo)codes[i].operand == AccessTools.Method(typeof(NetDictionary<Vector2, TerrainFeature, NetRef<TerrainFeature>, SerializableDictionary<Vector2, TerrainFeature>, NetVector2Dictionary<TerrainFeature, NetRef<TerrainFeature>>>), nameof(NetVector2Dictionary<TerrainFeature, NetRef<TerrainFeature>>.RemoveWhere))))
+                    if (codes[i].opcode == OpCodes.Ldftn && codes[i].operand is MethodInfo info && Array.Exists(info.GetParameters(), p => p.ParameterType == typeof(KeyValuePair<Vector2, TerrainFeature>)))
                     {
                         SMonitor.Log($"overriding hoedirt removal");
-                        codes.Insert(i, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.RemoveWhere))));
-                        i++;
-
+                        codes[i].operand = AccessTools.Method(typeof(ModEntry), nameof(RemoveWhere));
+                        break;
                     }
                 }
 
                 return codes.AsEnumerable();
             }
         }
-        [HarmonyPatch(typeof(HoeDirt), nameof(HoeDirt.seasonUpdate))]
-        public class HoeDirt_seasonUpdate_Patch
-        {
-            public static void Postfix(HoeDirt __instance, ref bool __result)
-            {
-                if (!__result || !Config.EnableMod)
-                    return;
-                for (int i = 0; i < 4; i++)
-                {
-                    if (__instance.modData.TryGetValue(sprinklerKey + i, out var sprinklerString))
-                    {
-                        __result = false;
-                        return;
-                    }
-                }
-            }
-        }
-
 
         [HarmonyPatch(typeof(HoeDirt), nameof(HoeDirt.dayUpdate))]
         public class HoeDirt_dayUpdate_Patch

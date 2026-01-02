@@ -49,7 +49,7 @@ namespace PetCoats
                 }
                 else if(dataDict[key].RealSwap != null)
                 {
-                    dataDict[key].IconTexture = GetCoatTexture(true, dataDict[key].RealSwap);
+                    dataDict[key].IconTexture = GetCoatTexture(dataDict[key].PetType, dataDict[key].PetBreed, true, dataDict[key].RealSwap);
                 }
                 if (dataDict[key].TexturePath != null)
                 {
@@ -57,21 +57,21 @@ namespace PetCoats
                 }
                 else if (dataDict[key].RealSwap != null)
                 {
-                    dataDict[key].Texture = GetCoatTexture(false, dataDict[key].RealSwap);
+                    dataDict[key].Texture = GetCoatTexture(dataDict[key].PetType, dataDict[key].PetBreed, false, dataDict[key].RealSwap);
                 }
             }
             return dataDict;
         }
 
-        public static Texture2D GetCoatTexture(bool icon, Dictionary<Color, Color> swap = null)
+        public static Texture2D GetCoatTexture(string petType, string petBreed, bool icon, Dictionary<Color, Color> swap = null)
         {
-            if (!Pet.TryGetData(Game1.MasterPlayer.whichPetType, out var petData))
+            if (!Pet.TryGetData(petType, out var petData))
                 return null;
             Texture2D texture = null;
             Rectangle rectangle = new Rectangle();
             foreach (PetBreed breed in petData.Breeds)
             {
-                if (breed.Id == Game1.MasterPlayer.whichPetBreed)
+                if (breed.Id == petBreed)
                 {
                     texture = Game1.content.Load<Texture2D>(icon ? breed.IconTexture : breed.Texture);
                     if (icon)

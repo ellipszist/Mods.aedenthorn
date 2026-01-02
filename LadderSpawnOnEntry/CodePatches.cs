@@ -2,12 +2,7 @@
 using StardewValley;
 using StardewValley.Extensions;
 using StardewValley.Locations;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
-using xTile.Dimensions;
-using Object = StardewValley.Object;
 
 namespace LadderSpawnOnEntry
 {
@@ -18,7 +13,7 @@ namespace LadderSpawnOnEntry
         {
             public static void Postfix(MineShaft __instance)
             {
-                if (!Config.EnableMod || __instance.ladderHasSpawned || __instance.mustKillAllMonstersToAdvance() || !__instance.shouldCreateLadderOnThisLevel())
+                if (!Config.EnableMod || (!Config.EnableForDangerous && __instance.GetAdditionalDifficulty() > 0) || __instance.ladderHasSpawned || __instance.mustKillAllMonstersToAdvance() || !__instance.shouldCreateLadderOnThisLevel())
                     return;
                 var stones = __instance.Objects.Pairs.Where(p => p.Value.IsBreakableStone()).ToList();
                 if(!stones.Any())

@@ -21,11 +21,21 @@ namespace LadderSpawnOnEntry
             SHelper = helper;
 
             Helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
+            Helper.Events.Input.ButtonPressed += Input_ButtonPressed;
             
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
         }
 
+        private void Input_ButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
+        {
+            if(e.Button == Config.ToggleKey)
+            {
+                Config.EnableMod = !Config.EnableMod;
+                Monitor.Log($"Mod enabled: {Config.EnableMod}");
+                Helper.WriteConfig(Config);
+            }
+        }
 
         private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
         {
@@ -45,6 +55,20 @@ namespace LadderSpawnOnEntry
                     name: () => SHelper.Translation.Get("Config.EnableMod"),
                     getValue: () => Config.EnableMod,
                     setValue: value => Config.EnableMod = value
+                );
+
+                configMenu.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("Config.EnableForDangerous"),
+                    getValue: () => Config.EnableForDangerous,
+                    setValue: value => Config.EnableForDangerous = value
+                );
+
+                configMenu.AddKeybind(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("Config.ToggleKey"),
+                    getValue: () => Config.ToggleKey,
+                    setValue: value => Config.ToggleKey = value
                 );
             }
         }

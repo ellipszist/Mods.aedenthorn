@@ -336,23 +336,23 @@ namespace ImmersiveScarecrows
             return result;
         }
 
-        public static Func<KeyValuePair<Vector2, TerrainFeature>, bool> RemoveWhere(Func<KeyValuePair<Vector2, TerrainFeature>, bool> match)
+        public static bool RemoveWhere(KeyValuePair<Vector2, TerrainFeature> pair)
         {
+            HoeDirt dirt = pair.Value as HoeDirt;
+            var match = dirt != null && dirt.crop == null && Game1.random.NextDouble() < 0.8;
+            
             if (!Config.EnableMod)
                 return match;
-            return delegate (KeyValuePair<Vector2, TerrainFeature> pair)
-            {
 
-                for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 4; i++)
+            {
+                if (pair.Value.modData.TryGetValue(scarecrowKey + i, out var scarecrowString))
                 {
-                    if (pair.Value.modData.TryGetValue(scarecrowKey + i, out var scarecrowString))
-                    {
-                        SMonitor.Log($"Preventing hoedirt removal");
-                        return false;
-                    }
+                    SMonitor.Log($"Preventing hoedirt removal");
+                    return false;
                 }
-                return match(pair);
-            };
+            }
+            return match;
         }
     }
 }

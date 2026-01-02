@@ -25,16 +25,15 @@ namespace PetCoats
         {
             public static void Prefix()
             {
-                if (!Config.EnableMod|| !SHelper.Input.IsDown(Config.ModKey) || !Context.IsPlayerFree || Game1.currentLocation is null)
+                if (!Config.EnableMod || !Context.IsPlayerFree || Game1.currentLocation is null)
                     return;
 
                 MouseState currentMouseState = Game1.input.GetMouseState();
                 if (currentMouseState.ScrollWheelValue == Game1.oldMouseState.ScrollWheelValue)
                     return;
+                int diff = Math.Sign(currentMouseState.ScrollWheelValue - Game1.oldMouseState.ScrollWheelValue);
                 
                 var dict = GetDataDict();
-                if (!dict.Any())
-                    return;
 
                 var mp = Game1.getMousePosition() + new Point(Game1.viewport.Location.X, Game1.viewport.Location.Y);
 
@@ -45,16 +44,57 @@ namespace PetCoats
                     bb.Inflate(0, 32);
                     if (c is not Pet pet || !bb.Contains(mp))
                         continue;
-                    string coat = GetPetData(pet, out var data);
-                    coat = ChangePetCoat(currentMouseState.ScrollWheelValue - Game1.oldMouseState.ScrollWheelValue, pet.petType.Value, pet.whichBreed.Value, coat);
 
-                    pet.modData[modKey] = coat == null ? "" : coat;
-                    pet.reloadBreedSprite();
+                    if (SHelper.Input.IsDown(Config.BreedKey))
+                    {
+                        if (!Pet.TryGetData(Game1.MasterPlayer.whichPetType, out var petData))
+                            return;
+                        for (int i = 0; i < petData.Breeds.Count; i++)
+                        {
+                            if (pet.whichBreed.Value == petData.Breeds[i].Id)
+                            {
+                                int which = i + diff;
+                                if (which < 0)
+                                    which = petData.Breeds.Count - 1;
+                                else if (which >= petData.Breeds.Count)
+                                {
+                                    which = 0;
+                                }
+                                pet.whichBreed.Value = petData.Breeds[which].Id;
+                                pet.reloadBreedSprite();
+                                Game1.oldMouseState = Game1.input.GetMouseState();
+                                Game1.playSound("grassyStep");
+                                return;
+                            }
+                        }
 
-                    Game1.oldMouseState = Game1.input.GetMouseState();
-                    Game1.playSound("grassyStep");
-                    return;
+                    }
+                    else if (SHelper.Input.IsDown(Config.CoatKey))
+                    {
+                        string coat = GetPetData(pet, out var data);
+                        coat = ChangePetCoat(diff, pet.petType.Value, pet.whichBreed.Value, coat);
+
+                        pet.modData[modKey] = coat == null ? "" : coat;
+                        pet.reloadBreedSprite();
+                        Game1.oldMouseState = Game1.input.GetMouseState();
+                        Game1.playSound("grassyStep");
+                        return;
+                    }
                 }
+            }
+        }
+
+        [HarmonyPatch(typeof(CharacterCustomization), "receiveLeftClick")]
+        public class CharacterCustomization_receiveLeftClick_Patch
+        {
+            public static bool Prefix(CharacterCustomization __instance, int x, int y, bool playSound)
+            {
+                if (!Config.EnableMod || __instance.petPortraitBox is null || !__instance.petPortraitBox.Value.Contains(x, y))
+                    return true;
+                cachedPetCoatIcon = null;
+                MasterCoat = ChangePetCoat(1, Game1.MasterPlayer.whichPetType, Game1.MasterPlayer.whichPetBreed, MasterCoat);
+                Game1.playSound("grassyStep");
+                return false;
             }
         }
 
