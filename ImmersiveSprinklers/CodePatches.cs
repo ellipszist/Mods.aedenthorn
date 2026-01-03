@@ -414,15 +414,20 @@ namespace ImmersiveSprinklers
             {
                 if (!Config.EnableMod)
                     return true;
-                Vector2 placementTile = new Vector2(x, y);
-                int which = GetMouseCorner();
-                if (ReturnSprinkler(Game1.player, location, Game1.currentCursorTile, which))
+                int tileX = x / 64;
+                int tileY = y / 64;
+                Vector2 tile = new Vector2(tileX, tileY);
+                for (int i = 0; i < 4; i++)
                 {
-                    location.playSound("hammer");
-                    return false;
+                    if (location.terrainFeatures.TryGetValue(tile, out var tf) && tf is HoeDirt && TryReturnSprinkler(who, location, tf, i))
+                    {
+                        location.playSound("woodyHit");
+                        return false;
+                    }
                 }
                 return true;
             }
         }
+
     }
 }
