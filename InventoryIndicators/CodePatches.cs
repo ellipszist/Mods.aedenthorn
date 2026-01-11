@@ -11,6 +11,8 @@ namespace InventoryIndicators
     {
         public static void drawInMenu_Prefix(Item __instance, SpriteBatch spriteBatch, Vector2 location, float scaleSize, float transparency, float layerDepth)
         {
+            if (!Config.ModEnabled)
+                return;
             DrawBefore(__instance, spriteBatch, location, scaleSize, transparency, layerDepth);
         }
 

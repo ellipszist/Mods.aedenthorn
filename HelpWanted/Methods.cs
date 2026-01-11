@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using static StardewValley.LocationRequest;
 using Object = StardewValley.Object;
 
@@ -22,7 +23,7 @@ namespace HelpWanted
             if (fi is null)
                 return;
             var name = (NetString)fi.GetValue(quest);
-            questList.Add(new QuestData() { padTexture = GetPadTexture(name, questType.ToString()), pinTexture = GetPinTexture(name, questType.ToString()), padTextureSource = new Rectangle(0, 0, 64, 64), pinTextureSource = new Rectangle(0, 0, 64, 64), icon = icon, iconSource = iconRect, quest = Game1.questOfTheDay, pinColor = GetRandomColor(), padColor = GetRandomColor(), iconColor = new Color(Config.PortraitTintR, Config.PortraitTintG, Config.PortraitTintB, Config.PortraitTintA), iconOffset = iconOffset, iconScale = Config.PortraitScale });
+            questList.Add(new QuestData() { padTexture = GetPadTexture(name.Value, questType.ToString()), pinTexture = GetPinTexture(name.Value, questType.ToString()), padTextureSource = new Rectangle(0, 0, 64, 64), pinTextureSource = new Rectangle(0, 0, 64, 64), icon = icon, iconSource = iconRect, quest = Game1.questOfTheDay, pinColor = GetRandomColor(), padColor = GetRandomColor(), iconColor = new Color(Config.PortraitTintR, Config.PortraitTintG, Config.PortraitTintB, Config.PortraitTintA), iconOffset = iconOffset, iconScale = Config.PortraitScale });
         }
         private static Texture2D GetTexture(string path)
         {
@@ -103,17 +104,17 @@ namespace HelpWanted
         }
 
 
-        private static List<int> GetPossibleCrops(List<int> oldList)
+        private static List<string> GetPossibleCrops(List<string> oldList)
         {
             if (!Config.ModEnabled)
                 return oldList;
-            List<int> newList = GetRandomItemList(oldList);
+            List<string> newList = GetRandomItemList(oldList);
             //SMonitor.Log($"possible crops: {newList?.Count}");
             return (newList is null || !newList.Any()) ? oldList : newList;
         }
-        private static int GetRandomItem(int result, List<int> possibleItems)
+        private static string GetRandomItem(string result, List<string> possibleItems)
         {
-            List<int> items = GetRandomItemList(possibleItems);
+            List<string> items = GetRandomItemList(possibleItems);
 
             if (items is null)
                 return result;
@@ -121,20 +122,20 @@ namespace HelpWanted
                 return result;
             for(int i = items.Count - 1; i >= 0; i--)
             {
-                if (!Game1.objectInformation.ContainsKey(items[i]))
+                if (!Game1.objectData.ContainsKey(items[i]))
                     items.RemoveAt(i);
             }
             if (!items.Any())
                 return result;
             var ii = items[random.Next(items.Count)];
-            if (!Game1.objectInformation.ContainsKey(ii))
+            if (!Game1.objectData.ContainsKey(ii))
                 return result;
             //SMonitor.Log($"our random: {ii}");
             //SMonitor.Log($"found our random: {ii}");
             return ii;
         }
 
-        private static List<int> GetRandomItemList(List<int> possibleItems)
+        private static List<string> GetRandomItemList(List<string> possibleItems)
         {
 
             if (!Config.ModEnabled || (!Config.MustLikeItem && !Config.MustLoveItem) || Game1.questOfTheDay is not ItemDeliveryQuest)
@@ -154,17 +155,15 @@ namespace HelpWanted
             if (string.IsNullOrEmpty(listString))
                 return null;
             split = listString.Split(' ');
-            List<int> items = new List<int>();
+            List<string> items = new List<string>();
             foreach (var str in split)
             {
-                if (!int.TryParse(str, out int i) || !Game1.objectInformation.ContainsKey(i))
-                    continue;
-                Object obj = new Object(i, 1);
+                Object obj = (Object)ItemRegistry.Create(str, 1);
                 if (!Config.AllowArtisanGoods && obj is not null && obj.Category == Object.artisanGoodsCategory)
                     continue;
                 if (Config.MaxPrice > 0 && obj is not null && obj.Price > Config.MaxPrice)
                     continue;
-                items.Add(i);
+                items.Add(str);
             }
             if (!items.Any() || (!Config.IgnoreVanillaItemSelection && possibleItems?.Any() != true))
                 return null;
@@ -174,16 +173,14 @@ namespace HelpWanted
             }
             for (int i = possibleItems.Count - 1; i >= 0; i--)
             {
-                int idx = possibleItems[i];
+                string idx = possibleItems[i];
                 if (!items.Contains(idx))
                 {
-                    if (idx >= 0)
+
+                    Object obj = (Object)ItemRegistry.Create(idx, 1);
+                    if (obj is null || !items.Contains(obj.Category.ToString()) || (!Config.AllowArtisanGoods && obj.Category == Object.artisanGoodsCategory) || (Config.MaxPrice > 0 && obj.Price > Config.MaxPrice))
                     {
-                        Object obj = new Object(idx, 1);
-                        if (obj is null || !items.Contains(obj.Category) || (!Config.AllowArtisanGoods && obj.Category == Object.artisanGoodsCategory) || (Config.MaxPrice > 0 && obj.Price > Config.MaxPrice))
-                        {
-                            possibleItems.RemoveAt(i);
-                        }
+                        possibleItems.RemoveAt(i);
                     }
                 }
             }
@@ -211,7 +208,7 @@ namespace HelpWanted
             float currentWeight = Config.ResourceCollectionWeight;
             if (d < currentWeight / totalWeight)
             {
-                Game1.questOfTheDay = new ResourceCollectionQuest();
+                Game1.netWorldState.Value.SetQuestOfTheDay(new ResourceCollectionQuest());
                 return;
             }
             if (mine)
@@ -219,17 +216,17 @@ namespace HelpWanted
                 currentWeight += Config.SlayMonstersWeight;
                 if (d < currentWeight / totalWeight)
                 {
-                    Game1.questOfTheDay = new SlayMonsterQuest();
+                    Game1.netWorldState.Value.SetQuestOfTheDay(new SlayMonsterQuest());
                     return;
                 }
             }
             currentWeight += Config.FishingWeight;
             if (d < currentWeight / totalWeight)
             {
-                Game1.questOfTheDay = new FishingQuest();
+                Game1.netWorldState.Value.SetQuestOfTheDay(new FishingQuest());
                 return;
             }
-            Game1.questOfTheDay = new ItemDeliveryQuest();
+            Game1.netWorldState.Value.SetQuestOfTheDay(new ItemDeliveryQuest());
         }
 
         private Quest MakeQuest(QuestInfo quest)
@@ -241,7 +238,7 @@ namespace HelpWanted
                     q.target.Value = quest.target;
                     q.questTitle = quest.questTitle;
                     q.questDescription = quest.questDescription;
-                    q.resource.Value = GetIndexFromString(quest.item);
+                    q.ItemId.Value = quest.itemId;
                     q.number.Value = quest.number;
                     q.targetMessage.Value = quest.targetMessage;
                     q.currentObjective = quest.currentObjective;
@@ -251,7 +248,7 @@ namespace HelpWanted
                     q2.target.Value = quest.target;
                     q2.questTitle = quest.questTitle;
                     q2.questDescription = quest.questDescription;
-                    q2.whichFish.Value = GetIndexFromString(quest.item);
+                    q2.ItemId.Value = quest.itemId;
                     q2.numberToFish.Value = quest.number;
                     q2.targetMessage = quest.targetMessage;
                     q2.currentObjective = quest.currentObjective;
@@ -260,7 +257,7 @@ namespace HelpWanted
                     var q3 = new ItemDeliveryQuest();
                     q3.target.Value = quest.target;
                     q3.questTitle = quest.questTitle;
-                    q3.item.Value = GetIndexFromString(quest.item);
+                    q3.ItemId.Value = quest.itemId;
                     q3.targetMessage = quest.targetMessage;
                     q3.currentObjective = quest.currentObjective;
                     q3.questDescription = quest.questDescription;
@@ -270,7 +267,7 @@ namespace HelpWanted
                     q4.target.Value = quest.target;
                     q4.questTitle = quest.questTitle;
                     q4.questDescription = quest.questDescription;
-                    q4.monsterName.Value = quest.item;
+                    q4.monsterName.Value = quest.itemId;
                     q4.numberToKill.Value = quest.number;
                     q4.targetMessage = quest.targetMessage;
                     q4.currentObjective = quest.currentObjective;
@@ -279,13 +276,5 @@ namespace HelpWanted
                     return null;
             }
         }
-
-        private int GetIndexFromString(string item)
-        {
-            if (int.TryParse(item, out int idx))
-                return idx;
-            return Game1.objectInformation.First(o => o.Value.StartsWith(item + "/")).Key;
-        }
-
     }
 }

@@ -33,59 +33,59 @@ namespace HelpWanted
             }
         }
         
-        [HarmonyPatch(typeof(DescriptionElement), nameof(DescriptionElement.loadDescriptionElement))]
-        public class DescriptionElement_loadDescriptionElement_Patch
-        {
-            public static bool Prefix(DescriptionElement __instance, ref string __result)
-            {
-                if (!Config.ModEnabled)
-                    return true;
-                try
-                {
-                    DescriptionElement temp = new DescriptionElement(__instance.xmlKey, __instance.param);
-                    for (int i = 0; i < temp.param.Count; i++)
-                    {
-                        if (temp.param[i] is DescriptionElement)
-                        {
-                            DescriptionElement d = temp.param[i] as DescriptionElement;
-                            temp.param[i] = d.loadDescriptionElement();
-                        }
-                        if (temp.param[i] is Object)
-                        {
-                            string objectInformation;
-                            Game1.objectInformation.TryGetValue((temp.param[i] as Object).ParentSheetIndex, out objectInformation);
-                            temp.param[i] = objectInformation.Split('/', StringSplitOptions.None)[4];
-                        }
-                        if (temp.param[i] is Monster)
-                        {
-                            DescriptionElement d2;
-                            if ((temp.param[i] as Monster).Name.Equals("Frost Jelly"))
-                            {
-                                d2 = new DescriptionElement("Strings\\StringsFromCSFiles:SlayMonsterQuest.cs.13772");
-                                temp.param[i] = d2.loadDescriptionElement();
-                            }
-                            else
-                            {
-                                d2 = new DescriptionElement("Data\\Monsters:" + (temp.param[i] as Monster).Name);
-                                temp.param[i] = ((LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.en) ? (d2.loadDescriptionElement().Split('/', StringSplitOptions.None).Last<string>() + "s") : d2.loadDescriptionElement().Split('/', StringSplitOptions.None).Last<string>());
-                            }
-                            temp.param[i] = d2.loadDescriptionElement().Split('/', StringSplitOptions.None).Last<string>();
-                        }
-                        if (temp.param[i] is NPC)
-                        {
-                            DescriptionElement d3 = new DescriptionElement("Data\\NPCDispositions:" + (temp.param[i] as NPC).Name);
-                            temp.param[i] = d3.loadDescriptionElement().Split('/', StringSplitOptions.None).Last<string>();
-                        }
-                    }
-                    return true;
-                }
-                catch
-                {
-                    __result = string.Empty;
-                    return false;
-                }
-            }
-        }
+        //[HarmonyPatch(typeof(DescriptionElement), nameof(DescriptionElement.loadDescriptionElement))]
+        //public class DescriptionElement_loadDescriptionElement_Patch
+        //{
+        //    public static bool Prefix(DescriptionElement __instance, ref string __result)
+        //    {
+        //        if (!Config.ModEnabled)
+        //            return true;
+        //        try
+        //        {
+        //            DescriptionElement temp = new DescriptionElement(__instance.xmlKey, __instance.param);
+        //            for (int i = 0; i < temp.param.Count; i++)
+        //            {
+        //                if (temp.param[i] is DescriptionElement)
+        //                {
+        //                    DescriptionElement d = temp.param[i] as DescriptionElement;
+        //                    temp.param[i] = d.loadDescriptionElement();
+        //                }
+        //                if (temp.param[i] is Object)
+        //                {
+        //                    string objectInformation;
+        //                    Game1.objectInformation.TryGetValue((temp.param[i] as Object).ParentSheetIndex, out objectInformation);
+        //                    temp.param[i] = objectInformation.Split('/', StringSplitOptions.None)[4];
+        //                }
+        //                if (temp.param[i] is Monster)
+        //                {
+        //                    DescriptionElement d2;
+        //                    if ((temp.param[i] as Monster).Name.Equals("Frost Jelly"))
+        //                    {
+        //                        d2 = new DescriptionElement("Strings\\StringsFromCSFiles:SlayMonsterQuest.cs.13772");
+        //                        temp.param[i] = d2.loadDescriptionElement();
+        //                    }
+        //                    else
+        //                    {
+        //                        d2 = new DescriptionElement("Data\\Monsters:" + (temp.param[i] as Monster).Name);
+        //                        temp.param[i] = ((LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.en) ? (d2.loadDescriptionElement().Split('/', StringSplitOptions.None).Last<string>() + "s") : d2.loadDescriptionElement().Split('/', StringSplitOptions.None).Last<string>());
+        //                    }
+        //                    temp.param[i] = d2.loadDescriptionElement().Split('/', StringSplitOptions.None).Last<string>();
+        //                }
+        //                if (temp.param[i] is NPC)
+        //                {
+        //                    DescriptionElement d3 = new DescriptionElement("Data\\NPCDispositions:" + (temp.param[i] as NPC).Name);
+        //                    temp.param[i] = d3.loadDescriptionElement().Split('/', StringSplitOptions.None).Last<string>();
+        //                }
+        //            }
+        //            return true;
+        //        }
+        //        catch
+        //        {
+        //            __result = string.Empty;
+        //            return false;
+        //        }
+        //    }
+        //}
 
         [HarmonyPatch(typeof(Billboard), nameof(Billboard.draw))]
         public class Billboard_draw_Patch
@@ -109,7 +109,7 @@ namespace HelpWanted
                 if (__instance.acceptQuestButton.containsPoint(x, y))
                 {
                     Game1.player.acceptedDailyQuest.Set(false);
-                    Game1.questOfTheDay = null;
+                    Game1.netWorldState.Value.SetQuestOfTheDay(null);
                     OrdersBillboard.questDict.Remove(OrdersBillboard.showingQuest);
                     OrdersBillboard.ccList.RemoveAll(c => c.myID == OrdersBillboard.showingQuest);
                     OrdersBillboard.questBillboard = null;
@@ -143,7 +143,7 @@ namespace HelpWanted
             return !Config.ModEnabled ? days: Config.QuestDays;
         }
 
-        [HarmonyPatch(typeof(Utility), nameof(Utility.getRandomItemFromSeason))]
+        [HarmonyPatch(typeof(Utility), nameof(Utility.getRandomItemFromSeason), new Type[] {typeof(Season), typeof(bool), typeof(Random) })]
         public class Utility_getRandomItemFromSeason_Patch
         {
             public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -156,6 +156,11 @@ namespace HelpWanted
 
                 return codes.AsEnumerable();
             }
+        }
+
+        [HarmonyPatch(typeof(Utility), nameof(Utility.getRandomItemFromSeason), new Type[] {typeof(Season), typeof(int), typeof(bool), typeof(bool) })]
+        public class Utility_getRandomItemFromSeason_Patch2
+        {
             public static void Prefix(ref int randomSeedAddition)
             {
                 if (!Config.ModEnabled || !gettingQuestDetails)

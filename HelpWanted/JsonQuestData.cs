@@ -30,7 +30,7 @@ namespace HelpWanted
     public class QuestInfo
     {
         public QuestType questType;
-        public string item;
+        public string itemId;
         public int number;
         public string questTitle;
         public string questDescription;

@@ -29,7 +29,7 @@ namespace CustomPictureFrames
             }
             Texture2D texture = pictureDict[key][index];
 
-            spriteBatch.Draw(texture, Game1.GlobalToLocal(Game1.viewport, new Vector2(x * 64 + 32 - (__instance.displayItem.Value as Furniture).sourceRect.Width * 2, y * 64 - 8 - (__instance.displayItem.Value as Furniture).sourceRect.Height * 2)), new Rectangle(0, 0, texture.Width, texture.Height), Color.White * alpha, 0f, Vector2.Zero, 1f, (__instance.displayItem.Value as Furniture).Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, (__instance.getBoundingBox(new Vector2(x, y)).Bottom + 1) / 10000f);
+            spriteBatch.Draw(texture, Game1.GlobalToLocal(Game1.viewport, new Vector2(x * 64 + 32 - (__instance.displayItem.Value as Furniture).sourceRect.Width * 2, y * 64 - 8 - (__instance.displayItem.Value as Furniture).sourceRect.Height * 2)), new Rectangle(0, 0, texture.Width, texture.Height), Color.White * alpha, 0f, Vector2.Zero, 1f, (__instance.displayItem.Value as Furniture).Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, (__instance.GetBoundingBox().Bottom + 1) / 10000f);
         }
         private static void GameLocation_draw_Postfix(GameLocation __instance, SpriteBatch b)
         {
@@ -57,7 +57,7 @@ namespace CustomPictureFrames
                 }
                 Texture2D texture = pictureDict[key][index];
 
-                b.Draw(texture, Game1.GlobalToLocal(Game1.viewport, SHelper.Reflection.GetField<NetVector2>(f, "drawPosition").GetValue() + ((f.shakeTimer > 0) ? new Vector2(Game1.random.Next(-1, 2), Game1.random.Next(-1, 2)) : Vector2.Zero)), new Rectangle(0, 0, texture.Width, texture.Height), Color.White, 0f, Vector2.Zero, 1f, f.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, (f.furniture_type.Value == 12) ? (2E-09f + f.TileLocation.Y / 100000f) : ((f.boundingBox.Value.Bottom - ((f.furniture_type.Value == 6 || f.furniture_type.Value == 17 || f.furniture_type.Value == 13) ? 48 : 8)) / 10000f));
+                b.Draw(texture, Game1.GlobalToLocal(Game1.viewport, SHelper.Reflection.GetField<NetVector2>(f, "drawPosition").GetValue().Value + ((f.shakeTimer > 0) ? new Vector2(Game1.random.Next(-1, 2), Game1.random.Next(-1, 2)) : Vector2.Zero)), new Rectangle(0, 0, texture.Width, texture.Height), Color.White, 0f, Vector2.Zero, 1f, f.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, (f.furniture_type.Value == 12) ? (2E-09f + f.TileLocation.Y / 100000f) : ((f.boundingBox.Value.Bottom - ((f.furniture_type.Value == 6 || f.furniture_type.Value == 17 || f.furniture_type.Value == 13) ? 48 : 8)) / 10000f));
             }
         } 
 

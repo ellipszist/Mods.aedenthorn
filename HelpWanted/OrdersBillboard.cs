@@ -92,7 +92,7 @@ namespace HelpWanted
                     {
                         if (questDict[cc.myID].acceptable)
                         {
-                            Game1.questOfTheDay = questDict[cc.myID].quest;
+                            Game1.netWorldState.Value.SetQuestOfTheDay(questDict[cc.myID].quest);
                             showingQuest = cc.myID;
                             questBillboard = new Billboard(true);
                         }
@@ -188,7 +188,7 @@ namespace HelpWanted
             }
             if (hoverText?.Length > 0)
             {
-                drawHoverText(b, hoverText, Game1.smallFont, 0, 0, -1, (hoverTitle.Length > 0) ? hoverTitle : null, -1, null, null, 0, -1, -1, -1, -1, 1f, null, null);
+                drawHoverText(b, hoverText, Game1.smallFont, 0, 0, -1, (hoverTitle.Length > 0) ? hoverTitle : null);
             }
             var method = AccessTools.Method(typeof(IClickableMenu), nameof(IClickableMenu.draw), new Type[] { typeof(SpriteBatch) });
             var ftn = method.MethodHandle.GetFunctionPointer();

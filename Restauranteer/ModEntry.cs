@@ -79,7 +79,7 @@ namespace Restauranteer
                                 Vector2 v = new Vector2(x, y);
                                 if (Config.AddFridgeObjects && !l.objects.TryGetValue(v, out Object obj))
                                 {
-                                    Chest fridge = new Chest(216, v, 217, 2)
+                                    Chest fridge = new Chest("216", v, 217, 2)
                                     {
                                         shakeTimer = 50
                                     };
@@ -100,7 +100,7 @@ namespace Restauranteer
 
         private void GameLoop_OneSecondUpdateTicked(object sender, StardewModdingAPI.Events.OneSecondUpdateTickedEventArgs e)
         {
-            if(Config.ModEnabled && Context.IsPlayerFree && Config.RestaurantLocations.Contains(Game1.player.currentLocation.Name) && (!Config.RequireEvent || Game1.player.eventsSeen.Contains(980558)))
+            if(Config.ModEnabled && Context.IsPlayerFree && Config.RestaurantLocations.Contains(Game1.player.currentLocation.Name) && (!Config.RequireEvent || Game1.player.eventsSeen.Contains("980558")))
             {
                 UpdateOrders();
             }
@@ -272,7 +272,7 @@ namespace Restauranteer
             var fridge = GetFridge(Game1.currentLocation);
             if(materialContainers is null)
                 materialContainers = new List<Chest>();
-            materialContainers.Add( fridge );
+            materialContainers.Add( fridge.Value );
         }
     }
 }

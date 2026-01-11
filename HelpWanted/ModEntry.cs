@@ -70,7 +70,7 @@ namespace HelpWanted
 
         private void GameLoop_DayStarted(object sender, StardewModdingAPI.Events.DayStartedEventArgs e)
         {
-            if (!Config.ModEnabled || Utility.isFestivalDay(Game1.dayOfMonth, Game1.currentSeason))
+            if (!Config.ModEnabled || Utility.isFestivalDay(Game1.dayOfMonth, Game1.season))
                 return;
             var dict = Helper.GameContent.Load<Dictionary<string, JsonQuestData>>(dictPath);
             foreach(var kvp in dict)
@@ -127,7 +127,7 @@ namespace HelpWanted
                 }
                 try
                 {
-                    AccessTools.FieldRefAccess<Quest, Random>(Game1.questOfTheDay, "random") = random;
+                    //AccessTools.FieldRefAccess<Quest, Random>(Game1.questOfTheDay, "random") = random;
                     gettingQuestDetails = true;
                     Game1.questOfTheDay.reloadDescription();
                     Game1.questOfTheDay.reloadObjective();

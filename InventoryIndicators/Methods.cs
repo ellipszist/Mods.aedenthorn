@@ -50,9 +50,6 @@ namespace InventoryIndicators
         }
         public static void DrawBefore(Item __instance, SpriteBatch spriteBatch, Vector2 location, float scaleSize, float transparency, float layerDepth)
         {
-
-            if (!Config.ModEnabled)
-                return;
             Color? color = null;
             if (dataDict.TryGetValue(__instance.QualifiedItemId, out var data))
             {
@@ -155,7 +152,7 @@ namespace InventoryIndicators
                 data.hoverText = text?.Trim();
                 dataDict[__instance.QualifiedItemId] = data;
             }
-            if (color != null)
+            if (color != null && (Game1.activeClickableMenu is not null || !Config.ShowOnlyInMenu))
             {
                 if (Config.OutlineWidth < 1)
                 {
@@ -172,7 +169,7 @@ namespace InventoryIndicators
         }
         public static void DrawAfter(Item __instance, SpriteBatch spriteBatch, Vector2 location, float scaleSize, float transparency, float layerDepth)
         {
-            if (!Config.ModEnabled || (Game1.activeClickableMenu is null && Config.ShowOnlyInMenu) || !dataDict.TryGetValue(__instance.QualifiedItemId, out var data))
+            if ((Game1.activeClickableMenu is null && Config.ShowOnlyInMenu) || !dataDict.TryGetValue(__instance.QualifiedItemId, out var data))
                 return;
             bool hover = new Rectangle(location.ToPoint(), new Point(64, 64)).Contains(Game1.getMousePosition());
 

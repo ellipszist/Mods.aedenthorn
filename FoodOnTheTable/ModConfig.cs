@@ -11,5 +11,6 @@ namespace FoodOnTheTable
         public float MaxDistanceToEat { get; set; } = 3f;
         public float PointsMult { get; set; } = 0.5f;
         public bool CountAsFedSpouse { get; set; } = true;
+        public bool OnlyInFarmhouse { get; set; } = true;
     }
 }

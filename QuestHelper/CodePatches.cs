@@ -1,0 +1,135 @@
+﻿using HarmonyLib;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using StardewValley;
+using StardewValley.GameData.Locations;
+using StardewValley.Menus;
+using StardewValley.Monsters;
+using StardewValley.Quests;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace QuestHelper
+{
+	public partial class ModEntry
+    {
+        [HarmonyPatch(typeof(NPC), nameof(NPC.draw), new Type[] {typeof(SpriteBatch), typeof(float) })]
+        public class NPC_draw_Patch
+        {
+            public static void Postfix(NPC __instance, SpriteBatch b)
+            {
+                if (!Config.ModEnabled || !Config.ShowQuestMarkers)
+                    return;
+                bool show = false;
+                foreach (var q in Game1.player.questLog)
+                {
+                    if (__instance.IsVillager)
+                    {
+                        if (q is ResourceCollectionQuest rq && !rq.completed.Value && rq.numberCollected.Value >= rq.number.Value && rq.target.Value == __instance.Name)
+                        {
+                            show = true;
+                            break;
+                        }
+                        if (q is SocializeQuest sq && !sq.completed.Value && sq.whoToGreet.Contains(__instance.Name))
+                        {
+                            show = true;
+                            break;
+                        }
+                        if (q is SecretLostItemQuest lq && lq.itemFound.Value && lq.npcName.Value == __instance.Name && Game1.player.Items.ContainsId(lq.ItemId.Value) && !lq.completed.Value)
+                        {
+                            show = true;
+                            break;
+                        }
+                        if (q is LostItemQuest iq && iq.itemFound.Value && iq.npcName.Value == __instance.Name && Game1.player.Items.ContainsId(iq.ItemId.Value) && !iq.completed.Value)
+                        {
+                            show = true;
+                            break;
+                        }
+                        if (q is ItemDeliveryQuest dq && dq.target.Value == __instance.Name && Game1.player.Items.CountId(dq.ItemId.Value) >= dq.number.Value && !dq.completed.Value)
+                        {
+                            show = true;
+                            break;
+                        }
+                        if (q is FishingQuest fq && fq.target.Value == __instance.Name && fq.numberFished.Value >= fq.numberToFish.Value && !fq.completed.Value)
+                        {
+                            show = true;
+                            break;
+                        }
+                        if (q is SlayMonsterQuest mq && mq.target.Value == __instance.Name && mq.numberKilled.Value >= mq.numberToKill.Value && !mq.completed.Value)
+                        {
+                            show = true;
+                            break;
+                        }
+                    }
+                    if(__instance is Monster m)
+                    {
+                        if (q is SlayMonsterQuest mq && !mq.completed.Value && mq.numberKilled.Value < mq.numberToKill.Value && (m.Name.Contains(mq.monsterName.Value) || (mq.id.Value == "15" && IsSlimeName(m.Name))))
+                        {
+                            show = true;
+                            break;
+                        }
+                    }
+                }
+                if (show)
+                {
+                    DrawQuestMarker(b, __instance.Position);
+                }
+            }
+        }
+        [HarmonyPatch(typeof(Quest), nameof(Quest.GetDescription))]
+        public class Quest_GetDescription_Patch
+        {
+            public static void Postfix(Quest __instance, ref string __result)
+            {
+                if (!Config.ModEnabled || !Config.ShowQuestDetails)
+                    return;
+                if (__instance is SocializeQuest sq && !sq.completed.Value && sq.whoToGreet.Count > 0)
+                {
+                    __result += "\n\n" + string.Format(SHelper.Translation.Get("left-to-greet"), sq.whoToGreet.Select(n => Game1.getCharacterFromName(n)?.displayName ?? n).Join());
+                }
+                else if (__instance is FishingQuest fq)
+                {
+                    var fish = ItemRegistry.Create(fq.ItemId.Value);
+                    if (fish == null)
+                        return;
+                    List<string> output = new List<string>();
+                    var spawnData = Game1.locationData["Default"].Fish.FirstOrDefault(d => d.ItemId == fq.ItemId.Value);
+                    if(spawnData != null)
+                    {
+                        output.Add(string.Format(SHelper.Translation.Get("fish-everywhere"), fish.DisplayName ?? fq.ItemId.Value));
+                    }
+                    else
+                    {
+                        List<string> locations = new List<string>();
+                        foreach (var l in Game1.locations)
+                        {
+                            if(l.GetData()?.Fish?.Exists(d => d.ItemId == fish.QualifiedItemId) == true)
+                            {
+                                locations.Add(l.DisplayName);
+                            }
+                        }
+                        if (locations.Any())
+                        {
+                            output.Add(string.Format(SHelper.Translation.Get("fish-location"), fish.DisplayName ?? fq.ItemId.Value, string.Join(", ", locations)));
+                        }
+                    }
+                    if (!DataLoader.Fish(Game1.content).TryGetValue(fish.ItemId, out var fishDataString))
+                        return;
+                    string[] fishData = fishDataString.Split('/');
+                    if (fishData.Length < 8 || fishData[7] == "both")
+                        return;
+                    if(fishData[7] == "sunny")
+                    {
+                        output.Add(string.Format(SHelper.Translation.Get("fish-sunny"), fish.DisplayName ?? fq.ItemId.Value));
+                    }
+                    else
+                    {
+                        output.Add(string.Format(SHelper.Translation.Get("fish-rainy"), fish.DisplayName ?? fq.ItemId.Value));
+                    }
+                    __result += "\n\n" + string.Join("\n\n", output);
+                }
+            }
+        }
+    }
+}

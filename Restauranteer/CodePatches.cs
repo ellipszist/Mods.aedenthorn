@@ -4,6 +4,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
+using StardewValley.GameData.Shops;
+using StardewValley.Internal;
+using StardewValley.Menus;
 using System;
 using System.Collections.Generic;
 using xTile.Dimensions;
@@ -51,12 +54,12 @@ namespace Restauranteer
                 emotePosition.Y -= 32 + __instance.Sprite.SpriteHeight * 4;
                 if (SHelper.Input.IsDown(Config.ModKey))
                 {
-                    SpriteText.drawStringWithScrollCenteredAt(b, orderData.dishName, (int)emotePosition.X + 32, (int)emotePosition.Y, "", 1, -1, 1);
+                    SpriteText.drawStringWithScrollCenteredAt(b, orderData.dishName, (int)emotePosition.X + 32, (int)emotePosition.Y);
                 }
                 else
                 {
-                    b.Draw(emoteSprite, emotePosition, new Rectangle?(new Rectangle(emoteIndex * 16 % Game1.emoteSpriteSheet.Width, emoteIndex * 16 / emoteSprite.Width * 16, 16, 16)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, __instance.getStandingY() / 10000f);
-                    b.Draw(Game1.objectSpriteSheet, emotePosition + new Vector2(16, 8), GameLocation.getSourceRectForObject(orderData.dish), Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, (__instance.getStandingY() + 1) / 10000f);
+                    b.Draw(emoteSprite, emotePosition, new Rectangle?(new Rectangle(emoteIndex * 16 % Game1.emoteSpriteSheet.Width, emoteIndex * 16 / emoteSprite.Width * 16, 16, 16)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, __instance.StandingPixel.Y / 10000f);
+                    b.Draw(Game1.objectSpriteSheet, emotePosition + new Vector2(16, 8), GameLocation.getSourceRectForObject(orderData.dishIndex), Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, (__instance.StandingPixel.Y + 1) / 10000f);
                 }
 
             }
@@ -77,7 +80,7 @@ namespace Restauranteer
                         __result = true;
                         return false;
                     }
-                    else if (Config.RequireEvent && !Game1.player.eventsSeen.Contains(980558))
+                    else if (Config.RequireEvent && !Game1.player.eventsSeen.Contains("980558"))
                     {
                         Game1.drawObjectDialogue(SHelper.Translation.Get("low-friendship"));
                         __result = true;
@@ -87,14 +90,14 @@ namespace Restauranteer
                 return true;
             }
         }
-        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.performAction))]
+        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.performAction), new Type[] { typeof(string[]), typeof(Farmer), typeof(Location) })]
         public class GameLocation_performAction_Patch
         {
-            public static bool Prefix(GameLocation __instance, string action, Farmer who, Location tileLocation, ref bool __result)
+            public static bool Prefix(GameLocation __instance, string[] action, Farmer who, Location tileLocation, ref bool __result)
             {
-                if (!Config.ModEnabled || !Config.RestaurantLocations.Contains(__instance.Name) || (action != "kitchen" && action != "restaurant"))
+                if (!Config.ModEnabled || !Config.RestaurantLocations.Contains(__instance.Name) || action?.Length < 1 || (action[0] != "kitchen" && action[0] != "restaurant"))
                     return true;
-                if (Config.RequireEvent && !Game1.player.eventsSeen.Contains(980558))
+                if (Config.RequireEvent && !Game1.player.eventsSeen.Contains("980558"))
                 {
                     Game1.drawObjectDialogue(SHelper.Translation.Get("low-friendship"));
                     __result = true;
@@ -102,7 +105,7 @@ namespace Restauranteer
                 }
                 var fridge = GetFridge(__instance);
 
-                __instance.ActivateKitchen(fridge);
+                __instance.ActivateKitchen();
                 __result = true;
                 return false;
             }
@@ -116,7 +119,7 @@ namespace Restauranteer
                 if (!Config.ModEnabled || !Config.RestaurantLocations.Contains(__instance.Name))
                     return;
                 var fridge = GetFridge(__instance);
-                fridge.Value.updateWhenCurrentLocation(time, __instance);
+                fridge.Value.updateWhenCurrentLocation(time);
             }
         }
         
@@ -136,7 +139,7 @@ namespace Restauranteer
                     return true;
                 }
                 OrderData orderData = JsonConvert.DeserializeObject<OrderData>(data);
-                if(who.ActiveObject != null && who.ActiveObject.canBeGivenAsGift() && who.ActiveObject.Name == orderData.dishName)
+                if(who.ActiveObject != null && who.ActiveObject.canBeGivenAsGift() && who.ActiveObject.ItemId == orderData.dishId)
                 {
                     Game1.mouseCursor = 6;
                     return false;
@@ -153,9 +156,9 @@ namespace Restauranteer
                 if (!Config.ModEnabled || !Config.RestaurantLocations.Contains(__instance.currentLocation.Name) || !__instance.modData.TryGetValue(orderKey, out string data))
                     return true;
                 OrderData orderData = JsonConvert.DeserializeObject<OrderData>(data);
-                if(who.ActiveObject?.ParentSheetIndex == orderData.dish)
+                if(who.ActiveObject?.ItemId == orderData.dishId)
                 {
-                    SMonitor.Log($"Fulfilling {__instance.Name}'s order of {orderData.dishName}");
+                    SMonitor.Log($"Fulfilling {__instance.Name}'s order of {orderData.dishDisplayName}");
                     if(!npcOrderNumbers.Value.ContainsKey(__instance.Name))
                     {
                         npcOrderNumbers.Value[__instance.Name] = 1;
@@ -224,7 +227,7 @@ namespace Restauranteer
                     SMonitor.Log($"Changed friendship with {__instance.Name} by {friendshipAmount}");
                     if (Config.RevealGiftTaste)
                     {
-                        who.revealGiftTaste(__instance, orderData.dish);
+                        who.revealGiftTaste(__instance.Name, orderData.dishId);
                     }
                     if(Config.PriceMarkup > 0)
                     {
@@ -234,7 +237,9 @@ namespace Restauranteer
                     }
                     who.reduceActiveItemByOne();
                     who.completelyStopAnimatingOrDoingAction();
-                    Game1.drawDialogue(__instance, reaction + "$h");
+                    Dialogue d = new Dialogue(__instance, "", reaction + "$h");
+                    __instance.setNewDialogue(d);
+                    Game1.drawDialogue(__instance);
                     __instance.faceTowardFarmerForPeriod(2000, 3, false, who);
                     __instance.modData.Remove(orderKey);
                     return false;
@@ -242,12 +247,12 @@ namespace Restauranteer
                 return true;   
             }
         }
-        [HarmonyPatch(typeof(Utility), nameof(Utility.getSaloonStock))]
-        public class Utility_getSaloonStock_Patch
+        [HarmonyPatch(typeof(ShopBuilder), nameof(ShopBuilder.GetShopStock), new Type[] {typeof(string), typeof(ShopData) })]
+        public class ShopBuilder_GetShopStock_Patch
         {
-            public static void Postfix(Dictionary<ISalable, int[]> __result)
+            public static void Postfix(string shopId, ShopData shop, Dictionary<ISalable, ItemStockInformation> __result)
             {
-                if (!Config.ModEnabled || !Config.SellCurrentRecipes)
+                if (!Config.ModEnabled || !Config.SellCurrentRecipes || shopId != "Saloon")
                     return;
                 foreach(var npc in Game1.getLocationFromName("Saloon").characters)
                 {
@@ -256,7 +261,7 @@ namespace Restauranteer
                         var data = JsonConvert.DeserializeObject<OrderData>(dataString);
                         if (!Game1.player.cookingRecipes.ContainsKey(data.dishName))
                         {
-                            Utility.AddStock(__result, new Object(data.dish, 1, true, -1, 0), data.dishPrice, -1);
+                            __result[new Object(data.dishId, 1, true, -1, 0)] = new ItemStockInformation(data.dishPrice, ShopMenu.infiniteStock);
                         }
                     }
                 }

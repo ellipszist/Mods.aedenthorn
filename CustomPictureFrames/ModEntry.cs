@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace CustomPictureFrames
 {
     /// <summary>The mod entry point.</summary>
-    public partial class ModEntry : Mod, IAssetLoader
+    public partial class ModEntry : Mod
     {
 
         public static IMonitor SMonitor;
@@ -40,9 +40,13 @@ namespace CustomPictureFrames
             SHelper = helper;
 
             helper.Events.Input.ButtonPressed += Input_ButtonPressed;
+            
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
             helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
+            
             helper.Events.Display.RenderedWorld += Display_RenderedWorld;
+
+            helper.Events.Content.AssetRequested += Content_AssetRequested;
 
             harmony = new Harmony(ModManifest.UniqueID);
             harmony.Patch(
@@ -51,6 +55,13 @@ namespace CustomPictureFrames
             );
         }
 
+        private void Content_AssetRequested(object sender, StardewModdingAPI.Events.AssetRequestedEventArgs e)
+        {
+            if (e.NameWithoutLocale.IsEquivalentTo(frameworkPath))
+            {
+                e.LoadFrom(() => new Dictionary<string, string>(), StardewModdingAPI.Events.AssetLoadPriority.Exclusive);
+            }
+        }
 
         private void Display_RenderedWorld(object sender, StardewModdingAPI.Events.RenderedWorldEventArgs e)
         {
@@ -136,9 +147,9 @@ namespace CustomPictureFrames
             if (!Config.EnableMod)
                 return;
             frameList.Clear();
-            foreach (var kvp in Helper.Content.Load<Dictionary<string, string>>(frameworkPath, ContentSource.GameContent))
+            foreach (var kvp in Helper.GameContent.Load<Dictionary<string, string>>(frameworkPath))
             {
-                var tex = Helper.Content.Load<Texture2D>(kvp.Value, ContentSource.GameContent);
+                var tex = Helper.GameContent.Load<Texture2D>(kvp.Value);
                 tex.Name = Path.GetFileName(kvp.Key);
                 frameList.Add(new FrameData() { texture = tex, name = kvp.Key });
             }
@@ -372,26 +383,5 @@ namespace CustomPictureFrames
                 (connected.Contains(up) || frameData[up.Y * frameWidth + up.X] != Color.Transparent || IsEnclosed(up.X, up.Y, frameData, frameWidth, frameHeight, connected)) &&
                 (connected.Contains(down) || frameData[down.Y * frameWidth + down.X] != Color.Transparent || IsEnclosed(down.X, down.Y, frameData, frameWidth, frameHeight, connected));
         }
-
-
-        /// <summary>Get whether this instance can load the initial version of the given asset.</summary>
-        /// <param name="asset">Basic metadata about the asset being loaded.</param>
-        public bool CanLoad<T>(IAssetInfo asset)
-        {
-            if (!Config.EnableMod)
-                return false;
-
-            return asset.AssetNameEquals(frameworkPath);
-        }
-
-        /// <summary>Load a matched asset.</summary>
-        /// <param name="asset">Basic metadata about the asset being loaded.</param>
-        public T Load<T>(IAssetInfo asset)
-        {
-            Monitor.Log("Loading frame list");
-
-            return (T)(object)new Dictionary<string, string>();
-        }
     }
-
 }
