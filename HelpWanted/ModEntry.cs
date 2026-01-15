@@ -46,11 +46,20 @@ namespace HelpWanted
             Helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
             Helper.Events.GameLoop.DayStarted += GameLoop_DayStarted;
             Helper.Events.Content.AssetRequested += Content_AssetRequested;
+            Helper.Events.Input.ButtonPressed += Input_ButtonPressed;
 
             random = new Random();
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
+        }
+
+        private void Input_ButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
+        {
+            if(Config.ModEnabled && e.Button == Config.ReloadQuestsButton)
+            {
+                ReloadQuests();
+            }
         }
 
         private void Content_AssetRequested(object sender, StardewModdingAPI.Events.AssetRequestedEventArgs e)
@@ -69,6 +78,10 @@ namespace HelpWanted
         }
 
         private void GameLoop_DayStarted(object sender, StardewModdingAPI.Events.DayStartedEventArgs e)
+        {
+            ReloadQuests();
+        }
+        public void ReloadQuests()
         {
             if (!Config.ModEnabled || Utility.isFestivalDay(Game1.dayOfMonth, Game1.season))
                 return;

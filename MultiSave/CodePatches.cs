@@ -212,7 +212,7 @@ namespace MultiSave
                         var files = GetSaveSlots(currentSaveSlot.Farmer.slotName, backups);
                         for(int j = 0; j < files.Count; j++)
                         {
-                            ___menuSlots.Add(new SaveFileSlot(__instance, files[j], i));
+                            ___menuSlots.Add(new SaveFileSlot(__instance, files[j], files.Count - j));
                         }
 
                         return false;

@@ -1,8 +1,12 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Netcode;
 using StardewModdingAPI;
 using StardewValley;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using Object = StardewValley.Object;
 
 namespace QuestHelper
 {
@@ -18,6 +22,48 @@ namespace QuestHelper
         public static bool IsSlimeName(string s)
         {
             return s.Contains("Slime") || s.Contains("Jelly") || s.Contains("Sludge");
+        }
+
+        private static List<string> GetFishInfo(string itemId)
+        {
+            var fish = ItemRegistry.Create(itemId);
+            if (fish == null || fish.Category != Object.FishCategory)
+                return null;
+            List<string> output = new List<string>();
+            var spawnData = Game1.locationData["Default"].Fish.FirstOrDefault(d => d.ItemId == itemId);
+            if (spawnData != null)
+            {
+                output.Add(string.Format(SHelper.Translation.Get("fish-everywhere"), fish.DisplayName ?? itemId));
+            }
+            else
+            {
+                List<string> locations = new List<string>();
+                foreach (var l in Game1.locations)
+                {
+                    if (l.GetData()?.Fish?.Exists(d => d.ItemId == fish.QualifiedItemId) == true)
+                    {
+                        locations.Add(l.DisplayName);
+                    }
+                }
+                if (locations.Any())
+                {
+                    output.Add(string.Format(SHelper.Translation.Get("fish-location"), fish.DisplayName ?? itemId, string.Join(", ", locations)));
+                }
+            }
+            if (!DataLoader.Fish(Game1.content).TryGetValue(fish.ItemId, out var fishDataString))
+                return null;
+            string[] fishData = fishDataString.Split('/');
+            if (fishData.Length < 8 || fishData[7] == "both")
+                return output;
+            if (fishData[7] == "sunny")
+            {
+                output.Add(string.Format(SHelper.Translation.Get("fish-sunny"), fish.DisplayName ?? itemId));
+            }
+            else
+            {
+                output.Add(string.Format(SHelper.Translation.Get("fish-rainy"), fish.DisplayName ?? itemId));
+            }
+            return output;
         }
     }
 }

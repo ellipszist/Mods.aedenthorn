@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Extensions;
 using StardewValley.Locations;
 using StardewValley.Menus;
 using StardewValley.Monsters;
@@ -64,92 +65,95 @@ namespace InventoryIndicators
                     color = c;
                     data.color = c;
                 }
-                string loveText = null;
-
-                if (universalLoves is null)
-                    universalLoves = ArgUtility.SplitBySpace(Game1.NPCGiftTastes["Universal_Love"]);
-
-                if (favoriteThings is null)
+                if (__instance is Object && !__instance.HasTypeBigCraftable())
                 {
-                    favoriteThings = new Dictionary<string, HashSet<string>>();
-                    foreach (var kvp in Game1.NPCGiftTastes)
+                    string loveText = null;
+
+                    if (universalLoves is null)
+                        universalLoves = ArgUtility.SplitBySpace(Game1.NPCGiftTastes["Universal_Love"]);
+
+                    if (favoriteThings is null)
                     {
-                        try
+                        favoriteThings = new Dictionary<string, HashSet<string>>();
+                        foreach (var kvp in Game1.NPCGiftTastes)
                         {
-                            var favs = ArgUtility.SplitBySpace(kvp.Value.Split('/', StringSplitOptions.None)[1]);
-                            foreach (var fav in favs)
+                            try
                             {
-                                if (!favoriteThings.TryGetValue(fav, out var l))
+                                var favs = ArgUtility.SplitBySpace(kvp.Value.Split('/', StringSplitOptions.None)[1]);
+                                foreach (var fav in favs)
                                 {
-                                    l = new HashSet<string>();
-                                    favoriteThings[fav] = l;
+                                    if (!favoriteThings.TryGetValue(fav, out var l))
+                                    {
+                                        l = new HashSet<string>();
+                                        favoriteThings[fav] = l;
+                                    }
+                                    l.Add(kvp.Key);
                                 }
-                                l.Add(kvp.Key);
                             }
-                        }
-                        catch
-                        {
-
-                        }
-                    }
-
-                }
-
-                data.universalLove = Array.Exists(universalLoves, s => s.Equals(__instance.ItemId));
-                if (data.universalLove)
-                {
-                    loveText = SHelper.Translation.Get("universal_love");
-                }
-                else if (favoriteThings.TryGetValue(__instance.ItemId, out var list))
-                {
-                    List<string> names = new List<string>();
-                    foreach(var npc in list)
-                    {
-                        if (Config.ShowUngiftedFavorites || (Game1.player.giftedItems.TryGetValue(npc, out var giftData) && giftData.TryGetValue(__instance.ItemId, out var value) && value > 0))
-                        {
-                            var portrait = Game1.getCharacterFromName(npc)?.Portrait;
-                            if (portrait != null)
+                            catch
                             {
-                                if (data.lovePortraits == null)
-                                    data.lovePortraits = new();
-                                data.lovePortraits.Add(portrait);
+
                             }
-                            names.Add(Game1.getCharacterFromName(npc, false, false)?.displayName ?? npc);
+                        }
+
+                    }
+
+                    data.universalLove = Array.Exists(universalLoves, s => s.Equals(__instance.ItemId));
+                    if (data.universalLove)
+                    {
+                        loveText = SHelper.Translation.Get("universal_love");
+                    }
+                    else if (favoriteThings.TryGetValue(__instance.ItemId, out var list))
+                    {
+                        List<string> names = new List<string>();
+                        foreach (var npc in list)
+                        {
+                            if (Config.ShowUngiftedFavorites || (Game1.player.giftedItems.TryGetValue(npc, out var giftData) && giftData.TryGetValue(__instance.ItemId, out var value) && value > 0))
+                            {
+                                var portrait = Game1.getCharacterFromName(npc)?.Portrait;
+                                if (portrait != null)
+                                {
+                                    if (data.lovePortraits == null)
+                                        data.lovePortraits = new();
+                                    data.lovePortraits.Add(portrait);
+                                }
+                                names.Add(Game1.getCharacterFromName(npc, false, false)?.displayName ?? npc);
+                            }
+                        }
+                        if (names.Count == 1)
+                        {
+                            loveText = string.Format(SHelper.Translation.Get("x_love"), names[0]);
+                        }
+                        else if (names.Count == 2)
+                        {
+                            loveText = string.Format(SHelper.Translation.Get("x_love_duo"), names[0], names[1]);
+                        }
+                        else if (names.Count > 2)
+                        {
+                            string mult = string.Join(SHelper.Translation.Get("x_love_mult_separator"), names.GetRange(0, names.Count - 1));
+                            loveText = string.Format(SHelper.Translation.Get("x_love_mult"), mult, names[names.Count - 1]);
                         }
                     }
-                    if(names.Count == 1)
+                    if (__instance is Object && Game1.RequireLocation<CommunityCenter>("CommunityCenter", false).couldThisIngredienteBeUsedInABundle(__instance as Object))
                     {
-                        loveText = string.Format(SHelper.Translation.Get("x_love"), names[0]);
+                        data.bundle = true;
                     }
-                    else if(names.Count == 2)
+                    if (__instance is Object && __instance.Category == Object.SeedsCategory)
                     {
-                        loveText = string.Format(SHelper.Translation.Get("x_love_duo"), names[0], names[1]);
+                        if (__instance.Name.Contains("Mixed") || Crop.TryGetData(Crop.ResolveSeedId(__instance.ItemId, Game1.currentLocation), out var cropData) && cropData.Seasons.Contains(Game1.currentLocation.GetSeason()))
+                        {
+                            data.seed = true;
+                        }
                     }
-                    else if(names.Count > 2)
-                    {
-                        string mult = string.Join(SHelper.Translation.Get("x_love_mult_separator"), names.GetRange(0, names.Count - 1));
-                        loveText = string.Format(SHelper.Translation.Get("x_love_mult"), mult, names[names.Count - 1]);
-                    }
+                    string text = null;
+                    if (loveText != null)
+                        text += loveText + " ";
+                    if (data.seed)
+                        text += SHelper.Translation.Get("can_plant") + " ";
+                    if (data.bundle)
+                        text += SHelper.Translation.Get("can_bundle");
+                    data.hoverText = text?.Trim();
                 }
-                if(__instance is Object && Game1.RequireLocation<CommunityCenter>("CommunityCenter", false).couldThisIngredienteBeUsedInABundle(__instance as Object))
-                {
-                    data.bundle = true;
-                }
-                if (__instance is Object && __instance.Category == Object.SeedsCategory)
-                {
-                    if (__instance.Name.Contains("Mixed") || Crop.TryGetData(Crop.ResolveSeedId(__instance.ItemId, Game1.currentLocation), out var cropData) && cropData.Seasons.Contains(Game1.currentLocation.GetSeason()))
-                    {
-                        data.seed = true;
-                    }
-                }
-                string text = null;
-                if (loveText != null)
-                    text += loveText + " ";
-                if (data.seed)
-                    text += SHelper.Translation.Get("can_plant") + " ";
-                if (data.bundle)
-                    text += SHelper.Translation.Get("can_bundle");
-                data.hoverText = text?.Trim();
                 dataDict[__instance.QualifiedItemId] = data;
             }
             if (color != null && (Game1.activeClickableMenu is not null || !Config.ShowOnlyInMenu))

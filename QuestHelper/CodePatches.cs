@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Netcode;
 using StardewValley;
 using StardewValley.GameData.Locations;
 using StardewValley.Menus;
@@ -90,44 +91,19 @@ namespace QuestHelper
                 }
                 else if (__instance is FishingQuest fq)
                 {
-                    var fish = ItemRegistry.Create(fq.ItemId.Value);
-                    if (fish == null)
-                        return;
-                    List<string> output = new List<string>();
-                    var spawnData = Game1.locationData["Default"].Fish.FirstOrDefault(d => d.ItemId == fq.ItemId.Value);
-                    if(spawnData != null)
+                    var output = GetFishInfo(fq.ItemId.Value);
+                    if (output != null)
                     {
-                        output.Add(string.Format(SHelper.Translation.Get("fish-everywhere"), fish.DisplayName ?? fq.ItemId.Value));
+                        __result += "\n\n" + string.Join("\n\n", output);
                     }
-                    else
+                }
+                else if (__instance is ItemDeliveryQuest dq)
+                {
+                    var output = GetFishInfo(dq.ItemId.Value);
+                    if (output != null)
                     {
-                        List<string> locations = new List<string>();
-                        foreach (var l in Game1.locations)
-                        {
-                            if(l.GetData()?.Fish?.Exists(d => d.ItemId == fish.QualifiedItemId) == true)
-                            {
-                                locations.Add(l.DisplayName);
-                            }
-                        }
-                        if (locations.Any())
-                        {
-                            output.Add(string.Format(SHelper.Translation.Get("fish-location"), fish.DisplayName ?? fq.ItemId.Value, string.Join(", ", locations)));
-                        }
+                        __result += "\n\n" + string.Join("\n\n", output);
                     }
-                    if (!DataLoader.Fish(Game1.content).TryGetValue(fish.ItemId, out var fishDataString))
-                        return;
-                    string[] fishData = fishDataString.Split('/');
-                    if (fishData.Length < 8 || fishData[7] == "both")
-                        return;
-                    if(fishData[7] == "sunny")
-                    {
-                        output.Add(string.Format(SHelper.Translation.Get("fish-sunny"), fish.DisplayName ?? fq.ItemId.Value));
-                    }
-                    else
-                    {
-                        output.Add(string.Format(SHelper.Translation.Get("fish-rainy"), fish.DisplayName ?? fq.ItemId.Value));
-                    }
-                    __result += "\n\n" + string.Join("\n\n", output);
                 }
             }
         }

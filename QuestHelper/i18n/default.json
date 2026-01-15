@@ -4,9 +4,7 @@
 	"GMCM.ShowQuestDetails.Name": "Quest Details",
 	"left-to-greet": "Left: {0}",
 	"fish-everywhere": "{0} can found everywhere.",
-	"fish-everywhere-season": "{0} can found everywhere in {1}.",
 	"fish-location": "{0} can be found in {1}",
-	"fish-location-season": "{0} can be found in {1} in {2}.",
 	"fish-sunny": "{0} can be found when it is sunny out.",
 	"fish-rainy": "{0} can be found when it is rainy out."
 }

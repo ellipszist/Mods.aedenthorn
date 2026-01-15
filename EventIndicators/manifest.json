@@ -6,5 +6,5 @@
 	"UniqueID": "aedenthorn.EventIndicators",
 	"EntryDll": "EventIndicators.dll",
 	"MinimumApiVersion": "4.0.0",
-	"UpdateKeys": [ "Nexus:" ]
+	"UpdateKeys": [ "Nexus:41183" ]
 }

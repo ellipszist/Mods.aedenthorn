@@ -1,0 +1,10 @@
+﻿{
+	"Name": "SG Jigsaw",
+	"Author": "aedenthorn",
+	"Version": "0.1.0",
+	"Description": "Stardew Games Jigsaw.",
+	"UniqueID": "aedenthorn.SGJigsaw",
+	"EntryDll": "SGJigsaw.dll",
+	"MinimumApiVersion": "4.0.0",
+	"UpdateKeys": [ "Nexus:" ]
+}

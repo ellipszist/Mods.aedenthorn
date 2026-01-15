@@ -32,5 +32,6 @@ namespace HelpWanted
         public float SlayMonstersWeight { get; set; } = 0.1f;
         public float FishingWeight { get; set; } = 0.07f;
         public float ItemDeliveryWeight { get; set; } = 0.4f;
+        public SButton ReloadQuestsButton { get; set; } = SButton.Insert;
     }
 }

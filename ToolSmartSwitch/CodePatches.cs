@@ -1,29 +1,7 @@
 ﻿using HarmonyLib;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using Newtonsoft.Json;
 using StardewModdingAPI;
 using StardewValley;
-using StardewValley.Locations;
-using StardewValley.Menus;
-using StardewValley.Monsters;
-using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
-using StardewValley.Tools;
-using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Windows.Input;
-using xTile.Dimensions;
-using Object = StardewValley.Object;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace ToolSmartSwitch
 {

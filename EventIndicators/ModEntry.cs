@@ -62,8 +62,6 @@ namespace EventIndicators
                             if (ArgUtility.TryGet(action, 0, out var actionType, out var error, true, "string actionType") && actionType == "LockedDoorWarp")
                             {
                                 TryAddWarp(new Warp(x, y, action[3], int.Parse(action[1]), int.Parse(action[2]), false));
-
- 
                             }
                         }
                     }
@@ -83,7 +81,7 @@ namespace EventIndicators
                     e.SpriteBatch.Draw(Game1.mouseCursors, rect.Location.ToVector2() + new Vector2(28, 40 + yOffset2), new Microsoft.Xna.Framework.Rectangle?(new Rectangle(395, 497, 3, 8)), Color.White, 0f, new Vector2(1f, 4f), 4f + Math.Max(0f, 0.25f - yOffset2 / 16f), SpriteEffects.None, 1f);
                     if (rect.Contains(Game1.getMousePosition()))
                     {
-                        if (SHelper.Input.IsDown(SButton.LeftShift) && eventsDictFull.TryGetValue(kvp.Key, out var data))
+                        if (SHelper.Input.IsDown(Config.ModKey) && eventsDictFull.TryGetValue(kvp.Key, out var data))
                         {
                             IClickableMenu.drawHoverText(e.SpriteBatch, data, Game1.smallFont, boldTitleText: kvp.Value);
                         }
@@ -116,6 +114,13 @@ namespace EventIndicators
 					name: () => SHelper.Translation.Get("GMCM.ModEnabled.Name"),
 					getValue: () => Config.ModEnabled,
 					setValue: value => Config.ModEnabled = value
+				);
+                // Main section
+                gmcm.AddKeybind(
+					mod: ModManifest,
+					name: () => SHelper.Translation.Get("GMCM.ModEnabled.Name"),
+					getValue: () => Config.ModKey,
+					setValue: value => Config.ModKey = value
 				);
 			}
 		}

@@ -77,7 +77,10 @@ namespace ToolSmartSwitch
         {
             if (!Config.FromWeapon && f.CurrentTool is MeleeWeapon && !(f.CurrentTool as MeleeWeapon).isScythe())
                 return;
-            var tile = f.GetToolLocation(false) / 64;
+
+            Vector2 position = ((!Game1.wasMouseVisibleThisFrame) ? Game1.player.GetToolLocation(false) : new Vector2((float)(Game1.getOldMouseX() + Game1.viewport.X), (float)(Game1.getOldMouseY() + Game1.viewport.Y)));
+
+            var tile = f.GetToolLocation(position, false) / 64;
             tile = new Vector2((int)tile.X, (int)tile.Y);
 
             Dictionary<int, Tool> tools = GetTools(f);
@@ -88,7 +91,7 @@ namespace ToolSmartSwitch
                 {
                     if (c is Monster)
                     {
-                        if (c is RockCrab && !AccessTools.FieldRefAccess<RockCrab, NetBool>((c as RockCrab), "shellGone").Value)
+                        if (c is RockCrab r && !AccessTools.FieldRefAccess<RockCrab, NetBool>(r, "shellGone").Value)
                             continue;
                         var distance = Vector2.Distance(c.GetBoundingBox().Center.ToVector2(), f.GetBoundingBox().Center.ToVector2());
                         if (distance > Config.MonsterMaxDistance)

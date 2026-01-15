@@ -1,0 +1,10 @@
+{
+	"GMCM.ModEnabled.Name": "Mod Enabled",
+	"GMCM.FuseConnected.Name": "Fuse Connected",
+	"GMCM.ShuffleMusic.Name": "Shuffle Music",
+	"box": "Jigsaw Puzzle Box",
+	"menu-text": "Jigsaw Puzzle",
+	"music": "Music",
+	"map": "Map",
+	"piece-size":  "Piece Size"
+}

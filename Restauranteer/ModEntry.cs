@@ -5,6 +5,7 @@ using Netcode;
 using StardewModdingAPI;
 using StardewModdingAPI.Utilities;
 using StardewValley;
+using StardewValley.Inventories;
 using StardewValley.Locations;
 using StardewValley.Objects;
 using System;
@@ -157,14 +158,21 @@ namespace Restauranteer
 
         private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
         {
-
-            object obj = Helper.ModRegistry.GetApi("blueberry.LoveOfCooking");
-            if (obj is not null)
+            try
             {
-                harmony.Patch( 
-                    original: AccessTools.Constructor(obj.GetType().Assembly.GetType("LoveOfCooking.Objects.CookingMenu"), new Type[] { typeof(List<CraftingRecipe>), typeof(List<Chest>), typeof(string)  }),
-                    prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.LoveOfCooking_CookingMenu_Prefix))
-                );
+                object obj = Helper.ModRegistry.GetApi("blueberry.LoveOfCooking");
+                if (obj is not null)
+                {
+                    harmony.Patch(
+                        original: AccessTools.Constructor(obj.GetType().Assembly.GetType("LoveOfCooking.Menu.CookingMenu"), new Type[] { typeof(List<CraftingRecipe>), typeof(Dictionary<IInventory, Chest>), typeof(string) }),
+                        prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.LoveOfCooking_CookingMenu_Prefix))
+                    );
+                    SMonitor.Log($"Patched Love of Cooking successfully");
+                }
+            }
+            catch(Exception ex)
+            {
+                SMonitor.Log($"Error patching Love of Cooking:\n\n{ex}");
             }
 
             // get Generic Mod Config Menu's API (if it's installed)
@@ -265,14 +273,16 @@ namespace Restauranteer
             );
         }
 
-        private static void LoveOfCooking_CookingMenu_Prefix(ref List<Chest> materialContainers)
+        private static void LoveOfCooking_CookingMenu_Prefix(ref Dictionary<IInventory, Chest> materialContainers)
         {
             if (!Config.ModEnabled || !Config.RestaurantLocations.Contains(Game1.currentLocation.Name))
                 return;
             var fridge = GetFridge(Game1.currentLocation);
+            if (fridge is null)
+                return;
             if(materialContainers is null)
-                materialContainers = new List<Chest>();
-            materialContainers.Add( fridge.Value );
+                materialContainers = new Dictionary<IInventory, Chest>();
+            materialContainers.Add(fridge.Value.GetItemsForPlayer(), fridge.Value );
         }
     }
 }

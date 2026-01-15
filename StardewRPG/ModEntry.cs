@@ -302,7 +302,7 @@ namespace StardewRPG
 
         private void Input_ButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
         {
-            if (Config.EnableMod && Config.IsDebug && Context.IsWorldReady && Game1.activeClickableMenu == null && e.Button == SButton.X)
+            if (false && Config.EnableMod && Config.IsDebug && Context.IsWorldReady && Game1.activeClickableMenu == null && e.Button == SButton.X)
             {
                 var farmer = Game1.player;
                 GainExperience(ref farmer, 100);

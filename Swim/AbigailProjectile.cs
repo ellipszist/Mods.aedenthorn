@@ -1,10 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
-using Newtonsoft.Json.Linq;
 using StardewValley;
 using StardewValley.Monsters;
-using StardewValley.Network;
 using StardewValley.Projectiles;
-using StardewValley.TerrainFeatures;
 
 namespace Swim
 {
