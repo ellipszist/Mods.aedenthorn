@@ -4,7 +4,7 @@ namespace CustomStarterFurniture
 {
 	public class StarterFurnitureData
 	{
-		public int FarmType = -1;
+		public object FarmType = -1;
 		public bool Clear;
 		public List<FurnitureData> Furniture;
 		public List<BigCraftableData> BigCraftable;

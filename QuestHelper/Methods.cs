@@ -24,6 +24,65 @@ namespace QuestHelper
             return s.Contains("Slime") || s.Contains("Jelly") || s.Contains("Sludge");
         }
 
+        private static List<string> GetItemInfo(string itemId)
+        {
+            var uItemId = itemId.Substring(itemId.IndexOf(')') + 1);
+
+            List<string> list;
+
+            list = GetFishInfo(itemId);
+            if (list != null)
+                return list;
+            
+            list = new List<string>();
+            var item = ItemRegistry.Create(itemId);
+            if(item is null) 
+                return null;
+
+
+            var r = CraftingRecipe.craftingRecipes.FirstOrDefault(kvp => kvp.Value.Contains($"/{uItemId}/"));
+            int unlock = 4;
+            string which = "crafting";
+            if(r.Value is null)
+            {
+                r = CraftingRecipe.cookingRecipes.FirstOrDefault(kvp => kvp.Value.Contains($"/{uItemId}/"));
+                unlock = 3;
+                which = "cooking";
+            }
+            if (r.Value is not null)
+            {
+                var data = r.Value.Split('/');
+                if (data.Length >= 3 && data[2] == uItemId)
+                {
+                    if (Game1.player.craftingRecipes.ContainsKey(r.Key))
+                    {
+                        list.Add(string.Format(SHelper.Translation.Get($"x-{which}-recipe-known"), item.DisplayName));
+                    }
+                    else
+                    {
+                        list.Add(string.Format(SHelper.Translation.Get($"x-{which}-recipe-unknown"), item.DisplayName));
+                        if(data.Length >= unlock + 1 && !string.IsNullOrEmpty(data[unlock]))
+                        {
+                            var split = data[unlock].Split(' ');
+                            if (split[0] == "f" && split.Length == 3)
+                            {
+                                list.Add(string.Format(SHelper.Translation.Get($"x-y-friendship"), split[2], Game1.getCharacterFromName(split[1])?.displayName ?? split[1]));
+                            }
+                            else if (split[0] == "s" && split.Length == 3)
+                            {
+                                list.Add(string.Format(SHelper.Translation.Get($"x-y-skill"), split[2], Farmer.getSkillDisplayNameFromIndex(Farmer.getSkillNumberFromName(split[1]))));
+                            }
+                            else
+                            {
+                                list.Add(string.Format(SHelper.Translation.Get($"x-special-recipe"), item.DisplayName));
+                            }
+                        }
+                    }
+                }
+            }
+            return list;
+        }
+
         private static List<string> GetFishInfo(string itemId)
         {
             var fish = ItemRegistry.Create(itemId);

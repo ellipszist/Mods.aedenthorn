@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
+using Netcode;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Buildings;
@@ -57,7 +58,7 @@ namespace RobinWorkHours
         }
         private void GameLoop_DayStarted(object sender, StardewModdingAPI.Events.DayStartedEventArgs e)
         {
-            notBuildingToday = !Config.EnableMod || !Game1.IsMasterGame || Utility.isFestivalDay() || (!isThereABuildingUnderConstruction(Game1.getFarm()) && Game1.player.daysUntilHouseUpgrade.Value <= 0 && (Game1.getLocationFromName("Town") as Town).daysUntilCommunityUpgrade.Value <= 0);
+            notBuildingToday = !Config.EnableMod || !Game1.IsMasterGame || Utility.isFestivalDay() || (!IsThereABuldingUnderConstruction(Game1.getFarm()) && Game1.player.daysUntilHouseUpgrade.Value <= 0 && (Game1.getLocationFromName("Town") as Town).daysUntilCommunityUpgrade.Value <= 0);
 
             startedWalking = false;
             if (!Config.EnableMod || Utility.isFestivalDay())
@@ -80,7 +81,7 @@ namespace RobinWorkHours
         {
             if (notBuildingToday)
                 return;
-            if (!Config.EnableMod || !Game1.IsMasterGame || Utility.isFestivalDay() || (!isThereABuildingUnderConstruction(Game1.getFarm()) && Game1.player.daysUntilHouseUpgrade.Value <= 0 && (Game1.getLocationFromName("Town") as Town).daysUntilCommunityUpgrade.Value <= 0))
+            if (!Config.EnableMod || !Game1.IsMasterGame || Utility.isFestivalDay() || (!IsThereABuldingUnderConstruction(Game1.getFarm()) && Game1.player.daysUntilHouseUpgrade.Value <= 0 && (Game1.getLocationFromName("Town") as Town).daysUntilCommunityUpgrade.Value <= 0))
                 return;
             var robin = Game1.getCharacterFromName("Robin");
             if (robin is null)
@@ -92,7 +93,7 @@ namespace RobinWorkHours
             string dest;
             int destX, destY;
             int travelTime;
-            if (isThereABuildingUnderConstruction(Game1.getFarm()) || Game1.player.daysUntilHouseUpgrade.Value > 0)
+            if (IsThereABuldingUnderConstruction(Game1.getFarm()) || Game1.player.daysUntilHouseUpgrade.Value > 0)
             {
                 dest = "BusStop";
                 travelTime = Config.FarmTravelTime;
@@ -136,6 +137,36 @@ namespace RobinWorkHours
             else if (e.NewTime >= Config.EndTime && IsRobinAtPlayerFarm())
             {
                 Monitor.Log($"Robin is ending work at {e.NewTime}", LogLevel.Debug);
+
+                if (Config.FinishNightBefore)
+                {
+                    using (List<Building>.Enumerator enumerator = Game1.getFarm().buildings.GetEnumerator())
+                    {
+                        while (enumerator.MoveNext())
+                        {
+                            if (enumerator.Current.isUnderConstruction(false) && (enumerator.Current.daysOfConstructionLeft.Value == 1 || enumerator.Current.daysUntilUpgrade.Value == 1))
+                            {
+                                Monitor.Log($"Finishing construction of {enumerator.Current.buildingType.Value}", LogLevel.Debug);
+                                enumerator.Current.FinishConstruction();
+                            }
+                        }
+                    }
+                    foreach(var f in Game1.getAllFarmers())
+                    {
+                        if (f.daysUntilHouseUpgrade.Value == 1)
+                        {
+                            Monitor.Log($"Finishing upgrade of farm house for {f.Name}", LogLevel.Debug);
+                            FarmHouse homeOfFarmer = Utility.getHomeOfFarmer(f);
+                            homeOfFarmer.moveObjectsForHouseUpgrade(f.HouseUpgradeLevel + 1);
+                            f.HouseUpgradeLevel++;
+                            f.daysUntilHouseUpgrade.Value = -1;
+                            homeOfFarmer.setMapForUpgradeLevel(f.HouseUpgradeLevel);
+                            Game1.stats.checkForBuildingUpgradeAchievements();
+                            f.autoGenerateActiveDialogueEvent("houseUpgrade_" + f.HouseUpgradeLevel.ToString(), 4);
+                        }
+                    }
+                }
+
                 robin.shouldPlayRobinHammerAnimation.Value = false;
                 robin.ignoreScheduleToday = false;
                 robin.resetCurrentDialogue();

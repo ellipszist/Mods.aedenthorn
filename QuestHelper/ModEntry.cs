@@ -6,6 +6,7 @@ using StardewValley.Locations;
 using StardewValley.Menus;
 using StardewValley.Quests;
 using System;
+using System.Collections.Generic;
 
 namespace QuestHelper
 {
@@ -32,11 +33,13 @@ namespace QuestHelper
 			harmony.PatchAll();
         }
 
+
         private void Input_ButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
         {
-			if (false && e.Button == SButton.Home)
+            if (false && e.Button == SButton.Home)
 			{
-
+                Game1.drawObjectDialogue(GetItemInfo("220"));
+                return;
                 Game1.playSound("newArtifact", null);
                 Game1.player.acceptedDailyQuest.Value = false;
                 double d = Game1.random.NextDouble();

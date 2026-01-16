@@ -15,7 +15,7 @@ namespace RobinWorkHours
     public partial class ModEntry : Mod
     {
 
-        public bool isThereABuildingUnderConstruction(GameLocation location)
+        public bool IsThereABuldingUnderConstruction(GameLocation location)
         {
             if (location.buildings.Count > 0)
             {

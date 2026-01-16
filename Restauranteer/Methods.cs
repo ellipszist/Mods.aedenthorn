@@ -33,7 +33,15 @@ namespace Restauranteer
         {
             if (npc.modData.TryGetValue(orderKey, out string orderData))
             {
-                UpdateOrder(npc, JsonConvert.DeserializeObject<OrderData>(orderData));
+                try
+                {
+                    UpdateOrder(npc, JsonConvert.DeserializeObject<OrderData>(orderData));
+                }
+                catch 
+                {
+                    SMonitor.Log($"error updating order, removing mod data from {npc.Name}");
+                    npc.modData.Remove(orderKey);
+                }
                 return;
             }
             if (!Game1.NPCGiftTastes.ContainsKey(npc.Name) || npcOrderNumbers.Value.TryGetValue(npc.Name, out int amount) && amount >= Config.MaxNPCOrdersPerNight)

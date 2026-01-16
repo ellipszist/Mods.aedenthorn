@@ -85,13 +85,14 @@ namespace QuestHelper
             {
                 if (!Config.ModEnabled || !Config.ShowQuestDetails)
                     return;
+                List<string> output;
                 if (__instance is SocializeQuest sq && !sq.completed.Value && sq.whoToGreet.Count > 0)
                 {
                     __result += "\n\n" + string.Format(SHelper.Translation.Get("left-to-greet"), sq.whoToGreet.Select(n => Game1.getCharacterFromName(n)?.displayName ?? n).Join());
                 }
                 else if (__instance is FishingQuest fq)
                 {
-                    var output = GetFishInfo(fq.ItemId.Value);
+                    output = GetFishInfo(fq.ItemId.Value);
                     if (output != null)
                     {
                         __result += "\n\n" + string.Join("\n\n", output);
@@ -99,7 +100,23 @@ namespace QuestHelper
                 }
                 else if (__instance is ItemDeliveryQuest dq)
                 {
-                    var output = GetFishInfo(dq.ItemId.Value);
+                    output = GetItemInfo(dq.ItemId.Value);
+                    if (output != null)
+                    {
+                        __result += "\n\n" + string.Join("\n\n", output);
+                    }
+                }
+                else if (__instance.id.Value == "22")
+                {
+                    output = GetFishInfo("(O)136");
+                    if (output != null)
+                    {
+                        __result += "\n\n" + string.Join("\n\n", output);
+                    }
+                }
+                else if (__instance.id.Value == "127")
+                {
+                    output = GetItemInfo("220");
                     if (output != null)
                     {
                         __result += "\n\n" + string.Join("\n\n", output);

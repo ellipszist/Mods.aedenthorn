@@ -11,9 +11,20 @@ namespace CustomStarterFurniture
 {
 	public partial class ModEntry
 	{
-		private static bool IsFarm(int farmType)
+		private static bool IsFarm(object farmType)
 		{
-			return Game1.whichFarm == farmType || farmType < 0;
+			if(farmType is int num)
+			{
+				return Game1.whichFarm == num || num < 0;
+			}
+			else if (farmType is string str)
+			{
+				return Game1.GetFarmTypeID() == str || Game1.GetFarmTypeKey() == str;
+			}
+			else 
+			{ 
+				return false; 
+			}
 		}
 
 		private static Furniture GetFurniture(string nameOrIndex, int x, int y)
