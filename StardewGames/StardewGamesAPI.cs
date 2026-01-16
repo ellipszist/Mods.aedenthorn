@@ -1,5 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using HarmonyLib;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using StardewValley;
 using StardewValley.Menus;
 using System;
 
@@ -18,7 +20,9 @@ namespace StardewGames
         }
         public void ReturnToMenu()
         {
-            TitleMenu.subMenu = new GamesLoadGameMenu();
+            TitleMenu.subMenu?.exitThisMenu();
+            TitleMenu.subMenu = null;
+            ModEntry.returnToMenu = true;
         }
     }
 }

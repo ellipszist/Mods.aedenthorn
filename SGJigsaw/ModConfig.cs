@@ -14,6 +14,7 @@ namespace SGJigsaw
         //public int OutlineThickness { get; set; } = 4;
         //public Color OutlineColor { get; set; } = Color.LightGray;
         public SButton SnapKey { get; set; } = SButton.LeftShift;
+        public SButton SolveKey { get; set; } = SButton.End;
         public bool Snap { get; set; } = false;
         public bool PlayingMusic { get; set; } = true;
         public string CurrentMusic { get; set; } = "MainTheme";

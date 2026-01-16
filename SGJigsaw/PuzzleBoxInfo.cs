@@ -6,6 +6,7 @@ namespace SGJigsaw
     public  class PuzzleBoxInfo
     {
         public string mapPath;
+        public int season = 0;
         public int pieceSize;
         public float zoom;
         public Vector2 offset;

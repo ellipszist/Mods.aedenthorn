@@ -115,8 +115,6 @@ namespace StardewValley.Menus
         {
             xPositionOnScreen = (newBounds.Width - width) / 2;
             yPositionOnScreen = (newBounds.Height - (height + 32)) / 2;
-            backButton.bounds.X = Game1.uiViewport.Width + -66 * TitleMenu.pixelZoom - 8 * TitleMenu.pixelZoom * 2;
-            backButton.bounds.Y = Game1.uiViewport.Height - 27 * TitleMenu.pixelZoom - 8 * TitleMenu.pixelZoom;
             upArrow.bounds.X = xPositionOnScreen + width + 16;
             upArrow.bounds.Y = yPositionOnScreen + 16;
             downArrow.bounds.X = xPositionOnScreen + width + 16;

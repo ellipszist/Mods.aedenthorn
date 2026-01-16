@@ -3,8 +3,13 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
+using StardewValley.Locations;
+using StardewValley.Logging;
 using StardewValley.Menus;
 using System;
+using System.Runtime.CompilerServices;
+using xTile;
+using xTile.Tiles;
 
 namespace SGJigsaw
 {
@@ -26,5 +31,6 @@ namespace SGJigsaw
             if(Config.ModEnabled)
                 TitleMenu.subMenu = new JigsawGameMenu(null);
         }
+
     }
 }

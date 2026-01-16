@@ -14,7 +14,6 @@ using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 using xTile;
-using xTile.Dimensions;
 using xTile.ObjectModel;
 using Object = StardewValley.Object;
 
@@ -36,7 +35,10 @@ namespace Restauranteer
         public static Vector2 fridgeHideTile = new Vector2(-42000, -42000);
         public static PerScreen<Dictionary<string, int>> npcOrderNumbers = new PerScreen<Dictionary<string, int>>();
         public static Dictionary<string, NetRef<Chest>> fridgeDict = new();
-        private Harmony harmony;
+        public static Dictionary<string, OrderData> npcEmotesDict = new();
+        private static int emoteBaseIndex = 424242;
+
+        public Harmony harmony;
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>

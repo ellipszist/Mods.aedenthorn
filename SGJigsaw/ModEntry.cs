@@ -38,7 +38,7 @@ namespace SGJigsaw
 			{
 				e.Edit((IAssetData data) =>
 				{
-					data.AsDictionary<string, string>().Data[boxId] = $"{boxId}/decor/1 1/1 1/1/250/-1/{SHelper.Translation.Get("box")}/0/{boxId}";
+					data.AsDictionary<string, string>().Data[boxId] = $"{boxId}/decor/1 1/1 1/1/1000/-1/{SHelper.Translation.Get("box")}/0/{boxId}";
 				});
 			}
 			if(Config.ModEnabled && e.NameWithoutLocale.IsEquivalentTo("Data/Shops"))
@@ -105,6 +105,12 @@ namespace SGJigsaw
 					name: () => SHelper.Translation.Get("GMCM.SnapKey.Name"),
 					getValue: () => Config.SnapKey,
 					setValue: value => Config.SnapKey = value
+				);
+                gmcm.AddKeybind(
+					mod: ModManifest,
+					name: () => SHelper.Translation.Get("GMCM.SolveKey.Name"),
+					getValue: () => Config.SolveKey,
+					setValue: value => Config.SolveKey = value
 				);
                 gmcm.AddTextOption(
 					mod: ModManifest,

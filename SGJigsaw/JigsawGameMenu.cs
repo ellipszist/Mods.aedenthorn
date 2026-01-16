@@ -8,14 +8,11 @@ using StardewValley;
 using StardewValley.GameData;
 using StardewValley.GameData.Locations;
 using StardewValley.Menus;
-using StardewValley.Network;
-using StardewValley.SDKs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using xTile;
 using xTile.Display;
-using xTile.Layers;
 using xTile.Tiles;
 using Object = StardewValley.Object;
 
@@ -28,8 +25,9 @@ namespace SGJigsaw
         public SpriteFont font;
         public DropDown musicDropdown;
         public DropDown mapDropdown;
-        public TextBox pieceSizeText;
         public DropDown pieceSizeDropdown;
+        public DropDown seasonDropdown;
+
         public ClickableTextureComponent stopButton;
         public ClickableTextureComponent playButton;
         public ClickableTextureComponent nextButton;
@@ -77,12 +75,17 @@ namespace SGJigsaw
         public float waterPosition;
         public bool waterTileFlip;
         public bool isFarm;
-        public Season season = Season.Spring;
+        public int season = 0;
         public Color waterColor;
 
         public JigsawGameMenu(Object box) : base(0, 0, Game1.uiViewport.Width, Game1.uiViewport.Height)
         {
             instance = this;
+            if (box is not null)
+            {
+                season = (int)Game1.season;
+            }
+
             loader = new LocalizedContentManager(Game1.content.ServiceProvider, Game1.content.RootDirectory);
             var mapsData = DataLoader.Locations(Game1.content).Values.Where(l => l.CreateOnLoad != null);
             maps = mapsData.Select(l => l.CreateOnLoad.MapPath).ToList();
@@ -128,6 +131,7 @@ namespace SGJigsaw
                     }
                     zoom = info.zoom;
                     offset = info.offset;
+                    season = info.season;
                 }
                 else
                 {
@@ -164,6 +168,7 @@ namespace SGJigsaw
                     tileDict[x, y] = new TileList(x, y, list);
                 }
             }
+            UpdateSeasonalTileSheets();
         }
 
         private void CleanupBeforeExit(IClickableMenu menu)
@@ -200,6 +205,11 @@ namespace SGJigsaw
             mapDropdown = new DropDown(maps, Game1.uiViewport.Width / 2, 12, 100, 44, 2);
             mapDropdown.bounds.Offset(-mapDropdown.bounds.Width / 2, 0);
             mapDropdown.SetCurrentItem(mapPath);
+
+            var seasonList = Enumerable.Range(0, 4).Select(s => Utility.getSeasonNameFromNumber(s)).ToList();
+            seasonDropdown = new DropDown(seasonList, Game1.uiViewport.Width * 3 / 4, 12, 100, 44, 2);
+            seasonDropdown.bounds.Offset(-seasonDropdown.bounds.Width / 2, 0);
+            seasonDropdown.SetCurrentItem(seasonList[season]);
             
 
             pieceSizes = Enumerable.Range(2, 29).Select(i => i.ToString()).ToList();
@@ -221,24 +231,24 @@ namespace SGJigsaw
             LoadMap();
             mapData = mapsDataDict[mapPath];
             isFarm = map.Properties.ContainsKey("IsFarm");
-            if (mapData.CreateOnLoad.Type != "MineShaft")
-            {
-                switch (season)
-                {
-                    case Season.Spring:
-                        waterColor = new Color(120, 200, 255) * 0.5f;
-                        break;
-                    case Season.Summer:
-                        waterColor = new Color(60, 240, 255) * 0.5f;
-                        break;
-                    case Season.Fall:
-                        waterColor = new Color(255, 130, 200) * 0.5f;
-                        break;
-                    case Season.Winter:
-                        waterColor = new Color(130, 80, 255) * 0.5f;
-                        break;
-                }
-            }
+            //if (mapData.CreateOnLoad.Type != "MineShaft")
+            //{
+            //    switch (season)
+            //    {
+            //        case Season.Spring:
+            //            waterColor = new Color(120, 200, 255) * 0.5f;
+            //            break;
+            //        case Season.Summer:
+            //            waterColor = new Color(60, 240, 255) * 0.5f;
+            //            break;
+            //        case Season.Fall:
+            //            waterColor = new Color(255, 130, 200) * 0.5f;
+            //            break;
+            //        case Season.Winter:
+            //            waterColor = new Color(130, 80, 255) * 0.5f;
+            //            break;
+            //    }
+            //}
             float wdiff = (float)Game1.viewport.Width / map.DisplayWidth;
             float hdiff = (float)Game1.viewport.Height / map.DisplayHeight;
 
@@ -623,12 +633,12 @@ namespace SGJigsaw
 
         public override void receiveKeyPress(Keys key)
         {
-            if((SButton)key == ModEntry.Config.SnapKey)
+            if ((SButton)key == ModEntry.Config.SnapKey)
             {
                 ModEntry.Config.Snap = !ModEntry.Config.Snap;
                 ModEntry.SHelper.WriteConfig(ModEntry.Config);
             }
-            else if((SButton)key == SButton.End)
+            else if((SButton)key == ModEntry.Config.SolveKey)
             {
                 Solve();
             }
@@ -649,10 +659,12 @@ namespace SGJigsaw
             }
             if (solving)
             {
+                bool done = true;
                 foreach(var p in sortedList)
                 {
                     if(p.position != p.properPosition)
                     {
+                        done = false;
                         var diff = p.properPosition - p.position;
                         if (Math.Abs(diff.X) < 64 && Math.Abs(diff.Y) < 64)
                         {
@@ -665,11 +677,14 @@ namespace SGJigsaw
                         }
                     }
                 }
-                CheckComplete();
+                if (done)
+                {
+                    CheckComplete();
+                }
                 if (solved)
                 {
                     solving = false;
-                    ConnectPieces(pieces[0, 0], new List<PuzzlePiece>());
+                    ConnectPieces(sortedList[0], new List<PuzzlePiece>());
                 }
             }
 
@@ -766,14 +781,28 @@ namespace SGJigsaw
         {
             Game1.playSound("bigDeSelect", null);
 
+            exitThisMenu();
             if (Game1.activeClickableMenu is TitleMenu)
             {
                 ModEntry.sgapi.ReturnToMenu();
             }
-            else
+        }
+        public void UpdateSeasonalTileSheets()
+        {
+            map.DisposeTileSheets(Game1.mapDisplayDevice);
+            foreach (TileSheet tilesheet in map.TileSheets)
             {
-                exitThisMenu();
+                string prevImageSource = tilesheet.ImageSource;
+                try
+                {
+                    tilesheet.ImageSource = GameLocation.GetSeasonalTilesheetName(tilesheet.ImageSource, Utility.getSeasonKey((Season)season));
+                    Game1.mapDisplayDevice.LoadTileSheet(tilesheet);
+                }
+                catch
+                {
+                }
             }
+            map.LoadTileSheets(Game1.mapDisplayDevice);
         }
         public override void draw(SpriteBatch b)
         {
@@ -790,6 +819,7 @@ namespace SGJigsaw
             IClickableMenu.drawTextureBox(b, 0, 0, Game1.viewport.Width, 68, Color.White);
             var musicStr = ModEntry.SHelper.Translation.Get("music");
             var mapStr = ModEntry.SHelper.Translation.Get("map");
+            var seasonStr = ModEntry.SHelper.Translation.Get("season");
             var pieceStr = ModEntry.SHelper.Translation.Get("piece-size");
             
             b.DrawString(Game1.smallFont, musicStr, new Vector2(musicDropdown.bounds.X  - 8 - Game1.smallFont.MeasureString(musicStr).X, 20), Color.DarkSlateGray);
@@ -807,6 +837,9 @@ namespace SGJigsaw
 
             b.DrawString(Game1.smallFont, mapStr, new Vector2(mapDropdown.bounds.X - 8 - Game1.smallFont.MeasureString(mapStr).X, 20), Color.DarkSlateGray);
             mapDropdown.draw(b, 0, 0);
+
+            b.DrawString(Game1.smallFont, seasonStr, new Vector2(seasonDropdown.bounds.X - 8 - Game1.smallFont.MeasureString(seasonStr).X, 20), Color.DarkSlateGray);
+            seasonDropdown.draw(b, 0, 0);
 
             b.DrawString(Game1.smallFont, pieceStr, new Vector2(pieceSizeDropdown.bounds.X - 8 - Game1.smallFont.MeasureString(pieceStr).X, 20), Color.DarkSlateGray);
             pieceSizeDropdown.draw(b, 0, 0);
@@ -944,6 +977,11 @@ namespace SGJigsaw
                     mapDropdown.receiveLeftClick(x, y);
                     return;
                 }
+                else if (seasonDropdown.bounds.Contains(x, y))
+                {
+                    seasonDropdown.receiveLeftClick(x, y);
+                    return;
+                }
                 else if (pieceSizeDropdown.bounds.Contains(x, y))
                 {
                     pieceSizeDropdown.receiveLeftClick(x, y);
@@ -1010,6 +1048,11 @@ namespace SGJigsaw
                         mapDropdown.leftClickHeld(x, y);
                         return;
                     }
+                    if (seasonDropdown.clicked || seasonDropdown.bounds.Contains(x, y))
+                    {
+                        seasonDropdown.leftClickHeld(x, y);
+                        return;
+                    }
                     if (pieceSizeDropdown.clicked || pieceSizeDropdown.bounds.Contains(x, y))
                     {
                         pieceSizeDropdown.leftClickHeld(x, y);
@@ -1039,6 +1082,13 @@ namespace SGJigsaw
                 mapDropdown.leftClickReleased(x, y);
                 mapPath = mapDropdown.GetCurrentItem();
                 ReloadMap();
+                RebuildElements();
+            }
+            if (seasonDropdown.clicked)
+            {
+                seasonDropdown.leftClickReleased(x, y);
+                season = seasonDropdown.selectedOption;
+                UpdateSeasonalTileSheets();
                 RebuildElements();
             }
             if (pieceSizeDropdown.clicked)
@@ -1089,7 +1139,7 @@ namespace SGJigsaw
         }
         public override bool readyToClose()
         {
-            return false;
+            return Game1.activeClickableMenu is not TitleMenu;
         }
     }
     public static class Extensions

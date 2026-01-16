@@ -1,17 +1,20 @@
-﻿namespace Restauranteer
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+
+namespace Restauranteer
 {
-    internal class OrderData
+    public class OrderData
     {
-        public int dishIndex;
+        public Texture2D dishTexture;
+        public Rectangle dishSourceRect;
         public string dishId;
         public string dishName;
         public string dishDisplayName;
         public int dishPrice;
         public bool loved;
 
-        public OrderData(int index, string dishId, string dishName, string dishDisplayName, int dishPrice, bool loved)
+        public OrderData(string dishId, string dishName, string dishDisplayName, int dishPrice, bool loved)
         {
-            this.dishIndex = index;
             this.dishId = dishId;
             this.dishName = dishName;
             this.dishDisplayName = dishDisplayName;

@@ -18,6 +18,8 @@ namespace StardewGames
 		public static ModConfig Config;
 		public static ModEntry context;
 		public static Dictionary<string, GamesGameData> gameDataDict = new Dictionary<string, GamesGameData>();
+        
+		public static bool returnToMenu;
 
         public override void Entry(IModHelper helper)
 		{

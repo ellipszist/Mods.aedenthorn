@@ -50,11 +50,16 @@ namespace StardewGames
         {
             public static void Postfix(TitleMenu __instance, int x, int y)
             {
-                if (!Config.ModEnabled || (TitleMenu.subMenu is not null && !TitleMenu.subMenu.readyToClose()) || __instance.isTransitioningButtons)
+                if (!Config.ModEnabled || TitleMenu.subMenu is not null || __instance.isTransitioningButtons)
                 {
                     return;
                 }
-                if (playButton.visible && playButton.containsPoint(x, y))
+                if (returnToMenu)
+                {
+                    TitleMenu.subMenu = new GamesLoadGameMenu();
+                    returnToMenu = false;
+                }
+                else if (playButton.visible && playButton.containsPoint(x, y))
                 {
                     TitleMenu.subMenu = new GamesLoadGameMenu();
                     Game1.playSound("newArtifact", null);

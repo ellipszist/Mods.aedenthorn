@@ -17,8 +17,9 @@ namespace Restauranteer
             foreach(var c in Game1.player.currentLocation.characters)
             {
 
-                if (c.isVillager() && !Config.IgnoredNPCs.Contains(c.Name))
+                if (c.IsVillager && !Config.IgnoredNPCs.Contains(c.Name))
                 {
+                    npcEmotesDict.Remove(c.Name);
                     CheckOrder(c, Game1.player.currentLocation);
                 }
                 else
@@ -32,7 +33,6 @@ namespace Restauranteer
         {
             if (npc.modData.TryGetValue(orderKey, out string orderData))
             {
-                //npc.modData.Remove(orderKey);
                 UpdateOrder(npc, JsonConvert.DeserializeObject<OrderData>(orderData));
                 return;
             }
@@ -44,15 +44,15 @@ namespace Restauranteer
             }
         }
 
-        private void UpdateOrder(NPC npc, OrderData orderData)
+        public static void UpdateOrder(NPC npc, OrderData orderData)
         {
             if (!npc.IsEmoting)
             {
-                npc.doEmote(424242, false);
+                npc.doEmote(emoteBaseIndex, false);
             }
         }
 
-        private void StartOrder(NPC npc, GameLocation location)
+        public static void StartOrder(NPC npc, GameLocation location)
         {
             List<string> loves = new();
             foreach(var str in Game1.NPCGiftTastes["Universal_Love"].Split(' '))
@@ -99,15 +99,15 @@ namespace Restauranteer
             }
             var dobj = ItemRegistry.Create(dish);
             int price = dobj.sellToStorePrice();
-            Monitor.Log($"{npc.Name} is going to order {dobj.Name}");
-            npc.modData[orderKey] = JsonConvert.SerializeObject(new OrderData(dobj.ParentSheetIndex, dish, dobj.Name, dobj.DisplayName, price, loved));
+            SMonitor.Log($"{npc.Name} is going to order {dobj.Name}");
+            npc.modData[orderKey] = JsonConvert.SerializeObject(new OrderData(dish, dobj.Name, dobj.DisplayName, price, loved));
             if (Config.AutoFillFridge)
             {
                 FillFridge(location);
             }
         }
 
-        private static NetRef<Chest> GetFridge(GameLocation location)
+        public static NetRef<Chest> GetFridge(GameLocation location)
         {
             if(location is FarmHouse)
             {
@@ -125,7 +125,7 @@ namespace Restauranteer
             }
             return fridge;
         }
-        private void FillFridge(GameLocation __instance)
+        public static void FillFridge(GameLocation __instance)
         {
             var fridge = GetFridge(__instance);
 

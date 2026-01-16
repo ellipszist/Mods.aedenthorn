@@ -23,7 +23,6 @@ namespace Restauranteer
         [HarmonyPatch(typeof(NPC), nameof(NPC.draw))]
         public class NPC_draw_Patch
         {
-            private static int emoteBaseIndex = 424242;
 
             public static void Prefix(NPC __instance, ref bool __state)
             {
@@ -35,16 +34,26 @@ namespace Restauranteer
             public static void Postfix(NPC __instance, SpriteBatch b, float alpha, ref bool __state)
             {
                 if (!Config.ModEnabled || !__state)
+                {
+                    npcEmotesDict.Remove(__instance.Name);
                     return;
+                }
                 __instance.IsEmoting = true;
-                if (!__instance.modData.TryGetValue(orderKey, out string data))
+                if (!__instance.modData.TryGetValue(orderKey, out string dataStr))
                     return;
                 if(!Config.RestaurantLocations.Contains(__instance.currentLocation.Name))
                 {
                     __instance.modData.Remove(orderKey);
                     return;
                 }
-                OrderData orderData = JsonConvert.DeserializeObject<OrderData>(data);
+                if(!npcEmotesDict.TryGetValue(__instance.Name, out var orderData))
+                {
+                    orderData = JsonConvert.DeserializeObject<OrderData>(dataStr);
+                    var objData = ItemRegistry.GetDataOrErrorItem(orderData.dishId);
+                    orderData.dishTexture = objData.GetTexture();
+                    orderData.dishSourceRect = objData.GetSourceRect();
+                    npcEmotesDict[__instance.Name] = orderData;
+                }
                 int emoteIndex = __instance.CurrentEmoteIndex >= emoteBaseIndex ? __instance.CurrentEmoteIndex - emoteBaseIndex : __instance.CurrentEmoteIndex;
                 if(__instance.CurrentEmoteIndex >= emoteBaseIndex + 3)
                 {
@@ -59,7 +68,7 @@ namespace Restauranteer
                 else
                 {
                     b.Draw(emoteSprite, emotePosition, new Rectangle?(new Rectangle(emoteIndex * 16 % Game1.emoteSpriteSheet.Width, emoteIndex * 16 / emoteSprite.Width * 16, 16, 16)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, __instance.StandingPixel.Y / 10000f);
-                    b.Draw(Game1.objectSpriteSheet, emotePosition + new Vector2(16, 8), GameLocation.getSourceRectForObject(orderData.dishIndex), Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, (__instance.StandingPixel.Y + 1) / 10000f);
+                    b.Draw(orderData.dishTexture, emotePosition + new Vector2(16, 8), orderData.dishSourceRect, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, (__instance.StandingPixel.Y + 1) / 10000f);
                 }
 
             }
