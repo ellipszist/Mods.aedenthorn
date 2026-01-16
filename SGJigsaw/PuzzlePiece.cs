@@ -188,18 +188,18 @@ namespace SGJigsaw
             {
                 GetDrawTiles();
             }
-            if (!menu.solved && ModEntry.Config.ShowOutlines && !Array.Exists(connected, c => c != null))
-            {
-                ModEntry.Config.OutlineThickness = 4;
-                float thickness = ModEntry.Config.OutlineThickness * zoom;
-                Point size = (new Vector2(64 + thickness * 2, 64 + thickness * 2) * zoom).ToPoint();
-                foreach (var t in drawTiles)
-                {
-                    var pos = (position - offset) * zoom + t.Key.ToVector2() * 64 * zoom - new Vector2(thickness, thickness) * zoom;
+            //if (!menu.solved && ModEntry.Config.ShowOutlines && !Array.Exists(connected, c => c != null))
+            //{
+            //    ModEntry.Config.OutlineThickness = 4;
+            //    float thickness = ModEntry.Config.OutlineThickness * zoom;
+            //    Point size = (new Vector2(64 + thickness * 2, 64 + thickness * 2) * zoom).ToPoint();
+            //    foreach (var t in drawTiles)
+            //    {
+            //        var pos = (position - offset) * zoom + t.Key.ToVector2() * 64 * zoom - new Vector2(thickness, thickness) * zoom;
 
-                    b.Draw(Game1.staminaRect, new Rectangle(pos.ToPoint(), size), ModEntry.Config.OutlineColor);
-                }
-            }
+            //        b.Draw(Game1.staminaRect, new Rectangle(pos.ToPoint(), size), ModEntry.Config.OutlineColor);
+            //    }
+            //}
             foreach (var t in drawTiles)
             {
                 t.Value.Draw(b, position, layerDepth, dict, offset, zoom, t.Key, menu);

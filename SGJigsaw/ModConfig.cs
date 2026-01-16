@@ -10,11 +10,15 @@ namespace SGJigsaw
         public bool ModEnabled { get; set; } = true;
         public bool FuseConnected { get; set; } = true;
         public bool ShuffleMusic { get; set; } = false;
-        public bool ShowOutlines { get; set; } = true;
-        public int OutlineThickness { get; set; } = 4;
-        public Color OutlineColor { get; set; } = Color.LightGray;
-        public string CurrentMusic { get; set; } = "MainTheme";
+        //public bool ShowOutlines { get; set; } = true;
+        //public int OutlineThickness { get; set; } = 4;
+        //public Color OutlineColor { get; set; } = Color.LightGray;
+        public SButton SnapKey { get; set; } = SButton.LeftShift;
+        public bool Snap { get; set; } = false;
         public bool PlayingMusic { get; set; } = true;
+        public string CurrentMusic { get; set; } = "MainTheme";
+        public string SnapSound { get; set; } = "newArtifact";
+        public string SolveSound { get; set; } = "yoba";
         public List<string> Music { get; set; } = new List<string>()
         {
             "50s",
@@ -178,6 +182,5 @@ namespace SGJigsaw
             "wind",
             "winter_day_ambient",
         };
-        public SButton SnapKey { get; set; } = SButton.LeftShift;
     }
 }

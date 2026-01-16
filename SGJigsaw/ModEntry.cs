@@ -1,10 +1,7 @@
 ﻿using HarmonyLib;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley.GameData.Shops;
-using System.Collections.Generic;
-using xTile.Tiles;
 
 namespace SGJigsaw
 {
@@ -17,7 +14,7 @@ namespace SGJigsaw
 		public static ModEntry context;
 		public static string boxId = "aedenthorn.SGJigsaw_puzzle_box";
 		public static string infoKey = "aedenthorn.SGJigsaw/info";
-        private ISGJigsawAPI sgapi;
+        public static ISGJigsawAPI sgapi;
 
         public override void Entry(IModHelper helper)
 		{
@@ -96,6 +93,30 @@ namespace SGJigsaw
 					name: () => SHelper.Translation.Get("GMCM.ShuffleMusic.Name"),
 					getValue: () => Config.ShuffleMusic,
 					setValue: value => Config.ShuffleMusic = value
+				);
+                gmcm.AddBoolOption(
+					mod: ModManifest,
+					name: () => SHelper.Translation.Get("GMCM.Snap.Name"),
+					getValue: () => Config.Snap,
+					setValue: value => Config.Snap = value
+				);
+                gmcm.AddKeybind(
+					mod: ModManifest,
+					name: () => SHelper.Translation.Get("GMCM.SnapKey.Name"),
+					getValue: () => Config.SnapKey,
+					setValue: value => Config.SnapKey = value
+				);
+                gmcm.AddTextOption(
+					mod: ModManifest,
+					name: () => SHelper.Translation.Get("GMCM.SnapSound.Name"),
+					getValue: () => Config.SnapSound,
+					setValue: value => Config.SnapSound = value
+				);
+                gmcm.AddTextOption(
+					mod: ModManifest,
+					name: () => SHelper.Translation.Get("GMCM.SolveSound.Name"),
+					getValue: () => Config.SolveSound,
+					setValue: value => Config.SolveSound = value
 				);
 			}
 		}

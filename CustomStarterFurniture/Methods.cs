@@ -60,7 +60,7 @@ namespace CustomStarterFurniture
 
 			foreach (KeyValuePair<string, string> data in dictionary)
 			{
-				if (data.Key == $"(F){nameOrIndex}" || data.Key == nameOrIndex || data.Value.Split('/')[0] == nameOrIndex)
+				if (data.Key == nameOrIndex || data.Value.Split('/')[0] == nameOrIndex)
 				{
 					return data.Key;
 				}

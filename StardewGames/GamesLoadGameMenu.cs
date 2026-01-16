@@ -20,23 +20,12 @@ namespace StardewValley.Menus
                 menuSlots = value;
             }
         }
-        public override bool readyToClose()
-        {
-            return _updatesSinceLastDeleteConfirmScreen > 1;
-        }
 
 
         public GamesLoadGameMenu(string filter = null)
             : base(Game1.uiViewport.Width / 2 - (1100 + IClickableMenu.borderWidth * 2) / 2, Game1.uiViewport.Height / 2 - (600 + IClickableMenu.borderWidth * 2) / 2, 1100 + IClickableMenu.borderWidth * 2, 600 + IClickableMenu.borderWidth * 2, false)
         {
-            backButton = new ClickableComponent(new Rectangle(Game1.uiViewport.Width + -66 * TitleMenu.pixelZoom - 8 * TitleMenu.pixelZoom * 2, Game1.uiViewport.Height - 27 * TitleMenu.pixelZoom - 8 * TitleMenu.pixelZoom, 66 * TitleMenu.pixelZoom, 27 * TitleMenu.pixelZoom), "")
-            {
-                myID = 81114,
-                upNeighborID = -99998,
-                leftNeighborID = -99998,
-                rightNeighborID = -99998,
-                downNeighborID = -99998
-            };
+
             upArrow = new ClickableTextureComponent(new Rectangle(xPositionOnScreen + width + 16, yPositionOnScreen + 16, 44, 48), Game1.mouseCursors, new Rectangle(421, 459, 11, 12), 4f, false)
             {
                 myID = 800,
@@ -70,6 +59,7 @@ namespace StardewValley.Menus
                 });
             }
             MenuSlots = ModEntry.gameDataDict.Values.ToList();
+
             if (Game1.options.snappyMenus && Game1.options.gamepadControls)
             {
                 populateClickableComponentList();

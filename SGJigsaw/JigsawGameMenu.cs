@@ -8,6 +8,8 @@ using StardewValley;
 using StardewValley.GameData;
 using StardewValley.GameData.Locations;
 using StardewValley.Menus;
+using StardewValley.Network;
+using StardewValley.SDKs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +24,7 @@ namespace SGJigsaw
     public class JigsawGameMenu : IClickableMenu
     {
         public static JigsawGameMenu instance;
+
         public SpriteFont font;
         public DropDown musicDropdown;
         public DropDown mapDropdown;
@@ -30,6 +33,8 @@ namespace SGJigsaw
         public ClickableTextureComponent stopButton;
         public ClickableTextureComponent playButton;
         public ClickableTextureComponent nextButton;
+        public ClickableTextureComponent backButton;
+
         public Point puzzleSize = new Point();
         public Point puzzleSizeMismatch = new Point();
         public List<int> shorter = new List<int>();
@@ -53,7 +58,6 @@ namespace SGJigsaw
         public int border = 4000;
         public string mapPath = "Maps\\Town";
         public float zoom = 1;
-        public bool autoSnap = false;
         
         public Vector2 offset;
 
@@ -65,6 +69,7 @@ namespace SGJigsaw
         public bool held;
         private bool draggingScreen;
         public bool solved;
+        public bool solving;
 
         public WaterTiles waterTiles;
         public int waterAnimationIndex;
@@ -141,6 +146,9 @@ namespace SGJigsaw
 
         private void LoadMap()
         {
+            solved = false;
+            solving = false;
+
             map = ModEntry.SHelper.GameContent.Load<Map>(mapPath);
             tileDict = new TileList[map.Layers[0].LayerWidth, map.Layers[0].LayerHeight];
             for (int x = 0; x < map.Layers[0].LayerWidth; x++)
@@ -174,16 +182,7 @@ namespace SGJigsaw
 
         public void Solve()
         {
-            foreach(var p in sortedList)
-            {
-                p.position = p.properPosition;
-
-            }
-            CheckComplete();
-            if (solved)
-            {
-                ConnectPieces(pieces[0, 0], new List<PuzzlePiece>());
-            }
+            solving = true;
         }
 
         private void RebuildElements()
@@ -198,20 +197,24 @@ namespace SGJigsaw
 
             nextButton = new ClickableTextureComponent("next", new Rectangle(new Point(playButton.bounds.Right, 6), new Point(44, 44)), "", "Next", Game1.mouseCursors, new Rectangle(364, 493, 14, 14), 4);
 
-            mapDropdown = new DropDown(maps, Game1.viewport.Width / 2, 12, 100, 44, 2);
+            mapDropdown = new DropDown(maps, Game1.uiViewport.Width / 2, 12, 100, 44, 2);
             mapDropdown.bounds.Offset(-mapDropdown.bounds.Width / 2, 0);
             mapDropdown.SetCurrentItem(mapPath);
             
 
             pieceSizes = Enumerable.Range(2, 29).Select(i => i.ToString()).ToList();
-            pieceSizeDropdown = new DropDown(pieceSizes, Game1.viewport.Width - 64, 12, 100, 44, 2);
+            pieceSizeDropdown = new DropDown(pieceSizes, Game1.uiViewport.Width - 64, 12, 100, 44, 2);
             pieceSizeDropdown.bounds.Offset(-pieceSizeDropdown.bounds.Width, 0);
             pieceSizeDropdown.SetCurrentItem(pieceSize.ToString());
+
+            backButton = new ClickableTextureComponent(Game1.content.LoadString("Strings\\StringsFromCSFiles:TitleMenu.cs.11739"), new Rectangle(width + -66 * TitleMenu.pixelZoom - 8 * TitleMenu.pixelZoom * 2, this.height - 27 * TitleMenu.pixelZoom - 8 * TitleMenu.pixelZoom, 66 * TitleMenu.pixelZoom, 27 * TitleMenu.pixelZoom), null, "", Game1.content.Load<Texture2D>("Minigames\\TitleButtons"), new Rectangle(296, 252, 66, 27), (float)TitleMenu.pixelZoom, false)
+            {
+                myID = 81114
+            };
         }
 
         private void ReloadMap()
         {
-            solved = false;
             skinnier.Clear();
             shorter.Clear();
 
@@ -529,17 +532,17 @@ namespace SGJigsaw
         }
         private bool ConnectPieces(PuzzlePiece piece, List<PuzzlePiece> list)
         {
-            if (!list.Contains(piece))
-            {
-                list.Add(piece);
-            }
             bool connect = false;
             for (int i = 0; i < 4; i++)
             {
                 if (piece._connected[i] != null)
                 {
-                    if (!list.Contains(piece._connected[i]) && ConnectPieces(piece._connected[i], list))
-                        connect = true;
+                    if (!list.Contains(piece._connected[i]))
+                    {
+                        list.Add(piece._connected[i]);
+                        if(ConnectPieces(piece._connected[i], list))
+                            connect = true;
+                    } 
                 }
                 else
                 {
@@ -580,10 +583,10 @@ namespace SGJigsaw
                             offset2 = new Vector2(-offPiece.tiles.GetLength(0), 0);
                             break;
                     }
-                    if (offPiece is not null && ((offPiece.position == piece.position + offset2 * 64) || (!autoSnap && Vector2.Distance(offPiece.position, piece.position + offset2 * 64) < 64)))
+                    if (offPiece is not null && ((offPiece.position == piece.position + offset2 * 64) || (!ModEntry.Config.Snap && Vector2.Distance(offPiece.position, piece.position + offset2 * 64) < 64)))
                     {
                         var diff = offPiece.position - offset2 * 64 - piece.position;
-                        foreach (var p in list)
+                        foreach (var p in GetConnected(piece))
                         {
                             p.position += diff;
                         }
@@ -605,7 +608,7 @@ namespace SGJigsaw
         private Vector2 Clamp(Vector2 v)
         {
             var v2 = new Vector2(Math.Clamp(v.X, -border, map.DisplayWidth + border - pieceSize * 64), Math.Clamp(v.Y, -border, map.DisplayHeight + border - pieceSize * 64));
-            if (autoSnap)
+            if (ModEntry.Config.Snap)
             {
                 int snap = 64;
                 v2 = new Vector2((float)Math.Round(v2.X / snap), (float)Math.Round(v2.Y / snap)) * snap;
@@ -622,7 +625,8 @@ namespace SGJigsaw
         {
             if((SButton)key == ModEntry.Config.SnapKey)
             {
-                autoSnap = !autoSnap;
+                ModEntry.Config.Snap = !ModEntry.Config.Snap;
+                ModEntry.SHelper.WriteConfig(ModEntry.Config);
             }
             else if((SButton)key == SButton.End)
             {
@@ -637,12 +641,38 @@ namespace SGJigsaw
         public override void update(GameTime time)
         {
             map.Update(time.ElapsedGameTime.Milliseconds);
-            updateWater(time);
+            //updateWater(time);
             
             if ((Game1.activeClickableMenu is not TitleMenu tm || !tm.startupPreferences.startMuted) && Game1.currentSong?.IsPlaying == false && !AccessTools.StaticFieldRefAccess<Game1, bool>("requestedMusicDirty"))
             {
                 ChangeMusic(ModEntry.Config.CurrentMusic);
             }
+            if (solving)
+            {
+                foreach(var p in sortedList)
+                {
+                    if(p.position != p.properPosition)
+                    {
+                        var diff = p.properPosition - p.position;
+                        if (Math.Abs(diff.X) < 64 && Math.Abs(diff.Y) < 64)
+                        {
+                            p.position = p.properPosition;
+                        }
+                        else
+                        {
+                            diff.Normalize();
+                            p.position += diff * 32;
+                        }
+                    }
+                }
+                CheckComplete();
+                if (solved)
+                {
+                    solving = false;
+                    ConnectPieces(pieces[0, 0], new List<PuzzlePiece>());
+                }
+            }
+
         }
         public void updateWater(GameTime time)
         {
@@ -707,25 +737,44 @@ namespace SGJigsaw
         }
         private void CheckComplete()
         {
-            var list = GetConnected(sortedList[0]);
+            var list = new List<PuzzlePiece>();
             ConnectPieces(sortedList[0], list);
             if (list.Count != sortedList.Count)
                 return;
-            if( !autoSnap && Vector2.Distance(sortedList[0].position, sortedList[0].properPosition) < 64)
+            if( !ModEntry.Config.Snap && Vector2.Distance(sortedList[0].position, sortedList[0].properPosition) < 64 && !solving)
             {
-                Solve();
+                foreach(var p in sortedList)
+                {
+                    p.position = p.properPosition;
+                }
+                solved = true;
+                Game1.playSound(ModEntry.Config.SolveSound);
                 return;
             }
-            foreach (var p in sortedList)
+            else
             {
-                if (p.position == p.properPosition)
-                    continue;
-                return;
+                foreach (var p in sortedList)
+                {
+                    if (p.position != p.properPosition)
+                        return;
+                }
+                solved = true;
+                Game1.playSound(ModEntry.Config.SolveSound);
             }
-            solved = true;
-            Game1.playSound("yoba");
         }
+        public void BackButtonPressed()
+        {
+            Game1.playSound("bigDeSelect", null);
 
+            if (Game1.activeClickableMenu is TitleMenu)
+            {
+                ModEntry.sgapi.ReturnToMenu();
+            }
+            else
+            {
+                exitThisMenu();
+            }
+        }
         public override void draw(SpriteBatch b)
         {
             b.Draw(Game1.staminaRect, new Rectangle(0, 0, Game1.viewport.Width, Game1.viewport.Height), new Color(0,0,0,0.5f));
@@ -762,6 +811,10 @@ namespace SGJigsaw
             b.DrawString(Game1.smallFont, pieceStr, new Vector2(pieceSizeDropdown.bounds.X - 8 - Game1.smallFont.MeasureString(pieceStr).X, 20), Color.DarkSlateGray);
             pieceSizeDropdown.draw(b, 0, 0);
 
+            if (Game1.activeClickableMenu is TitleMenu)
+            {
+                backButton.draw(b);
+            }
 
             //var no  = ClampToRect(new Vector2(-(Game1.uiViewport.Width / 2 - map.DisplayWidth / 2 * zoom), -(Game1.uiViewport.Height / 2 - map.DisplayHeight / 2 * zoom)) / zoom);
             //b.DrawString(Game1.smallFont, $"{offset}; {no}", new Vector2(0, 1400), Color.Brown);
@@ -771,6 +824,13 @@ namespace SGJigsaw
         {
             base.gameWindowSizeChanged(oldBounds, newBounds);
             RebuildElements();
+        }
+        public override void receiveGamePadButton(Buttons button)
+        {
+            if (button == Buttons.B)
+            {
+                BackButtonPressed();
+            }
         }
         public override void receiveLeftClick(int x, int y, bool playSound = true)
         {
@@ -800,7 +860,14 @@ namespace SGJigsaw
                 Game1.playSound("shiny4");
                 return;
             }
-
+            else if (Game1.activeClickableMenu is TitleMenu)
+            {
+                if (backButton.containsPoint(x, y))
+                {
+                    BackButtonPressed();
+                    return;
+                }
+            }
         }
 
         public override void leftClickHeld(int x, int y)
@@ -987,16 +1054,16 @@ namespace SGJigsaw
                 {
                     var list = GetConnected(draggingPiece);
                     bool connect = false;
-                    foreach(var p in list)
+                    foreach(var p in list.ToArray())
                     {
-                        if(ConnectPieces(draggingPiece, list))
+                        if(ConnectPieces(draggingPiece, new List<PuzzlePiece>()))
                         { 
                             connect = true; 
                         }
                     }
                     if (connect)
                     {
-                        Game1.playSound("newArtifact");
+                        Game1.playSound(ModEntry.Config.SnapSound);
                     }
                 }
                 draggingPiece = null;
@@ -1019,6 +1086,10 @@ namespace SGJigsaw
             offset = ClampToRect(offset);
             //offset = Vector2.Zero;
             zoom = newZoom;
+        }
+        public override bool readyToClose()
+        {
+            return false;
         }
     }
     public static class Extensions
