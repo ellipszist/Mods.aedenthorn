@@ -39,11 +39,11 @@ namespace QuestHelper
             if(item is null) 
                 return null;
 
-
-            var r = CraftingRecipe.craftingRecipes.FirstOrDefault(kvp => kvp.Value.Contains($"/{uItemId}/"));
+            bool bc = itemId.StartsWith("(BC)");
+            var r = CraftingRecipe.craftingRecipes.FirstOrDefault(kvp => kvp.Value.Contains($"/{uItemId}/{bc.ToString().ToLower()}/"));
             int unlock = 4;
             string which = "crafting";
-            if(r.Value is null)
+            if(r.Value is null && !bc)
             {
                 r = CraftingRecipe.cookingRecipes.FirstOrDefault(kvp => kvp.Value.Contains($"/{uItemId}/"));
                 unlock = 3;
@@ -80,7 +80,7 @@ namespace QuestHelper
                     }
                 }
             }
-            return list;
+            return list.Any() ? list : null;
         }
 
         private static List<string> GetFishInfo(string itemId)

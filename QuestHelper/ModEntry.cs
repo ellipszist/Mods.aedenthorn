@@ -38,7 +38,7 @@ namespace QuestHelper
         {
             if (false && e.Button == SButton.Home)
 			{
-                Game1.drawObjectDialogue(GetItemInfo("220"));
+                Game1.drawObjectDialogue(GetItemInfo("(O)688"));
                 return;
                 Game1.playSound("newArtifact", null);
                 Game1.player.acceptedDailyQuest.Value = false;
