@@ -24,7 +24,7 @@ namespace ToolSmartSwitch
         public bool SwitchForTilling { get; set; } = true;
         public bool SwitchForAnimals { get; set; } = true;
         public bool SwitchForMonsters { get; set; } = true;
-        public float MonsterMaxDistance { get; set; } = 256;
+        public float MonsterMaxDistance { get; set; } = 64;
 
     }
 }

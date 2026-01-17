@@ -112,15 +112,22 @@ namespace QuestHelper
             if (!DataLoader.Fish(Game1.content).TryGetValue(fish.ItemId, out var fishDataString))
                 return null;
             string[] fishData = fishDataString.Split('/');
-            if (fishData.Length < 8 || fishData[7] == "both")
-                return output;
-            if (fishData[7] == "sunny")
+            if (fishData.Length >= 6 && fishData[5] != "600 2600")
             {
-                output.Add(string.Format(SHelper.Translation.Get("fish-sunny"), fish.DisplayName ?? itemId));
+                var split = fishData[5].Split(' ');
+                if(split.Length == 2)
+                    output.Add(string.Format(SHelper.Translation.Get("fish-hours"), fish.DisplayName ?? itemId, split[0], split[1]));
             }
-            else
+            if (fishData.Length >= 8 && fishData[7] != "both")
             {
-                output.Add(string.Format(SHelper.Translation.Get("fish-rainy"), fish.DisplayName ?? itemId));
+                if (fishData[7] == "sunny")
+                {
+                    output.Add(string.Format(SHelper.Translation.Get("fish-sunny"), fish.DisplayName ?? itemId));
+                }
+                else if(fishData[7] == "rainy")
+                {
+                    output.Add(string.Format(SHelper.Translation.Get("fish-rainy"), fish.DisplayName ?? itemId));
+                }
             }
             return output;
         }

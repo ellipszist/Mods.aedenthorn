@@ -48,6 +48,7 @@ namespace HereFishy
 			who.CanMove = Config.AllowMovement;
 			who.forceTimePass = true;
 			who.jitterStrength = 2f;
+			who.FacingDirection = 2;
 			who.FarmerSprite.setCurrentAnimation(animationFrames.ToArray());
 			who.FarmerSprite.PauseForSingleAnimation = true;
 			who.FarmerSprite.loop = true;

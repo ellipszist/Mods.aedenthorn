@@ -103,7 +103,7 @@ namespace InventoryIndicators
                     {
                         loveText = SHelper.Translation.Get("universal_love");
                     }
-                    else if (favoriteThings.TryGetValue(__instance.ItemId, out var list))
+                    else if (__instance is Object obj && !obj.bigCraftable.Value && favoriteThings.TryGetValue(__instance.ItemId, out var list))
                     {
                         List<string> names = new List<string>();
                         foreach (var npc in list)

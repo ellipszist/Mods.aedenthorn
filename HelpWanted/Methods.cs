@@ -158,10 +158,12 @@ namespace HelpWanted
             List<string> items = new List<string>();
             foreach (var str in split)
             {
-                Object obj = (Object)ItemRegistry.Create(str, 1);
-                if (!Config.AllowArtisanGoods && obj is not null && obj.Category == Object.artisanGoodsCategory)
+                var item = ItemRegistry.Create(str, 1);
+                if (item is null)
                     continue;
-                if (Config.MaxPrice > 0 && obj is not null && obj.Price > Config.MaxPrice)
+                if (!Config.AllowArtisanGoods && item.Category == Object.artisanGoodsCategory)
+                    continue;
+                if (Config.MaxPrice > 0 && item.sellToStorePrice() > Config.MaxPrice)
                     continue;
                 items.Add(str);
             }
@@ -177,8 +179,8 @@ namespace HelpWanted
                 if (!items.Contains(idx))
                 {
 
-                    Object obj = (Object)ItemRegistry.Create(idx, 1);
-                    if (obj is null || !items.Contains(obj.Category.ToString()) || (!Config.AllowArtisanGoods && obj.Category == Object.artisanGoodsCategory) || (Config.MaxPrice > 0 && obj.Price > Config.MaxPrice))
+                    Item item = ItemRegistry.Create(idx, 1);
+                    if (item is null || !items.Contains(item.Category.ToString()) || (!Config.AllowArtisanGoods && item.Category == Object.artisanGoodsCategory) || (Config.MaxPrice > 0 && item.sellToStorePrice() > Config.MaxPrice))
                     {
                         possibleItems.RemoveAt(i);
                     }

@@ -83,7 +83,7 @@ namespace QuestHelper
         {
             public static void Postfix(Quest __instance, ref string __result)
             {
-                if (!Config.ModEnabled || !Config.ShowQuestDetails)
+                if (!Config.ModEnabled || !Config.ShowQuestDetails || __instance.completed.Value)
                     return;
                 List<string> output;
                 if (__instance is SocializeQuest sq && !sq.completed.Value && sq.whoToGreet.Count > 0)

@@ -80,8 +80,11 @@ namespace PushPull
                 d.position += Config.Speed;
                 if (d.position >= 64)
                 {
-                    d.location.objects.Remove(obj.TileLocation);
-                    d.location.objects[d.destination] = obj;
+					if(d.location.objects.ContainsKey(obj.TileLocation))
+					{
+                        d.location.objects.Remove(obj.TileLocation);
+                        d.location.objects[d.destination] = obj;
+                    }
                     movingObjects.Remove(obj);
                 }
                 else

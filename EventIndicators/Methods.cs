@@ -83,12 +83,6 @@ namespace EventIndicators
                     eventsDict[point] = l.currentEvent.id;
                     return;
                 }
-
-                if (l.IsGreenRainingHere())
-                {
-                    eventsDict[point] = Game1.content.LoadString("Strings\\1_6_Strings:greenrainmessage");
-                    return;
-                }
                 if (l.TryGetLocationEvents(out var eventAssetName, out var events))
                 {
                     if (events != null)
