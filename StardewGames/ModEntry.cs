@@ -1,4 +1,6 @@
 ﻿using HarmonyLib;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Netcode;
 using StardewModdingAPI;
 using StardewValley;
@@ -21,6 +23,14 @@ namespace StardewGames
         
 		public static bool returnToMenu;
 
+		public enum CurrentMiniGame
+		{
+			None,
+            PrairieKing,
+			JunimoKart
+        }
+        public static CurrentMiniGame currentMiniGame;
+
         public override void Entry(IModHelper helper)
 		{
 			Config = Helper.ReadConfig<ModConfig>();
@@ -31,16 +41,40 @@ namespace StardewGames
 			SModManifest = ModManifest;
 
 			helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
+            helper.Events.Display.RenderingStep += Display_RenderingStep;
             Harmony harmony = new Harmony(ModManifest.UniqueID);
 			harmony.PatchAll();
         }
 
-		public override object GetApi()
+        private void Display_RenderingStep(object sender, StardewModdingAPI.Events.RenderingStepEventArgs e)
+        {
+            if (!Config.ModEnabled || currentMiniGame == CurrentMiniGame.None || Game1.currentMinigame == null || e.Step != StardewValley.Mods.RenderSteps.Minigame)
+            {
+                return;
+            }
+			//e.SpriteBatch.End();
+   //         Game1.currentMinigame.draw(e.SpriteBatch);
+			//e.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, null);
+
+        }
+
+        public override object GetApi()
 		{
 			return new StardewGamesAPI();
 		}
         public void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
 		{
+			if (Config.ModEnabled)
+			{
+				if (Config.ShowPrairieKing)
+				{
+					gameDataDict["aedenthorn.PrarieKing"] = new GamesGameData(ClickPrairieKing, DrawPrairieKing);
+				}
+				if (Config.ShowJunimo)
+				{
+					gameDataDict["aedenthorn.JuniomKart"] = new GamesGameData(ClickJunimo, DrawJunimo);
+                }
+            }
 			// Get Generic Mod Config Menu's API
 			var gmcm = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
 
@@ -61,5 +95,6 @@ namespace StardewGames
 				);
 			}
 		}
-	}
+
+    }
 }
