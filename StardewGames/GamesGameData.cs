@@ -6,10 +6,10 @@ namespace StardewGames
 {
     public class GamesGameData
     {
-        public Action clickAction;
+        public Action<int, int> clickAction;
         public Action<SpriteBatch, Rectangle> drawAction;
 
-        public GamesGameData(Action clickAction, Action<SpriteBatch, Rectangle> drawAction)
+        public GamesGameData(Action<int, int> clickAction, Action<SpriteBatch, Rectangle> drawAction)
         {
             this.clickAction = clickAction;
             this.drawAction = drawAction;

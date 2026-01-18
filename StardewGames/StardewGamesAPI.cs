@@ -9,12 +9,12 @@ namespace StardewGames
 {
     public interface IStardewGamesAPI
     {
-        public void AddGame(string name, Action clickAction, Action<SpriteBatch, Rectangle> drawAction);
+        public void AddGame(string name, Action<int, int> clickAction, Action<SpriteBatch, Rectangle> drawAction);
         public void ReturnToMenu();
     }
     public class StardewGamesAPI: IStardewGamesAPI
     {
-        public void AddGame(string name, Action clickAction, Action<SpriteBatch, Rectangle> drawAction)
+        public void AddGame(string name, Action<int, int> clickAction, Action<SpriteBatch, Rectangle> drawAction)
         {
             ModEntry.gameDataDict[name] = new GamesGameData(clickAction, drawAction);
         }

@@ -27,8 +27,9 @@ namespace StardewGames
             SpriteText.drawStringHorizontallyCenteredAt(b, text, Game1.viewport.Width / 2 + 64, rectangle.Y + 64, color: Color.LightGoldenrodYellow);
         }
 
-        public static void ClickPrairieKing()
+        public static void ClickPrairieKing(int x, int y)
         {
+            var mpos = Game1.getMousePosition();
             Game1.currentSong?.Stop(Microsoft.Xna.Framework.Audio.AudioStopOptions.Immediate);
             Game1.currentMinigame = new AbigailGame(null);
             currentMiniGame = CurrentMiniGame.PrairieKing;
@@ -41,7 +42,7 @@ namespace StardewGames
             SpriteText.drawStringHorizontallyCenteredAt(b, text, Game1.viewport.Width / 2 + 64, rectangle.Y + 64, color: Color.LightGoldenrodYellow);
         }
 
-        public static void ClickJunimo()
+        public static void ClickJunimo(int x, int y)
         {
         }
     }

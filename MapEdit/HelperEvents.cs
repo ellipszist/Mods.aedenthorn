@@ -24,13 +24,12 @@ namespace MapEdit
             {
                 foreach (string name in mapCollectionData.mapDataDict.Keys)
                 {
-                    if (e.NameWithoutLocale.IsEquivalentTo("Maps/" + name) || e.NameWithoutLocale.IsEquivalentTo(name))
+                    if ((e.NameWithoutLocale.IsEquivalentTo("Maps/" + name) || e.NameWithoutLocale.IsEquivalentTo(name)) && mapCollectionData.mapDataDict.TryGetValue(name, out var data))
                     {
                         e.Edit(delegate (IAssetData idata)
                         {
                             SMonitor.Log("Editing map " + e.Name);
                             var mapData = idata.AsMap();
-                            MapData data = mapCollectionData.mapDataDict[name];
                             mapData.ReplaceWith(EditMap(e.Name.Name, mapData.Data, data));
 
                         });
