@@ -348,7 +348,6 @@ namespace ImmersiveSprinklers
                 return codes.AsEnumerable();
             }
         }
-
         [HarmonyPatch(typeof(HoeDirt), nameof(HoeDirt.dayUpdate))]
         public class HoeDirt_dayUpdate_Patch
         {

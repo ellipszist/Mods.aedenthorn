@@ -1,5 +1,6 @@
 ﻿
 using StardewModdingAPI;
+using StardewModdingAPI.Utilities;
 
 namespace FarmerPortraits
 {
@@ -14,5 +15,6 @@ namespace FarmerPortraits
         public bool FacingFront { get; set; } = false;
         public bool UseCustomPortrait { get; set; } = true;
         public bool UseCustomBackground { get; set; } = true;
+        public KeybindList CustomButton { get; set; } = new KeybindList(new Keybind(SButton.MouseLeft, SButton.LeftShift));
     }
 }

@@ -241,26 +241,6 @@ namespace ImmersiveScarecrows
             }
 
         }
-        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.GetDirtDecayChance))]
-        public class GameLocation_GetDirtDecayChance_Patch
-        {
-            public static void Postfix(GameLocation __instance, Vector2 tile, ref double __result)
-            {
-                if (!Config.EnableMod)
-                    return;
-                if(__instance.terrainFeatures.TryGetValue(tile, out var tf) && tf is HoeDirt)
-                {
-                    for (int i = 0; i < 4; i++)
-                    {
-                        if (tf.modData.ContainsKey(scarecrowKey + i))
-                        {
-                            __result = 0;
-                            return;
-                        }
-                    }
-                }
-            }
-        }
         [HarmonyPatch(typeof(Farm), nameof(Farm.addCrows))]
         public class Farm_addCrows_Patch
         {
@@ -344,7 +324,7 @@ namespace ImmersiveScarecrows
         }
 
         [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.GetDirtDecayChance))]
-        public class GameLocation_DayUpdate_Patch
+        public class GameLocation_GetDirtDecayChance_Patch
         {
             public static bool Prefix(GameLocation __instance, Vector2 tile, ref double __result)
             {
@@ -383,23 +363,7 @@ namespace ImmersiveScarecrows
                 return codes.AsEnumerable();
             }
         }
-        [HarmonyPatch(typeof(HoeDirt), nameof(HoeDirt.seasonUpdate))]
-        public class HoeDirt_seasonUpdate_Patch
-        {
-            public static void Postfix(HoeDirt __instance, ref bool __result)
-            {
-                if (!__result || !Config.EnableMod)
-                    return;
-                for (int i = 0; i < 4; i++)
-                {
-                    if (__instance.modData.TryGetValue(scarecrowKey + i, out var sprinklerString))
-                    {
-                        __result = false;
-                        return;
-                    }
-                }
-            }
-        }
+
         [HarmonyPatch(typeof(Utility), nameof(Utility.doesItemExistAnywhere))]
         public class Utility_doesItemExistAnywhere_Patch
         {

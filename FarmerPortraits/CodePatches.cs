@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using StardewModdingAPI;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.ItemTypeDefinitions;
@@ -94,7 +95,8 @@ namespace FarmerPortraits
                     Texture2D pt = GetCachedTexture("portrait", which);
                     if (pt != null)
                     {
-                        b.Draw(pt, new Rectangle(portraitBoxX + 20, portraitBoxY + 24, 256, 256), null, Color.White, 0f, Vector2.Zero, SpriteEffects.None, 0.88f);
+                        var rect = new Rectangle(portraitBoxX + 20, portraitBoxY + 24, 256, 256);
+                        b.Draw(pt, rect, null, Color.White, 0f, Vector2.Zero, SpriteEffects.None, 0.88f);
                         goto skippt;
                     }
                 }
@@ -108,6 +110,7 @@ namespace FarmerPortraits
             skippt:
                 SpriteText.drawStringHorizontallyCenteredAt(b, Game1.player.Name, xPos + boxWidth / 2, portraitBoxY + 296 + 16, 999999, -1, 999999, 1f, 0.88f, false, null, 99999);
             }
+
 
             private static void drawFarmer(SpriteBatch b, int currentFrame, Rectangle sourceRect, Vector2 position, Color overrideColor)
             {

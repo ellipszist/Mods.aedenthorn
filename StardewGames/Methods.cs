@@ -18,18 +18,70 @@ namespace StardewGames
 {
 	public partial class ModEntry : Mod
     {
-
-        public static void DrawPrairieKing(SpriteBatch b, Rectangle rectangle)
+        public static int ticks;
+        public static void DrawPrairieKing(SpriteBatch b, Rectangle area)
         {
-            var text = SHelper.Translation.Get("prairie-text");
-            IClickableMenu.drawTextureBox(b, Game1.mouseCursors, new Rectangle(384, 396, 15, 15), rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height, Color.White, 4f, false, -1f);
-            //b.Draw(SHelper.ModContent.Load<Texture2D>("assets/prairieMenu.png"), new Rectangle(rectangle.Location + new Point(8, 8), rectangle.Size - new Point(16, 16)), Color.White);
-            SpriteText.drawStringHorizontallyCenteredAt(b, text, Game1.viewport.Width / 2 + 64, rectangle.Y + 64, color: Color.LightGoldenrodYellow);
+            IClickableMenu.drawTextureBox(b, Game1.mouseCursors, new Rectangle(384, 396, 15, 15), area.X, area.Y, area.Width, area.Height, Color.White, 4f, false, -1f);
+            var menuRect = new Rectangle(area.Location + new Point(8, 8), area.Size - new Point(16, 16));
+            b.Draw(SHelper.ModContent.Load<Texture2D>("assets/prairieMenu.png"), menuRect, Color.White);
+
+            var buttonWidth = menuRect.Width - 768;
+
+            var newRect = new Rectangle(menuRect.Location + new Point(768, 0), new Point(buttonWidth, menuRect.Height / 2));
+            var resumeRect = new Rectangle(menuRect.Location + new Point(768, menuRect.Height / 2), new Point(buttonWidth, menuRect.Height / 2));
+            var newString = Game1.content.LoadString("Strings\\Locations:Saloon_Arcade_Cowboy_NewGame");
+            var resumeString = Game1.content.LoadString("Strings\\Locations:Saloon_Arcade_Cowboy_Continue");
+            var newSize = Game1.smallFont.MeasureString(newString);
+            var resumeSize = Game1.smallFont.MeasureString(resumeString);
+            SpriteText.drawStringHorizontallyCenteredAt(b, SHelper.Translation.Get("prairie-text"), menuRect.X + 768 / 2, menuRect.Y + 4, color: new Color(100,0,0));
+            
+            b.Draw(Game1.staminaRect, new Rectangle(menuRect.X + 768 + 4, menuRect.Y + menuRect.Height / 2, buttonWidth - 8, 2), Color.White);
+            
+            var mpos = Game1.getMousePosition();
+            var newColor = Color.White;
+            var resumeColor = Color.White;
+            var speed = 20;
+            if (newRect.Contains(mpos))
+            {
+                ticks++;
+                ticks %= speed;
+                if(ticks > speed / 2)
+                {
+                    newColor = Color.Gold;
+                }
+            }
+            else if (resumeRect.Contains(mpos))
+            {
+                ticks++;
+                ticks %= speed;
+                if(ticks > speed / 2)
+                {
+                    resumeColor = Color.Gold;
+                }
+            }
+            b.DrawString(Game1.smallFont, newString, new Vector2(menuRect.Right - buttonWidth / 2 - newSize.X / 2, menuRect.Y + menuRect.Height / 4 - newSize.Y / 2), newColor);
+
+
+            b.DrawString(Game1.smallFont, resumeString, new Vector2(menuRect.Right - buttonWidth / 2 - resumeSize.X / 2, menuRect.Y + menuRect.Height * 3 / 4 - resumeSize.Y / 2), resumeColor);
         }
 
-        public static void ClickPrairieKing(int x, int y)
+        public static void ClickPrairieKing(Rectangle area, int x, int y)
         {
-            var mpos = Game1.getMousePosition();
+
+            var menuRect = new Rectangle(new Point(8, 8), area.Size - new Point(16, 16));
+
+            var buttonWidth = menuRect.Width - 768;
+
+            var newRect = new Rectangle(menuRect.Location + new Point(768, 8), new Point(buttonWidth, menuRect.Height / 2));
+            var resumeRect = new Rectangle(menuRect.Location + new Point(768, menuRect.Height / 2), new Point(buttonWidth, menuRect.Height / 2));
+            if (newRect.Contains(x, y))
+            {
+                Game1.player.jotpkProgress.Value = null;
+            }
+            else if (!resumeRect.Contains(x, y))
+            {
+                return;
+            }
             Game1.currentSong?.Stop(Microsoft.Xna.Framework.Audio.AudioStopOptions.Immediate);
             Game1.currentMinigame = new AbigailGame(null);
             currentMiniGame = CurrentMiniGame.PrairieKing;
@@ -42,7 +94,7 @@ namespace StardewGames
             SpriteText.drawStringHorizontallyCenteredAt(b, text, Game1.viewport.Width / 2 + 64, rectangle.Y + 64, color: Color.LightGoldenrodYellow);
         }
 
-        public static void ClickJunimo(int x, int y)
+        public static void ClickJunimo(Rectangle area, int x, int y)
         {
         }
     }

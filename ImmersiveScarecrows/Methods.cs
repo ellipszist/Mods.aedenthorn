@@ -341,12 +341,12 @@ namespace ImmersiveScarecrows
             HoeDirt dirt = pair.Value as HoeDirt;
             var match = dirt != null && dirt.crop == null && Game1.random.NextDouble() < 0.8;
             
-            if (!Config.EnableMod)
+            if (!Config.EnableMod || !match)
                 return match;
 
             for (int i = 0; i < 4; i++)
             {
-                if (pair.Value.modData.TryGetValue(scarecrowKey + i, out var scarecrowString))
+                if (dirt.modData.TryGetValue(scarecrowKey + i, out var scarecrowString))
                 {
                     SMonitor.Log($"Preventing hoedirt removal");
                     return false;

@@ -1,6 +1,9 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
+using System;
+using System.IO;
+using System.Linq;
 
 namespace FarmerPortraits
 {
@@ -73,5 +76,52 @@ namespace FarmerPortraits
             return null;
         }
 
+        private void SetGlobalPortrait(string arg1, string[] arg2)
+        {
+            var path = string.Join(' ', arg2);
+            SetTexture($"portrait.png", path);
+        }
+        private void SetThisPortrait(string arg1, string[] arg2)
+        {
+            var path = string.Join(' ', arg2);
+            SetTexture($"portrait_{Game1.player.Name}.png", path);
+        }
+        private void SetGlobalBackground(string arg1, string[] arg2)
+        {
+            var path = string.Join(' ', arg2);
+            SetTexture($"background.png", path);
+        }
+        private void SetThisBackground(string arg1, string[] arg2)
+        {
+            var path = string.Join(' ', arg2);
+            SetTexture($"background_{Game1.player.Name}.png", path);
+        }
+
+        private void SetTexture(string output, string path)
+        {
+            if (!path.EndsWith(".png"))
+            {
+                SMonitor.Log($"File {path} doesn't have the .png extension.");
+                return;
+            }
+            if (!File.Exists(path))
+            {
+                SMonitor.Log($"File {path} doesn't exist or can't be accessed");
+                return;
+            }
+            var dest = Path.Combine(SHelper.DirectoryPath, output);
+            if (File.Exists(dest))
+            {
+                int ext = 0;
+                while (File.Exists($"{dest}.bkp{(ext == 0 ? "" : ext)}"))
+                {
+                    ext++;
+                }
+                File.Move(dest, $"{dest}.bkp{(ext == 0 ? "" : ext)}");
+            }
+            File.Copy(path, dest);
+            SMonitor.Log($"Copied {path} to {dest}");
+            ReloadTextures();
+        }
     }
 }

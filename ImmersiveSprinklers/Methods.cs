@@ -464,12 +464,12 @@ namespace ImmersiveSprinklers
         {
             HoeDirt dirt = pair.Value as HoeDirt;
             var match = dirt != null && dirt.crop == null && Game1.random.NextDouble() < 0.8;
-            if (!Config.EnableMod)
+            if (!Config.EnableMod || !match)
                 return match;
 
             for (int i = 0; i < 4; i++)
             {
-                if (pair.Value.modData.TryGetValue(sprinklerKey + i, out var sprinklerString))
+                if (dirt.modData.TryGetValue(sprinklerKey + i, out var sprinklerString))
                 {
                     SMonitor.Log($"Preventing hoedirt removal");
                     return false;

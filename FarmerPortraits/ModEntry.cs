@@ -4,6 +4,7 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
+using StardewValley.Menus;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -42,11 +43,19 @@ namespace FarmerPortraits
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
+
+            helper.ConsoleCommands.Add("fppme", "Set the portrait for this farmer.", SetThisPortrait);
+            helper.ConsoleCommands.Add("fppg", "Set the portrait for all farmers.", SetGlobalPortrait);
+            helper.ConsoleCommands.Add("fpbme", "Set the background for this farmer.", SetThisBackground);
+            helper.ConsoleCommands.Add("fpbg", "Set the background for all farmers.", SetGlobalBackground);
         }
+
 
         private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
         {
-            if (false && e.Button == SButton.OemCloseBrackets)
+            if (!Config.EnableMod)
+                return;
+            if (e.Button == SButton.OemCloseBrackets)
             {
                 Dialogue d = new Dialogue(Game1.getCharacterFromName("Clint"), "Data\\ExtraDialogue:Clint_NoInventorySpace");
                 d.CurrentEmotion = "$0";

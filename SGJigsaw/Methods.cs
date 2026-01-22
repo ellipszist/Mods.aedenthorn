@@ -23,7 +23,7 @@ namespace SGJigsaw
             SpriteText.drawStringHorizontallyCenteredAt(b, text, Game1.viewport.Width / 2 + 64, rectangle.Y + 64, color: Color.LightGoldenrodYellow);
         }
 
-        private void LoadGame()
+        private void LoadGame(Rectangle area, int x, int y)
         {
             if(Config.ModEnabled)
                 TitleMenu.subMenu = new JigsawGameMenu(null);

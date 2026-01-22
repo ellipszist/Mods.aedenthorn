@@ -269,7 +269,7 @@ namespace StardewValley.Menus
                 {
                     Game1.playSound("select", null);
 
-                    MenuSlots[currentItemIndex + j].clickAction.Invoke(x - slotButtons[j].bounds.X, y - slotButtons[j].bounds.Y);
+                    MenuSlots[currentItemIndex + j].clickAction.Invoke(slotButtons[j].bounds, x - slotButtons[j].bounds.X, y - slotButtons[j].bounds.Y);
                     return;
                 }
             }
