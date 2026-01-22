@@ -55,7 +55,7 @@ namespace FarmerPortraits
         {
             if (!Config.EnableMod)
                 return;
-            if (e.Button == SButton.OemCloseBrackets)
+            if (false && e.Button == SButton.OemCloseBrackets)
             {
                 Dialogue d = new Dialogue(Game1.getCharacterFromName("Clint"), "Data\\ExtraDialogue:Clint_NoInventorySpace");
                 d.CurrentEmotion = "$0";
