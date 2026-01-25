@@ -93,6 +93,18 @@ namespace StardewGames
 					getValue: () => Config.ModEnabled,
 					setValue: value => Config.ModEnabled = value
 				);
+                gmcm.AddBoolOption(
+					mod: ModManifest,
+					name: () => SHelper.Translation.Get("GMCM.ShowJunimo.Name"),
+					getValue: () => Config.ShowJunimo,
+					setValue: value => Config.ShowJunimo = value
+				);
+                gmcm.AddBoolOption(
+					mod: ModManifest,
+					name: () => SHelper.Translation.Get("GMCM.ShowPrairieKing.Name"),
+					getValue: () => Config.ShowPrairieKing,
+					setValue: value => Config.ShowPrairieKing = value
+				);
 			}
 		}
 

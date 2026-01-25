@@ -1,27 +1,20 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Netcode;
 using StardewValley;
 using StardewValley.Audio;
 using StardewValley.BellsAndWhistles;
 using StardewValley.GameData;
-using StardewValley.GameData.Locations;
 using StardewValley.Menus;
 using StardewValley.Minigames;
 using StardewValley.Mods;
-using StardewValley.Monsters;
-using StardewValley.Quests;
 using StardewValley.SDKs;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using static StardewValley.Minigames.MineCart.Whale;
+using System.Reflection;
+using System.Reflection.Emit;
 
 namespace StardewGames
 {
@@ -39,6 +32,26 @@ namespace StardewGames
                     return;
                 }
                 playButton = new ClickableTextureComponent("play games", new Rectangle(__instance.width + -22 * TitleMenu.pixelZoom - 8 * TitleMenu.pixelZoom * 2, __instance.height - 25 * TitleMenu.pixelZoom * 3 - 24 * TitleMenu.pixelZoom, 27 * TitleMenu.pixelZoom, 25 * TitleMenu.pixelZoom), null, "", SHelper.ModContent.Load<Texture2D>("assets/play.png"), new Rectangle(0, 0, 27, 25), TitleMenu.pixelZoom, false);
+            }
+        }
+        [HarmonyPatch(typeof(MineCart), new Type[] { typeof(int), typeof(int) })]
+        [HarmonyPatch(MethodType.Constructor)]
+        public class MineCart_Patch
+        {
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling MineCart");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Call && codes[i].operand is MethodInfo mi && mi.Name == "RequireCharacter")
+                    {
+                        SMonitor.Log($"replacing RequireCharacter");
+                        codes[i].operand = AccessTools.Method(typeof(ModEntry), nameof(RequireCharacter));
+                    }
+                }
+
+                return codes.AsEnumerable();
             }
         }
         [HarmonyPatch(typeof(TitleMenu), "ShouldDrawCursor")]
