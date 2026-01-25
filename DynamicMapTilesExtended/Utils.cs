@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
+using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
@@ -179,7 +180,7 @@ namespace DMT
                     }
                 }
             }
-            var trigger = key[key.Length - 1];
+            var trigger = key[^1];
             if (string.IsNullOrWhiteSpace(trigger))
                 return null;
             foreach (var item in Triggers.Regexes)
@@ -346,16 +347,11 @@ namespace DMT
                     keys.RemoveAt(i);
                 }
             }
+            IOrderedEnumerable<string> allKeys = (IOrderedEnumerable<string>)Keys.AllKeys.Union(Keys.ModKeys).OrderByDescending(x => x.Length);
 
             foreach (var layer in l.Map.Layers)
             {
-                for (int i = keys.Count - 1; i >= 0; i--)
-                {
-                    if (!(dict[keys[i]].Layers?.Contains(layer.Id) ?? true))
-                    {
-                        keys.RemoveAt(i);
-                    }
-                }
+
                 int width = layer.Tiles.Array.GetLength(0);
                 int height = layer.Tiles.Array.GetLength(1);
                 for (int x = 0; x < width; x++)
@@ -365,8 +361,18 @@ namespace DMT
                         var tile = layer.Tiles[x, y];
                         if (tile is null)
                             continue;
+                        foreach(var key in tile.Properties.Keys)
+                        {
+                            var prop = ParseProperty(new(key, tile.Properties[key]), allKeys);
+                            if(prop?.Trigger == Triggers.Load)
+                            {
+                                DoTriggerActions(Game1.player, l, new(x, y), [(prop, tile)]);
+                            }
+                        }
                         foreach (var key in keys)
                         {
+                            if (dict[key].Layers?.Contains(layer.Id) == false)
+                                continue;
                             int count = 0;
                             int count2 = 0;
                             var value = dict[key];

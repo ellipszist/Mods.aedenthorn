@@ -102,6 +102,11 @@ namespace DMT
                 }
                 InvalidateOnTimeChanged.Clear();
             }
+            foreach (var f in Game1.getOnlineFarmers())
+            {
+                if(f?.currentLocation is not null)
+                    LoadLocation(f.currentLocation);
+            }
         }
 
         private void onTimeChanged(object? sender, TimeChangedEventArgs e)
