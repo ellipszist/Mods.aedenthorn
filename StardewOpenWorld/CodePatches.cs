@@ -85,13 +85,6 @@ namespace StardewOpenWorld
                 return false;
             }
         }
-        [HarmonyPatch(typeof(Debris), nameof(Debris.updateChunks))]
-        public static class Debris_updateChunks_Patch
-        {
-            public static void Postfix()
-            {
-            }
-        }
         [HarmonyPatch(typeof(Game1), nameof(Game1.CanTakeScreenshots))]
         public static class Game1_CanTakeScreenshots_Patch
         {
@@ -278,9 +271,8 @@ namespace StardewOpenWorld
                 if (!Config.ModEnabled || __instance != openWorldLocation)
                     return true;
                 BoundingBoxGroup passableTiles = null;
-                Farmer farmer = character as Farmer;
                 Rectangle? currentBounds;
-                if (farmer != null)
+                if (character is Farmer farmer)
                 {
                     isFarmer = true;
                     var bb = farmer.GetBoundingBox();

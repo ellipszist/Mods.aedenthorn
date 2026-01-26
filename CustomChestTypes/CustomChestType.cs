@@ -4,11 +4,6 @@ using System.Collections.Generic;
 
 namespace CustomChestTypes
 {
-    public class CustomChestTypeData
-    {
-        public List<CustomChestType> chestTypes = new List<CustomChestType>();
-    }
-
     public class CustomChestType
     {
         public string name;

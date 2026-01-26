@@ -293,7 +293,7 @@ namespace StardewOpenWorld
             if (!Config.ModEnabled)
                 return;
 
-            openWorldLocation = Game1.getLocationFromName(locName);
+            openWorldLocation = Game1.RequireLocation(locName);
 
             CreateAnimatedTiles();
 
