@@ -641,6 +641,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StardewGames", "StardewGame
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SGJigsaw", "SGJigsaw\SGJigsaw.csproj", "{56DD750C-47C6-8574-86EF-13882D97809C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapTokens", "MapTokens\MapTokens.csproj", "{90C24EEF-8222-E57B-D587-9F95C89C7865}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3169,6 +3171,14 @@ Global
 		{56DD750C-47C6-8574-86EF-13882D97809C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{56DD750C-47C6-8574-86EF-13882D97809C}.Release|x64.ActiveCfg = Release|Any CPU
 		{56DD750C-47C6-8574-86EF-13882D97809C}.Release|x64.Build.0 = Release|Any CPU
+		{90C24EEF-8222-E57B-D587-9F95C89C7865}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90C24EEF-8222-E57B-D587-9F95C89C7865}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90C24EEF-8222-E57B-D587-9F95C89C7865}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{90C24EEF-8222-E57B-D587-9F95C89C7865}.Debug|x64.Build.0 = Debug|Any CPU
+		{90C24EEF-8222-E57B-D587-9F95C89C7865}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90C24EEF-8222-E57B-D587-9F95C89C7865}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90C24EEF-8222-E57B-D587-9F95C89C7865}.Release|x64.ActiveCfg = Release|Any CPU
+		{90C24EEF-8222-E57B-D587-9F95C89C7865}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

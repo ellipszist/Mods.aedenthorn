@@ -458,7 +458,9 @@ namespace FreeLove
         {
             foreach (Farmer f in Game1.getAllFarmers())
             {
-                if (f.friendshipData.TryGetValue(__instance.Name, out var fs) && fs.IsMarried())
+                if (!__instance.IsVillager || !__instance.CanSocialize)
+                    continue;
+                if (f?.friendshipData.TryGetValue(__instance.Name, out var fs) == true && fs.IsMarried())
                 {
                     __result = true;
                     return false;
@@ -471,6 +473,8 @@ namespace FreeLove
         {
             foreach (Farmer f in Game1.getAllFarmers())
             {
+                if (!__instance.IsVillager || !__instance.CanSocialize)
+                    continue;
                 if (f.friendshipData.TryGetValue(__instance.Name, out var fs) && (fs.IsMarried() || fs.IsEngaged()))
                 {
                     __result = true;
