@@ -16,7 +16,7 @@ namespace DMT
     {
         public static readonly Dictionary<string, Action<Farmer, string, Tile, Point>> ModActions = [];
 
-        public static void DoAction(Farmer who, string value)
+        public static void DoAction(Farmer? who, string value)
         {
             if (who?.currentLocation == null || string.IsNullOrEmpty(value))
                 return;
@@ -233,11 +233,11 @@ namespace DMT
 
         public static void DoPlayMusic(string value) => Game1.changeMusicTrack(value);
 
-        public static void DoAddMailflag(Farmer who, string value) => who?.mailReceived.Add(value);
+        public static void DoAddMailflag(Farmer? who, string value) => who?.mailReceived.Add(value);
 
-        public static void DoRemoveMailflag(Farmer who, string value) => who?.mailReceived.Remove(value);
+        public static void DoRemoveMailflag(Farmer? who, string value) => who?.mailReceived.Remove(value);
 
-        public static void DoAddMailForTomorrow(Farmer who, string value)
+        public static void DoAddMailForTomorrow(Farmer? who, string value)
         {
             if (who == null)
                 return;
@@ -246,14 +246,14 @@ namespace DMT
                 who.mailbox.Add(value);
         }
 
-        public static void DoAddQuest(Farmer who, string value)
+        public static void DoAddQuest(Farmer? who, string value)
         {
             if (who == null)
                 return;
             who.addQuest(value);
         }
 
-        public static void DoRemoveQuest(Farmer who, string value)
+        public static void DoRemoveQuest(Farmer? who, string value)
         {
             if (who == null)
                 return;
@@ -266,7 +266,7 @@ namespace DMT
                 context.Helper.GameContent.InvalidateCache(asset);
         }
 
-        public static void DoTeleport(Farmer who, string value)
+        public static void DoTeleport(Farmer? who, string value)
         {
             if (who == null)
                 return;
@@ -277,7 +277,7 @@ namespace DMT
             who.Position = new Vector2(x, y);
         }
 
-        public static void DoTeleportTile(Farmer who, string value)
+        public static void DoTeleportTile(Farmer? who, string value)
         {
             if (who == null)
                 return;
@@ -288,7 +288,7 @@ namespace DMT
             who.Position = new Vector2(x * 64, y * 64);
         }
 
-        public static void DoGive(Farmer who, string value)
+        public static void DoGive(Farmer? who, string value)
         {
             if(who == null) 
                 return;
@@ -307,7 +307,7 @@ namespace DMT
                 Game1.createItemDebris(item, who.getStandingPosition(), who.FacingDirection);
         }
 
-        public static void DoTake(Farmer who, string value)
+        public static void DoTake(Farmer? who, string value)
         {
             if (who == null)
                 return;
@@ -374,7 +374,7 @@ namespace DMT
             location.overlayObjects[tilePos] = chest;
         }
 
-        public static void DoUpdateHealth(Farmer who, string value)
+        public static void DoUpdateHealth(Farmer? who, string value)
         {
             if (who == null)
                 return;
@@ -390,7 +390,7 @@ namespace DMT
             who.takeDamage(Math.Abs(number), false, null);
         }
 
-        public static void DoUpdateHealthPerSecond(Farmer who, string value)
+        public static void DoUpdateHealthPerSecond(Farmer? who, string value)
         {
             if (who == null)
                 return;
@@ -404,14 +404,14 @@ namespace DMT
         }
         
 
-        public static void DoUpdateHealthPerSecondCont(Farmer who, string value)
+        public static void DoUpdateHealthPerSecondCont(Farmer? who, string value)
         {
             if (!int.TryParse(value, out int number))
                 return;
             context.SecondUpdateContinuousLoops.Value.Add(new() { Tile = who.Tile, Location = who.currentLocation, Value = number, type = SecondUpdateData.SecondUpdateType.Health, Who = who });
         }
 
-        public static void DoUpdateStamina(Farmer who, string value)
+        public static void DoUpdateStamina(Farmer? who, string value)
         {
             if (who == null)
                 return;
@@ -421,7 +421,7 @@ namespace DMT
             who.Stamina += number;
         }
 
-        public static void DoUpdateStaminaPerSecond(Farmer who, string value)
+        public static void DoUpdateStaminaPerSecond(Farmer? who, string value)
         {
             if (who == null)
                 return;
@@ -435,7 +435,7 @@ namespace DMT
         }
         
 
-        public static void DoUpdateStaminaPerSecondCont(Farmer who, string value)
+        public static void DoUpdateStaminaPerSecondCont(Farmer? who, string value)
         {
             if (who == null)
                 return;
@@ -445,7 +445,7 @@ namespace DMT
             context.SecondUpdateContinuousLoops.Value.Add(new() { Tile = who.Tile, Location = who.currentLocation, Value = number, type = SecondUpdateData.SecondUpdateType.Stamina, Who = who });
         }
 
-        public static void DoAddBuff(Farmer who, string value)
+        public static void DoAddBuff(Farmer? who, string value)
         {
             if (who == null)
                 return;
@@ -462,7 +462,7 @@ namespace DMT
             }
         }
 
-        public static void DoEmote(Farmer who, string value)
+        public static void DoEmote(Farmer? who, string value)
         {
             if (who == null)
                 return;
@@ -472,7 +472,7 @@ namespace DMT
             who.doEmote(id);
         }
 
-        public static void DoExplode(Farmer who, GameLocation location, string value, Point tilePos)
+        public static void DoExplode(Farmer? who, GameLocation location, string value, Point tilePos)
         {
             var split = value.Split(' ');
             string explodeSound = "explosion";
@@ -497,7 +497,7 @@ namespace DMT
 
 
             location.playSound(explodeSound);
-            who.currentLocation.explode(pos, radius, who, damagesFarmer, damageRadius, destroyObjects);
+            location.explode(pos, radius, who, damagesFarmer, damageRadius, destroyObjects);
         }
 
         public static void DoAnimate(GameLocation location, string value, bool off)
@@ -532,9 +532,9 @@ namespace DMT
             }
         }
 
-        public static void DoPushTiles(Farmer who, Tile tile, Point tilePos) => PushTilesWithOthers(who, tile, tilePos);
+        public static void DoPushTiles(Farmer? who, Tile tile, Point tilePos) => PushTilesWithOthers(who, tile, tilePos);
 
-        public static void DoPushOtherTiles(Farmer who, string value, Tile tile, Point tilePos)
+        public static void DoPushOtherTiles(Farmer? who, string value, Tile tile, Point tilePos)
         {
             if (who == null)
                 return;
@@ -554,7 +554,7 @@ namespace DMT
             }
         }
 
-        public static void DoWarp(Farmer who, string value)
+        public static void DoWarp(Farmer? who, string value)
         {
             if (who == null)
                 return;
@@ -580,7 +580,7 @@ namespace DMT
             who.warpFarmer(new(who.TilePoint.X, who.TilePoint.Y, location, x, y, false));
         }
 
-        public static void DoFriendshipChange(Farmer who, string value)
+        public static void DoFriendshipChange(Farmer? who, string value)
         {
             if (who == null)
                 return;

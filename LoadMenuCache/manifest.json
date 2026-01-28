@@ -5,18 +5,6 @@
   "Description": "Load Menu Cache.",
   "UniqueID": "aedenthorn.LoadMenuCache",
   "EntryDll": "LoadMenuCache.dll",
-  "MinimumApiVersion": "3.15.0",
-  "ModUpdater": {
-    "Repository": "StardewValleyMods",
-    "User": "aedenthorn",
-    "Directory": "_releases",
-    "ModFolder": "LoadMenuCache"
-  },
-  "Dependencies": [
-    {
-      "UniqueID": "Platonymous.ModUpdater",
-      "IsRequired": false
-    }
-  ],
+  "MinimumApiVersion": "4.0.0",
   "UpdateKeys": [ "Nexus:" ]
 }

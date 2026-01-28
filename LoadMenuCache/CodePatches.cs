@@ -1,30 +1,16 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
-using StardewValley;
-using StardewValley.Menus;
-using StardewValley.Network;
-using StardewValley.Objects;
-using StardewValley.Quests;
-using StardewValley.Tools;
-using System.Collections.Generic;
-using System.Reflection.Emit;
-using System.Reflection;
-using xTile.Dimensions;
-using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
-using Object = StardewValley.Object;
-using StardewValley.Characters;
-using static StardewValley.Minigames.CraneGame;
-using StardewValley.Locations;
-using System.Text.RegularExpressions;
-using Microsoft.Xna.Framework.Graphics.PackedVector;
-using StardewValley.TerrainFeatures;
-using System.IO;
 using Newtonsoft.Json;
-using Sickhead.Engine.Util;
+using StardewValley;
+using StardewValley.Extensions;
+using StardewValley.Menus;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace LoadMenuCache
 {
@@ -54,7 +40,7 @@ namespace LoadMenuCache
         [HarmonyPatch(typeof(LoadGameMenu), "FindSaveGames")]
         public class LoadGameMenu_FindSaveGames_Patch
         {
-            public static bool Prefix(ref List<Farmer> __result)
+            public static bool Prefix(ref List<Farmer> __result, string filter)
             {
                 if (!Config.ModEnabled)
                     return true;
@@ -109,16 +95,16 @@ namespace LoadMenuCache
 
                                 FarmerData data = new FarmerData()
                                 {
-                                    slotName = Game1.player.slotName,
-                                    Name = Game1.player.Name,
-                                    gameVersion = Game1.player.gameVersion,
-                                    dayOfMonthForSaveGame = Game1.player.dayOfMonthForSaveGame,
-                                    seasonForSaveGame = Game1.player.seasonForSaveGame,
-                                    yearForSaveGame = Game1.player.yearForSaveGame,
-                                    dateStringForSaveGame = Game1.player.dateStringForSaveGame,
-                                    farmName = Game1.player.farmName.Value,
-                                    Money = Game1.player.Money,
-                                    millisecondsPlayed = Game1.player.millisecondsPlayed
+                                    slotName = f.slotName,
+                                    Name = f.Name,
+                                    gameVersion = f.gameVersion,
+                                    dayOfMonthForSaveGame = f.dayOfMonthForSaveGame,
+                                    seasonForSaveGame = f.seasonForSaveGame,
+                                    yearForSaveGame = f.yearForSaveGame,
+                                    dateStringForSaveGame = f.dateStringForSaveGame,
+                                    farmName = f.farmName.Value,
+                                    Money = f.Money,
+                                    millisecondsPlayed = f.millisecondsPlayed
                                 };
                                 File.WriteAllText(Path.Combine(folder, "data.json"), JsonConvert.SerializeObject(data, Formatting.Indented));
 
@@ -146,8 +132,24 @@ namespace LoadMenuCache
                     }
                 }
                 results.Sort();
+                if (!string.IsNullOrWhiteSpace(filter))
+                {
+                    for (int i = 0; i < results.Count; i++)
+                    {
+                        Farmer farmer = results[i];
+                        string name = farmer.Name;
+                        if (name != null && name.IndexOfIgnoreCase(filter) == -1)
+                        {
+                            string value = farmer.farmName.Value;
+                            if (value != null && value.IndexOfIgnoreCase(filter) == -1)
+                            {
+                                results[i] = null;
+                            }
+                        }
+                    }
+                }
                 __result = results;
-                return true;
+                return false;
             }
         }
     }

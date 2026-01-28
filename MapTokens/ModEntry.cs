@@ -22,6 +22,8 @@ namespace MapTokens
 		public static ModEntry context;
 
         public static Dictionary<string, Dictionary<string, Point>> mapPropertyDict = new();
+        public static Dictionary<string, string> mapPathDict = new();
+        public static bool mapPathChanged;
         public static bool mapPropertiesChanged;
 
         public override void Entry(IModHelper helper)
@@ -34,6 +36,7 @@ namespace MapTokens
 			SModManifest = ModManifest;
 
 			helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
+            helper.Events.GameLoop.ReturnedToTitle += GameLoop_ReturnedToTitle;
 
             helper.Events.Input.ButtonPressed += Input_ButtonPressed;
 
@@ -41,9 +44,15 @@ namespace MapTokens
 			harmony.PatchAll();
         }
 
+        private void GameLoop_ReturnedToTitle(object sender, StardewModdingAPI.Events.ReturnedToTitleEventArgs e)
+        {
+            mapPropertyDict.Clear();
+            mapPathDict.Clear();
+        }
+
         private void Input_ButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
         {
-            if (false && e.Button == SButton.OemCloseBrackets)
+            if (e.Button == SButton.OemCloseBrackets)
             {
                 Monitor.Log(Helper.GameContent.Load<Dictionary<string, string>>("Data/Furniture")["asdf"]);
             }
@@ -96,6 +105,8 @@ namespace MapTokens
 
             api.RegisterToken(ModManifest, "WarpTiles", new WarpTiles(0, " "));
             api.RegisterToken(ModManifest, "WarpTilesComma", new WarpTiles(0, ","));
+
+            api.RegisterToken(ModManifest, "MapPath", new MapPath());
 
             // Get Generic Mod Config Menu's API
             var gmcm = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");

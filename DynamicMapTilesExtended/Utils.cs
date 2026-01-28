@@ -238,7 +238,7 @@ namespace DMT
             if (!Enabled || !location.isTileOnMap(tilePosition) || (!context.Config.TriggerDuringEvents && Game1.eventUp))
                 return false;
 
-            List<(DynamicTileProperty prop, Tile tile)> properties = GetPropertiesForTriggers(layers, who, tilePosition, triggers);
+            List<(DynamicTileProperty prop, Tile tile)> properties = GetPropertiesForTriggers(layers, tilePosition, triggers);
             if (properties.Count == 0)
             {
                 return false;
@@ -246,7 +246,7 @@ namespace DMT
             return DoTriggerActions(who, location, tilePosition, properties);
         }
 
-        internal static List<(DynamicTileProperty prop, Tile tile)> GetPropertiesForTriggers(List<Layer> layers, Farmer who, Point tilePosition, IEnumerable<string> triggers)
+        internal static List<(DynamicTileProperty prop, Tile tile)> GetPropertiesForTriggers(List<Layer> layers, Point tilePosition, IEnumerable<string> triggers)
         {
             List<string> localTriggers = [];
             List<string> globalTriggers = [];

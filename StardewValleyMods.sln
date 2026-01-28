@@ -643,6 +643,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SGJigsaw", "SGJigsaw\SGJigs
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapTokens", "MapTokens\MapTokens.csproj", "{90C24EEF-8222-E57B-D587-9F95C89C7865}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomSplashScreen", "CustomSplashScreen\CustomSplashScreen.csproj", "{AA8F44B4-2805-01A8-3167-5F3D82524A12}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImmersiveSprinklersScarecrows", "ImmersiveSprinklersScarecrows\ImmersiveSprinklersScarecrows.csproj", "{66B92EAE-85E7-8FDF-BA38-EF0C17C4DA2A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3179,6 +3183,22 @@ Global
 		{90C24EEF-8222-E57B-D587-9F95C89C7865}.Release|Any CPU.Build.0 = Release|Any CPU
 		{90C24EEF-8222-E57B-D587-9F95C89C7865}.Release|x64.ActiveCfg = Release|Any CPU
 		{90C24EEF-8222-E57B-D587-9F95C89C7865}.Release|x64.Build.0 = Release|Any CPU
+		{AA8F44B4-2805-01A8-3167-5F3D82524A12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA8F44B4-2805-01A8-3167-5F3D82524A12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA8F44B4-2805-01A8-3167-5F3D82524A12}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{AA8F44B4-2805-01A8-3167-5F3D82524A12}.Debug|x64.Build.0 = Debug|Any CPU
+		{AA8F44B4-2805-01A8-3167-5F3D82524A12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA8F44B4-2805-01A8-3167-5F3D82524A12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA8F44B4-2805-01A8-3167-5F3D82524A12}.Release|x64.ActiveCfg = Release|Any CPU
+		{AA8F44B4-2805-01A8-3167-5F3D82524A12}.Release|x64.Build.0 = Release|Any CPU
+		{66B92EAE-85E7-8FDF-BA38-EF0C17C4DA2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{66B92EAE-85E7-8FDF-BA38-EF0C17C4DA2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{66B92EAE-85E7-8FDF-BA38-EF0C17C4DA2A}.Debug|x64.ActiveCfg = Debug|x64
+		{66B92EAE-85E7-8FDF-BA38-EF0C17C4DA2A}.Debug|x64.Build.0 = Debug|x64
+		{66B92EAE-85E7-8FDF-BA38-EF0C17C4DA2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{66B92EAE-85E7-8FDF-BA38-EF0C17C4DA2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{66B92EAE-85E7-8FDF-BA38-EF0C17C4DA2A}.Release|x64.ActiveCfg = Release|x64
+		{66B92EAE-85E7-8FDF-BA38-EF0C17C4DA2A}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

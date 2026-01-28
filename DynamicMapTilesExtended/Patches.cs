@@ -166,8 +166,12 @@ namespace DMT
             Item item = who.ActiveItem;
             if (!TriggerActions([.. __instance.Map.Layers], who, __instance, new(tileLocation.X, tileLocation.Y),
                 [
-                    string.Format(Triggers.UseItem, BuildFormattedTrigger(item.Name, '-', item.Stack, '-', item.Quality)),
-                    string.Format(Triggers.UseItem, BuildFormattedTrigger(item.QualifiedItemId, '-', item.Stack, '-', item.Quality)),
+                    string.Format(Triggers.UseItem, BuildFormattedTrigger(item.Name)),
+                    string.Format(Triggers.UseItem, BuildFormattedTrigger(item.ItemId)),
+                    string.Format(Triggers.UseItem, BuildFormattedTrigger(item.QualifiedItemId)),
+                    string.Format(Triggers.UseItem, BuildFormattedTrigger(item.Name, '-', item.Quality)),
+                    string.Format(Triggers.UseItem, BuildFormattedTrigger(item.ItemId, '-', item.Quality)),
+                    string.Format(Triggers.UseItem, BuildFormattedTrigger(item.QualifiedItemId, '-', item.Quality)),
                     "Action"
                 ]))
                 return true;

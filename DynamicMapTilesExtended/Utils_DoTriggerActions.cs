@@ -18,7 +18,7 @@ namespace DMT
 {
     public static partial class Utils
     {
-        public static bool DoTriggerActions(Farmer who, GameLocation location, Point tilePosition, List<(DynamicTileProperty prop, Tile tile)> properties)
+        public static bool DoTriggerActions(Farmer? who, GameLocation location, Point tilePosition, List<(DynamicTileProperty prop, Tile tile)> properties)
         {
             List<string> triggered = new();
 

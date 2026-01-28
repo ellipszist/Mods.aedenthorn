@@ -1,0 +1,222 @@
+﻿using HarmonyLib;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using StardewModdingAPI;
+using StardewValley;
+using StardewValley.TerrainFeatures;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using Color = Microsoft.Xna.Framework.Color;
+using Object = StardewValley.Object;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
+
+namespace ImmersiveSprinklersScarecrows
+{
+    /// <summary>The mod entry point.</summary>
+    public partial class ModEntry : Mod
+    {
+
+        public static IMonitor SMonitor;
+        public static IModHelper SHelper;
+        public static ModConfig Config;
+
+        public static ModEntry context;
+
+        public static string sprinklerKey = "aedenthorn.ImmersiveSprinklersScarecrows/sprinkler";
+        public static object atApi;
+
+        /// <summary>The mod entry point, called after the mod is first loaded.</summary>
+        /// <param name="helper">Provides simplified APIs for writing mods.</param>
+        public override void Entry(IModHelper helper)
+        {
+            Config = Helper.ReadConfig<ModConfig>();
+
+            context = this;
+
+            SMonitor = Monitor;
+            SHelper = helper;
+
+            Helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
+            Helper.Events.Input.ButtonPressed += Input_ButtonPressed;
+            Helper.Events.Display.RenderedWorld += Display_RenderedWorld;
+
+            var harmony = new Harmony(ModManifest.UniqueID);
+            harmony.PatchAll();
+
+        }
+        public override object GetApi()
+        {
+            return new ImmersiveApi();
+        }
+        public void Display_RenderedWorld(object sender, StardewModdingAPI.Events.RenderedWorldEventArgs e)
+        {
+            if (!Config.EnableMod || !Context.IsPlayerFree || !Helper.Input.IsDown(Config.ShowRangeButton) || Game1.currentLocation?.terrainFeatures is null)
+                return;
+            List<Vector2> tiles = new List<Vector2>();
+            foreach(var kvp in Game1.currentLocation.terrainFeatures.Pairs)
+            {
+                if (kvp.Value is not HoeDirt || !TryGetSprinkler(Game1.currentLocation, kvp.Key, out Object sprinkler))
+                    continue;
+
+                tiles.AddRange(GetSprinklerTiles(kvp.Key, GetSprinklerRadius(sprinkler)));
+            }
+            foreach (var tile in tiles.Distinct())
+            {
+                e.SpriteBatch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(new Vector2((float)((int)tile.X * 64), (float)((int)tile.Y * 64))), new Rectangle?(new Rectangle(194, 388, 16, 16)), Config.RangeTint * Config.RangeAlpha, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.01f);
+            }
+        }
+
+
+        public void Input_ButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
+        {
+            if (!Config.EnableMod)
+                return;
+            if(e.Button == SButton.OemOpenBrackets && Context.IsWorldReady)
+            {
+                //foreach(var key in Game1.currentLocation.terrainFeatures.Keys)
+                //{
+                //    if (Game1.currentLocation.terrainFeatures[key] is HoeDirt dirt && dirt.crop != null)
+                //    {
+                //        dirt.crop.growCompletely();
+                //        Game1.currentLocation.terrainFeatures[key] = dirt;
+                //    }
+                //}
+            }
+            else if (e.Button == Config.ActivateButton && Context.CanPlayerMove)
+            {
+                Vector2 tile = GetMouseTile();
+                
+                if (TryGetSprinkler(Game1.currentLocation, tile, out var sprinkler))
+                {
+                    ActivateSprinkler(Game1.currentLocation, tile, sprinkler, false);
+                    Helper.Input.Suppress(e.Button);
+                }
+                else if (Config.ActivateNearby || Constants.TargetPlatform == GamePlatform.Android)
+                {
+                    var list = Game1.currentLocation.terrainFeatures.Pairs.Where(t => t.Value is HoeDirt).ToList();
+                    if (!list.Any())
+                        return;
+
+                    foreach (var kvp in list)
+                    {
+                        if(Config.ActivateNearbyRange > 0)
+                        {
+                            var distance = Vector2.Distance(kvp.Key * 64, Game1.player.position.Value);
+                            if (distance > 64 * Config.ActivateNearbyRange)
+                                continue;
+                        }
+                        if (TryGetSprinkler(Game1.currentLocation, kvp.Key, out sprinkler))
+                        {
+                            ActivateSprinkler(Game1.currentLocation, kvp.Key, sprinkler, false);
+                            Helper.Input.Suppress(e.Button);
+                        }
+                    }
+                }
+            }
+        }
+
+
+        public void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
+        {
+            atApi = Helper.ModRegistry.GetApi("PeacefulEnd.AlternativeTextures");
+            // get Generic Mod Config Menu's API (if it's installed)
+            var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+            if (configMenu is null)
+                return;
+
+            // register mod
+            configMenu.Register(
+                mod: ModManifest,
+                reset: () => Config = new ModConfig(),
+                save: () => Helper.WriteConfig(Config)
+            );
+
+            configMenu.AddBoolOption(
+                mod: ModManifest,
+                name: () => "Mod Enabled",
+                getValue: () => Config.EnableMod,
+                setValue: value => Config.EnableMod = value
+            );
+
+            configMenu.AddBoolOption(
+                mod: ModManifest,
+                name: () => "Show Range When Placing",
+                getValue: () => Config.ShowRangeWhenPlacing,
+                setValue: value => Config.ShowRangeWhenPlacing = value
+            );
+            configMenu.AddKeybind(
+                mod: ModManifest,
+                name: () => "Pickup Key",
+                getValue: () => Config.PickupButton,
+                setValue: value => Config.PickupButton = value
+            );
+            configMenu.AddBoolOption(
+                mod: ModManifest,
+                name: () => "Pickup Nearby",
+                getValue: () => Config.PickupNearby,
+                setValue: value => Config.PickupNearby = value
+            );
+            configMenu.AddKeybind(
+                mod: ModManifest,
+                name: () => "Activate Key",
+                getValue: () => Config.ActivateButton,
+                setValue: value => Config.ActivateButton = value
+            );
+            configMenu.AddBoolOption(
+                mod: ModManifest,
+                name: () => "Activate Nearby",
+                getValue: () => Config.ActivateNearby,
+                setValue: value => Config.ActivateNearby = value
+            );
+            configMenu.AddNumberOption(
+                mod: ModManifest,
+                name: () => "Activation Range",
+                getValue: () => Config.ActivateNearbyRange,
+                setValue: value => Config.ActivateNearbyRange = value
+            );
+            configMenu.AddKeybind(
+                mod: ModManifest,
+                name: () => "Show Range Key",
+                getValue: () => Config.ShowRangeButton,
+                setValue: value => Config.ShowRangeButton = value
+            );
+            configMenu.AddTextOption(
+                mod: ModManifest,
+                name: () => "Scale",
+                getValue: () => Config.Scale + "",
+                setValue: delegate (string value) { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out float f)) { Config.Scale = f; } }
+            );
+            configMenu.AddTextOption(
+                mod: ModManifest,
+                name: () => "Alpha",
+                getValue: () => Config.Alpha + "",
+                setValue: delegate (string value) { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out float f)) { Config.Alpha = f; } }
+            );
+            configMenu.AddTextOption(
+                mod: ModManifest,
+                name: () => "RangeAlpha",
+                getValue: () => Config.RangeAlpha + "",
+                setValue: delegate (string value) { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out float f)) { Config.RangeAlpha = f; } }
+            );
+            configMenu.AddNumberOption(
+                mod: ModManifest,
+                name: () => "Offset X",
+                getValue: () => Config.DrawOffsetX,
+                setValue: value => Config.DrawOffsetX = value
+            );
+            configMenu.AddNumberOption(
+                mod: ModManifest,
+                name: () => "Offset Y",
+                getValue: () => Config.DrawOffsetY,
+                setValue: value => Config.DrawOffsetY = value
+            );
+            configMenu.AddNumberOption(
+                mod: ModManifest,
+                name: () => "Offset Z",
+                getValue: () => Config.DrawOffsetZ,
+                setValue: value => Config.DrawOffsetZ = value
+            );
+        }
+    }
+}
