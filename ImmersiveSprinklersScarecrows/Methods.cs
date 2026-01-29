@@ -24,6 +24,12 @@ namespace ImmersiveSprinklersScarecrows
             sprinkler = null;
             return location?.Objects?.TryGetValue(tile, out sprinkler) == true && sprinkler.modData.ContainsKey(sprinklerKey);
         }
+
+        public static bool TryGetScarecrow(GameLocation location, Vector2 tile, out Object scarecrow)
+        {
+            scarecrow = null;
+            return location?.Objects?.TryGetValue(tile, out scarecrow) == true && scarecrow.modData.ContainsKey(scarecrowKey);
+        }
         public static Object GetSprinklerAtMouse()
         {
             if (Game1.currentLocation == null)
@@ -147,6 +153,42 @@ namespace ImmersiveSprinklersScarecrows
                 layerDepth = layerDepth,
                 scale = scale
             });
+        }
+
+        public static List<Vector2> GetScarecrowTiles(Vector2 tileLocation, int radius)
+        {
+            Vector2 start = tileLocation + new Vector2(-1, -1) * (radius - 2);
+            Vector2 position = tileLocation + new Vector2(0.5f,0.5f);
+            List<Vector2> list = new();
+            var diameter = (radius - 1) * 2;
+            for (int x = 0; x < diameter; x++)
+            {
+                for (int y = 0; y < diameter; y++)
+                {
+                    Vector2 tile = start + new Vector2(x, y);
+                    if ((int)Math.Ceiling(Vector2.Distance(position, tile)) <= radius)
+                        list.Add(tile);
+                }
+            }
+            return list;
+
+        }
+        public static bool IsScarecrowInRange(bool scarecrow, Farm f, Vector2 v)
+        {
+            if (!Config.EnableMod || scarecrow)
+                return scarecrow;
+            foreach(var kvp in f.Objects.Pairs)
+            {
+                if (kvp.Value.modData.ContainsKey(scarecrowKey))
+                {
+                    var tiles = GetScarecrowTiles(kvp.Key, kvp.Value.GetRadiusForScarecrow());
+                    if (tiles.Contains(v))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         public static Texture2D GetAltTextureForObject(Object obj, out Rectangle sourceRect)

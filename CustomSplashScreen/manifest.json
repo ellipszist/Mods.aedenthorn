@@ -1,7 +1,7 @@
 ﻿{
 	"Name": "Custom Splash Screen",
 	"Author": "aedenthorn",
-	"Version": "0.1.0",
+	"Version": "0.2.0",
 	"Description": "Custom Splash Screen.",
 	"UniqueID": "aedenthorn.CustomSplashScreen",
 	"EntryDll": "CustomSplashScreen.dll",

@@ -1,25 +1,16 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Graphics.PackedVector;
-using Netcode;
 using StardewModdingAPI;
 using StardewValley;
-using StardewValley.BellsAndWhistles;
 using StardewValley.GameData.FarmAnimals;
 using StardewValley.GameData.Machines;
 using StardewValley.ItemTypeDefinitions;
-using StardewValley.Network;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 using StardewValley.Tools;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
-using xTile.Dimensions;
-using xTile.Tiles;
 using Color = Microsoft.Xna.Framework.Color;
 using Object = StardewValley.Object;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
@@ -29,12 +20,24 @@ namespace ImmersiveSprinklersScarecrows
     public partial class ModEntry
     {
 
+        [HarmonyPatch(typeof(Object), nameof(Object.GetSprinklerTiles))]
+        public class Object_GetSprinklerTiles_Patch
+        {
+            public static bool Prefix(Object __instance, ref List<Vector2> __result)
+            {
+                if (!Config.EnableMod || !__instance.modData.ContainsKey(sprinklerKey))
+                    return true;
+                __result = GetSprinklerTiles(__instance.TileLocation, GetSprinklerRadius(__instance));
+                return false;
+            }
+        }
+
         [HarmonyPatch(typeof(Object), nameof(Object.placementAction))]
         public class Object_placementAction_Patch
         {
             public static bool Prefix(Object __instance, GameLocation location, int x, int y, Farmer who, ref bool __result)
             {
-                if (!Config.EnableMod || !__instance.IsSprinkler())
+                if (!Config.EnableMod || (!__instance.IsSprinkler() && !__instance.IsScarecrow()))
                     return true;
                 __instance.modData.Remove(sprinklerKey);
 
@@ -54,7 +57,7 @@ namespace ImmersiveSprinklersScarecrows
         {
             public static bool Prefix(Object __instance, SpriteBatch spriteBatch, int x, int y, float alpha, int ____machineAnimationFrame, MachineEffects ____machineAnimation)
             {
-                if (!Config.EnableMod || !__instance.IsSprinkler() || !__instance.modData.ContainsKey(sprinklerKey))
+                if (!Config.EnableMod || (!__instance.IsSprinkler() && !__instance.IsScarecrow()) || (!__instance.modData.ContainsKey(sprinklerKey) && !__instance.modData.ContainsKey(scarecrowKey)))
                     return true;
                 GameLocation location = __instance.Location;
                 Vector2 drawOffset = new(32, 16);
@@ -139,26 +142,28 @@ namespace ImmersiveSprinklersScarecrows
                     }
                     ParsedItemData itemData2 = ItemRegistry.GetDataOrErrorItem(__instance.QualifiedItemId);
                     spriteBatch.Draw(itemData2.GetTexture(), Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(x * 64 + 32 + ((__instance.shakeTimer > 0) ? Game1.random.Next(-1, 2) : 0)), (float)(y * 64 + 32 + ((__instance.shakeTimer > 0) ? Game1.random.Next(-1, 2) : 0)))) + drawOffset, new Rectangle?(itemData2.GetSourceRect(0, null)), Color.White * alpha, 0f, new Vector2(8f, 8f), (__instance.scale.Y > 1f) ? __instance.getScale().Y : 4f, __instance.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, (float)(__instance.isPassable() ? bounds.Top + layerOffset : bounds.Center.Y + layerOffset) / 10000f);
-
-                    if (__instance.heldObject.Value != null)
+                    if (__instance.IsSprinkler())
                     {
-                        Vector2 offset2 = Vector2.Zero;
-                        if (__instance.heldObject.Value.QualifiedItemId == "(O)913")
+                        if (__instance.heldObject.Value != null)
                         {
-                            offset2 = new Vector2(0f, -20f);
+                            Vector2 offset2 = Vector2.Zero;
+                            if (__instance.heldObject.Value.QualifiedItemId == "(O)913")
+                            {
+                                offset2 = new Vector2(0f, -20f);
+                            }
+                            ParsedItemData heldItemData = ItemRegistry.GetDataOrErrorItem(__instance.heldObject.Value.QualifiedItemId);
+                            spriteBatch.Draw(heldItemData.GetTexture(), Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(x * 64 + 32 + ((__instance.shakeTimer > 0) ? Game1.random.Next(-1, 2) : 0)), (float)(y * 64 + 32 + ((__instance.shakeTimer > 0) ? Game1.random.Next(-1, 2) : 0))) + offset2) + drawOffset, new Rectangle?(heldItemData.GetSourceRect(1, null)), Color.White * alpha, 0f, new Vector2(8f, 8f), (__instance.scale.Y > 1f) ? __instance.getScale().Y : 4f, __instance.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, (float)(__instance.isPassable() ? bounds.Top + layerOffset : bounds.Bottom + layerOffset) / 10000f + 1E-05f);
                         }
-                        ParsedItemData heldItemData = ItemRegistry.GetDataOrErrorItem(__instance.heldObject.Value.QualifiedItemId);
-                        spriteBatch.Draw(heldItemData.GetTexture(), Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(x * 64 + 32 + ((__instance.shakeTimer > 0) ? Game1.random.Next(-1, 2) : 0)), (float)(y * 64 + 32 + ((__instance.shakeTimer > 0) ? Game1.random.Next(-1, 2) : 0))) + offset2) + drawOffset, new Rectangle?(heldItemData.GetSourceRect(1, null)), Color.White * alpha, 0f, new Vector2(8f, 8f), (__instance.scale.Y > 1f) ? __instance.getScale().Y : 4f, __instance.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, (float)(__instance.isPassable() ? bounds.Top + layerOffset : bounds.Bottom + layerOffset) / 10000f + 1E-05f);
-                    }
-                    if (__instance.SpecialVariable == 999999)
-                    {
-                        if (__instance.heldObject.Value != null && __instance.heldObject.Value.QualifiedItemId == "(O)913")
+                        if (__instance.SpecialVariable == 999999)
                         {
-                            Torch.drawBasicTorch(spriteBatch, (float)(x * 64) - 2f + 32, (float)(y * 64 - 32) + 16, (float)(bounds.Bottom + layerOffset) / 10000f + 1E-06f, 1f);
-                        }
-                        else
-                        {
-                            Torch.drawBasicTorch(spriteBatch, (float)(x * 64) - 2f + 32, (float)(y * 64 - 32 + 12) + 16, (float)(bounds.Bottom + 2 + layerOffset) / 10000f, 1f);
+                            if (__instance.heldObject.Value != null && __instance.heldObject.Value.QualifiedItemId == "(O)913")
+                            {
+                                Torch.drawBasicTorch(spriteBatch, (float)(x * 64) - 2f + 32, (float)(y * 64 - 32) + 16, (float)(bounds.Bottom + layerOffset) / 10000f + 1E-06f, 1f);
+                            }
+                            else
+                            {
+                                Torch.drawBasicTorch(spriteBatch, (float)(x * 64) - 2f + 32, (float)(y * 64 - 32 + 12) + 16, (float)(bounds.Bottom + 2 + layerOffset) / 10000f, 1f);
+                            }
                         }
                     }
                 }
@@ -170,7 +175,7 @@ namespace ImmersiveSprinklersScarecrows
         {
             public static bool Prefix(Object __instance, GameLocation l, Vector2 tile, ref bool __result)
             {
-                if (!Config.EnableMod || !__instance.IsSprinkler() || !l.terrainFeatures.TryGetValue(tile, out var tf) || tf is not HoeDirt || l.objects.ContainsKey(tile))
+                if (!Config.EnableMod || (!__instance.IsSprinkler() && !__instance.IsScarecrow()) || !l.terrainFeatures.TryGetValue(tile, out var tf) || tf is not HoeDirt || l.objects.ContainsKey(tile))
                     return true;
                 __result = true;
                 return false;
@@ -182,7 +187,7 @@ namespace ImmersiveSprinklersScarecrows
         {
             public static bool Prefix(GameLocation location, Item item, int x, int y, Farmer f, ref bool __result)
             {
-                if (!Config.EnableMod || item is not Object || !(item as Object).IsSprinkler() || !location.terrainFeatures.TryGetValue(new Vector2(x / 64, y / 64), out var tf) || tf is not HoeDirt || location.objects.ContainsKey(new Vector2(x / 64, y / 64)))
+                if (!Config.EnableMod || item is not Object || (!(item as Object).IsSprinkler() && !(item as Object).IsScarecrow()) || !location.terrainFeatures.TryGetValue(new Vector2(x / 64, y / 64), out var tf) || tf is not HoeDirt || location.objects.ContainsKey(new Vector2(x / 64, y / 64)))
                     return true;
                 __result = Utility.withinRadiusOfPlayer(x, y, 1, Game1.player);
                 return false;
@@ -194,17 +199,40 @@ namespace ImmersiveSprinklersScarecrows
         {
             public static bool Prefix(Object __instance, SpriteBatch spriteBatch, GameLocation location)
             {
-                if (!Config.EnableMod || !Context.IsPlayerFree || !__instance.IsSprinkler() || Game1.currentLocation?.terrainFeatures?.TryGetValue(Game1.currentCursorTile, out var tf) != true || tf is not HoeDirt)
+                if (!Config.EnableMod || !Context.IsPlayerFree || Game1.currentLocation?.terrainFeatures?.TryGetValue(Game1.currentCursorTile, out var tf) != true || tf is not HoeDirt)
                     return true;
-                var sprinklerTile = Game1.currentCursorTile;
+                bool sprinkler = false;
+                bool scarecrow = false;
+                if (__instance.IsSprinkler())
+                {
+                    sprinkler = true;
+                }
+                if (__instance.IsScarecrow())
+                {
+                    scarecrow = true;
+                }
+                if (!sprinkler && !scarecrow)
+                    return true;
+                var cursorTile = Game1.currentCursorTile;
 
-                Vector2 pos = Game1.GlobalToLocal(sprinklerTile * 64 + new Vector2(32,32) - new Vector2(0, 16));
+                Vector2 pos = Game1.GlobalToLocal(cursorTile * 64 + new Vector2(32,32) - new Vector2(0, 16));
 
                 spriteBatch.Draw(Game1.mouseCursors, pos, new Rectangle(Utility.withinRadiusOfPlayer((int)Game1.currentCursorTile.X * 64, (int)Game1.currentCursorTile.Y * 64, 1, Game1.player) ? 194 : 210, 388, 16, 16), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.01f);
 
                 if (Config.ShowRangeWhenPlacing)
                 {
-                    foreach(var tile in GetSprinklerTiles(sprinklerTile, GetSprinklerRadius(__instance)))
+                    HashSet<Vector2> tiles = new();
+                    if (sprinkler)
+                    {
+                        foreach(var t in GetSprinklerTiles(cursorTile, GetSprinklerRadius(__instance)))
+                            tiles.Add(t);
+                    }
+                    if (scarecrow)
+                    {
+                        foreach (var t in GetScarecrowTiles(cursorTile, __instance.GetRadiusForScarecrow()))
+                            tiles.Add(t);
+                    }
+                    foreach (var tile in tiles)
                     {
                         spriteBatch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(tile * 64), new Rectangle(194, 388, 16, 16), Color.White * 0.5f, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.01f);
                     }
@@ -214,15 +242,17 @@ namespace ImmersiveSprinklersScarecrows
                 Texture2D texture = null;
                 ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem(__instance.QualifiedItemId);
                 Rectangle sourceRect = itemData.GetSourceRect(__instance is Mannequin ? 2 : 0, new int?(__instance.ParentSheetIndex));
-                texture = itemData.GetTexture();
                 if (atApi is not null && __instance.modData.ContainsKey("AlternativeTextureName"))
                 {
                     texture = GetAltTextureForObject(__instance, out sourceRect);
                 }
+                else
+                {
+                    texture = itemData.GetTexture();
+                }
                 if (texture is null)
                 {
-                    texture = Game1.bigCraftableSpriteSheet;
-                    sourceRect = Object.getSourceRectForBigCraftable(__instance.ParentSheetIndex);
+                    return false;
                 }
                 spriteBatch.Draw(texture, pos, sourceRect, Color.White * Config.Alpha, 0, Vector2.Zero, Config.Scale, __instance.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0.02f);
 
@@ -231,25 +261,6 @@ namespace ImmersiveSprinklersScarecrows
 
         }
 
-        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.GetDirtDecayChance))]
-        public class GameLocation_DayUpdate_Patch
-        {
-            public static bool Prefix(GameLocation __instance, Vector2 tile, ref double __result)
-            {
-                if (!Config.EnableMod || !__instance.terrainFeatures.TryGetValue(tile, out var tf) || tf is not HoeDirt dirt)
-                    return true;
-                for (int i = 0; i < 4; i++)
-                {
-                    if (dirt.modData.TryGetValue(sprinklerKey + i, out var sprinklerString))
-                    {
-                        SMonitor.Log($"Preventing hoedirt removal");
-                        __result = -1;
-                        return false;
-                    }
-                }
-                return true;
-            }
-        }
 
         [HarmonyPatch(typeof(Pickaxe), nameof(Pickaxe.DoFunction))]
         public class Pickaxe_DoFunction_Patch
@@ -263,6 +274,11 @@ namespace ImmersiveSprinklersScarecrows
                 if (TryGetSprinkler(location, placementTile, out var sprinkler) && location.terrainFeatures.ContainsKey(placementTile))
                 {
                     sprinkler.performRemoveAction();
+                    location.Objects.Remove(placementTile);
+                }
+                else if (TryGetScarecrow(location, placementTile, out var scarecrow) && location.terrainFeatures.ContainsKey(placementTile))
+                {
+                    scarecrow.performRemoveAction();
                     location.Objects.Remove(placementTile);
                 }
                 return true;

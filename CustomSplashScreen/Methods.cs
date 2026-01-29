@@ -3,6 +3,8 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
+using System.IO;
+using System.Linq;
 
 namespace CustomSplashScreen
 {
@@ -43,6 +45,33 @@ namespace CustomSplashScreen
             if(!Config.ModEnabled)
                 return chance;
             return Config.AltSurpriseChance;
+        }
+        public static string ChangeMusic(string str)
+        {
+            if(!Config.ModEnabled || string.IsNullOrEmpty(Config.MenuMusic))
+                return str;
+            return Config.MenuMusic;
+        }
+        private void ReloadTextures()
+        {
+            splashBackground = null;
+            if (Helper.GameContent.DoesAssetExist<Texture2D>(Helper.GameContent.ParseAssetName($"{Helper.ModRegistry.ModID}/splash")))
+            {
+                splashBackground = Helper.GameContent.Load<Texture2D>(Helper.GameContent.ParseAssetName($"{Helper.ModRegistry.ModID}/splash"));
+
+            }
+            else if (Helper.ModContent.DoesAssetExist<Texture2D>("splash.png"))
+            {
+                splashBackground = Helper.ModContent.Load<Texture2D>("splash.png");
+            }
+            else if (Directory.Exists(Path.Combine(Helper.DirectoryPath, "Images")))
+            {
+                var files = Directory.GetFiles(Path.Combine(Helper.DirectoryPath, "Images"), "*.png");
+                if (files.Any())
+                {
+                    splashBackground = Helper.ModContent.Load<Texture2D>(files[Game1.random.Next(0, files.Length)]);
+                }
+            }
         }
     }
 }

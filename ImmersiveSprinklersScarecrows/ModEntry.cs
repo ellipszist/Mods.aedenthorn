@@ -24,6 +24,7 @@ namespace ImmersiveSprinklersScarecrows
         public static ModEntry context;
 
         public static string sprinklerKey = "aedenthorn.ImmersiveSprinklersScarecrows/sprinkler";
+        public static string scarecrowKey = "aedenthorn.ImmersiveSprinklersScarecrows/scarecrow";
         public static object atApi;
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
@@ -53,15 +54,21 @@ namespace ImmersiveSprinklersScarecrows
         {
             if (!Config.EnableMod || !Context.IsPlayerFree || !Helper.Input.IsDown(Config.ShowRangeButton) || Game1.currentLocation?.terrainFeatures is null)
                 return;
-            List<Vector2> tiles = new List<Vector2>();
-            foreach(var kvp in Game1.currentLocation.terrainFeatures.Pairs)
+            HashSet<Vector2> tiles = new();
+            foreach (var kvp in Game1.currentLocation.Objects.Pairs)
             {
-                if (kvp.Value is not HoeDirt || !TryGetSprinkler(Game1.currentLocation, kvp.Key, out Object sprinkler))
-                    continue;
-
-                tiles.AddRange(GetSprinklerTiles(kvp.Key, GetSprinklerRadius(sprinkler)));
+                if (kvp.Value?.IsSprinkler() == true)
+                {
+                    foreach (var t in GetSprinklerTiles(kvp.Key, GetSprinklerRadius(kvp.Value)))
+                        tiles.Add(t);
+                }
+                if (kvp.Value?.IsScarecrow() == true)
+                {
+                    foreach (var t in GetScarecrowTiles(kvp.Key, kvp.Value.GetRadiusForScarecrow()))
+                        tiles.Add(t);
+                }
             }
-            foreach (var tile in tiles.Distinct())
+            foreach (var tile in tiles)
             {
                 e.SpriteBatch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(new Vector2((float)((int)tile.X * 64), (float)((int)tile.Y * 64))), new Rectangle?(new Rectangle(194, 388, 16, 16)), Config.RangeTint * Config.RangeAlpha, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.01f);
             }
@@ -94,22 +101,19 @@ namespace ImmersiveSprinklersScarecrows
                 }
                 else if (Config.ActivateNearby || Constants.TargetPlatform == GamePlatform.Android)
                 {
-                    var list = Game1.currentLocation.terrainFeatures.Pairs.Where(t => t.Value is HoeDirt).ToList();
-                    if (!list.Any())
-                        return;
-
-                    foreach (var kvp in list)
+                    foreach (var kvp in Game1.currentLocation.Objects.Pairs)
                     {
-                        if(Config.ActivateNearbyRange > 0)
+                        if (kvp.Value?.modData.ContainsKey(sprinklerKey) == true)
                         {
-                            var distance = Vector2.Distance(kvp.Key * 64, Game1.player.position.Value);
-                            if (distance > 64 * Config.ActivateNearbyRange)
-                                continue;
-                        }
-                        if (TryGetSprinkler(Game1.currentLocation, kvp.Key, out sprinkler))
-                        {
-                            ActivateSprinkler(Game1.currentLocation, kvp.Key, sprinkler, false);
-                            Helper.Input.Suppress(e.Button);
+                            if (Config.ActivateNearbyRange > 0)
+                            {
+                                var distance = Vector2.Distance(kvp.Key * 64, Game1.player.position.Value);
+                                if (distance <= 64 * Config.ActivateNearbyRange)
+                                {
+                                    ActivateSprinkler(Game1.currentLocation, kvp.Key, sprinkler, false);
+                                    Helper.Input.Suppress(e.Button);
+                                }
+                            }
                         }
                     }
                 }

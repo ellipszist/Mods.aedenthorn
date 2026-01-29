@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using StardewValley;
+using StardewValley.GameData;
 using StardewValley.Menus;
 using System;
 using System.Collections.Generic;
@@ -46,6 +47,79 @@ namespace CustomSplashScreen
                     {
                         SMonitor.Log($"adding method to change alt surprise background chance");
                         codes.Insert(i + 2, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeAltSurpriseChance))));
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+
+        }
+        [HarmonyPatch(typeof(TitleMenu), nameof(TitleMenu.update))]
+        public class TitleMenu_update_Patch
+        {
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling TitleMenu.update");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count - 1; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Ldstr && codes[i].operand is string str && str == "MainTheme")
+                    {
+                        SMonitor.Log($"adding method to change music");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeMusic))));
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+
+        }
+        [HarmonyPatch(typeof(TitleMenu), nameof(TitleMenu.skipToTitleButtons))]
+        public class TitleMenu_skipToTitleButtons_Patch
+        {
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling TitleMenu.skipToTitleButtons");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count - 1; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Ldstr && codes[i].operand is string str && str == "MainTheme")
+                    {
+                        SMonitor.Log($"adding method to change music");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeMusic))));
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+
+        }
+        [HarmonyPatch(typeof(TitleMenu), new Type[0])]
+        [HarmonyPatch(MethodType.Constructor)]
+        public class TitleMenu_Patch
+        {
+            public static void Postfix()
+            {
+                if(Config.ModEnabled && Config.StartMusicAtSplash && !string.IsNullOrEmpty(Config.MenuMusic))
+                {
+                    Game1.changeMusicTrack(Config.MenuMusic, false, MusicContext.Default);
+                }
+            }
+
+        }
+        [HarmonyPatch(typeof(TitleMenu), nameof(TitleMenu.receiveKeyPress))]
+        public class TitleMenu_receiveKeyPress_Patch
+        {
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling TitleMenu.receiveKeyPress");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count - 1; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Ldstr && codes[i].operand is string str && str == "MainTheme")
+                    {
+                        SMonitor.Log($"adding method to change music");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeMusic))));
                     }
                 }
 

@@ -17,6 +17,7 @@ namespace CustomSplashScreen
 		public static ModConfig Config;
 		public static ModEntry context;
 		public static Texture2D splashBackground;
+		
 
         public override void Entry(IModHelper helper)
 		{
@@ -35,36 +36,14 @@ namespace CustomSplashScreen
 			ReloadTextures();
         }
 
-        private void ReloadTextures()
-        {
-			splashBackground = null;
-            if (Helper.GameContent.DoesAssetExist<Texture2D>(Helper.GameContent.ParseAssetName($"{Helper.ModRegistry.ModID}/splash")))
-            {
-                splashBackground = Helper.GameContent.Load<Texture2D>(Helper.GameContent.ParseAssetName($"{Helper.ModRegistry.ModID}/splash"));
-
-            }
-			else if (Helper.ModContent.DoesAssetExist<Texture2D>("splash.png"))
-			{
-				splashBackground = Helper.ModContent.Load<Texture2D>("splash.png");
-			}
-			else if (Directory.Exists(Path.Combine(Helper.DirectoryPath, "Images")))
-			{
-				var files = Directory.GetFiles(Path.Combine(Helper.DirectoryPath, "Images"), "*.png");
-				if (files.Any())
-				{
-                    splashBackground = Helper.ModContent.Load<Texture2D>(files[Game1.random.Next(0, files.Length)]);
-                }
-            }
-        }
-
         private void Input_ButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
         {
 			if(Config.ModEnabled && Game1.activeClickableMenu is TitleMenu tm && e.Button == SButton.OemCloseBrackets)
 			{
 				tm.logoFadeTimer = 5000;
 				tm.fadeFromWhiteTimer = 4000;
+                ReloadTextures();
             }
-			ReloadTextures();
         }
 
         public void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
@@ -87,7 +66,36 @@ namespace CustomSplashScreen
 					getValue: () => Config.ModEnabled,
 					setValue: value => Config.ModEnabled = value
 				);
-			}
+                gmcm.AddBoolOption(
+					mod: ModManifest,
+					name: () => SHelper.Translation.Get("GMCM.StartMusicAtSplash.Name"),
+					getValue: () => Config.StartMusicAtSplash,
+					setValue: value => Config.StartMusicAtSplash = value
+				);
+                gmcm.AddTextOption(
+					mod: ModManifest,
+					name: () => SHelper.Translation.Get("GMCM.MenuMusic.Name"),
+					getValue: () => Config.MenuMusic,
+					setValue: value => Config.MenuMusic = value
+				);
+                gmcm.AddTextOption(
+					mod: ModManifest,
+					name: () => SHelper.Translation.Get("GMCM.AltSurpriseChance.Name"),
+					getValue: () => Config.AltSurpriseChance.ToString(),
+					setValue: value => Config.AltSurpriseChance = double.TryParse(value, out var d) ? d : Config.AltSurpriseChance
+				);
+
+                var configMenuExt = Helper.ModRegistry.GetApi<IGMCMOptionsAPI>("jltaylor-us.GMCMOptions");
+                if (configMenuExt is not null)
+                {
+                    configMenuExt.AddColorOption(
+                        mod: ModManifest,
+                        getValue: () => Config.BackgroundColor,
+                        setValue: (c) => Config.BackgroundColor = c,
+                        name: () => SHelper.Translation.Get("GMCM.BackgroundColor.Name")
+                    );
+                }
+            }
 		}
 	}
 
