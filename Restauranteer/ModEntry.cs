@@ -80,7 +80,7 @@ namespace Restauranteer
                             if (l.Map.GetLayer("Buildings").Tiles[x, y] is not null && l.Map.GetLayer("Buildings").Tiles[x, y].Properties.TryGetValue("Action", out PropertyValue p) && (p == "fridge" || p == "DropBox GusFridge"))
                             {
                                 Vector2 v = new Vector2(x, y);
-                                if (Config.AddFridgeObjects && !l.objects.TryGetValue(v, out Object obj))
+                                if (Config.AddFridgeObjects && !l.objects.ContainsKey(v))
                                 {
                                     Chest fridge = new Chest("216", v, 217, 2)
                                     {
@@ -90,7 +90,7 @@ namespace Restauranteer
                                     fridge.fridge.Value = true;
                                     l.objects[v] = fridge;
                                 }
-                                else if (!Config.AddFridgeObjects && l.objects.TryGetValue(v, out obj) && obj.modData.ContainsKey(fridgeKey))
+                                else if (!Config.AddFridgeObjects && l.objects.TryGetValue(v, out var obj) && obj.modData.ContainsKey(fridgeKey))
                                 {
                                     l.objects.Remove(v);
                                 }
@@ -275,16 +275,5 @@ namespace Restauranteer
             );
         }
 
-        private static void LoveOfCooking_CookingMenu_Prefix(ref Dictionary<IInventory, Chest> materialContainers)
-        {
-            if (!Config.ModEnabled || !Config.RestaurantLocations.Contains(Game1.currentLocation.Name))
-                return;
-            var fridge = GetFridge(Game1.currentLocation);
-            if (fridge is null)
-                return;
-            if(materialContainers is null)
-                materialContainers = new Dictionary<IInventory, Chest>();
-            materialContainers.Add(fridge.Value.GetItemsForPlayer(), fridge.Value );
-        }
     }
 }

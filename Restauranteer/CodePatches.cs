@@ -6,7 +6,9 @@ using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.GameData.Shops;
 using StardewValley.Internal;
+using StardewValley.Inventories;
 using StardewValley.Menus;
+using StardewValley.Objects;
 using System;
 using System.Collections.Generic;
 using xTile.Dimensions;
@@ -41,12 +43,12 @@ namespace Restauranteer
                 __instance.IsEmoting = true;
                 if (!__instance.modData.TryGetValue(orderKey, out string dataStr))
                     return;
-                if(!Config.RestaurantLocations.Contains(__instance.currentLocation.Name))
+                if (!Config.RestaurantLocations.Contains(__instance.currentLocation.Name))
                 {
                     __instance.modData.Remove(orderKey);
                     return;
                 }
-                if(!npcEmotesDict.TryGetValue(__instance.Name, out var orderData))
+                if (!npcEmotesDict.TryGetValue(__instance.Name, out var orderData))
                 {
                     orderData = JsonConvert.DeserializeObject<OrderData>(dataStr);
                     var objData = ItemRegistry.GetDataOrErrorItem(orderData.dishId);
@@ -55,7 +57,7 @@ namespace Restauranteer
                     npcEmotesDict[__instance.Name] = orderData;
                 }
                 int emoteIndex = __instance.CurrentEmoteIndex >= emoteBaseIndex ? __instance.CurrentEmoteIndex - emoteBaseIndex : __instance.CurrentEmoteIndex;
-                if(__instance.CurrentEmoteIndex >= emoteBaseIndex + 3)
+                if (__instance.CurrentEmoteIndex >= emoteBaseIndex + 3)
                 {
                     AccessTools.Field(typeof(Character), "currentEmoteFrame").SetValue(__instance, emoteBaseIndex);
                 }
@@ -71,6 +73,22 @@ namespace Restauranteer
                     b.Draw(orderData.dishTexture, emotePosition + new Vector2(16, 8), orderData.dishSourceRect, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, (__instance.StandingPixel.Y + 1) / 10000f);
                 }
 
+            }
+        }
+        [HarmonyPatch(typeof(CraftingPage), new Type[] { typeof(int),typeof(int),typeof(int),typeof(int),typeof(bool),typeof(bool), typeof(List<IInventory>)})]
+        [HarmonyPatch(MethodType.Constructor)]
+        public class CraftingPage_Patch
+        {
+            public static void Prefix(CraftingPage __instance, bool cooking, ref List<IInventory> materialContainers)
+            {
+                if (!Config.ModEnabled || !cooking || !Config.RestaurantLocations.Contains(Game1.currentLocation.Name))
+                    return;
+                var fridge = GetFridge(Game1.currentLocation);
+                if(fridge == null) 
+                    return;
+                if(materialContainers == null)
+                    materialContainers = new List<IInventory>();
+                materialContainers.Add(fridge.Value.GetItemsForPlayer());
             }
         }
         [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.checkAction))]
@@ -89,7 +107,7 @@ namespace Restauranteer
                         __result = true;
                         return false;
                     }
-                    else if (Config.RequireEvent && !Game1.player.eventsSeen.Contains("980558"))
+                    else if (__instance.Name == "Saloon" && Config.RequireEvent && !Game1.player.eventsSeen.Contains("980558"))
                     {
                         Game1.drawObjectDialogue(SHelper.Translation.Get("low-friendship"));
                         __result = true;
@@ -277,5 +295,17 @@ namespace Restauranteer
             }
         }
 
+        public static void LoveOfCooking_CookingMenu_Prefix(ref Dictionary<IInventory, Chest> materialContainers)
+        {
+            if (!Config.ModEnabled || !Config.RestaurantLocations.Contains(Game1.currentLocation.Name))
+                return;
+            var fridge = GetFridge(Game1.currentLocation);
+            if (fridge is null)
+                return;
+            if (materialContainers is null)
+                materialContainers = new Dictionary<IInventory, Chest>();
+            var items = fridge.Value.GetItemsForPlayer();
+            materialContainers.Add(items, fridge.Value);
+        }
     }
 }

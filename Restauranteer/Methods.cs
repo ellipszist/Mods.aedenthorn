@@ -1,4 +1,5 @@
-﻿using Netcode;
+﻿using Microsoft.Xna.Framework;
+using Netcode;
 using Newtonsoft.Json;
 using StardewValley;
 using StardewValley.Locations;
@@ -130,6 +131,7 @@ namespace Restauranteer
             if (!fridgeDict.TryGetValue(location.Name, out NetRef<Chest> fridge))
             {
                 fridge = fridgeDict[location.Name] = new NetRef<Chest>(new Chest(true));
+                
             }
             return fridge;
         }
