@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 using StardewValley;
 using System.Collections.Generic;
 
-namespace MapTokens
+namespace StardewVN
 {
 	public partial class ModEntry
     {

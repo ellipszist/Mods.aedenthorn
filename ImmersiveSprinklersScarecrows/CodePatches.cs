@@ -19,7 +19,17 @@ namespace ImmersiveSprinklersScarecrows
 {
     public partial class ModEntry
     {
-
+        [HarmonyPatch(typeof(Object), nameof(Object.isPassable))]
+        public class Object_isPassable_Patch
+        {
+            public static bool Prefix(Object __instance, ref bool __result)
+            {
+                if (!Config.EnableMod || !IsImmersive(__instance))
+                    return true;
+                __result = true;
+                return false;
+            }
+        }
         [HarmonyPatch(typeof(Object), nameof(Object.GetSprinklerTiles))]
         public class Object_GetSprinklerTiles_Patch
         {
@@ -28,6 +38,17 @@ namespace ImmersiveSprinklersScarecrows
                 if (!Config.EnableMod || !__instance.modData.ContainsKey(sprinklerKey))
                     return true;
                 __result = GetSprinklerTiles(__instance.TileLocation, GetSprinklerRadius(__instance));
+                return false;
+            }
+        }
+        [HarmonyPatch(typeof(Object), nameof(Object.ApplySprinklerAnimation))]
+        public class Object_ApplySprinklerAnimation_Patch
+        {
+            public static bool Prefix(Object __instance)
+            {
+                if (!Config.EnableMod || !__instance.modData.ContainsKey(sprinklerKey))
+                    return true;
+                ApplySprinklerAnimation(__instance.TileLocation, GetSprinklerRadius(__instance), __instance.Location, Game1.random.Next(1000));
                 return false;
             }
         }
@@ -40,13 +61,21 @@ namespace ImmersiveSprinklersScarecrows
                 if (!Config.EnableMod || (!__instance.IsSprinkler() && !__instance.IsScarecrow()))
                     return true;
                 __instance.modData.Remove(sprinklerKey);
+                __instance.modData.Remove(scarecrowKey);
 
                 Vector2 placementTile = new Vector2((float)(x / 64), (float)(y / 64));
                 if (!location.terrainFeatures.TryGetValue(placementTile, out var tf) || tf is not HoeDirt || location.Objects.ContainsKey(placementTile))
                     return true;
                 SMonitor.Log($"Placing {__instance.Name} at {x},{y}");
                 location.playSound("woodyStep");
-                __instance.modData[sprinklerKey] = "true";
+                if (__instance.IsSprinkler())
+                {
+                    __instance.modData[sprinklerKey] = "true";
+                }
+                else
+                {
+                    __instance.modData[scarecrowKey] = "true";
+                }
                 location.objects.Add(placementTile, __instance);
                 __result = true;
                 return false;
@@ -67,7 +96,7 @@ namespace ImmersiveSprinklersScarecrows
                     scaleFactor *= 4f;
                     Vector2 position = Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(x * 64), (float)(y * 64 - 64)) + drawOffset);
                     Rectangle destination = new Rectangle((int)(position.X - scaleFactor.X / 2f) + ((__instance.shakeTimer > 0) ? Game1.random.Next(-1, 2) : 0), (int)(position.Y - scaleFactor.Y / 2f) + ((__instance.shakeTimer > 0) ? Game1.random.Next(-1, 2) : 0), (int)(64f + scaleFactor.X), (int)(128f + scaleFactor.Y / 2f));
-                    float draw_layer = Math.Max(0f, (float)((y + 1) * 64 - 24) / 10000f) + (float)x * 1E-05f;
+                    float draw_layer = Math.Max(0f, (float)((y + 1) * 64 - 16) / 10000f) + (float)x * 1E-05f;
                     int offset = 0;
                     if (__instance.showNextIndex.Value)
                     {
@@ -106,7 +135,7 @@ namespace ImmersiveSprinklersScarecrows
                     }
                     if (__instance.isLamp.Value && Game1.isDarkOut(__instance.Location))
                     {
-                        spriteBatch.Draw(Game1.mouseCursors, position + new Vector2(-32f, -32f), new Rectangle?(new Rectangle(88, 1779, 32, 32)), Color.White * 0.75f, 0f, Vector2.Zero, 4f, SpriteEffects.None, Math.Max(0f, (float)((y + 1) * 64 - 20) / 10000f) + (float)x / 1000000f);
+                        spriteBatch.Draw(Game1.mouseCursors, position + new Vector2(-32f, -32f), new Rectangle?(new Rectangle(88, 1779, 32, 32)), Color.White * 0.75f, 0f, Vector2.Zero, 4f, SpriteEffects.None, Math.Max(0f, (float)((y + 1) * 64 - 16) / 10000f) + (float)x / 1000000f);
                     }
                     if (__instance.QualifiedItemId == "(BC)126")
                     {
@@ -117,7 +146,7 @@ namespace ImmersiveSprinklersScarecrows
                             Texture2D texture2 = dataOrErrorItem.GetTexture();
                             int spriteIndex = dataOrErrorItem.SpriteIndex;
                             bool isPrismatic = ItemContextTagManager.HasBaseTag("(H)" + hatId, "Prismatic");
-                            spriteBatch.Draw(texture2, position + new Vector2(-3f, -6f) * 4f, new Rectangle?(new Rectangle(spriteIndex * 20 % texture2.Width, spriteIndex * 20 / texture2.Width * 20 * 4, 20, 20)), (isPrismatic ? Utility.GetPrismaticColor(0, 1f) : Color.White) * alpha, 0f, Vector2.Zero, 4f, SpriteEffects.None, Math.Max(0f, (float)((y + 1) * 64 - 20) / 10000f) + (float)x * 1E-05f);
+                            spriteBatch.Draw(texture2, position + new Vector2(-3f, -6f) * 4f, new Rectangle?(new Rectangle(spriteIndex * 20 % texture2.Width, spriteIndex * 20 / texture2.Width * 20 * 4, 20, 20)), (isPrismatic ? Utility.GetPrismaticColor(0, 1f) : Color.White) * alpha, 0f, Vector2.Zero, 4f, SpriteEffects.None, Math.Max(0f, (float)((y + 1) * 64 - 16) / 10000f) + (float)x * 1E-05f);
                         }
                     }
                 }
@@ -125,7 +154,7 @@ namespace ImmersiveSprinklersScarecrows
                 {
                     Rectangle bounds = new Rectangle(x*64 , y * 64, 64, 64);
                     string qualifiedItemId = __instance.QualifiedItemId;
-                    int layerOffset = 24;
+                    int layerOffset = 48;
                     if (qualifiedItemId == "(O)590")
                     {
                         spriteBatch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(x * 64 + 32 + ((__instance.shakeTimer > 0) ? Game1.random.Next(-1, 2) : 0)), (float)(y * 64 + 32 + ((__instance.shakeTimer > 0) ? Game1.random.Next(-1, 2) : 0)))) + drawOffset, new Rectangle?(new Rectangle(368 + ((Game1.currentGameTime.TotalGameTime.TotalMilliseconds % 1200.0 <= 400.0) ? ((int)(Game1.currentGameTime.TotalGameTime.TotalMilliseconds % 400.0 / 100.0) * 16) : 0), 32, 16, 16)), Color.White * alpha, 0f, new Vector2(8f, 8f), (__instance.scale.Y > 1f) ? __instance.getScale().Y : 4f, __instance.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, (float)(__instance.isPassable() ? bounds.Top + layerOffset : bounds.Bottom + layerOffset) / 10000f);
@@ -260,30 +289,83 @@ namespace ImmersiveSprinklersScarecrows
             }
 
         }
-
-
         [HarmonyPatch(typeof(Pickaxe), nameof(Pickaxe.DoFunction))]
         public class Pickaxe_DoFunction_Patch
         {
-            public static bool Prefix(GameLocation location, int x, int y, int power, Farmer who)
+            public static bool Prefix(Pickaxe __instance, GameLocation location, int x, int y, Farmer who, ref (Vector2 tile, Object obj) __state)
             {
                 if (!Config.EnableMod)
                     return true;
-                Vector2 placementTile = new Vector2(x, y);
+                int tileX = x / 64;
+                int tileY = y / 64;
+                Vector2 tile = new Vector2(tileX, tileY);
 
-                if (TryGetSprinkler(location, placementTile, out var sprinkler) && location.terrainFeatures.ContainsKey(placementTile))
+                var xx = x - 32;
+                var yy = y - 32;
+                int tileXX = xx / 64;
+                int tileYY = yy / 64;
+                Vector2 tile2 = new Vector2(tileXX, tileYY);
+                if(location.Objects.TryGetValue(tile2, out var obj) && IsImmersive(obj) && obj.performToolAction(__instance))
                 {
-                    sprinkler.performRemoveAction();
-                    location.Objects.Remove(placementTile);
+                    obj.modData.Remove(sprinklerKey);
+                    obj.modData.Remove(scarecrowKey);
+                    if (obj.Type == "Crafting" && obj.Fragility != 2)
+                    {
+                        who.currentLocation.debris.Add(new Debris(obj.QualifiedItemId, who.GetToolLocation(false), Utility.PointToVector2(who.StandingPixel)));
+                    }
+                    obj.performRemoveAction();
+                    who.currentLocation.Objects.Remove(tile2);
+                    return false;
                 }
-                else if (TryGetScarecrow(location, placementTile, out var scarecrow) && location.terrainFeatures.ContainsKey(placementTile))
+                else if (location.Objects.TryGetValue(tile, out obj) && IsImmersive(obj))
                 {
-                    scarecrow.performRemoveAction();
-                    location.Objects.Remove(placementTile);
+                    __state = new(tile, obj);
+                    location.Objects.Remove(tile);
+                    return true;
                 }
                 return true;
             }
-        }
+        [HarmonyPatch(typeof(Axe), nameof(Axe.DoFunction))]
+        public class Axe_DoFunction_Patch
+            {
+            public static bool Prefix(Pickaxe __instance, GameLocation location, int x, int y, Farmer who, ref (Vector2 tile, Object obj) __state)
+            {
+                if (!Config.EnableMod)
+                    return true;
+                int tileX = x / 64;
+                int tileY = y / 64;
+                Vector2 tile = new Vector2(tileX, tileY);
 
+                var xx = x - 32;
+                var yy = y - 32;
+                int tileXX = xx / 64;
+                int tileYY = yy / 64;
+                Vector2 tile2 = new Vector2(tileXX, tileYY);
+                if(location.Objects.TryGetValue(tile2, out var obj) && IsImmersive(obj) && obj.performToolAction(__instance))
+                {
+                    obj.modData.Remove(sprinklerKey);
+                    obj.modData.Remove(scarecrowKey);
+                    if (obj.Type == "Crafting" && obj.Fragility != 2)
+                    {
+                        who.currentLocation.debris.Add(new Debris(obj.QualifiedItemId, who.GetToolLocation(false), Utility.PointToVector2(who.StandingPixel)));
+                    }
+                    obj.performRemoveAction();
+                    who.currentLocation.Objects.Remove(tile2);
+                    return false;
+                }
+                else if (location.Objects.TryGetValue(tile, out obj) && IsImmersive(obj))
+                {
+                    __state = new(tile, obj);
+                    location.Objects.Remove(tile);
+                    return true;
+                }
+                return true;
+            }
+            public static void Postfix(GameLocation location, (Vector2 tile, Object obj) __state)
+            {
+                if (__state.obj != null) 
+                    location.Objects[__state.tile] = __state.obj;
+            }
+        }
     }
 }

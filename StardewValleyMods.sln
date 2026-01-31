@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11415.280 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MagnetMod", "MagnetMod\MagnetMod.csproj", "{7EA4E49D-D5FF-4A36-8755-D9F6B1F4A3C3}"
 EndProject
@@ -646,6 +646,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomSplashScreen", "CustomSplashScreen\CustomSplashScreen.csproj", "{AA8F44B4-2805-01A8-3167-5F3D82524A12}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImmersiveSprinklersScarecrows", "ImmersiveSprinklersScarecrows\ImmersiveSprinklersScarecrows.csproj", "{66B92EAE-85E7-8FDF-BA38-EF0C17C4DA2A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StardewVN", "StardewVN\StardewVN.csproj", "{6C8F9E06-89C1-337C-A46E-1D85F286AC06}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -3199,6 +3201,14 @@ Global
 		{66B92EAE-85E7-8FDF-BA38-EF0C17C4DA2A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{66B92EAE-85E7-8FDF-BA38-EF0C17C4DA2A}.Release|x64.ActiveCfg = Release|x64
 		{66B92EAE-85E7-8FDF-BA38-EF0C17C4DA2A}.Release|x64.Build.0 = Release|x64
+		{6C8F9E06-89C1-337C-A46E-1D85F286AC06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C8F9E06-89C1-337C-A46E-1D85F286AC06}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C8F9E06-89C1-337C-A46E-1D85F286AC06}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6C8F9E06-89C1-337C-A46E-1D85F286AC06}.Debug|x64.Build.0 = Debug|Any CPU
+		{6C8F9E06-89C1-337C-A46E-1D85F286AC06}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C8F9E06-89C1-337C-A46E-1D85F286AC06}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C8F9E06-89C1-337C-A46E-1D85F286AC06}.Release|x64.ActiveCfg = Release|Any CPU
+		{6C8F9E06-89C1-337C-A46E-1D85F286AC06}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

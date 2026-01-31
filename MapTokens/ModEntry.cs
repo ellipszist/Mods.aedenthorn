@@ -15,8 +15,6 @@ namespace MapTokens
 
         public static Dictionary<string, Dictionary<string, Point>> mapPropertyDict = new();
         public static Dictionary<string, string> mapPathDict = new();
-        public static bool mapPathChanged;
-        public static bool mapPropertiesChanged;
 
         public override void Entry(IModHelper helper)
 		{

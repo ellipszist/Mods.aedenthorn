@@ -36,9 +36,15 @@ namespace MapTokens
         public virtual bool UpdateContext()
         {
             bool changed = false;
+            bool reset = false;
+            if(ModEntry.mapPathDict.Count > Game1.locations.Count)
+            {
+                ModEntry.mapPathDict.Clear();
+                reset = true;
+            }
             foreach(var l in Game1.locations)
             {
-                if(!ModEntry.mapPathDict.TryGetValue(l.NameOrUniqueName, out var path) || path != l.mapPath.Value)
+                if(reset || !ModEntry.mapPathDict.TryGetValue(l.NameOrUniqueName, out var path) || path != l.mapPath.Value)
                 {
                     ModEntry.mapPathDict[l.NameOrUniqueName] = l.mapPath.Value; 
                     changed = true;

@@ -3,18 +3,20 @@ using StardewValley;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Channels;
 using System.Xml;
 
 namespace MapTokens
 {
-    internal class MapPropertyTile : PropertyTile
+    internal class MapDefaultArrivalTile : PropertyTile
     {
         /*********
         ** Fields
         *********/
+
         internal static bool changed;
 
-        public MapPropertyTile(int _which = 0, string _s = " ") : base(_which, _s)
+        public MapDefaultArrivalTile(int _which = 0, string _s = " ") : base(_which, _s)
         {
         }
 

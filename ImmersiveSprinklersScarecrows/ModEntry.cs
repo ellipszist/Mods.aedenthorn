@@ -7,6 +7,7 @@ using StardewValley.TerrainFeatures;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using xTile.Dimensions;
 using Color = Microsoft.Xna.Framework.Color;
 using Object = StardewValley.Object;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
@@ -54,23 +55,33 @@ namespace ImmersiveSprinklersScarecrows
         {
             if (!Config.EnableMod || !Context.IsPlayerFree || !Helper.Input.IsDown(Config.ShowRangeButton) || Game1.currentLocation?.terrainFeatures is null)
                 return;
-            HashSet<Vector2> tiles = new();
+            HashSet<Vector2> sprinklerTiles = new();
+            HashSet<Vector2> scarecrowTiles = new();
             foreach (var kvp in Game1.currentLocation.Objects.Pairs)
             {
                 if (kvp.Value?.IsSprinkler() == true)
                 {
                     foreach (var t in GetSprinklerTiles(kvp.Key, GetSprinklerRadius(kvp.Value)))
-                        tiles.Add(t);
+                        sprinklerTiles.Add(t);
                 }
                 if (kvp.Value?.IsScarecrow() == true)
                 {
                     foreach (var t in GetScarecrowTiles(kvp.Key, kvp.Value.GetRadiusForScarecrow()))
-                        tiles.Add(t);
+                        scarecrowTiles.Add(t);
                 }
             }
-            foreach (var tile in tiles)
+            Config.BothRangeTint = Color.Aqua;
+            Config.ScarecrowRangeTint = Color.Pink;
+            Config.SprinklerRangeTint = Color.Yellow;
+            foreach(var tile in sprinklerTiles)
             {
-                e.SpriteBatch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(new Vector2((float)((int)tile.X * 64), (float)((int)tile.Y * 64))), new Rectangle?(new Rectangle(194, 388, 16, 16)), Config.RangeTint * Config.RangeAlpha, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.01f);
+                e.SpriteBatch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(new Vector2((float)((int)tile.X * 64), (float)((int)tile.Y * 64))), new Rectangle?(new Rectangle(194, 388, 16, 16)), (scarecrowTiles.Contains(tile) ? Config.BothRangeTint : Config.SprinklerRangeTint) * Config.RangeAlpha, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.01f);
+            }
+            foreach(var tile in scarecrowTiles)
+            {
+                if (sprinklerTiles.Contains(tile))
+                    continue;
+                e.SpriteBatch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(new Vector2((float)((int)tile.X * 64), (float)((int)tile.Y * 64))), new Rectangle?(new Rectangle(194, 388, 16, 16)), Config.ScarecrowRangeTint * Config.RangeAlpha, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.01f);
             }
         }
 
@@ -89,6 +100,45 @@ namespace ImmersiveSprinklersScarecrows
                 //        Game1.currentLocation.terrainFeatures[key] = dirt;
                 //    }
                 //}
+            }
+            if (e.Button == Config.PickupButton && Context.CanPlayerMove)
+            {
+                return;
+
+                var grabTile = Game1.currentCursorTile;
+                if (TryGetSprinkler(Game1.currentLocation, grabTile, out var obj) || TryGetScarecrow(Game1.currentLocation, grabTile, out obj))
+                {
+                    obj.modData.Remove(sprinklerKey);
+                    obj.modData.Remove(scarecrowKey);
+                    if (obj.Type == "Crafting" && obj.Fragility != 2)
+                    {
+                        Game1.currentLocation.debris.Add(new Debris(obj.QualifiedItemId, Game1.player.GetToolLocation(false), Utility.PointToVector2(Game1.player.StandingPixel)));
+                    }
+                    obj.performRemoveAction();
+                    Game1.currentLocation.Objects.Remove(grabTile);
+                    Helper.Input.Suppress(e.Button);
+                }
+                else if (Config.PickupNearby || Constants.TargetPlatform == GamePlatform.Android)
+                {
+                    var list = Game1.currentLocation.Objects.Pairs.Where(kvp => kvp.Value?.modData.ContainsKey(sprinklerKey) == true || kvp.Value?.modData.ContainsKey(scarecrowKey) == true);
+                    foreach (var kvp in list)
+                    {
+                        var distance = Vector2.Distance(kvp.Key * 64, Game1.player.position.Value);
+                        if (distance <= 64)
+                        {
+                            obj = kvp.Value;
+                            obj.modData.Remove(sprinklerKey);
+                            obj.modData.Remove(scarecrowKey);
+                            if (obj.Type == "Crafting" && obj.Fragility != 2)
+                            {
+                                Game1.currentLocation.debris.Add(new Debris(obj.QualifiedItemId, Game1.player.GetToolLocation(false), Utility.PointToVector2(Game1.player.StandingPixel)));
+                            }
+                            obj.performRemoveAction();
+                            Game1.currentLocation.Objects.Remove(kvp.Key);
+                            Helper.Input.Suppress(e.Button);
+                        }
+                    }
+                }
             }
             else if (e.Button == Config.ActivateButton && Context.CanPlayerMove)
             {

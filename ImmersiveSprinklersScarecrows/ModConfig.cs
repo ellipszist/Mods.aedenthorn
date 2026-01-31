@@ -12,7 +12,9 @@ namespace ImmersiveSprinklersScarecrows
         public bool ShowRangeWhenPlacing { get; set; } = true;
         public float Scale { get; set; } = 4;
         public float Alpha { get; set; } = 1;
-        public Color RangeTint { get; set; } = Color.White;
+        public Color ScarecrowRangeTint { get; set; } = Color.Blue;
+        public Color SprinklerRangeTint { get; set; } = Color.Red;
+        public Color BothRangeTint { get; set; } = Color.Gray;
         public float RangeAlpha { get; set; } = 1;
         public int DrawOffsetX { get; set; } = 0;
         public int DrawOffsetY { get; set; } = 0;

@@ -2,22 +2,21 @@
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Netcode;
 using StardewValley;
-using StardewValley.ConsoleAsync;
-using StardewValley.Network;
 using StardewValley.Objects;
-using StardewValley.TerrainFeatures;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using Object = StardewValley.Object;
 
 namespace ImmersiveSprinklersScarecrows
 {
     public partial class ModEntry
     {
+
+        public static bool IsImmersive(Object obj)
+        {
+            return obj.modData.ContainsKey(sprinklerKey) || obj.modData.ContainsKey(scarecrowKey); 
+        }
 
         public static bool TryGetSprinkler(GameLocation location, Vector2 tile, out Object sprinkler)
         {
@@ -99,7 +98,7 @@ namespace ImmersiveSprinklersScarecrows
             {
                 return;
             }
-            var position = tileLocation * 64 + new Vector2(32, 16);
+            var position = tileLocation * 64 + new Vector2(32, 32);
             float layerDepth = 1;
             if (radius == 0)
             {
