@@ -77,11 +77,11 @@ namespace HereFishy
 			if (!Config.EnableMod || !Context.IsWorldReady)
 				return;
 
-			if (e.Button == SButton.MouseRight)
+			if (e.Button == Config.TriggerButton)
 			{
 				if (!hereFishying)
 				{
-					if (Context.CanPlayerMove && (Game1.player.CurrentTool is FishingRod))
+					if (Context.CanPlayerMove && (!Config.RequireRod || Game1.player.CurrentTool is FishingRod))
 					{
 						try
 						{
@@ -182,6 +182,12 @@ namespace HereFishy
 				getValue: () => Config.EnableMod,
 				setValue: value => Config.EnableMod = value
 			);
+			configMenu.AddKeybind(
+				mod: ModManifest,
+				name: () => SHelper.Translation.Get("GMCM.TriggerButton.Name"),
+				getValue: () => Config.TriggerButton,
+				setValue: value => Config.TriggerButton = value
+			);
 			configMenu.AddBoolOption(
 				mod: ModManifest,
 				name: () => SHelper.Translation.Get("GMCM.PlaySound.Name"),
@@ -205,6 +211,12 @@ namespace HereFishy
 				name: () => SHelper.Translation.Get("GMCM.AllowMovement.Name"),
 				getValue: () => Config.AllowMovement,
 				setValue: value => Config.AllowMovement = value
+			);
+			configMenu.AddBoolOption(
+				mod: ModManifest,
+				name: () => SHelper.Translation.Get("GMCM.RequireRod.Name"),
+				getValue: () => Config.RequireRod,
+				setValue: value => Config.RequireRod = value
 			);
 		}
 	}

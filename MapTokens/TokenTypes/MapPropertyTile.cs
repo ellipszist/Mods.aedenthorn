@@ -1,8 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using StardewValley;
+using StardewValley.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Channels;
 using System.Xml;
 
 namespace MapTokens
@@ -12,7 +14,6 @@ namespace MapTokens
         /*********
         ** Fields
         *********/
-        internal static bool changed;
 
         public MapPropertyTile(int _which = 0, string _s = " ") : base(_which, _s)
         {
@@ -25,9 +26,7 @@ namespace MapTokens
 
         public override bool UpdateContext()
         {
-            var c = changed;
-            changed = false;
-            return c;
+            return true;
         }
 
         /// <summary>Get whether the token is available for use.</summary>
@@ -40,13 +39,21 @@ namespace MapTokens
         /// <param name="input">The input arguments, if applicable.</param>
         public override IEnumerable<string> GetValues(string input)
         {
-            string output = null;
+            string output = "null";
             if (input != null)
             {
                 string[] args = input.Split(':');
-                if (args.Length == 2 && ModEntry.mapPropertyDict.TryGetValue(args[0].Trim(), out var dict) && dict != null && dict.TryGetValue(args[1], out var point))
+                if(args.Length == 2)
                 {
-                    output = GetString(point);
+                    var loc = Game1.getLocationFromName(args[0]);
+                    if (loc != null )
+                    {
+                        var val = loc.GetMapPropertySplitBySpaces(args[1]);
+                        if (ArgUtility.TryGetPoint(val, 0, out Point parsed, out _, "parsed"))
+                        {
+                            output = GetString(parsed);
+                        }
+                    }
                 }
             }
             yield return output;

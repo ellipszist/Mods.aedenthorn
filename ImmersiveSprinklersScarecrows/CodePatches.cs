@@ -305,7 +305,7 @@ namespace ImmersiveSprinklersScarecrows
                 int tileXX = xx / 64;
                 int tileYY = yy / 64;
                 Vector2 tile2 = new Vector2(tileXX, tileYY);
-                if(location.Objects.TryGetValue(tile2, out var obj) && IsImmersive(obj) && obj.performToolAction(__instance))
+                if (location.Objects.TryGetValue(tile2, out var obj) && IsImmersive(obj) && obj.performToolAction(__instance))
                 {
                     obj.modData.Remove(sprinklerKey);
                     obj.modData.Remove(scarecrowKey);
@@ -325,6 +325,7 @@ namespace ImmersiveSprinklersScarecrows
                 }
                 return true;
             }
+        }
         [HarmonyPatch(typeof(Axe), nameof(Axe.DoFunction))]
         public class Axe_DoFunction_Patch
             {

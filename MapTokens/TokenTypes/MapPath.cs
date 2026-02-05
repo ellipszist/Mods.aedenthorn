@@ -8,6 +8,7 @@ namespace MapTokens
     public class MapPath
     {
 
+        internal static bool changed;
 
         /*********
         ** Public methods
@@ -35,22 +36,7 @@ namespace MapTokens
         /// <returns>Returns whether the value changed, which may trigger patch updates.</returns>
         public virtual bool UpdateContext()
         {
-            bool changed = false;
-            bool reset = false;
-            if(ModEntry.mapPathDict.Count > Game1.locations.Count)
-            {
-                ModEntry.mapPathDict.Clear();
-                reset = true;
-            }
-            foreach(var l in Game1.locations)
-            {
-                if(reset || !ModEntry.mapPathDict.TryGetValue(l.NameOrUniqueName, out var path) || path != l.mapPath.Value)
-                {
-                    ModEntry.mapPathDict[l.NameOrUniqueName] = l.mapPath.Value; 
-                    changed = true;
-                }
-            }
-            return changed;
+            return true;
         }
 
 
@@ -64,8 +50,21 @@ namespace MapTokens
         /// <param name="input">The input arguments, if applicable.</param>
         public virtual IEnumerable<string> GetValues(string input)
         {
-            string mapPath;
-            ModEntry.mapPathDict.TryGetValue(input, out mapPath);
+            string mapPath = "null";
+            if (input != null)
+            {
+                GameLocation loc = null;
+                if(input == "currentPlayer")
+                {
+                    loc = Game1.player?.currentLocation;
+                }
+                else if (input == "hostPlayer")
+                {
+                    loc = Game1.serverHost.Value?.currentLocation;
+                }
+                loc = Game1.getLocationFromName(input);
+                mapPath = loc?.mapPath.Value ?? "null";
+            }
             yield return mapPath;
         }
     }

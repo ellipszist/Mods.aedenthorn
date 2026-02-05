@@ -13,8 +13,6 @@ namespace MapTokens
 		public static ModConfig Config;
 		public static ModEntry context;
 
-        public static Dictionary<string, Dictionary<string, Point>> mapPropertyDict = new();
-        public static Dictionary<string, string> mapPathDict = new();
 
         public override void Entry(IModHelper helper)
 		{
@@ -26,18 +24,11 @@ namespace MapTokens
 			SModManifest = ModManifest;
 
 			helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
-            helper.Events.GameLoop.ReturnedToTitle += GameLoop_ReturnedToTitle;
 
             helper.Events.Input.ButtonPressed += Input_ButtonPressed;
 
             Harmony harmony = new Harmony(ModManifest.UniqueID);
 			harmony.PatchAll();
-        }
-
-        private void GameLoop_ReturnedToTitle(object sender, StardewModdingAPI.Events.ReturnedToTitleEventArgs e)
-        {
-            mapPropertyDict.Clear();
-            mapPathDict.Clear();
         }
 
         private void Input_ButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
