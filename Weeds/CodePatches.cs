@@ -17,7 +17,7 @@ namespace Weeds
             Game1.player.mostRecentlyGrabbedItem = null;
             Game1.player.animateOnce(279 + Game1.player.FacingDirection);
             Game1.player.currentLocation.playSound("moss_cut");
-            Game1.player.gainExperience(2, Config.WeedExp);
+            Game1.player.gainExperience(0, Config.WeedExp);
             Game1.player.Stamina -= Math.Max(0, Config.WeedStaminaUse - (float)Game1.player.FarmingLevel * 0.1f);
             __instance.modData.Remove(modKey);
             __instance.modData.Remove(modFlippedKey);
