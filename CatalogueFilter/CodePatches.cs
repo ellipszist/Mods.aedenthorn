@@ -115,7 +115,7 @@ namespace CatalogueFilter
         {
             public static void Postfix(ShopMenu __instance, int x, int y)
             {
-                if (!Config.ModEnabled)
+                if (!Config.ModEnabled || filterField == null)
                     return;
                 filterField.Hover(x, y);
             }

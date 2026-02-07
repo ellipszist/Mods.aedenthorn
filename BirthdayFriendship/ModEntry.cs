@@ -1,5 +1,6 @@
 ﻿using System;
 using HarmonyLib;
+using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
@@ -38,6 +39,10 @@ namespace BirthdayFriendship
             harmony.Patch(
                 original: AccessTools.PropertyGetter(typeof(NPC), nameof(NPC.Birthday_Season)),
                 prefix: new HarmonyMethod(typeof(NPC_Birthday_Season_Patch), nameof(NPC_Birthday_Season_Patch.Prefix))
+            );
+            harmony.Patch(
+                original: AccessTools.Method(typeof(ProfileMenu), nameof(ProfileMenu.draw), new Type[] { typeof(SpriteBatch) }),
+                transpiler: new HarmonyMethod(typeof(ProfileMenu_draw_Patch), nameof(ProfileMenu_draw_Patch.Transpiler))
             );
         }
 
