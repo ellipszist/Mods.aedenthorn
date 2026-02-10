@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36518.9 d17.14
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11415.280 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MagnetMod", "MagnetMod\MagnetMod.csproj", "{7EA4E49D-D5FF-4A36-8755-D9F6B1F4A3C3}"
 EndProject
@@ -652,6 +652,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChestContentDisplay", "ChestContentDisplay\ChestContentDisplay.csproj", "{046A1D6C-5DB3-5E70-0B15-B1EE9D9C0BFB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tycoon", "Tycoon\Tycoon.csproj", "{9996846E-9203-5294-D451-66820F6E39AE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Survivors", "Survivors\Survivors.csproj", "{E2C97091-2AF2-807F-038C-E87627BB9A1D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -3229,6 +3231,14 @@ Global
 		{9996846E-9203-5294-D451-66820F6E39AE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9996846E-9203-5294-D451-66820F6E39AE}.Release|x64.ActiveCfg = Release|Any CPU
 		{9996846E-9203-5294-D451-66820F6E39AE}.Release|x64.Build.0 = Release|Any CPU
+		{E2C97091-2AF2-807F-038C-E87627BB9A1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2C97091-2AF2-807F-038C-E87627BB9A1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2C97091-2AF2-807F-038C-E87627BB9A1D}.Debug|x64.ActiveCfg = Debug|x64
+		{E2C97091-2AF2-807F-038C-E87627BB9A1D}.Debug|x64.Build.0 = Debug|x64
+		{E2C97091-2AF2-807F-038C-E87627BB9A1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2C97091-2AF2-807F-038C-E87627BB9A1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2C97091-2AF2-807F-038C-E87627BB9A1D}.Release|x64.ActiveCfg = Release|x64
+		{E2C97091-2AF2-807F-038C-E87627BB9A1D}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
