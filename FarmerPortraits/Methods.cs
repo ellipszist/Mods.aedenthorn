@@ -17,14 +17,14 @@ namespace FarmerPortraits
             portraitTextures.Value.Clear();
             foreach(var key in new string[] { "background", "portrait" })
             {
-                Texture2D texture = null;
+                
                 int i = 0;
                 for ( ; ; )
                 {
-                    texture = GetAssetTexture(key+i);
-                    if (texture != null)
+                    Texture2D t = GetAssetTexture(key+i);
+                    if (t != null)
                     {
-                        portraitTextures.Value[key + i] = texture;
+                        portraitTextures.Value[key + i] = t;
                     }
                     else if(i > 5)
                     {
@@ -32,7 +32,7 @@ namespace FarmerPortraits
                     }
                     i++;
                 }
-                texture = GetAssetTexture(key);
+                Texture2D texture = GetAssetTexture(key);
                 if (texture != null)
                 {
                     portraitTextures.Value[key] = texture;

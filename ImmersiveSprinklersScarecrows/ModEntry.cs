@@ -53,26 +53,29 @@ namespace ImmersiveSprinklersScarecrows
         }
         public void Display_RenderedWorld(object sender, StardewModdingAPI.Events.RenderedWorldEventArgs e)
         {
-            if (!Config.EnableMod || !Context.IsPlayerFree || !Helper.Input.IsDown(Config.ShowRangeButton) || Game1.currentLocation?.terrainFeatures is null)
+            if (!Config.EnableMod || !Context.IsPlayerFree || Game1.currentLocation?.terrainFeatures is null)
                 return;
+
+            var sc = Helper.Input.IsDown(Config.ShowScarecrowRangeButton);
+            var sp = Helper.Input.IsDown(Config.ShowSprinklerRangeButton);
+            if (!sc && !sp)
+                return;
+
             HashSet<Vector2> sprinklerTiles = new();
             HashSet<Vector2> scarecrowTiles = new();
             foreach (var kvp in Game1.currentLocation.Objects.Pairs)
             {
-                if (kvp.Value?.IsSprinkler() == true)
+                if (sp && kvp.Value?.IsSprinkler() == true)
                 {
                     foreach (var t in GetSprinklerTiles(kvp.Key, GetSprinklerRadius(kvp.Value)))
                         sprinklerTiles.Add(t);
                 }
-                if (kvp.Value?.IsScarecrow() == true)
+                if (sc && kvp.Value?.IsScarecrow() == true)
                 {
                     foreach (var t in GetScarecrowTiles(kvp.Key, kvp.Value.GetRadiusForScarecrow()))
                         scarecrowTiles.Add(t);
                 }
             }
-            Config.BothRangeTint = Color.Aqua;
-            Config.ScarecrowRangeTint = Color.Pink;
-            Config.SprinklerRangeTint = Color.Yellow;
             foreach(var tile in sprinklerTiles)
             {
                 e.SpriteBatch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(new Vector2((float)((int)tile.X * 64), (float)((int)tile.Y * 64))), new Rectangle?(new Rectangle(194, 388, 16, 16)), (scarecrowTiles.Contains(tile) ? Config.BothRangeTint : Config.SprinklerRangeTint) * Config.RangeAlpha, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.01f);
@@ -101,46 +104,7 @@ namespace ImmersiveSprinklersScarecrows
                 //    }
                 //}
             }
-            if (e.Button == Config.PickupButton && Context.CanPlayerMove)
-            {
-                return;
-
-                var grabTile = Game1.currentCursorTile;
-                if (TryGetSprinkler(Game1.currentLocation, grabTile, out var obj) || TryGetScarecrow(Game1.currentLocation, grabTile, out obj))
-                {
-                    obj.modData.Remove(sprinklerKey);
-                    obj.modData.Remove(scarecrowKey);
-                    if (obj.Type == "Crafting" && obj.Fragility != 2)
-                    {
-                        Game1.currentLocation.debris.Add(new Debris(obj.QualifiedItemId, Game1.player.GetToolLocation(false), Utility.PointToVector2(Game1.player.StandingPixel)));
-                    }
-                    obj.performRemoveAction();
-                    Game1.currentLocation.Objects.Remove(grabTile);
-                    Helper.Input.Suppress(e.Button);
-                }
-                else if (Config.PickupNearby || Constants.TargetPlatform == GamePlatform.Android)
-                {
-                    var list = Game1.currentLocation.Objects.Pairs.Where(kvp => kvp.Value?.modData.ContainsKey(sprinklerKey) == true || kvp.Value?.modData.ContainsKey(scarecrowKey) == true);
-                    foreach (var kvp in list)
-                    {
-                        var distance = Vector2.Distance(kvp.Key * 64, Game1.player.position.Value);
-                        if (distance <= 64)
-                        {
-                            obj = kvp.Value;
-                            obj.modData.Remove(sprinklerKey);
-                            obj.modData.Remove(scarecrowKey);
-                            if (obj.Type == "Crafting" && obj.Fragility != 2)
-                            {
-                                Game1.currentLocation.debris.Add(new Debris(obj.QualifiedItemId, Game1.player.GetToolLocation(false), Utility.PointToVector2(Game1.player.StandingPixel)));
-                            }
-                            obj.performRemoveAction();
-                            Game1.currentLocation.Objects.Remove(kvp.Key);
-                            Helper.Input.Suppress(e.Button);
-                        }
-                    }
-                }
-            }
-            else if (e.Button == Config.ActivateButton && Context.CanPlayerMove)
+            if (e.Button == Config.ActivateButton && Context.CanPlayerMove)
             {
                 Vector2 tile = GetMouseTile();
                 
@@ -201,18 +165,6 @@ namespace ImmersiveSprinklersScarecrows
             );
             configMenu.AddKeybind(
                 mod: ModManifest,
-                name: () => "Pickup Key",
-                getValue: () => Config.PickupButton,
-                setValue: value => Config.PickupButton = value
-            );
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Pickup Nearby",
-                getValue: () => Config.PickupNearby,
-                setValue: value => Config.PickupNearby = value
-            );
-            configMenu.AddKeybind(
-                mod: ModManifest,
                 name: () => "Activate Key",
                 getValue: () => Config.ActivateButton,
                 setValue: value => Config.ActivateButton = value
@@ -231,9 +183,15 @@ namespace ImmersiveSprinklersScarecrows
             );
             configMenu.AddKeybind(
                 mod: ModManifest,
-                name: () => "Show Range Key",
-                getValue: () => Config.ShowRangeButton,
-                setValue: value => Config.ShowRangeButton = value
+                name: () => "Show Scarecrow Range",
+                getValue: () => Config.ShowScarecrowRangeButton,
+                setValue: value => Config.ShowScarecrowRangeButton = value
+            );
+            configMenu.AddKeybind(
+                mod: ModManifest,
+                name: () => "Show Sprinkler Range",
+                getValue: () => Config.ShowSprinklerRangeButton,
+                setValue: value => Config.ShowSprinklerRangeButton = value
             );
             configMenu.AddTextOption(
                 mod: ModManifest,
@@ -252,24 +210,6 @@ namespace ImmersiveSprinklersScarecrows
                 name: () => "RangeAlpha",
                 getValue: () => Config.RangeAlpha + "",
                 setValue: delegate (string value) { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out float f)) { Config.RangeAlpha = f; } }
-            );
-            configMenu.AddNumberOption(
-                mod: ModManifest,
-                name: () => "Offset X",
-                getValue: () => Config.DrawOffsetX,
-                setValue: value => Config.DrawOffsetX = value
-            );
-            configMenu.AddNumberOption(
-                mod: ModManifest,
-                name: () => "Offset Y",
-                getValue: () => Config.DrawOffsetY,
-                setValue: value => Config.DrawOffsetY = value
-            );
-            configMenu.AddNumberOption(
-                mod: ModManifest,
-                name: () => "Offset Z",
-                getValue: () => Config.DrawOffsetZ,
-                setValue: value => Config.DrawOffsetZ = value
             );
         }
     }

@@ -12,10 +12,13 @@ namespace SubmergedCrabPots
 		{
 			public static bool Prefix(CrabPot __instance, SpriteBatch spriteBatch, int x, int y, ref float ___yBob, Vector2 ___shake)
 			{
-				if (!Config.EnableMod || (__instance.heldObject.Value == null && !__instance.readyForHarvest.Value && __instance.bait.Value == null) || (__instance.readyForHarvest.Value && __instance.heldObject.Value is not null && !Config.SubmergeHarvestable))
+				if (!Config.EnableMod
+                     || (__instance.heldObject.Value == null && !__instance.readyForHarvest.Value && __instance.bait.Value == null && __instance.NeedsBait(Game1.GetPlayer(__instance.owner.Value, false) ?? Game1.MasterPlayer))
+                     || (__instance.readyForHarvest.Value && __instance.heldObject.Value is not null && !Config.SubmergeHarvestable)
+					)
 					return true;
 
-				___yBob = (float)(Math.Sin(Game1.currentGameTime.TotalGameTime.TotalMilliseconds / 500.0 + x * 64) * 8.0 + 8.0);
+                ___yBob = (float)(Math.Sin(Game1.currentGameTime.TotalGameTime.TotalMilliseconds / 500.0 + x * 64) * 8.0 + 8.0);
 
 				int tileIndexToShow = (int)((___yBob - 1) / 5);
 
