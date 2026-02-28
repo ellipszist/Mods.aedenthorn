@@ -1,4 +1,5 @@
-﻿using StardewModdingAPI;
+﻿using System.Collections.Generic;
+using StardewModdingAPI;
 
 namespace AllChestsMenu
 {
@@ -7,9 +8,15 @@ namespace AllChestsMenu
 		public bool ModEnabled { get; set; } = true;
 		public bool ModToOpen { get; set; } = false;
 		public bool LimitToCurrentLocation { get; set; } = false;
-		public bool FilterItems { get; set; } = false;
-		public bool FilterItemsCategory { get; set; } = false;
-		public bool FilterItemsDescription { get; set; } = false;
+
+
+		// New independent filter options
+		public bool FilterChestLabel { get; set; } = true;
+		public bool FilterItemName { get; set; } = false;
+		public bool FilterItemCategory { get; set; } = false;
+		public bool FilterItemDescription { get; set; } = false;
+		public bool EnableControllerKeyboard { get; set; } = true;
+		public List<string> SelectedLocations { get; set; } = new();
 		public bool IncludeFridge { get; set; } = true;
 		public bool IncludeMiniFridges { get; set; } = true;
 		public bool IncludeShippingBin { get; set; } = true;
