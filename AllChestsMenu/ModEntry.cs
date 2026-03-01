@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
@@ -78,65 +78,37 @@ namespace AllChestsMenu
 					save: () => Helper.WriteConfig(Config)
 				);
 
-				// ==================== GENERAL SECTION ====================
-				gmcm.AddSectionTitle(
-					mod: ModManifest,
-					text: () => SHelper.Translation.Get("GMCM.Section.General.Name"),
-					tooltip: () => SHelper.Translation.Get("GMCM.Section.General.Desc")
-				);
-
+				// Main section
 				gmcm.AddBoolOption(
 					mod: ModManifest,
 					name: () => SHelper.Translation.Get("GMCM.ModEnabled.Name"),
-					tooltip: () => SHelper.Translation.Get("GMCM.ModEnabled.Tooltip"),
 					getValue: () => Config.ModEnabled,
 					setValue: value => Config.ModEnabled = value
 				);
-
-				// ==================== CONTAINERS SECTION ====================
-				gmcm.AddSectionTitle(
-					mod: ModManifest,
-					text: () => SHelper.Translation.Get("GMCM.Section.Containers.Name"),
-					tooltip: () => SHelper.Translation.Get("GMCM.Section.Containers.Desc")
-				);
-
 				gmcm.AddBoolOption(
 					mod: ModManifest,
 					name: () => SHelper.Translation.Get("GMCM.LimitToCurrentLocation.Name"),
-					tooltip: () => SHelper.Translation.Get("GMCM.LimitToCurrentLocation.Tooltip"),
 					getValue: () => Config.LimitToCurrentLocation,
 					setValue: value => Config.LimitToCurrentLocation = value
 				);
-
-				gmcm.AddParagraph(
-					mod: ModManifest,
-					text: () => ""
-				); // spacer
-
 				gmcm.AddBoolOption(
 					mod: ModManifest,
 					name: () => SHelper.Translation.Get("GMCM.IncludeFridge.Name"),
-					tooltip: () => SHelper.Translation.Get("GMCM.IncludeFridge.Tooltip"),
 					getValue: () => Config.IncludeFridge,
 					setValue: value => Config.IncludeFridge = value
 				);
-
 				gmcm.AddBoolOption(
 					mod: ModManifest,
 					name: () => SHelper.Translation.Get("GMCM.IncludeMiniFridges.Name"),
-					tooltip: () => SHelper.Translation.Get("GMCM.IncludeMiniFridges.Tooltip"),
 					getValue: () => Config.IncludeMiniFridges,
 					setValue: value => Config.IncludeMiniFridges = value
 				);
-
 				gmcm.AddBoolOption(
 					mod: ModManifest,
 					name: () => SHelper.Translation.Get("GMCM.IncludeShippingBin.Name"),
-					tooltip: () => SHelper.Translation.Get("GMCM.IncludeShippingBin.Tooltip"),
 					getValue: () => Config.IncludeShippingBin,
 					setValue: value => Config.IncludeShippingBin = value
 				);
-
 				gmcm.AddBoolOption(
 					mod: ModManifest,
 					name: () => SHelper.Translation.Get("GMCM.UnrestrictedShippingBin.Name"),
@@ -144,81 +116,61 @@ namespace AllChestsMenu
 					getValue: () => Config.UnrestrictedShippingBin,
 					setValue: value => Config.UnrestrictedShippingBin = value
 				);
-
+                gmcm.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM.FilterItems.Name"),
+                    getValue: () => Config.FilterItems,
+                    setValue: value => Config.FilterItems = value
+                );
+                gmcm.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM.FilterItemsCategory.Name"),
+                    getValue: () => Config.FilterItemsCategory,
+                    setValue: value => Config.FilterItemsCategory = value
+                );
+                gmcm.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM.FilterItemsDescription.Name"),
+                    getValue: () => Config.FilterItemsDescription,
+                    setValue: value => Config.FilterItemsDescription = value
+                );
 				gmcm.AddBoolOption(
 					mod: ModManifest,
 					name: () => SHelper.Translation.Get("GMCM.IncludeMiniShippingBins.Name"),
-					tooltip: () => SHelper.Translation.Get("GMCM.IncludeMiniShippingBins.Tooltip"),
 					getValue: () => Config.IncludeMiniShippingBins,
 					setValue: value => Config.IncludeMiniShippingBins = value
 				);
-
 				gmcm.AddBoolOption(
 					mod: ModManifest,
 					name: () => SHelper.Translation.Get("GMCM.IncludeJunimoChests.Name"),
-					tooltip: () => SHelper.Translation.Get("GMCM.IncludeJunimoChests.Tooltip"),
 					getValue: () => Config.IncludeJunimoChests,
 					setValue: value => Config.IncludeJunimoChests = value
 				);
-
 				gmcm.AddBoolOption(
 					mod: ModManifest,
 					name: () => SHelper.Translation.Get("GMCM.IncludeAutoGrabbers.Name"),
-					tooltip: () => SHelper.Translation.Get("GMCM.IncludeAutoGrabbers.Tooltip"),
 					getValue: () => Config.IncludeAutoGrabbers,
 					setValue: value => Config.IncludeAutoGrabbers = value
 				);
-
-
-
-				// ==================== SORTING SECTION ====================
-				gmcm.AddSectionTitle(
-					mod: ModManifest,
-					text: () => SHelper.Translation.Get("GMCM.Section.Sorting.Name"),
-					tooltip: () => SHelper.Translation.Get("GMCM.Section.Sorting.Desc")
-				);
-
 				gmcm.AddTextOption(
 					mod: ModManifest,
 					name: () => SHelper.Translation.Get("GMCM.SecondarySortingPriority.Name"),
-					tooltip: () => SHelper.Translation.Get("GMCM.SecondarySortingPriority.Tooltip"),
 					getValue: () => Config.SecondarySortingPriority,
 					setValue: value => Config.SecondarySortingPriority = value,
-					allowedValues: new string[] { "X", "Y" },
-					formatAllowedValue: value => SHelper.Translation.Get($"GMCM.SecondarySortingPriority.{value}")
+					allowedValues: new string[] { "X", "Y" }
 				);
-
-				// ==================== CONTROLS SECTION ====================
-				gmcm.AddSectionTitle(
-					mod: ModManifest,
-					text: () => SHelper.Translation.Get("GMCM.Section.Controls.Name"),
-					tooltip: () => SHelper.Translation.Get("GMCM.Section.Controls.Desc")
-				);
-
 				gmcm.AddKeybind(
 					mod: ModManifest,
 					name: () => SHelper.Translation.Get("GMCM.MenuKey.Name"),
-					tooltip: () => SHelper.Translation.Get("GMCM.MenuKey.Tooltip"),
 					getValue: () => Config.MenuKey,
 					setValue: value => Config.MenuKey = value
 				);
-
 				gmcm.AddBoolOption(
 					mod: ModManifest,
 					name: () => SHelper.Translation.Get("GMCM.ModToOpen.Name"),
-					tooltip: () => SHelper.Translation.Get("GMCM.ModToOpen.Tooltip"),
 					getValue: () => Config.ModToOpen,
 					setValue: value => Config.ModToOpen = value
 				);
-
-				gmcm.AddBoolOption(
-					mod: ModManifest,
-					name: () => "Enable Controller Keyboard",
-					tooltip: () => "Opens an on-screen keyboard when selecting a text input using a controller.",
-					getValue: () => Config.EnableControllerKeyboard,
-					setValue: value => Config.EnableControllerKeyboard = value
-				);
-
 				gmcm.AddKeybind(
 					mod: ModManifest,
 					name: () => SHelper.Translation.Get("GMCM.ModKey.Name"),
@@ -226,7 +178,6 @@ namespace AllChestsMenu
 					getValue: () => Config.ModKey,
 					setValue: value => Config.ModKey = value
 				);
-
 				gmcm.AddKeybind(
 					mod: ModManifest,
 					name: () => SHelper.Translation.Get("GMCM.ModKey2.Name"),
@@ -234,7 +185,6 @@ namespace AllChestsMenu
 					getValue: () => Config.ModKey2,
 					setValue: value => Config.ModKey2 = value
 				);
-
 				gmcm.AddKeybind(
 					mod: ModManifest,
 					name: () => SHelper.Translation.Get("GMCM.SwitchButton.Name"),
