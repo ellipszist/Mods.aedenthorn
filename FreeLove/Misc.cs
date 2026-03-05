@@ -362,6 +362,8 @@ namespace FreeLove
                 topOfHeadOffsets[name] = 0;
                 return 0;
             }
+            if (tex is null)
+                return 0;
 
             int sleepidx;
             string sleepAnim = SleepAnimation(name);
