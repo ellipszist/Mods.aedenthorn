@@ -1,7 +1,7 @@
 ﻿{
   "Name": "Bulk Animal Purchase",
   "Author": "aedenthorn",
-  "Version": "0.3.0",
+  "Version": "0.3.1",
   "Description": "Lets you buy and place multiple farm animals without leaving the placement screen. ",
   "UniqueID": "aedenthorn.BulkAnimalPurchase",
   "EntryDll": "BulkAnimalPurchase.dll",

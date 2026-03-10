@@ -72,99 +72,71 @@ namespace FarmerHelper
             if (!Config.EnableMod || dialogKey != "Sleep")
                 return;
 
-            List<string> logMessage = new List<string>() { "Summary:", "" };
-
+            List<string> logMessage = new List<string>();
             if (Config.WarnAboutPlantsUnwateredBeforeSleep)
             {
                 bool added = false;
-                foreach (var terrainFeature in Game1.getFarm().terrainFeatures.Values)
-                {
-                    if (terrainFeature is HoeDirt && (terrainFeature as HoeDirt).crop != null && !(terrainFeature as HoeDirt).hasPaddyCrop() && (terrainFeature as HoeDirt).state.Value == 0 && (terrainFeature as HoeDirt).crop.currentPhase.Value < (terrainFeature as HoeDirt).crop.phaseDays.Count - 1)
+
+                foreach (var l in Game1.locations)
+                    foreach (var terrainFeature in l.terrainFeatures.Values)
                     {
-                        logMessage.Add($"Crop with harvest index {(terrainFeature as HoeDirt).crop.indexOfHarvest.Value} at Farm {terrainFeature.Tile.X},{terrainFeature.Tile.Y} is unwatered");
-                        if (!added)
+                        if (terrainFeature is HoeDirt && (terrainFeature as HoeDirt).crop != null && !(terrainFeature as HoeDirt).hasPaddyCrop() && (terrainFeature as HoeDirt).state.Value == 0 && (terrainFeature as HoeDirt).crop.currentPhase.Value < (terrainFeature as HoeDirt).crop.phaseDays.Count - 1)
                         {
-                            added = true;
-                            question = string.Format(SHelper.Translation.Get("plants-need-watering"), question);
+                            logMessage.Add($"Crop with harvest index {(terrainFeature as HoeDirt).crop.indexOfHarvest.Value} at {l.NameOrUniqueName} {terrainFeature.Tile.X},{terrainFeature.Tile.Y} is unwatered");
+                            if (!added)
+                            {
+                                added = true;
+                                question = string.Format(SHelper.Translation.Get("plants-need-watering"), question);
+                            }
                         }
                     }
-                }
-                foreach (TerrainFeature terrainFeature in Game1.getLocationFromName("Greenhouse").terrainFeatures.Values)
-                {
-                    if (terrainFeature is HoeDirt && (terrainFeature as HoeDirt).crop != null && !(terrainFeature as HoeDirt).hasPaddyCrop() && (terrainFeature as HoeDirt).state.Value == 0 && (terrainFeature as HoeDirt).crop.currentPhase.Value < (terrainFeature as HoeDirt).crop.phaseDays.Count - 1)
-                    {
-                        logMessage.Add($"Crop with harvest index {(terrainFeature as HoeDirt).crop.indexOfHarvest.Value} at Greenhouse {terrainFeature.Tile.X},{terrainFeature.Tile.Y} is unwatered");
-                        if (!added)
-                        {
-                            added = true;
-                            question = string.Format(SHelper.Translation.Get("plants-need-watering"), question);
-                        }
-                    }
-                }
             }
             if (Config.WarnAboutPlantsUnharvestedBeforeSleep)
             {
                 bool added = false;
 
                 var ignoreCrops = Config.IgnoreHarvestCrops.Split(',');
-                foreach (var terrainFeature in Game1.getFarm().terrainFeatures.Values)
+                foreach (var l in Game1.locations)
                 {
-                    if (terrainFeature is HoeDirt && (terrainFeature as HoeDirt).readyForHarvest() && (!Config.IgnoreFlowers || new Object((terrainFeature as HoeDirt).crop.indexOfHarvest.Value, 1, false, -1, 0).Category != -80) && (!ignoreCrops.Contains((terrainFeature as HoeDirt).crop?.indexOfHarvest.Value + "")))
+                    foreach (HoeDirt hd in l.terrainFeatures.Values.Where(t => t is HoeDirt h && h.crop?.indexOfHarvest.Value is not null))
                     {
-                        logMessage.Add($"Crop with harvest index {(terrainFeature as HoeDirt).crop.indexOfHarvest.Value} at Farm {terrainFeature.Tile.X},{terrainFeature.Tile.Y} is ready to harvest");
-                        if (!added)
+                        var harvest = ItemRegistry.Create(hd.crop.indexOfHarvest.Value);
+                        if (hd.readyForHarvest() && (!Config.IgnoreFlowers || harvest.Category != -80) && (!ignoreCrops.Contains(hd.crop.indexOfHarvest.Value + "")))
                         {
-                            added = true;
-                            question = string.Format(SHelper.Translation.Get("plants-ready-for-harvest"), question);
-                        }
-                    }
-                }
-                foreach (TerrainFeature terrainFeature in Game1.getLocationFromName("Greenhouse")?.terrainFeatures.Values)
-                {
-                    if (terrainFeature is HoeDirt && (terrainFeature as HoeDirt).readyForHarvest())
-                    {
-                        logMessage.Add($"Crop with harvest index {(terrainFeature as HoeDirt).crop.indexOfHarvest.Value} at Greenhouse {terrainFeature.Tile.X},{terrainFeature.Tile.Y} is ready to harvest");
-                        if (!added)
-                        {
-                            added = true;
-                            question = string.Format(SHelper.Translation.Get("plants-ready-for-harvest"), question);
+
+                            logMessage.Add($"Crop with harvest index {hd.crop.indexOfHarvest.Value} at {l.NameOrUniqueName} {hd.Tile.X},{hd.Tile.Y} is ready to harvest");
+                            if (!added)
+                            {
+                                added = true;
+                                question = string.Format(SHelper.Translation.Get("plants-ready-for-harvest"), question);
+                            }
                         }
                     }
                 }
             }
             if (Config.WarnAboutAnimalsOutsideBeforeSleep)
             {
-                if(Game1.getFarm().Animals.Count() > 0)
-                {
-                    logMessage.Add($"{Game1.getFarm().Animals.Count()} animals outside on farm.");
-                    question = string.Format(SHelper.Translation.Get("animals-outside"), question);
-                }
+                var added = false;
+                foreach (var l in Game1.locations)
+                    if (l.buildings.Any() && l.IsOutdoors && l.Animals.Count() > 0)
+                    {
+                        logMessage.Add($"{Game1.getFarm().Animals.Count()} animals outside on {l.NameOrUniqueName}.");
+                        if (!added)
+                        {
+                            added= true;
+                            question = string.Format(SHelper.Translation.Get("animals-outside"), question);
+                        }
+                    }
             }
             if (Config.WarnAboutAnimalsUnharvestedBeforeSleep)
             {
                 bool added = false;
-                foreach (FarmAnimal animal in Game1.getFarm().Animals.Values)
-                {
-                    if (animal.currentProduce.Value != null && !animal.type.Value.Contains("Pig"))
-                    {
-                        logMessage.Add($"{animal.type.Value} {animal.Name} on farm is ready to harvest");
-                        if (!added)
-                        {
-                            question = string.Format(SHelper.Translation.Get("animals-need-harvesting"), question);
-                            added = true;
-                        }
-                    }
-                }
-                foreach (Building building in Game1.getFarm().buildings)
-                {
-                    if (building.indoors.Value is not AnimalHouse)
-                        continue;
-                    foreach (FarmAnimal animal in (building.indoors.Value as AnimalHouse).animals.Values)
+                foreach (var l in Game1.locations)
+                    foreach (FarmAnimal animal in l.Animals.Values)
                     {
                         if (animal.currentProduce.Value != null && !animal.type.Value.Contains("Pig"))
                         {
-                            logMessage.Add($"{animal.type.Value} {animal.Name} in {building.GetIndoorsName()} is ready to harvest");
-
+                            logMessage.Add($"{animal.type.Value} {animal.Name} on {l.NameOrUniqueName} is ready to harvest");
                             if (!added)
                             {
                                 question = string.Format(SHelper.Translation.Get("animals-need-harvesting"), question);
@@ -172,33 +144,16 @@ namespace FarmerHelper
                             }
                         }
                     }
-                }
             }
             if (Config.WarnAboutAnimalsNotPetBeforeSleep)
             {
                 bool added = false;
-                foreach (FarmAnimal animal in Game1.getFarm().Animals.Values)
-                {
-                    if (!animal.wasPet.Value && !animal.wasAutoPet.Value)
-                    {
-                        logMessage.Add($"{animal.type.Value} {animal.Name} on farm needs petting");
-                        if (!added)
-                        {
-                            question = string.Format(SHelper.Translation.Get("animals-need-petting"), question);
-                            added = true;
-                        }
-                    }
-                }
-                foreach (Building building in Game1.getFarm().buildings)
-                {
-                    if (building.indoors.Value is not AnimalHouse)
-                        continue;
-                    foreach (FarmAnimal animal in (building.indoors.Value as AnimalHouse).animals.Values)
+                foreach (var l in Game1.locations)
+                    foreach (FarmAnimal animal in l.Animals.Values)
                     {
                         if (!animal.wasPet.Value && !animal.wasAutoPet.Value)
                         {
-                            logMessage.Add($"{animal.type.Value} {animal.Name} in {building.GetIndoorsName()} needs petting");
-
+                            logMessage.Add($"{animal.type.Value} {animal.Name} on {l.NameOrUniqueName} needs petting");
                             if (!added)
                             {
                                 question = string.Format(SHelper.Translation.Get("animals-need-petting"), question);
@@ -206,7 +161,10 @@ namespace FarmerHelper
                             }
                         }
                     }
-                }
+            }
+            if (logMessage.Any())
+            {
+                SMonitor.Log($"Warnings:\n\n\t{string.Join("\n\t", logMessage)}");
             }
         }
     }

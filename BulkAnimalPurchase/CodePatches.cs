@@ -316,7 +316,7 @@ namespace BulkAnimalPurchase
 		{
 			public static void Postfix(Object __instance, ref int __result)
 			{
-				if (!Config.EnableMod || Game1.activeClickableMenu is not PurchaseAnimalsMenu)
+				if (!Config.EnableMod || __result == 0 || Game1.activeClickableMenu is not PurchaseAnimalsMenu)
 					return;
 
 				__result = __instance.Name switch
