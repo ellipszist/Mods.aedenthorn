@@ -657,6 +657,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Survivors", "Survivors\Surv
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoMoney", "NoMoney\NoMoney.csproj", "{84213571-4570-1B2D-F82F-8A9932AB107F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gravedigger", "Gravedigger\Gravedigger.csproj", "{FCC36A0F-C67D-F758-FD29-A1AAA1D556DD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3249,6 +3251,14 @@ Global
 		{84213571-4570-1B2D-F82F-8A9932AB107F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{84213571-4570-1B2D-F82F-8A9932AB107F}.Release|x64.ActiveCfg = Release|Any CPU
 		{84213571-4570-1B2D-F82F-8A9932AB107F}.Release|x64.Build.0 = Release|Any CPU
+		{FCC36A0F-C67D-F758-FD29-A1AAA1D556DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FCC36A0F-C67D-F758-FD29-A1AAA1D556DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FCC36A0F-C67D-F758-FD29-A1AAA1D556DD}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FCC36A0F-C67D-F758-FD29-A1AAA1D556DD}.Debug|x64.Build.0 = Debug|Any CPU
+		{FCC36A0F-C67D-F758-FD29-A1AAA1D556DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FCC36A0F-C67D-F758-FD29-A1AAA1D556DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FCC36A0F-C67D-F758-FD29-A1AAA1D556DD}.Release|x64.ActiveCfg = Release|Any CPU
+		{FCC36A0F-C67D-F758-FD29-A1AAA1D556DD}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

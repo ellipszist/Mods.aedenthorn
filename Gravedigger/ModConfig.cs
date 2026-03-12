@@ -1,0 +1,18 @@
+﻿
+using Microsoft.Xna.Framework;
+using StardewModdingAPI;
+using System.Collections.Generic;
+
+namespace Gravedigger
+{
+	public class ModConfig
+	{
+		public bool ModEnabled { get; set; } = true;
+		public int VanillaChance { get; set; } = 60;
+		public int ArtifactChance { get; set; } = 30;
+		public List<string> NotBones { get; set; } = new List<string>()
+		{
+            "119"
+        };
+    }
+}

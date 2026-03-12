@@ -294,6 +294,8 @@ namespace ImmersiveSprinklersScarecrows
         {
             public static bool Prefix(Pickaxe __instance, GameLocation location, int x, int y, Farmer who, ref (Vector2 tile, Object obj) __state)
             {
+                return true;
+
                 if (!Config.EnableMod)
                     return true;
                 int tileX = x / 64;
@@ -331,6 +333,8 @@ namespace ImmersiveSprinklersScarecrows
             {
             public static bool Prefix(Pickaxe __instance, GameLocation location, int x, int y, Farmer who, ref (Vector2 tile, Object obj) __state)
             {
+                return true;
+
                 if (!Config.EnableMod)
                     return true;
                 int tileX = x / 64;
