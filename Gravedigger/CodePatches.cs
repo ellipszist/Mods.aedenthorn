@@ -1,9 +1,13 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using StardewValley;
+using StardewValley.Characters;
 using StardewValley.Extensions;
+using StardewValley.GameData.Characters;
 using StardewValley.Locations;
+using System;
 using System.Linq;
+using xTile.Tiles;
 
 namespace Gravedigger
 {
@@ -15,7 +19,46 @@ namespace Gravedigger
         {
             public static bool Prefix(GameLocation __instance, int xLocation, int yLocation, bool explosion, bool detectOnly, Farmer who)
             {
-                if (__instance is not Town || !graveTiles.Contains(new Point(xLocation, yLocation)) || Game1.random.NextDouble() < Config.VanillaChance / 100f)
+                if (__instance is not Town || !graveTiles.Contains(new Point(xLocation, yLocation)))
+                    return true;
+                if (Config.NPCReactAsGarbage)
+                {
+                    foreach (NPC npc in Utility.GetNpcsWithinDistance(new Vector2(xLocation, yLocation), 7, __instance))
+                    {
+                        if (!(npc is Horse))
+                        {
+                            CharacterData data = null;
+                            int friendshipChange = -25;
+                            int? emote = ((data != null) ? data.DumpsterDiveEmote : null);
+                            Dialogue dialogue = null;
+                            int num = npc.Age;
+                            if (num != 1)
+                            {
+                                if (num == 2)
+                                {
+                                    emote = new int?(emote.GetValueOrDefault(28));
+                                    dialogue = dialogue ?? new Dialogue(npc, "Data\\ExtraDialogue:Town_DumpsterDiveComment_Child", false);
+                                }
+                                else
+                                {
+                                    emote = new int?(emote.GetValueOrDefault(12));
+                                    dialogue = dialogue ?? new Dialogue(npc, "Data\\ExtraDialogue:Town_DumpsterDiveComment_Adult", false);
+                                }
+                            }
+                            else
+                            {
+                                emote = new int?(emote.GetValueOrDefault(8));
+                                dialogue = dialogue ?? new Dialogue(npc, "Data\\ExtraDialogue:Town_DumpsterDiveComment_Adult", false);
+                            }
+                            npc.doEmote(emote.Value, true);
+                            who.changeFriendship(friendshipChange, npc);
+                            npc.setNewDialogue(dialogue, true, true);
+                            Game1.drawDialogue(npc);
+                            break;
+                        }
+                    }
+                }
+                if(Game1.random.NextDouble() < Config.VanillaChance / 100f)
                     return true;
                 if (Game1.random.NextDouble() < Config.ArtifactChance / 100f)
                 {

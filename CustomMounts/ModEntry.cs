@@ -145,6 +145,11 @@ namespace CustomMounts
             );
 
             harmony.Patch(
+                original: AccessTools.Method(typeof(Utility), nameof(Utility.GetHorseWarpRestrictionsForFarmer)),
+                postfix: new(typeof(ModEntry), nameof(Utility_GetHorseWarpRestrictionsForFarmer_Postfix))
+            );
+
+            harmony.Patch(
                 original: AccessTools.Method(typeof(Farmer), nameof(Farmer.Update), [typeof(GameTime), typeof(GameLocation)]),
                 prefix: new(typeof(ModEntry), nameof(Farmer_Update_Prefix)),
                 postfix: new(typeof(ModEntry), nameof(Farmer_Update_Postfix))

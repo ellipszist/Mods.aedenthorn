@@ -15,18 +15,16 @@ namespace MobileCatalogues
         public static bool opening;
         public static List<string> catalogueList = new List<string>();
 
-        // call this method from your Entry class
         public static void Initialize(IModHelper helper, IMonitor monitor, ModConfig config)
         {
             Monitor = monitor;
             Helper = helper;
             Config = config;
-
-            catalogueList = new();
-            catalogueList.AddRange(DataLoader.Shops(Game1.content).Keys);
         }
         internal static void OpenCatalogueApp()
         {
+            catalogueList = new();
+            catalogueList.AddRange(DataLoader.Shops(Game1.content).Keys);
             api = ModEntry.api;
             Helper.Events.Input.ButtonPressed += HelperEvents.Input_ButtonPressed;
             Helper.Events.Input.MouseWheelScrolled += HelperEvents.Input_MouseWheelScrolled; ;
@@ -42,7 +40,7 @@ namespace MobileCatalogues
             api.SetAppRunning(false);
             api.SetRunningApp(null);
             Helper.Events.Input.ButtonPressed -= HelperEvents.Input_ButtonPressed;
-            Helper.Events.Display.RenderedWorld -= Visuals.Display_RenderedWorld;
+            Helper.Events.Input.MouseWheelScrolled -= HelperEvents.Input_MouseWheelScrolled; ;
             Helper.Events.Display.RenderedWorld -= Visuals.Display_RenderedWorld;
         }
 

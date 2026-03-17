@@ -659,6 +659,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoMoney", "NoMoney\NoMoney.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gravedigger", "Gravedigger\Gravedigger.csproj", "{FCC36A0F-C67D-F758-FD29-A1AAA1D556DD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomBouquets", "CustomBouquets\CustomBouquets.csproj", "{911D7714-DD63-F1A5-17D0-9A99207932E4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3259,6 +3261,14 @@ Global
 		{FCC36A0F-C67D-F758-FD29-A1AAA1D556DD}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FCC36A0F-C67D-F758-FD29-A1AAA1D556DD}.Release|x64.ActiveCfg = Release|Any CPU
 		{FCC36A0F-C67D-F758-FD29-A1AAA1D556DD}.Release|x64.Build.0 = Release|Any CPU
+		{911D7714-DD63-F1A5-17D0-9A99207932E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{911D7714-DD63-F1A5-17D0-9A99207932E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{911D7714-DD63-F1A5-17D0-9A99207932E4}.Debug|x64.ActiveCfg = Debug|x64
+		{911D7714-DD63-F1A5-17D0-9A99207932E4}.Debug|x64.Build.0 = Debug|x64
+		{911D7714-DD63-F1A5-17D0-9A99207932E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{911D7714-DD63-F1A5-17D0-9A99207932E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{911D7714-DD63-F1A5-17D0-9A99207932E4}.Release|x64.ActiveCfg = Release|x64
+		{911D7714-DD63-F1A5-17D0-9A99207932E4}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

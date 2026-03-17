@@ -1,26 +1,11 @@
 ﻿using HarmonyLib;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
-using Netcode;
-using Newtonsoft.Json;
 using StardewModdingAPI;
-using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.GameData.Machines;
 using StardewValley.GameData.Objects;
 using StardewValley.ItemTypeDefinitions;
-using StardewValley.Menus;
-using StardewValley.TerrainFeatures;
-using StardewValley.Tools;
-using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Linq;
-using xTile;
-using xTile.Layers;
-using xTile.ObjectModel;
 using Object = StardewValley.Object;
 
 namespace PortableFurnace

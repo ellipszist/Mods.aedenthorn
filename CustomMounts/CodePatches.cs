@@ -407,6 +407,37 @@ namespace CustomMounts
             }
             return codes.AsEnumerable();
         }
+        public static void Utility_GetHorseWarpRestrictionsForFarmer_Postfix(Farmer who, ref Utility.HorseWarpRestrictions __result)
+        {
+            if (!Config.ModEnabled)
+                return;
+            if (__result.HasFlag(Utility.HorseWarpRestrictions.NoOwnedHorse))
+            {
+                bool found = false;
+                Utility.ForEachBuilding<Stable>(delegate (Stable stable)
+                {
+                    Horse curHorse = stable.getStableHorse();
+                    var owner = curHorse?.getOwner();
+                    var ownerId = curHorse?.ownerId;
+                    if (owner == Game1.player)
+                    {
+                        if (curHorse.modData.TryGetValue(modKey, out var key) && MountDict.TryGetValue(key, out var data))
+                        {
+                            if (who.ActiveObject.QualifiedItemId == data.FluteItem)
+                            {
+                                found = true;
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
+                }, true);
+                if (found) 
+                {
+                    __result &= ~Utility.HorseWarpRestrictions.NoOwnedHorse;
+                }
+            }
+        }
         public static void Farmer_Update_Prefix(Farmer __instance, ref bool __state)
         {
             if (!Config.ModEnabled || __instance.yJumpOffset >= 0)
