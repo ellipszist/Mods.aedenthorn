@@ -120,12 +120,12 @@ namespace CustomMounts
         {
             if (!Config.ModEnabled || __instance.rider is null || __instance.dismounting.Value || !__instance.modData.TryGetValue(modKey, out var key) || !MountDict.TryGetValue(key, out var data))
                 return;
-            __instance.Position += new Vector2((32 - data.FrameWidth) * 2, data.FrameWidth - 32);
-            if(__instance.Position.X < 0)
-            {
-                __instance.rider.Position -= new Vector2(__instance.Position.X, 0);
-                __instance.Position -= new Vector2(__instance.Position.X, 0);
-            }
+            var offset = new Vector2((32 - data.FrameWidth) * 2, data.FrameWidth - 32);
+            var newPos = __instance.Position + offset;
+            if (newPos.X < 0)
+                return;
+
+            __instance.Position = newPos;
         }
         public static IEnumerable<CodeInstruction> Horse_PerformDefaultHorseFootstep_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
