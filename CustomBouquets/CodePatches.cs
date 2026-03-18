@@ -3,12 +3,13 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.Extensions;
-using StardewValley.ItemTypeDefinitions;
 using StardewValley.Menus;
 using StardewValley.Objects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
 using Object = StardewValley.Object;
 
 namespace CustomBouquets
@@ -28,18 +29,14 @@ namespace CustomBouquets
                 {
                     __instance.DrawShadow(spriteBatch, location, color, layerDepth);
                 }
-                ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem(__instance.ItemId);
-                Texture2D texture = itemData.GetTexture();
                 Vector2 origin = new Vector2(8f, 8f);
                 float scale = 4f * scaleSize;
                 
-                spriteBatch.Draw(texture, location + new Vector2(32f, 32f) * scaleSize, new Rectangle?(itemData.GetSourceRect(0, new int?(__instance.ParentSheetIndex))), Color.White * transparency, 0f, origin * scaleSize, scale, SpriteEffects.None, layerDepth);
-                if (flower1 == null)
-                {
-                    flower1 = SHelper.GameContent.Load<Texture2D>(flowerPath1);
-                    flower2 = SHelper.GameContent.Load<Texture2D>(flowerPath2);
-                    flower3 = SHelper.GameContent.Load<Texture2D>(flowerPath3);
-                }
+                CacheTextures();
+                Texture2D texture = bouquet;
+
+                spriteBatch.Draw(texture, location + new Vector2(32f, 32f) * scaleSize, null, Color.White * transparency, 0f, origin * scaleSize, scale, SpriteEffects.None, layerDepth);
+
                 spriteBatch.Draw(flower1, location + new Vector2(32f, 32f) * scaleSize, null, GetColor(f1) * transparency, 0f, origin * scaleSize, scale, SpriteEffects.None, Math.Min(1f, layerDepth + 2E-05f));
                 spriteBatch.Draw(flower2, location + new Vector2(32f, 32f) * scaleSize, null, GetColor(f2) * transparency, 0f, origin * scaleSize, scale, SpriteEffects.None, Math.Min(1f, layerDepth + 2E-05f));
                 spriteBatch.Draw(flower3, location + new Vector2(32f, 32f) * scaleSize, null, GetColor(f3) * transparency, 0f, origin * scaleSize, scale, SpriteEffects.None, Math.Min(1f, layerDepth + 2E-05f));
@@ -47,11 +44,84 @@ namespace CustomBouquets
                 __instance.DrawMenuIcons(spriteBatch, location, scaleSize, transparency, layerDepth + 3E-05f, drawStackNumber, color);
                 return false;
             }
-
         }
+
+        [HarmonyPatch(typeof(Object), nameof(Object.drawWhenHeld))]
+        public class Object_drawWhenHeld_Patch
+        {
+            public static bool Prefix(Object __instance, SpriteBatch spriteBatch, Vector2 objectPosition, Farmer f)
+            {
+                if (!Config.EnableMod || !__instance.modData.TryGetValue(flowerPath1, out var f1) || !__instance.modData.TryGetValue(flowerPath2, out var f2) || !__instance.modData.TryGetValue(flowerPath3, out var f3))
+                    return true;
+                float drawLayer = Math.Max(0f, (float)(f.StandingPixel.Y + 3) / 10000f);
+                
+                CacheTextures();
+                Texture2D texture = bouquet;
+                spriteBatch.Draw(texture, objectPosition, null, Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, drawLayer);
+
+                spriteBatch.Draw(flower1, objectPosition, null, GetColor(f1), 0f, Vector2.Zero, 4f, SpriteEffects.None, drawLayer + 3 / 10000f);
+                spriteBatch.Draw(flower2, objectPosition, null, GetColor(f2), 0f, Vector2.Zero, 4f, SpriteEffects.None, drawLayer + 2 / 10000f);
+                spriteBatch.Draw(flower3, objectPosition, null, GetColor(f3), 0f, Vector2.Zero, 4f, SpriteEffects.None, drawLayer + 1 / 10000f);
+
+                return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(Object), nameof(Object.draw), new Type[] { typeof(SpriteBatch), typeof(int), typeof(int), typeof(float), typeof(float) })]
+        public class Object_draw_Patch
+        {
+            public static bool Prefix(Object __instance, SpriteBatch spriteBatch, int xNonTile, int yNonTile, float layerDepth, float alpha)
+            {
+                if (!Config.EnableMod || !__instance.modData.TryGetValue(flowerPath1, out var f1) || !__instance.modData.TryGetValue(flowerPath2, out var f2) || !__instance.modData.TryGetValue(flowerPath3, out var f3) || Game1.eventUp || Game1.CurrentEvent?.isTileWalkedOn(xNonTile / 64, yNonTile / 64) == true)
+                    return true;
+                CacheTextures();
+
+                spriteBatch.Draw(Game1.shadowTexture, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(xNonTile + 32), (float)(yNonTile + 51 + 4))), new Microsoft.Xna.Framework.Rectangle?(Game1.shadowTexture.Bounds), Color.White * alpha, 0f, new Vector2((float)Game1.shadowTexture.Bounds.Center.X, (float)Game1.shadowTexture.Bounds.Center.Y), 4f, SpriteEffects.None, layerDepth - 1E-06f);
+
+                var pos = Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(xNonTile + 32 + ((__instance.shakeTimer > 0) ? Game1.random.Next(-1, 2) : 0)), (float)(yNonTile + 32 + ((__instance.shakeTimer > 0) ? Game1.random.Next(-1, 2) : 0))));
+
+                var scale = (__instance.scale.Y > 1f) ? __instance.getScale().Y : 4f;
+
+                spriteBatch.Draw(bouquet, pos, null, Color.White * alpha, 0f, new Vector2(8f, 8f), scale, __instance.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth);
+                spriteBatch.Draw(flower1, pos, null, GetColor(f1) * alpha, 0f, new Vector2(8f, 8f), scale, __instance.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + 3 / 10000f);
+                spriteBatch.Draw(flower2, pos, null, GetColor(f2) * alpha, 0f, new Vector2(8f, 8f), scale, __instance.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + 2 / 10000f);
+                spriteBatch.Draw(flower3, pos, null, GetColor(f3) * alpha, 0f, new Vector2(8f, 8f), scale, __instance.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + 1 / 10000f);
+
+
+                return false;
+            }
+        }
+        [HarmonyPatch(typeof(Furniture), nameof(Furniture.draw), new Type[] { typeof(SpriteBatch), typeof(int), typeof(int), typeof(float) })]
+        public class Furniture_draw_Patch
+        {
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling Furniture.draw");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (i < codes.Count - 5 && codes[i].opcode == OpCodes.Ldarg_0 && codes[i + 1].opcode == OpCodes.Ldfld && codes[i + 1].operand is FieldInfo fi && fi.Name == "heldObject" && codes[i + 3].opcode == OpCodes.Brfalse)
+                    {
+                        SMonitor.Log($"adding check for bouquet");
+                        codes.Insert(i + 3, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(CheckBouquet))));
+                        codes.Insert(i + 3, new CodeInstruction(OpCodes.Ldarg_S, 4));
+                        codes.Insert(i + 3, new CodeInstruction(OpCodes.Ldarg_3));
+                        codes.Insert(i + 3, new CodeInstruction(OpCodes.Ldarg_2));
+                        codes.Insert(i + 3, new CodeInstruction(OpCodes.Ldarg_1));
+                        codes.Insert(i + 3, new CodeInstruction(OpCodes.Ldarg_0));
+                        break;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+
+
         public static bool showingBouquets;
         public static List<List<ColoredObject>> bouquetList = new();
         public static Dictionary<ClickableTextureComponent, List<ColoredObject>> bouquetDict = new();
+
 
         [HarmonyPatch(typeof(CraftingPage), "GetRecipesToDisplay")]
         public class CraftingPage_GetRecipesToDisplay_Patch
@@ -60,28 +130,43 @@ namespace CustomBouquets
             {
                 if (!Config.EnableMod || !showingBouquets)
                     return true;
-                SHelper.GameContent.InvalidateCache(flowerPath1);
-                SHelper.GameContent.InvalidateCache(flowerPath2);
-                SHelper.GameContent.InvalidateCache(flowerPath3);
-                flower1 = null;
-                flower2 = null;
-                flower3 = null;
                 bouquetList.Clear();
                 __result = new List<string>();
 
-                for(int i = 0; i < Game1.player.Items.Count; i++)
+                if (Config.ForceColorFlowers)
                 {
-                    if (Game1.player.Items[i]?.Category == -80 && Game1.player.Items[i] is Object obj && Game1.player.Items[i] is not ColoredObject && Game1.objectData.TryGetValue(Game1.player.Items[i].ItemId, out var data))
+                    for (int i = 0; i < Game1.player.Items.Count; i++)
                     {
-                        var cdata = Game1.cropData.Values.FirstOrDefault(d => d.HarvestItemId == obj.ItemId && d.TintColors.Any());
-                        if (cdata == null)
-                            continue;
-                        Color? color = Utility.StringToColor(Game1.random.ChooseFrom(cdata.TintColors));
-                        if (color != null)
+                        if (Game1.player.Items[i]?.Category == -80 && Game1.player.Items[i] is Object obj && Game1.player.Items[i] is not ColoredObject && Game1.objectData.TryGetValue(Game1.player.Items[i].ItemId, out var data))
                         {
-                            var item = new ColoredObject(obj.ItemId, obj.Stack, color.Value);
-                            item.Quality = obj.Quality;
-                            Game1.player.Items[i] = item;
+                            var cdata = Game1.cropData.Values.FirstOrDefault(d => d.HarvestItemId == obj.ItemId && d.TintColors.Any());
+                            if (cdata == null)
+                                continue;
+                            for (; ;)
+                            {
+                                Color? color = Utility.StringToColor(Game1.random.ChooseFrom(cdata.TintColors));
+                                if (color != null)
+                                {
+                                    var item = new ColoredObject(obj.ItemId, 1, color.Value);
+                                    item.Quality = obj.Quality;
+                                    if (Game1.player.addItemToInventoryBool(item))
+                                    {
+                                        Game1.player.Items[i] = Game1.player.Items[i].ConsumeStack(1);
+                                        if (Game1.player.Items[i] is null || Game1.player.Items[i].Stack <= 0)
+                                        {
+                                            break;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
@@ -273,10 +358,16 @@ namespace CustomBouquets
         [HarmonyPatch(typeof(CraftingPage), "clickCraftingRecipe")]
         public class CraftingPage_clickCraftingRecipe_Patch
         {
-            public static void Prefix(CraftingPage __instance, ClickableTextureComponent c, bool playSound, ref Dictionary<string, int> __state)
+            public static bool Prefix(CraftingPage __instance, ClickableTextureComponent c, bool playSound, ref Dictionary<string, int> __state)
             {
                 if (!Config.EnableMod || !showingBouquets || !bouquetDict.TryGetValue(c, out var list))
-                    return;
+                    return true;
+                if (__instance.heldItem != null && 
+                    (!__instance.heldItem.modData.TryGetValue(flowerPath1, out var f1) || GetColor(f1) != list[0].color.Value || !__instance.heldItem.modData.TryGetValue(flowerPath2, out var f2) || GetColor(f2) != list[1].color.Value || !__instance.heldItem.modData.TryGetValue(flowerPath3, out var f3) || GetColor(f3) != list[2].color.Value)
+                    )
+                {
+                    return false;
+                }
                 __state = __instance.pagesOfCraftingRecipes[__instance.currentCraftingPage][c].recipeList;
                 __instance.pagesOfCraftingRecipes[__instance.currentCraftingPage][c].recipeList = new Dictionary<string, int>() { { "771", 1 } };
                 foreach(var co in list)
@@ -291,12 +382,23 @@ namespace CustomBouquets
                         }
                     }
                 }
+                return true;
             }
             public static void Postfix(CraftingPage __instance, ClickableTextureComponent c, bool playSound, Dictionary<string, int> __state)
             {
                 if (!Config.EnableMod || !showingBouquets || __state == null)
                     return;
                 __instance.pagesOfCraftingRecipes[__instance.currentCraftingPage][c].recipeList = __state;
+                __instance.RepositionElements();
+            }
+        }
+
+        [HarmonyPatch(typeof(CraftingPage), "_UpdateCurrentPageButtons")]
+        public class CraftingPage__UpdateCurrentPageButtons_Patch
+        {
+            public static void Prefix(CraftingPage __instance)
+            {
+                __instance.currentCraftingPage = Math.Min(__instance.currentCraftingPage, __instance.pagesOfCraftingRecipes.Count - 1);
             }
         }
 
@@ -333,6 +435,15 @@ namespace CustomBouquets
                         if (kvp.Value.name == recipeKey)
                         {
                             showingBouquets = true;
+                            SHelper.GameContent.InvalidateCache(flowerPath1);
+                            SHelper.GameContent.InvalidateCache(flowerPath2);
+                            SHelper.GameContent.InvalidateCache(flowerPath3);
+                            SHelper.GameContent.InvalidateCache(bouquetPath);
+                            flower1 = null;
+                            flower2 = null;
+                            flower3 = null;
+                            bouquet = null;
+                            CacheTextures();
                             __instance.currentCraftingPage = 0;
                             __instance.RepositionElements();
                             return false;
@@ -352,12 +463,23 @@ namespace CustomBouquets
         {
             public static bool Prefix(IClickableMenu __instance)
             {
-                if (!Config.EnableMod || !showingBouquets || __instance is not GameMenu menu || menu.GetCurrentPage() is not CraftingPage page)
+                var x = Environment.StackTrace;
+                if (!Config.EnableMod || !showingBouquets)
                     return true;
                 showingBouquets = false;
-                page.currentCraftingPage = 0;
-                page.RepositionElements();
-                return false;
+                if(__instance is GameMenu menu && menu.GetCurrentPage() is CraftingPage page)
+                {
+                    page.currentCraftingPage = 0;
+                    page.RepositionElements();
+                    return false;
+                }
+                else if(__instance is CraftingPage page1)
+                {
+                    page1.currentCraftingPage = 0;
+                    page1.RepositionElements();
+                    return false;
+                }
+                return true;
             }
         }
 
@@ -366,11 +488,8 @@ namespace CustomBouquets
         {
             public static bool Prefix()
             {
-                if (!Config.EnableMod || !showingBouquets || Game1.activeClickableMenu is not GameMenu menu || menu.GetCurrentPage() is not CraftingPage page)
+                if (!Config.EnableMod || !showingBouquets || Game1.activeClickableMenu is not GameMenu menu || menu.GetCurrentPage() is not CraftingPage)
                     return true;
-                showingBouquets = false;
-                page.currentCraftingPage = 0;
-                page.RepositionElements();
                 return false;
             }
         }

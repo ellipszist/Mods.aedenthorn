@@ -111,6 +111,22 @@ namespace CustomBouquets
                     setValue: value => Config.EnableMod = value
                 );
 
+                configMenu.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("Config.AllowMultSame"),
+                    tooltip: () => SHelper.Translation.Get("Config.AllowMultSame.Desc"),
+                    getValue: () => Config.AllowMultSame,
+                    setValue: value => Config.AllowMultSame = value
+                );
+
+                configMenu.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("Config.ForceColorFlowers"),
+                    tooltip: () => SHelper.Translation.Get("Config.ForceColorFlowers.Desc"),
+                    getValue: () => Config.ForceColorFlowers,
+                    setValue: value => Config.ForceColorFlowers = value
+                );
+
             }
         }
     }
