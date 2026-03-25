@@ -318,7 +318,7 @@ namespace ImmersiveSprinklers
                     if (dirt.modData.TryGetValue(sprinklerKey + i, out var sprinklerString))
                     {
                         SMonitor.Log($"Preventing hoedirt removal");
-                        __result = -1;
+                        __result = 0;
                         return false;
                     }
                 }

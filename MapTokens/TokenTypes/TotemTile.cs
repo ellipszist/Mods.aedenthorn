@@ -22,10 +22,16 @@ namespace MapTokens
         public override bool UpdateContext()
         {
             Point oldPos = position;
-            if((Game1.getLocationFromName("Farm") as Farm)?.TryGetMapPropertyAs("WarpTotemEntry", out position) != true)
+            if(Game1.getLocationFromName("Farm")?.TryGetMapPropertyAs("WarpTotemEntry", out position) != true)
             {
-                position = new Point(48, 7);
+                position = Game1.whichFarm switch
+                {
+                    6 => new Point(82, 29),
+                    5 => new Point(48, 39),
+                    _ => new Point(48, 7),
+                };
             }
+            //ModEntry.SMonitor.Log($"Totem tile position: {position.X}, {position.Y}", StardewModdingAPI.LogLevel.Debug);
             return oldPos != position;
         }
 

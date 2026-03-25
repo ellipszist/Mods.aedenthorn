@@ -347,13 +347,6 @@ namespace CustomBouquets
             }
         }
 
-        [HarmonyPatch(typeof(CraftingPage), nameof(CraftingPage.draw), new Type[] { typeof(SpriteBatch) })]
-        public class CraftingPage_draw_Patch
-        {
-            public static void Postfix(CraftingPage __instance, SpriteBatch b)
-            {
-            }
-        }
 
         [HarmonyPatch(typeof(CraftingPage), "clickCraftingRecipe")]
         public class CraftingPage_clickCraftingRecipe_Patch
@@ -434,6 +427,7 @@ namespace CustomBouquets
                     {
                         if (kvp.Value.name == recipeKey)
                         {
+                            SMonitor.Log("Clicked on bouquet");
                             showingBouquets = true;
                             SHelper.GameContent.InvalidateCache(flowerPath1);
                             SHelper.GameContent.InvalidateCache(flowerPath2);

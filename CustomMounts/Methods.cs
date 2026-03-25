@@ -59,7 +59,10 @@ namespace CustomMounts
                 location += data.HatOffsets[horse.FacingDirection] - new Vector2(0, 20);
                 hat.draw(spriteBatch, location, scaleSize, transparency, layerDepth, direction, useAnimalTexture);
             }
-
+            else
+            {
+                hat.draw(spriteBatch, location, scaleSize, transparency, layerDepth, direction, useAnimalTexture);
+            }
         }
         private static void HatDraw(Hat hat, float rotation, SpriteBatch spriteBatch, Vector2 location, float scaleSize, float transparency, float layerDepth, int direction, bool useAnimalTexture = false)
         {
