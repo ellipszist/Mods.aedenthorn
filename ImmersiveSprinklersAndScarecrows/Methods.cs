@@ -288,7 +288,7 @@ namespace ImmersiveSprinklersAndScarecrows
             return list;
 
         }
-        static List<Vector2> GetScarecrowTiles(Vector2 tileLocation, int radius)
+        public static List<Vector2> GetScarecrowTiles(Vector2 tileLocation, int radius)
         {
             Vector2 start = tileLocation + new Vector2(-1, -1) * (radius - 2);
             Vector2 position = tileLocation + new Vector2(0.5f, 0.5f);

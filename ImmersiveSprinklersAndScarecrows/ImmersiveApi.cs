@@ -12,37 +12,71 @@ namespace ImmersiveSprinklersAndScarecrows
 {
     public interface IImmersiveApi
     {
-        public Object GetObjectAtMouse();
-        public Object GetObjectAtTileCorner(GameLocation location, int x, int y);
-        public bool IsObjectAtMouse();
-        public bool IsObjectAtTileCorner(GameLocation location, Vector2 tile);
-        public int GetRadius(Object obj);
-        public List<Vector2> GetRange(Vector2 tile, int radius);
-        public List<Vector2> GetRange(GameLocation location, Vector2 tile);
+        public Object GetSprinklerAtMouse();
+        public Object GetSprinklerAtTileCorner(GameLocation location, int x, int y);
+        public bool IsSprinklerAtMouse();
+        public bool IsSprinklerAtTileCorner(GameLocation location, Vector2 tile);
+        public Object GetScarecrowAtMouse();
+        public Object GetScarecrowAtTileCorner(GameLocation location, int x, int y);
+        public bool IsScarecrowAtMouse();
+        public bool IsScarecrowAtTileCorner(GameLocation location, Vector2 tile);
+        public int GetSprinklerRadius(Object obj);
+        public List<Vector2> GetSprinklerRange(Vector2 tile, int radius);
+        public List<Vector2> GetScarecrowRange(Vector2 tile, int radius);
+        public List<Vector2> GetSprinklerRange(GameLocation location, Vector2 tile);
+        public List<Vector2> GetScarecrowRange(GameLocation location, Vector2 tile);
 
     }
     public class ImmersiveApi : IImmersiveApi
     {
-        public Object GetObjectAtMouse()
+        public Object GetSprinklerAtMouse()
         {
             return ModEntry.GetSprinklerAtMouse();
         }
-        public Object GetObjectAtTileCorner(GameLocation l, int x, int y)
+        public Object GetSprinklerAtTileCorner(GameLocation l, int x, int y)
         {
             return ModEntry.GetSprinkler(l, x, y);
         }
 
-        public int GetRadius(Object obj)
+        public bool IsSprinklerAtMouse()
+        {
+            var corner = ModEntry.GetMouseCornerTile();
+            return ModEntry.SprinklerAt(Game1.currentLocation, corner.X, corner.Y) != null;
+        }
+        public bool IsSprinklerAtTileCorner(GameLocation location, Vector2 tile)
+        {
+            return ModEntry.SprinklerAt(location, (int)tile.X, (int)tile.Y) != null;
+        }
+        public Object GetScarecrowAtMouse()
+        {
+            return ModEntry.GetScarecrowAtMouse();
+        }
+        public Object GetScarecrowAtTileCorner(GameLocation l, int x, int y)
+        {
+            return ModEntry.GetScarecrow(l, x, y);
+        }
+
+        public bool IsScarecrowAtMouse()
+        {
+            var corner = ModEntry.GetMouseCornerTile();
+            return ModEntry.ScarecrowAt(Game1.currentLocation, corner.X, corner.Y) != null;
+        }
+        public bool IsScarecrowAtTileCorner(GameLocation location, Vector2 tile)
+        {
+            return ModEntry.ScarecrowAt(location, (int)tile.X, (int)tile.Y) != null;
+        }
+
+        public int GetSprinklerRadius(Object obj)
         {
             return ModEntry.GetSprinklerRadius(obj);
         }
 
-        public List<Vector2> GetRange(Vector2 tile, int radius)
+        public List<Vector2> GetSprinklerRange(Vector2 tile, int radius)
         {
             return ModEntry.GetSprinklerTiles(tile, radius);
         }
 
-        public List<Vector2> GetRange(GameLocation l, Vector2 tile)
+        public List<Vector2> GetSprinklerRange(GameLocation l, Vector2 tile)
         {
             HashSet<Vector2> tiles = new HashSet<Vector2>();
             var x = (int) tile.X;
@@ -57,22 +91,40 @@ namespace ImmersiveSprinklersAndScarecrows
             foreach(var p in points)
             {
                 var obj = ModEntry.GetSprinklerCached(l, p.X, p.Y);
-                if(obj!= null)
+                if(obj != null)
                 {
-                    tiles.AddRange(ModEntry.GetSprinklerTiles(p.ToVector2(), GetRadius(obj)));
+                    tiles.AddRange(ModEntry.GetSprinklerTiles(p.ToVector2(), GetSprinklerRadius(obj)));
                 }
             }
             return tiles.ToList();
         }
 
-        public bool IsObjectAtMouse()
+        public List<Vector2> GetScarecrowRange(Vector2 tile, int radius)
         {
-            var corner = ModEntry.GetMouseCornerTile();
-            return ModEntry.SprinklerAt(Game1.currentLocation, corner.X, corner.Y) != null;
+            return ModEntry.GetScarecrowTiles(tile, radius);
         }
-        public bool IsObjectAtTileCorner(GameLocation location, Vector2 tile)
+
+        public List<Vector2> GetScarecrowRange(GameLocation l, Vector2 tile)
         {
-            return ModEntry.SprinklerAt(location, (int)tile.X, (int)tile.Y) != null;
+            HashSet<Vector2> tiles = new HashSet<Vector2>();
+            var x = (int) tile.X;
+            var y = (int) tile.Y;
+            List<Point> points = new List<Point>()
+            {
+                new Point(x, y),
+                new Point(x - 1, y),
+                new Point(x - 1, y - 1),
+                new Point(x, y - 1)
+            };
+            foreach(var p in points)
+            {
+                var obj = ModEntry.GetScarecrowCached(l, p.X, p.Y);
+                if(obj != null)
+                {
+                    tiles.AddRange(ModEntry.GetScarecrowTiles(p.ToVector2(), obj.GetRadiusForScarecrow()));
+                }
+            }
+            return tiles.ToList();
         }
     }
 }
