@@ -1,7 +1,7 @@
 ﻿{
   "Name": "Immersive Scarecrows",
   "Author": "aedenthorn",
-  "Version": "1.4.3",
+  "Version": "1.5.0",
   "Description": "Immersive Scarecrows.",
   "UniqueID": "aedenthorn.ImmersiveScarecrows",
   "EntryDll": "ImmersiveScarecrows.dll",

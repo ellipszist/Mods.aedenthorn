@@ -14,7 +14,7 @@ using System.Linq;
 using System.Reflection;
 using Object = StardewValley.Object;
 
-namespace ImmersiveSprinklers
+namespace ImmersiveSprinklersAndScarecrows
 {
     public partial class ModEntry
     {

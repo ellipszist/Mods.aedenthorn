@@ -1,7 +1,7 @@
 ﻿{
   "Name": "Immersive Sprinklers",
   "Author": "aedenthorn",
-  "Version": "1.3.3",
+  "Version": "1.4.0",
   "Description": "Immersive Sprinklers.",
   "UniqueID": "aedenthorn.ImmersiveSprinklers",
   "EntryDll": "ImmersiveSprinklers.dll",

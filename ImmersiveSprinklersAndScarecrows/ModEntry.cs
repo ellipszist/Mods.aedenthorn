@@ -23,17 +23,25 @@ namespace ImmersiveSprinklersAndScarecrows
 
         public static ModEntry context;
 
-        public static string prefixKey = "aedenthorn.ImmersiveSprinklers/";
+        public static string sprinklerPrefix = "aedenthorn.ImmersiveSprinklers/";
+        public static string scarecrowPrefix = "aedenthorn.ImmersiveScarecrows/";
         public static string sprinklerKey = "aedenthorn.ImmersiveSprinklers/sprinkler";
-        public static string bigCraftableKey = "aedenthorn.ImmersiveSprinklers/bigCraftable";
-        public static string guidKey = "aedenthorn.ImmersiveSprinklers/guid";
+        public static string scarecrowKey = "aedenthorn.ImmersiveScarecrows/scarecrow";
+        public static string sprinklerBigCraftableKey = "aedenthorn.ImmersiveSprinklers/bigCraftable";
+        public static string scarecrowBigCraftableKey = "aedenthorn.ImmersiveScarecrows/bigCraftable";
+        public static string sprinklerGuidKey = "aedenthorn.ImmersiveSprinklers/guid";
+        public static string scarecrowGuidKey = "aedenthorn.ImmersiveScarecrows/guid";
         public static string enricherKey = "aedenthorn.ImmersiveSprinklers/enricher";
         public static string fertilizerKey = "aedenthorn.ImmersiveSprinklers/fertilizer";
         public static string nozzleKey = "aedenthorn.ImmersiveSprinklers/nozzle";
-        public static string altTexturePrefix = "aedenthorn.ImmersiveSprinklers/AlternativeTexture";
+        public static string altTextureSprinklerPrefix = "aedenthorn.ImmersiveSprinklers/AlternativeTexture";
+        public static string altTextureScarecrowPrefix = "aedenthorn.ImmersiveScarecrows/AlternativeTexture";
         public static string altTextureKey = "AlternativeTexture";
+        public static string scaredKey = "aedenthorn.ImmersiveScarecrows/scared";
+        public static string hatKey = "aedenthorn.ImmersiveScarecrows/hat";
 
         public static Dictionary<string, Object> sprinklerDict = new();
+        public static Dictionary<string, Object> scarecrowDict = new();
         public static object atApi;
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
@@ -62,43 +70,62 @@ namespace ImmersiveSprinklersAndScarecrows
         }
         public void Display_RenderedWorld(object sender, StardewModdingAPI.Events.RenderedWorldEventArgs e)
         {
-            if (!Config.EnableMod || !Context.IsPlayerFree || !Helper.Input.IsDown(Config.ShowRangeButton) || Game1.currentLocation?.terrainFeatures is null)
+            if (!Config.EnableMod || !Context.IsPlayerFree || Game1.currentLocation?.terrainFeatures is null)
                 return;
-            List<Vector2> tiles = new List<Vector2>();
-            foreach(var kvp in Game1.currentLocation.terrainFeatures.Pairs)
-            {
-                if (kvp.Value is not HoeDirt)
-                    continue;
-                for(int i = 0; i < 4; i++)
-                {
-                    var which = i;
-                    var sprinklerTile = kvp.Key;
-                    if (TileSprinklerString(Game1.currentLocation, sprinklerTile, which) is null)
-                    {
-                        continue;
-                    }
-                    var tf = Game1.currentLocation.terrainFeatures[sprinklerTile];
-                    Object obj = GetSprinklerCached(tf, which, tf.modData.ContainsKey(nozzleKey + which));
-                    if (obj is not null)
-                    {
-                        tiles.AddRange(GetSprinklerTiles(sprinklerTile, which, GetSprinklerRadius(obj)));
 
-                        if (tf.modData.ContainsKey(enricherKey + which) && tf.modData.TryGetValue(fertilizerKey + which, out string fertString))
+            var sc = Helper.Input.IsDown(Config.ShowScarecrowRangeButton);
+            var sp = Helper.Input.IsDown(Config.ShowSprinklerRangeButton);
+            if (!sc && !sp)
+                return;
+
+            HashSet<Vector2> sprinklerTiles = new();
+            HashSet<Vector2> scarecrowTiles = new();
+            foreach (var kvp in Game1.currentLocation.modData.Pairs)
+            {
+                if (sp && kvp.Key.StartsWith(sprinklerKey+","))
+                {
+                    try
+                    {
+                        int x = int.Parse(kvp.Key.Split(',')[1]);
+                        int y = int.Parse(kvp.Key.Split(',')[2]);
+                        var obj = GetSprinklerCached(Game1.currentLocation, x, y);
+                        if (obj.IsSprinkler())
                         {
-                            Vector2 pos = sprinklerTile + GetSprinklerCorner(which) * 0.5f;
-                            var f = GetFertilizer(fertString);
-                            var xy = Game1.GlobalToLocal(pos * 64) + new Vector2(0, -64);
-                            e.SpriteBatch.Draw(Game1.objectSpriteSheet, xy, GameLocation.getSourceRectForObject(f.ParentSheetIndex), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, (pos.Y + 1) / 10000f);
-                            var scaleFactor = 1f;
-                            Utility.drawTinyDigits(f.Stack, e.SpriteBatch, xy + new Vector2((float)(64 - Utility.getWidthOfTinyDigitString(f.Stack, 3f * scaleFactor)) + 3f * scaleFactor, 64f - 18f * scaleFactor + 1f), 3f * scaleFactor, 1f, Color.White);
+                            foreach (var t in GetSprinklerTiles(new Vector2(x, y), GetSprinklerRadius(obj)))
+                            {
+                                sprinklerTiles.Add(t);
+                            }
                         }
                     }
+                    catch { }
                 }
-
+                if (sc && kvp.Key.StartsWith(scarecrowKey + ","))
+                {
+                    try
+                    {
+                        int x = int.Parse(kvp.Key.Split(',')[1]);
+                        int y = int.Parse(kvp.Key.Split(',')[2]);
+                        var obj = GetScarecrowCached(Game1.currentLocation, x, y);
+                        if (obj.IsScarecrow())
+                        {
+                            foreach (var t in GetScarecrowTiles(new Vector2(x, y), obj.GetRadiusForScarecrow()))
+                            {
+                                scarecrowTiles.Add(t);
+                            }
+                        }
+                    }
+                    catch { }
+                }
             }
-            foreach (var tile in tiles.Distinct())
+            foreach (var tile in sprinklerTiles)
             {
-                e.SpriteBatch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(new Vector2((float)((int)tile.X * 64), (float)((int)tile.Y * 64))), new Rectangle?(new Rectangle(194, 388, 16, 16)), Config.RangeTint * Config.RangeAlpha, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.01f);
+                e.SpriteBatch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(new Vector2((float)((int)tile.X * 64), (float)((int)tile.Y * 64))), new Rectangle?(new Rectangle(194, 388, 16, 16)), (scarecrowTiles.Contains(tile) ? Config.BothRangeTint : Config.SprinklerRangeTint) * Config.RangeAlpha, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.01f);
+            }
+            foreach (var tile in scarecrowTiles)
+            {
+                if (sprinklerTiles.Contains(tile))
+                    continue;
+                e.SpriteBatch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(new Vector2((float)((int)tile.X * 64), (float)((int)tile.Y * 64))), new Rectangle?(new Rectangle(194, 388, 16, 16)), Config.ScarecrowRangeTint * Config.RangeAlpha, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.01f);
             }
         }
 
@@ -119,76 +146,68 @@ namespace ImmersiveSprinklersAndScarecrows
             }
             if (e.Button == Config.PickupButton && Context.CanPlayerMove)
             {
-                int which = GetMouseCorner();
-                if (ReturnSprinkler(Game1.player, Game1.currentLocation, Game1.currentCursorTile, which))
+                var tile = GetMouseCornerTile();
+                if (ReturnOrDropSprinkler(Game1.currentLocation, tile.X, tile.Y, Game1.player, false))
+                {
+                    Helper.Input.Suppress(e.Button);
+                }
+                else if (ReturnOrDropScarecrow(Game1.currentLocation, tile.X, tile.Y, Game1.player, false))
                 {
                     Helper.Input.Suppress(e.Button);
                 }
                 else if (Config.PickupNearby || Constants.TargetPlatform == GamePlatform.Android)
                 {
-                    var list = Game1.currentLocation.terrainFeatures.Pairs.Where(t => t.Value is HoeDirt).ToList();
-                    if (!list.Any())
-                        return;
-                    
-                    foreach(var kvp in list)
+                    foreach(var p in GetSprinklers(Game1.currentLocation))
                     {
-                        var distance = Vector2.Distance(kvp.Key * 64, Game1.player.position.Value);
+                        var distance = Vector2.Distance(new Vector2(p.X + 1, p.Y + 1) * 64, Game1.player.position.Value);
                         if (distance > 64)
                             continue;
-                        for (int i = 0; i < 4; i++)
+                        if (ReturnOrDropSprinkler(Game1.currentLocation, (int)p.X, (int)p.Y, Game1.player, false))
                         {
-                            if (ReturnSprinkler(Game1.player, Game1.currentLocation, kvp.Key, i))
-                            {
-                                Helper.Input.Suppress(e.Button);
-                                return;
-                            }
+                            Helper.Input.Suppress(e.Button);
+                            return;
+                        }
+                    }
+                    foreach(var p in GetScarecrows(Game1.currentLocation))
+                    {
+                        var distance = Vector2.Distance(new Vector2(p.X + 1, p.Y + 1) * 64, Game1.player.position.Value);
+                        if (distance > 64)
+                            continue;
+                        if (ReturnOrDropScarecrow(Game1.currentLocation, (int)p.X, (int)p.Y, Game1.player, false))
+                        {
+                            Helper.Input.Suppress(e.Button);
+                            return;
                         }
                     }
                 }
             }
             else if (e.Button == Config.ActivateButton && Context.CanPlayerMove)
             {
-                int which = GetMouseCorner();
-                Vector2 tile = Game1.currentCursorTile;
-                
-                if (GetSprinklerTileBool(Game1.currentLocation, ref tile, ref which, out string sprinklerString))
+                Point tile = GetMouseCornerTile();
+
+                var obj = GetSprinkler(Game1.currentLocation, tile.X, tile.Y);
+                if (obj is not null)
                 {
-                    var obj = GetSprinkler(Game1.currentLocation.terrainFeatures[tile], which, Game1.currentLocation.terrainFeatures[tile].modData.ContainsKey(nozzleKey + which));
-                    if (obj is not null)
-                    {
-                        obj.Location = Game1.currentLocation;
-                        ActivateSprinkler(Game1.currentLocation, tile, obj, which, false);
-                        Helper.Input.Suppress(e.Button);
-                    }
+                    obj.Location = Game1.currentLocation;
+                    ActivateSprinkler(Game1.currentLocation, tile, obj, false);
+                    Helper.Input.Suppress(e.Button);
                 }
                 else if (Config.ActivateNearby || Constants.TargetPlatform == GamePlatform.Android)
                 {
-                    var list = Game1.currentLocation.terrainFeatures.Pairs.Where(t => t.Value is HoeDirt).ToList();
-                    if (!list.Any())
-                        return;
-
-                    foreach (var kvp in list)
+                    foreach (var v in GetSprinklers(Game1.currentLocation))
                     {
                         if(Config.ActivateNearbyRange > 0)
                         {
-                            var distance = Vector2.Distance(kvp.Key * 64, Game1.player.position.Value);
+                            var distance = Vector2.Distance(v * 64, Game1.player.position.Value);
                             if (distance > 64 * Config.ActivateNearbyRange)
                                 continue;
                         }
-                        for (int i = 0; i < 4; i++)
+                        obj = GetSprinkler(Game1.currentLocation, tile.X, tile.Y);
+                        if (obj is not null)
                         {
-                            which = i;
-                            tile = kvp.Key;
-                            if (GetSprinklerTileBool(Game1.currentLocation, ref tile, ref which, out sprinklerString))
-                            {
-                                var obj = GetSprinkler(Game1.currentLocation.terrainFeatures[tile], which, Game1.currentLocation.terrainFeatures[tile].modData.ContainsKey(nozzleKey + which));
-                                if (obj is not null)
-                                {
-                                    obj.Location = Game1.currentLocation;
-                                    ActivateSprinkler(Game1.currentLocation, tile, obj, which, false);
-                                    Helper.Input.Suppress(e.Button);
-                                }
-                            }
+                            obj.Location = Game1.currentLocation;
+                            ActivateSprinkler(Game1.currentLocation, tile, obj, false);
+                            Helper.Input.Suppress(e.Button);
                         }
                     }
                 }
@@ -198,6 +217,7 @@ namespace ImmersiveSprinklersAndScarecrows
         public void GameLoop_SaveLoaded(object sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)
         {
             sprinklerDict.Clear();
+            scarecrowDict.Clear();
         }
 
         public void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
@@ -260,9 +280,15 @@ namespace ImmersiveSprinklersAndScarecrows
             );
             configMenu.AddKeybind(
                 mod: ModManifest,
-                name: () => "Show Range Key",
-                getValue: () => Config.ShowRangeButton,
-                setValue: value => Config.ShowRangeButton = value
+                name: () => "Show Sprinkler Range",
+                getValue: () => Config.ShowSprinklerRangeButton,
+                setValue: value => Config.ShowSprinklerRangeButton = value
+            );
+            configMenu.AddKeybind(
+                mod: ModManifest,
+                name: () => "Show Scarecrow Range",
+                getValue: () => Config.ShowScarecrowRangeButton,
+                setValue: value => Config.ShowScarecrowRangeButton = value
             );
             configMenu.AddTextOption(
                 mod: ModManifest,

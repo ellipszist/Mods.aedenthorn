@@ -19,7 +19,7 @@ using Color = Microsoft.Xna.Framework.Color;
 using Object = StardewValley.Object;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
-namespace ImmersiveSprinklers
+namespace ImmersiveSprinklersAndScarecrows
 {
     public partial class ModEntry
     {
