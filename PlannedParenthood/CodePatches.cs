@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Microsoft.Xna.Framework.Input;
 using Netcode;
 using StardewModdingAPI;
 using StardewValley;
@@ -28,7 +29,10 @@ namespace PlannedParenthood
                 }
                 var npc = Game1.getCharacterFromName(names[i], true);
                 if (npc is null || (Config.InBed && !npc.isSleeping.Value))
+                {
+                    SMonitor.Log($"Removing non-sleeping spouse {names[i]} to list");
                     names.RemoveAt(i);
+                }
             }
             foreach (var kvp in Game1.player.team.friendshipData.Pairs)
             {

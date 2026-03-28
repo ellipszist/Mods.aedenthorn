@@ -240,23 +240,21 @@ namespace HugsAndKisses
 
         public static bool AreNPCsMarried(string npc1, string npc2)
         {
-            if (ModEntry.relationships.ContainsKey(npc1) && ModEntry.relationships[npc1].ContainsKey(npc2))
+            if (ModEntry.relationships.TryGetValue(npc1, out var dict) && dict?.TryGetValue(npc2, out var rel) == true)
             {
-                string relation = ModEntry.relationships[npc1][npc2];
                 foreach (string r in spouseRoles)
                 {
-                    if (relation.Contains(r))
+                    if (rel.Contains(r))
                     {
                         return true;
                     }
                 }
             }
-            if (ModEntry.relationships.ContainsKey(npc2) && ModEntry.relationships[npc2].ContainsKey(npc1))
+            if (ModEntry.relationships.TryGetValue(npc2, out var dict2) && dict2?.TryGetValue(npc1, out var rel2) == true)
             {
-                string relation = ModEntry.relationships[npc2][npc1];
                 foreach (string r in spouseRoles)
                 {
-                    if (relation.Contains(r))
+                    if (rel2.Contains(r))
                     {
                         return true;
                     }
@@ -267,23 +265,21 @@ namespace HugsAndKisses
         
         public static bool AreNPCsRelated(string npc1, string npc2)
         {
-            if (ModEntry.relationships.ContainsKey(npc1) && ModEntry.relationships[npc1].ContainsKey(npc2))
+            if (ModEntry.relationships.TryGetValue(npc1, out var dict) && dict?.TryGetValue(npc2, out var rel) == true)
             {
-                string relation = ModEntry.relationships[npc1][npc2];
                 foreach (string r in relativeRoles)
                 {
-                    if (relation.Contains(r))
+                    if (rel.Contains(r))
                     {
                         return true;
                     }
                 }
             }
-            if (ModEntry.relationships.ContainsKey(npc2) && ModEntry.relationships[npc2].ContainsKey(npc1))
+            if (ModEntry.relationships.TryGetValue(npc2, out var dict2) && dict2?.TryGetValue(npc1, out var rel2) == true)
             {
-                string relation = ModEntry.relationships[npc2][npc1];
                 foreach (string r in relativeRoles)
                 {
-                    if (relation.Contains(r))
+                    if (rel2.Contains(r))
                     {
                         return true;
                     }

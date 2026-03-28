@@ -1,4 +1,4 @@
-﻿namespace CustomStarterFurniture
+﻿namespace LocationFurniture
 {
 	public class ModConfig
 	{
