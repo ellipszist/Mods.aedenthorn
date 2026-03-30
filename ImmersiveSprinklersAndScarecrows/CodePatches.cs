@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Netcode;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.ItemTypeDefinitions;
@@ -40,25 +41,24 @@ namespace ImmersiveSprinklersAndScarecrows
                 if (obj is not null && who.CurrentItem is not null)
                 {
 
-                    if (who.CurrentItem.ItemId == "913" && !EnricherAt(__instance, x, y))
+                    if (who.CurrentItem.ItemId == "913" && !HasData(__instance, enricherKey, x, y))
                     {
                         __instance.modData[$"{enricherKey},{x},{y}"] = "true";
                         who.reduceActiveItemByOne();
                         __instance.playSound("axe");
                     }
-                    else if (who.CurrentItem.ItemId == "915" && !NozzleAt(__instance, x, y))
+                    else if (who.CurrentItem.ItemId == "915" && !HasData(__instance, nozzleKey, x, y))
                     {
                         __instance.modData[$"{nozzleKey},{x},{y}"] = "true";
                         who.reduceActiveItemByOne();
                         __instance.playSound("axe");
                     }
-                    else if (who.CurrentItem.Category == -19 && EnricherAt(__instance, x, y))
+                    else if (who.CurrentItem.Category == -19 && HasData(__instance, enricherKey, x, y))
                     {
                         int stack = who.CurrentItem.Stack;
                         int addStack = stack;
                         int index = who.CurrentItem.ParentSheetIndex;
-                        var fertString = FertilizerAt(__instance, x, y);
-                        if (fertString != null)
+                        if (TryGetData(__instance, fertilizerKey, x, y, out var fertString))
                         {
                             Object f = GetFertilizer(fertString);
                             if (f.ParentSheetIndex == who.CurrentItem.ParentSheetIndex)
@@ -99,8 +99,7 @@ namespace ImmersiveSprinklersAndScarecrows
                 {
                     if (obj.ParentSheetIndex == 126 && who.CurrentItem is not null && who.CurrentItem is Hat hat)
                     {
-                        var hatString = HatAt(__instance, x, y);
-                        if (hatString != null)
+                        if (TryGetData(__instance, hatKey, x, y, out var hatString))
                         {
                             Game1.createItemDebris(new Hat(hatString), Game1.currentCursorTile * 64f, (who.FacingDirection + 2) % 4, null, -1);
                             __instance.modData.Remove($"{hatKey},{x},{y}");
@@ -114,12 +113,11 @@ namespace ImmersiveSprinklersAndScarecrows
                     }
                     if (Game1.didPlayerJustRightClick(true))
                     {
-                        var scaredString = ScaredAt(__instance, x, y);
                         int scared = 0;
-                        int.TryParse(scaredString, out scared);
-                        if (scaredString == null)
+                        
+                        if (!TryGetData(__instance, scaredKey, x, y, out var scaredString) || !int.TryParse(scaredString, out scared))
                         {
-                            __instance.modData[$"{scaredKey},{x},{y}"] = "0";
+                            SetData(__instance, scaredKey,x,y, "0");
                         }
                         if (scared == 0)
                         {
@@ -152,7 +150,9 @@ namespace ImmersiveSprinklersAndScarecrows
                 var tile = GetMouseCornerTile();
                 int tileX = (int)tile.X;
                 int tileY = (int)tile.Y;
-                if (__instance.IsSprinkler() && location.terrainFeatures.ContainsKey(placementTile))
+                if (!location.terrainFeatures.TryGetValue(placementTile, out var tf) || tf is not HoeDirt dirt)
+                    return true;
+                if (__instance.IsSprinkler())
                 {
                     SMonitor.Log($"Placing {__instance.Name} at {tileX},{tileY}");
                     location.playSound("woodyStep");
@@ -184,7 +184,7 @@ namespace ImmersiveSprinklersAndScarecrows
                     __result = true;
                     return false;
                 }
-                else if (__instance.IsScarecrow() && location.terrainFeatures.ContainsKey(placementTile))
+                else if (__instance.IsScarecrow())
                 {
                     SMonitor.Log($"Placing {__instance.Name} at {tileX},{tileY}");
                     location.playSound("woodyStep");
@@ -217,16 +217,15 @@ namespace ImmersiveSprinklersAndScarecrows
                     return false;
 
                 }
-                else if (__instance.Category == -74 && location.terrainFeatures.TryGetValue(placementTile, out var tf) && tf is HoeDirt dirt)
+                else if (__instance.Category == -74)
                 {
                     foreach (var point in GetSprinklerPoints(location))
                     {
                         int sprX = point.X;
                         int sprY = point.Y;
-                        if (EnricherAt(location, sprX, sprY))
+                        if (HasData(location,enricherKey, sprX, sprY))
                         {
-                            var fertString = FertilizerAt(location, sprX, sprY);
-                            if (fertString != null)
+                            if (TryGetData(location,fertilizerKey, sprX, sprY, out var fertString))
                             {
                                 var obj = GetSprinkler(location, sprX, sprY);
                                 if (obj is not null)
@@ -240,11 +239,11 @@ namespace ImmersiveSprinklersAndScarecrows
                                             f.Stack--;
                                             if (f.Stack > 0)
                                             {
-                                                location.modData[$"{fertilizerKey},{sprX},{sprY}"] = f.ParentSheetIndex + "," + f.Stack;
+                                                SetData(location, fertilizerKey, sprX, sprY, f.ParentSheetIndex + "," + f.Stack);
                                             }
                                             else
                                             {
-                                                location.modData.Remove($"{fertilizerKey},{sprX},{sprY}");
+                                                SetData(location, fertilizerKey, sprX, sprY, null);
                                             }
                                         }
                                     }
@@ -255,6 +254,28 @@ namespace ImmersiveSprinklersAndScarecrows
                 }
                 return true;
             }
+        }
+
+        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.DayUpdate))]
+        public class GameLocation_DayUpdate_Patch
+        {
+            public static void Postfix(GameLocation __instance)
+            {
+                if (!Config.EnableMod || (__instance.IsOutdoors && Game1.IsRainingHere(__instance)))
+                    return;
+                foreach(var obj in GetSprinklers(__instance))
+                {
+                    if (obj is not null)
+                    {
+                        obj.Location = __instance;
+                        __instance.postFarmEventOvernightActions.Add(delegate
+                        {
+                            ActivateSprinkler(__instance, obj.TileLocation, obj, true);
+                        });
+                    }
+                }
+            }
+
         }
         [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.draw))]
         public class HoeDirt_DrawOptimized_Patch
@@ -290,11 +311,11 @@ namespace ImmersiveSprinklersAndScarecrows
                         }
                         b.Draw(texture, position, sourceRect, Color.White * Config.Alpha, 0, Vector2.Zero, Config.Scale, obj.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth);
 
-                        if (EnricherAt(__instance, p.X, p.Y))
+                        if (HasData(__instance, enricherKey, p.X, p.Y))
                         {
                             b.Draw(Game1.objectSpriteSheet, position + new Vector2(0f, -20f), GameLocation.getSourceRectForObject(914), Color.White * Config.Alpha, 0, Vector2.Zero, Config.Scale, obj.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + 2E-05f);
                         }
-                        if (NozzleAt(__instance, p.X, p.Y))
+                        if (HasData(__instance, nozzleKey, p.X, p.Y))
                         {
                             b.Draw(Game1.objectSpriteSheet, position, GameLocation.getSourceRectForObject(916), Color.White * Config.Alpha, 0, Vector2.Zero, Config.Scale, obj.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + 1E-05f);
                         }
@@ -324,11 +345,10 @@ namespace ImmersiveSprinklersAndScarecrows
                         Vector2 globalPosition = p.ToVector2() * 64 + new Vector2(32f, 16);
                         if (obj.bigCraftable.Value)
                             globalPosition -= new Vector2(0, 64);
-                        var layerDepth = (globalPosition.Y + (obj.bigCraftable.Value ? 81 : 33) + Config.DrawOffsetZ) / 10000f;
+                        var layerDepth = (globalPosition.Y + (obj.bigCraftable.Value ? 81 : 33) + 24 + Config.DrawOffsetZ) / 10000f;
                         var position = Game1.GlobalToLocal(globalPosition);
                         b.Draw(texture, position, sourceRect, Color.White * Config.Alpha, 0, Vector2.Zero, Config.Scale, SpriteEffects.None, layerDepth);
-                        var hatString = HatAt(__instance, p.X, p.Y);
-                        if (hatString is not null && int.TryParse(hatString, out var hat))
+                        if (TryGetData(__instance, hatKey, p.X, p.Y, out var hatString) && int.TryParse(hatString, out var hat))
                         {
                             b.Draw(FarmerRenderer.hatsTexture, position + new Vector2(-3f, -6f) * 4f, new Rectangle(hat * 20 % FarmerRenderer.hatsTexture.Width, hat * 20 / FarmerRenderer.hatsTexture.Width * 20 * 4, 20, 20), Color.White * Config.Alpha, 0f, Vector2.Zero, 4f, SpriteEffects.None, layerDepth + 1E-05f);
                         }

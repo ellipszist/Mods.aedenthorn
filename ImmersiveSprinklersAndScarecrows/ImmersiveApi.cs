@@ -41,11 +41,11 @@ namespace ImmersiveSprinklersAndScarecrows
         public bool IsSprinklerAtMouse()
         {
             var corner = ModEntry.GetMouseCornerTile();
-            return ModEntry.SprinklerAt(Game1.currentLocation, corner.X, corner.Y) != null;
+            return ModEntry.HasData(Game1.currentLocation, ModEntry.sprinklerKey, corner.X, corner.Y);
         }
         public bool IsSprinklerAtTileCorner(GameLocation location, Vector2 tile)
         {
-            return ModEntry.SprinklerAt(location, (int)tile.X, (int)tile.Y) != null;
+            return ModEntry.HasData(location, ModEntry.sprinklerKey, (int)tile.X, (int)tile.Y);
         }
         public Object GetScarecrowAtMouse()
         {
@@ -59,11 +59,11 @@ namespace ImmersiveSprinklersAndScarecrows
         public bool IsScarecrowAtMouse()
         {
             var corner = ModEntry.GetMouseCornerTile();
-            return ModEntry.ScarecrowAt(Game1.currentLocation, corner.X, corner.Y) != null;
+            return ModEntry.HasData(Game1.currentLocation, ModEntry.scarecrowKey, corner.X, corner.Y);
         }
         public bool IsScarecrowAtTileCorner(GameLocation location, Vector2 tile)
         {
-            return ModEntry.ScarecrowAt(location, (int)tile.X, (int)tile.Y) != null;
+            return ModEntry.HasData(location, ModEntry.scarecrowKey, (int)tile.X, (int)tile.Y);
         }
 
         public int GetSprinklerRadius(Object obj)

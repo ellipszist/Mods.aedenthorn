@@ -4,9 +4,11 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.TerrainFeatures;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using Color = Microsoft.Xna.Framework.Color;
 using Object = StardewValley.Object;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
@@ -63,6 +65,28 @@ namespace ImmersiveSprinklersAndScarecrows
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
 
+            HarmonyMethod prefix = new(typeof(ModEntry), nameof(ModEntry.Modded_Farm_AddCrows_Prefix));
+            Type prismaticPatches = AccessTools.TypeByName("PrismaticTools.Framework.PrismaticPatches");
+            if (prismaticPatches is not null)
+            {
+                MethodInfo prismaticPrefix = AccessTools.Method(prismaticPatches, "Farm_AddCrows");
+                if (prismaticPrefix is not null)
+                {
+                    harmony.Patch(prismaticPrefix, prefix: prefix);
+                    Monitor.Log("Found Prismatic Tools, patching for compat", LogLevel.Info);
+                }
+            }
+
+            Type radioactivePatches = AccessTools.TypeByName("RadioactiveTools.Framework.RadioactivePatches");
+            if (radioactivePatches is not null)
+            {
+                MethodInfo radioactivePrefix = AccessTools.Method(radioactivePatches, "Farm_AddCrows");
+                if (radioactivePrefix is not null)
+                {
+                    harmony.Patch(radioactivePrefix, prefix: prefix);
+                    Monitor.Log("Found Radioactive Tools, patching for compat", LogLevel.Info);
+                }
+            }
         }
         public override object GetApi()
         {
@@ -157,7 +181,7 @@ namespace ImmersiveSprinklersAndScarecrows
                 }
                 else if (Config.PickupNearby || Constants.TargetPlatform == GamePlatform.Android)
                 {
-                    foreach(var p in GetSprinklers(Game1.currentLocation))
+                    foreach(var p in GetSprinklerVectors(Game1.currentLocation))
                     {
                         var distance = Vector2.Distance(new Vector2(p.X + 1, p.Y + 1) * 64, Game1.player.position.Value);
                         if (distance > 64)
@@ -168,7 +192,7 @@ namespace ImmersiveSprinklersAndScarecrows
                             return;
                         }
                     }
-                    foreach(var p in GetScarecrows(Game1.currentLocation))
+                    foreach(var p in GetScarecrowVectors(Game1.currentLocation))
                     {
                         var distance = Vector2.Distance(new Vector2(p.X + 1, p.Y + 1) * 64, Game1.player.position.Value);
                         if (distance > 64)
@@ -189,12 +213,12 @@ namespace ImmersiveSprinklersAndScarecrows
                 if (obj is not null)
                 {
                     obj.Location = Game1.currentLocation;
-                    ActivateSprinkler(Game1.currentLocation, tile, obj, false);
+                    ActivateSprinkler(Game1.currentLocation, tile.ToVector2(), obj, false);
                     Helper.Input.Suppress(e.Button);
                 }
                 else if (Config.ActivateNearby || Constants.TargetPlatform == GamePlatform.Android)
                 {
-                    foreach (var v in GetSprinklers(Game1.currentLocation))
+                    foreach (var v in GetSprinklerVectors(Game1.currentLocation))
                     {
                         if(Config.ActivateNearbyRange > 0)
                         {
@@ -206,7 +230,7 @@ namespace ImmersiveSprinklersAndScarecrows
                         if (obj is not null)
                         {
                             obj.Location = Game1.currentLocation;
-                            ActivateSprinkler(Game1.currentLocation, tile, obj, false);
+                            ActivateSprinkler(Game1.currentLocation, tile.ToVector2(), obj, false);
                             Helper.Input.Suppress(e.Button);
                         }
                     }

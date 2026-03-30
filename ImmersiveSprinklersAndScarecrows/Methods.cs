@@ -2,6 +2,7 @@
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Newtonsoft.Json.Linq;
 using StardewValley;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
@@ -17,8 +18,7 @@ namespace ImmersiveSprinklersAndScarecrows
 
         public static Object GetSprinklerCached(GameLocation l, int x, int y)
         {
-            string guid = SprinklerGuidAt(l, x, y);
-            if (guid == null)
+            if (!TryGetData(l, sprinklerGuidKey, x, y, out var guid))
             {
                 guid = Guid.NewGuid().ToString();
                 l.modData[$"{sprinklerGuidKey},{x},{y}"] = guid;
@@ -32,8 +32,7 @@ namespace ImmersiveSprinklersAndScarecrows
 
         public static Object GetScarecrowCached(GameLocation l, int x, int y)
         {
-            string guid = ScarecrowGuidAt(l, x, y);
-            if (guid == null)
+            if (!TryGetData(l, scarecrowGuidKey, x, y, out var guid))
             {
                 guid = Guid.NewGuid().ToString();
                 l.modData[$"{scarecrowGuidKey},{x},{y}"] = guid;
@@ -46,12 +45,10 @@ namespace ImmersiveSprinklersAndScarecrows
         }
         public static Object GetSprinkler(GameLocation l, int x, int y)
         {
-            string sprinklerName = SprinklerAt(l, x, y);
-
-            if (sprinklerName == null)
+            if (!TryGetData(l, sprinklerKey, x, y, out var sprinklerName))
                 return null;
             Object obj = null;
-            if (SprinklerBigCraftableAt(l,x,y))
+            if (HasData(l, sprinklerBigCraftableKey, x, y))
             {
                 if (Game1.bigCraftableData.TryGetValue(sprinklerName, out var data))
                 {
@@ -64,7 +61,8 @@ namespace ImmersiveSprinklersAndScarecrows
             }
             if (obj != null)
             {
-                if (NozzleAt(l,x,y))
+                obj.TileLocation = new Vector2(x, y);
+                if (HasData(l, nozzleKey, x, y))
                 {
                     obj.heldObject.Value = new Object("915", 1);
                 }
@@ -79,8 +77,7 @@ namespace ImmersiveSprinklersAndScarecrows
                         }
                     }
                 }
-                var guid = SprinklerGuidAt(l, x, y);
-                if (guid == null)
+                if (!TryGetData(l, sprinklerGuidKey, x, y, out var guid))
                 {
                     guid = Guid.NewGuid().ToString();
                     l.modData[$"{sprinklerGuidKey},{x},{y}"] = guid;
@@ -91,12 +88,10 @@ namespace ImmersiveSprinklersAndScarecrows
         }
         public static Object GetScarecrow(GameLocation l, int x, int y)
         {
-            string name = ScarecrowAt(l, x, y);
-
-            if (name == null)
+            if (!TryGetData(l, scarecrowKey, x, y, out var name))
                 return null;
             Object obj = null;
-            if (ScarecrowBigCraftableAt(l,x,y))
+            if (HasData(l, scarecrowBigCraftableKey, x, y))
             {
                 if (Game1.bigCraftableData.TryGetValue(name, out var data))
                 {
@@ -109,6 +104,7 @@ namespace ImmersiveSprinklersAndScarecrows
             }
             if (obj != null)
             {
+                obj.TileLocation = new Vector2(x, y);
                 if (atApi is not null)
                 {
                     foreach (var kvp2 in l.modData.Pairs)
@@ -120,11 +116,10 @@ namespace ImmersiveSprinklersAndScarecrows
                         }
                     }
                 }
-                var guid = ScarecrowGuidAt(l, x, y);
-                if (guid == null)
+                if (!TryGetData(l, scarecrowGuidKey, x, y, out var guid))
                 {
                     guid = Guid.NewGuid().ToString();
-                    l.modData[$"{scarecrowGuidKey},{x},{y}"] = guid;
+                    SetData(l, scarecrowGuidKey, x, y, guid);
                 }
                 scarecrowDict[guid] = obj;
             }
@@ -188,21 +183,21 @@ namespace ImmersiveSprinklersAndScarecrows
                     l.debris.Add(new Debris(sprinkler, pos));
                 else
                     TryReturnObject(sprinkler, who);
-                l.modData.Remove($"{sprinklerKey},{x},{y}");
-                l.modData.Remove($"{sprinklerGuidKey},{x},{y}");
-                l.modData.Remove($"{sprinklerBigCraftableKey},{x},{y}");
-                if (EnricherAt(l,x,y))
+                SetData(l,sprinklerKey,x,y, null);
+                SetData(l, sprinklerGuidKey, x,y, null);
+                SetData(l, sprinklerBigCraftableKey, x,y, null);
+                if (HasData(l, enricherKey, x, y))
                 {
-                    l.modData.Remove($"{enricherKey},{x},{y}");
+                    SetData(l, enricherKey, x, y, null);
                     var e = new Object("913", 1);
                     if (drop)
                         l.debris.Add(new Debris(e, pos));
                     else
                         TryReturnObject(e, who);
                 }
-                if (NozzleAt(l,x,y))
+                if (HasData(l, nozzleKey, x, y))
                 {
-                    l.modData.Remove($"{nozzleKey},{x},{y}");
+                    SetData(l, nozzleKey, x, y, null);
                     var e = new Object("915", 1);
                     if (drop)
                         l.debris.Add(new Debris(e, pos));
@@ -210,10 +205,9 @@ namespace ImmersiveSprinklersAndScarecrows
                         TryReturnObject(e, who);
 
                 }
-                var fertString = FertilizerAt(l,x,y);
-                if (fertString != null)
+                if (TryGetData(l, fertilizerKey, x, y, out var fertString))
                 {
-                    l.modData.Remove($"{fertilizerKey},{x},{y}");
+                    SetData(l, fertilizerKey, x, y, null);
                     Object e = GetFertilizer(fertString);
                     if (drop)
                         l.debris.Add(new Debris(e, pos));
@@ -236,9 +230,9 @@ namespace ImmersiveSprinklersAndScarecrows
                     l.debris.Add(new Debris(scarecrow, pos));
                 else
                     TryReturnObject(scarecrow, who);
-                l.modData.Remove($"{scarecrowKey},{x},{y}");
-                l.modData.Remove($"{scarecrowGuidKey},{x},{y}");
-                l.modData.Remove($"{scarecrowBigCraftableKey},{x},{y}");
+                SetData(l, scarecrowKey, x, y, null);
+                SetData(l, scarecrowGuidKey, x, y, null);
+                SetData(l, scarecrowBigCraftableKey, x, y, null);
                 SMonitor.Log($"{(drop ? "Dropped" : "Returned")} {scarecrow?.Name}");
                 return true;
             }
@@ -318,6 +312,14 @@ namespace ImmersiveSprinklersAndScarecrows
                     var tiles = GetScarecrowTiles(p.ToVector2(), obj.GetRadiusForScarecrow());
                     if (tiles.Contains(v))
                     {
+                        int scared = 0;
+                        if(TryGetData(f, scaredKey, p.X, p.Y, out var scaredString))
+                        {
+                            int.TryParse(scaredString, out scared);
+                        }
+                        scared++;
+                        SetData(f, scaredKey, p.X, p.Y, scared.ToString());
+                        SMonitor.Log($"Scarecrow at {p} has scared {scared} crows");
                         return true;
                     }
                 }
@@ -328,8 +330,10 @@ namespace ImmersiveSprinklersAndScarecrows
                 if (obj is not null && obj.IsScarecrow())
                 {
                     var tiles = GetScarecrowTiles(p.ToVector2(), obj.GetRadiusForScarecrow());
-                    if (tiles.Contains(v))
+                    if (tiles.Contains(v) && TryGetData(f, scaredKey, p.X, p.Y, out var scaredString) && int.TryParse(scaredString, out var scared))
                     {
+                        scared++;
+                        SetData(f, scaredKey, p.X, p.Y, scared.ToString());
                         return true;
                     }
                 }
@@ -338,7 +342,7 @@ namespace ImmersiveSprinklersAndScarecrows
         }
 
 
-        public static void ActivateSprinkler(GameLocation environment, Point tileLocation, Object obj, bool delay)
+        public static void ActivateSprinkler(GameLocation environment, Vector2 tileLocation, Object obj, bool delay)
         {
             if (Game1.player.team.SpecialOrderRuleActive("NO_SPRINKLER", null))
             {
@@ -350,7 +354,7 @@ namespace ImmersiveSprinklersAndScarecrows
 
             obj.Location = environment;
 
-            foreach (Vector2 tile in GetSprinklerTiles(tileLocation.ToVector2(), radius))
+            foreach (Vector2 tile in GetSprinklerTiles(tileLocation, radius))
             {
                 obj.ApplySprinkler(tile);
                 if (environment.objects.TryGetValue(tile, out var o) && o is IndoorPot)
@@ -359,7 +363,7 @@ namespace ImmersiveSprinklersAndScarecrows
                     o.showNextIndex.Value = true;
                 }
             }
-            ApplySprinklerAnimation(tileLocation.ToVector2(), radius, environment, delay ? Game1.random.Next(1000) : 0);
+            ApplySprinklerAnimation(tileLocation, radius, environment, delay ? Game1.random.Next(1000) : 0);
         }
         public static void ApplySprinklerAnimation(Vector2 tileLocation, int radius, GameLocation location, int delay)
         {
@@ -368,7 +372,7 @@ namespace ImmersiveSprinklersAndScarecrows
             {
                 return;
             }
-            var position = tileLocation * 64 + new Vector2(32, 32);
+            var position = tileLocation * 64 + new Vector2(32, 16);
             float layerDepth = 1;
             if (radius == 0)
             {
@@ -423,7 +427,11 @@ namespace ImmersiveSprinklersAndScarecrows
                 scale = scale
             });
         }
-        public static IEnumerable<Vector2> GetSprinklers(GameLocation l)
+        public static IEnumerable<Object> GetSprinklers(GameLocation l)
+        {
+            return l.modData.FieldDict.Where(p => p.Key.StartsWith(sprinklerKey + ",")).Select(p => GetSprinkler(l, int.Parse(p.Key.Split(',')[1]), int.Parse(p.Key.Split(',')[2])));
+        }
+        public static IEnumerable<Vector2> GetSprinklerVectors(GameLocation l)
         {
             return l.modData.FieldDict.Where(p => p.Key.StartsWith(sprinklerKey + ",")).Select(p => new Vector2(int.Parse(p.Key.Split(',')[1]),int.Parse(p.Key.Split(',')[2])));
         }
@@ -431,8 +439,11 @@ namespace ImmersiveSprinklersAndScarecrows
         {
             return l.modData.FieldDict.Where(p => p.Key.StartsWith(sprinklerKey + ",")).Select(p => new Point(int.Parse(p.Key.Split(',')[1]),int.Parse(p.Key.Split(',')[2])));
         }
-        
-        public static IEnumerable<Vector2> GetScarecrows(GameLocation l)
+        public static IEnumerable<Object> GetScarecrows(GameLocation l)
+        {
+            return l.modData.FieldDict.Where(p => p.Key.StartsWith(scarecrowKey + ",")).Select(p => GetScarecrow(l, int.Parse(p.Key.Split(',')[1]), int.Parse(p.Key.Split(',')[2])));
+        }
+        public static IEnumerable<Vector2> GetScarecrowVectors(GameLocation l)
         {
             return l.modData.FieldDict.Where(p => p.Key.StartsWith(scarecrowKey + ",")).Select(p => new Vector2(int.Parse(p.Key.Split(',')[1]),int.Parse(p.Key.Split(',')[2])));
         }
@@ -480,80 +491,29 @@ namespace ImmersiveSprinklersAndScarecrows
             }
             return match;
         }
-        public static bool NozzleAt(GameLocation l, int x, int y)
+        public static bool TryGetData(GameLocation l, string key, int x, int y, out string value)
         {
-            return l.modData.ContainsKey($"{nozzleKey},{x},{y}");
-
-        }
-        public static bool EnricherAt(GameLocation l, int x, int y)
-        {
-            return l.modData.ContainsKey($"{enricherKey},{x},{y}");
-        }
-        public static bool SprinklerBigCraftableAt(GameLocation l, int x, int y)
-        {
-            return l.modData.ContainsKey($"{sprinklerBigCraftableKey},{x},{y}");
-        }
-        
-        public static bool ScarecrowBigCraftableAt(GameLocation l, int x, int y)
-        {
-            return l.modData.ContainsKey($"{scarecrowBigCraftableKey},{x},{y}");
-        }
-
-        public static string FertilizerAt(GameLocation l, int x, int y)
-        {
-            if (l.modData.TryGetValue($"{fertilizerKey},{x},{y}", out var fertilizer))
+            value = null;
+            if (l.modData.TryGetValue($"{key},{x},{y}", out value) && !string.IsNullOrEmpty(value))
             {
-                return fertilizer;
+                return true;
             }
-            return null;
+            return false;
         }
-        public static string SprinklerAt(GameLocation l, int x, int y)
+        public static bool HasData(GameLocation l, string key, int x, int y)
         {
-            if (l.modData.TryGetValue($"{sprinklerKey},{x},{y}", out var sprinkler))
-            {
-                return sprinkler;
-            }
-            return null;
+            return l.modData.ContainsKey($"{key},{x},{y}");
         }
-        public static string ScarecrowAt(GameLocation l, int x, int y)
+        public static void SetData(GameLocation l, string key, int x, int y, string value)
         {
-            if (l.modData.TryGetValue($"{scarecrowKey},{x},{y}", out var sprinkler))
+            if(value == null)
             {
-                return sprinkler;
+                l.modData.Remove($"{key},{x},{y}");
             }
-            return null;
-        }
-        public static string SprinklerGuidAt(GameLocation l, int x, int y)
-        {
-            if (l.modData.TryGetValue($"{sprinklerGuidKey},{x},{y}", out var guid))
+            else
             {
-                return guid;
+                l.modData[$"{key},{x},{y}"] = value;
             }
-            return null;
-        }
-        public static string ScarecrowGuidAt(GameLocation l, int x, int y)
-        {
-            if (l.modData.TryGetValue($"{scarecrowGuidKey},{x},{y}", out var guid))
-            {
-                return guid;
-            }
-            return null;
-        }
-        public static string HatAt(GameLocation l, int x, int y)
-        {
-            if (l.modData.TryGetValue($"{hatKey},{x},{y}", out var hat))
-            {
-                return hat;
-            }
-            return null;
-        }
-        public static string ScaredAt(GameLocation l, int x, int y)
-        {
-            if (l.modData.TryGetValue($"{scaredKey},{x},{y}", out var scared))
-            {
-                return scared;
-            }
-            return null;
         }
     }
 }

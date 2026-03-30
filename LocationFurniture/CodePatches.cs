@@ -24,18 +24,19 @@ namespace LocationFurniture
                     return;
                 for (int i = 0; i < fields.Length; i += 5)
                 {
-                    int index;
                     string error;
-                    Vector2 tile;
-                    int rotations;
-                    bool canMove;
-                    if (!ArgUtility.TryGetInt(fields, i, out index, out error, "int index") || !ArgUtility.TryGetVector2(fields, i + 1, out tile, out error, false, "Vector2 tile") || !ArgUtility.TryGetInt(fields, i + 3, out rotations, out error, "int rotations") || !ArgUtility.TryGetBool(fields, i + 4, out canMove, out error, "bool canMove"))
+                    if (!ArgUtility.TryGet(fields, i, out var id, out error, false, "string id") || !ArgUtility.TryGetVector2(fields, i + 1, out var tile, out error, false, "Vector2 tile") || !ArgUtility.TryGetInt(fields, i + 3, out var rotations, out error, "int rotations") || !ArgUtility.TryGetBool(fields, i + 4, out var canMove, out error, "bool canMove"))
                     {
                         __instance.LogMapPropertyError("LocationFurniture", fields, error, ' ');
                     }
                     else
                     {
-                        Furniture newFurniture = ItemRegistry.Create<Furniture>("(F)" + index.ToString(), 1, 0, false);
+                        Furniture newFurniture = ItemRegistry.Create<Furniture>(id.StartsWith("(F)") ? id : "(F)" + id, 1, 0, true);
+                        if(newFurniture == null)
+                        {
+                            __instance.LogMapPropertyError("LocationFurniture", fields, $"Failed to create furniture with id '{id}'", ' ');
+                            continue;
+                        }
                         newFurniture.InitializeAtTile(tile);
                         newFurniture.IsOn = true;
                         for (int rotation = 0; rotation < rotations; rotation++)
