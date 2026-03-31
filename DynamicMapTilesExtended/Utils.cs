@@ -149,7 +149,17 @@ namespace DMT
             if (!kvp.Key.StartsWith(ModPrefix))
                 return null;
             DynamicTileProperty prop = new() { Value = kvp.Value };
-            string[] key = kvp.Key.Split('_');
+            string[] preKey = kvp.Key.Split('(', 2);
+            string[] key;
+            if (preKey.Length == 2)
+            {
+                key = preKey[0].Split('_');
+                key[key.Length - 1] += "(" + preKey[1];
+            }
+            else
+            {
+                key = kvp.Key.Split('_');
+            }
             if (key.Length < 2)
                 return null;
             foreach (var item in keys)

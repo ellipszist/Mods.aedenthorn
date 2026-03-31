@@ -85,6 +85,17 @@ namespace DMT
                 original: AccessTools.Method(typeof(Object), nameof(Object.placementAction)),
                 postfix: new(typeof(Patches), nameof(Object_placementAction_Postfix))
             );
+            foreach (var t in typeof(Game1).Assembly.GetTypes().Where(t => t.IsSubclassOf(typeof(Object))))
+            {
+                var m = AccessTools.DeclaredMethod(t, nameof(Object.placementAction));
+                if(m != null)
+                {
+                    harmony.Patch(
+                        original: AccessTools.Method(t, nameof(Object.placementAction)),
+                        postfix: new(typeof(Patches), nameof(Object_placementAction_Postfix))
+                    );
+                }
+            }
             harmony.Patch(
                 original: AccessTools.Method(typeof(Object), nameof(Object.checkForAction)),
                 postfix: new(typeof(Patches), nameof(Object_checkForAction_Postfix))
