@@ -2,7 +2,7 @@
   "Name": "Dynamic Map Tiles Extended",
   "Author": "aedenthorn",
   "Version": "1.5.3",
-  "Description": "Makes map tiles dynamic - change tile, tile sheet, and properties on-the-fly.",
+  "Description": "Makes map tiles extensively dynamic.",
   "UniqueID": "aedenthorn.DynamicMapTilesExtended",
   "EntryDll": "DynamicMapTilesExtended.dll",
   "MinimumApiVersion": "4.0.0",
