@@ -5,6 +5,7 @@ using StardewValley;
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using xTile;
@@ -195,10 +196,11 @@ namespace DMT
                 return null;
             foreach (var item in Triggers.Regexes)
             {
-                if (!Regex.IsMatch(trigger, item))
-                    continue;
-                prop.Trigger = trigger;
-                break;
+                if (Regex.IsMatch(trigger, item))
+                {
+                    prop.Trigger = trigger;
+                    break;
+                }
             }
             return prop;
         }
@@ -474,6 +476,47 @@ namespace DMT
                 return false;
 
             return true;
+        }
+
+
+        internal static bool TryGetParameter(string value, ParameterInfo pi, out object p)
+        {
+
+            if (int.TryParse(value, out var i))
+            {
+                if (pi.ParameterType == typeof(int))
+                {
+                    p = i;
+                    return true;
+                }
+            }
+            else if (bool.TryParse(value, out var b))
+            {
+                if (pi.ParameterType == typeof(bool))
+                {
+                    p = b;
+                    return true;
+                }
+            }
+            else if (value.StartsWith('#') && value.Length == 7)
+            {
+                if (pi.ParameterType == typeof(Color))
+                {
+                    Color color = new(
+                        int.Parse(value.Substring(1, 2), System.Globalization.NumberStyles.HexNumber),
+                        int.Parse(value.Substring(3, 2), System.Globalization.NumberStyles.HexNumber),
+                        int.Parse(value.Substring(5, 2), System.Globalization.NumberStyles.HexNumber));
+                    p = color;
+                    return true;
+                }
+            }
+            else if (pi.ParameterType == typeof(string))
+            {
+                p = value;
+                return true;
+            }
+            p = "";
+            return false;
         }
     }
 }

@@ -103,6 +103,9 @@ namespace DMT
                         case Keys.MessageKey:
                             Actions.DoShowMessage(value);
                             break;
+                        case Keys.MonsterKey:
+                            Actions.DoSpawnMonster(location, value);
+                            break;
                         case Keys.MusicKey:
                             Actions.DoPlayMusic(value);
                             break;

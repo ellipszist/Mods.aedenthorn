@@ -30,6 +30,7 @@ namespace DMT.Data
         public const string MailKey = "DMT/mail";
         public const string MailRemoveKey = "DMT/mailRemove";
         public const string MessageKey = "DMT/message";
+        public const string MonsterKey = "DMT/monster";
         public const string MoveKey = "DMT/move";
         public const string MusicKey = "DMT/music";
         public const string HealthKey = "DMT/health";

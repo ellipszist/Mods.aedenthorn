@@ -44,7 +44,7 @@ namespace DMT
                 original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.performToolAction)),
                 prefix: new(typeof(Patches), nameof(GameLocation_PerformToolAction_Prefix))
             );
-
+            
             harmony.Patch(
                 original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.checkAction)),
                 prefix: new(typeof(Patches), nameof(GameLocation_CheckAction_Prefix))
@@ -96,6 +96,10 @@ namespace DMT
                     );
                 }
             }
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Object), nameof(Object.performToolAction)),
+                postfix: new(typeof(Patches), nameof(Object_performToolAction_Postfix))
+            );
             harmony.Patch(
                 original: AccessTools.Method(typeof(Object), nameof(Object.checkForAction)),
                 postfix: new(typeof(Patches), nameof(Object_checkForAction_Postfix))
@@ -332,14 +336,27 @@ namespace DMT
         {
             if (!Enabled || !Game1.IsMasterGame || __instance.IsErrorCrop() || !__state || !__instance.fullyGrown.Value)
                 return;
-            context.Monitor.Log($"Crop {__instance.netSeedIndex.Value} grew up");
+            //context.Monitor.Log($"Crop {__instance.netSeedIndex.Value} grew up");
             TriggerActions([.. __instance.currentLocation.Map.Layers], null, __instance.currentLocation, __instance.tilePosition.ToPoint(), [string.Format(Triggers.CropGrown, Utils.BuildFormattedTrigger(__instance.netSeedIndex.Value))]);
+        }
+        internal static void Crop_harvest_Postfix(Crop __instance, JunimoHarvester junimoHarvester, bool __result)
+        {
+            if (!Enabled || !Game1.IsMasterGame || __instance.IsErrorCrop() || junimoHarvester is not null || !__result)
+                return;
+            //context.Monitor.Log($"Crop {__instance.netSeedIndex.Value} grew up");
+            TriggerActions([.. __instance.currentLocation.Map.Layers], Game1.player, __instance.currentLocation, __instance.tilePosition.ToPoint(), [string.Format(Triggers.CropHarvest, Utils.BuildFormattedTrigger(__instance.netSeedIndex.Value))]);
         }
         internal static void Object_placementAction_Postfix(Object __instance, GameLocation location, int x, int y, Farmer who)
         {
             if (!Enabled || who is null)
                 return;
             TriggerActions([.. location.Map.Layers], who, location, __instance.TileLocation.ToPoint(), [string.Format(Triggers.ObjectPlaced, Utils.BuildFormattedTrigger(__instance.QualifiedItemId))]);
+        }
+        internal static void Object_performToolAction_Postfix(Object __instance, Tool t, bool __result)
+        {
+            if (!Enabled || (__instance.Location?.objects.TryGetValue(__instance.TileLocation, out var obj) == true && obj != null && !__result)) 
+                return;
+            TriggerActions([.. __instance.Location.Map.Layers], t?.lastUser, __instance.Location, __instance.TileLocation.ToPoint(), [string.Format(Triggers.ObjectRemoved, Utils.BuildFormattedTrigger(__instance.QualifiedItemId))]);
         }
         internal static void Object_checkForAction_Postfix(Object __instance, Farmer who, bool justCheckingForActivity)
         {

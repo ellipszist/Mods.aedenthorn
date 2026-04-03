@@ -1,14 +1,15 @@
 ﻿using DMT.Data;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using StardewValley;
-using StardewValley.Characters;
 using StardewValley.Extensions;
+using StardewValley.Monsters;
 using StardewValley.Objects;
+using System.Reflection;
 using xTile.Dimensions;
 using xTile.Layers;
 using xTile.Tiles;
+using static HarmonyLib.Code;
 
 namespace DMT
 {
@@ -204,6 +205,78 @@ namespace DMT
             Game1.drawObjectDialogue(value);
         }
 
+        public static void DoSpawnMonster(GameLocation location, string value)
+        {
+            if (location == null)
+            {
+                SMonitor.Log($"[{nameof(Actions)}.{nameof(DoSpawnMonster)}] Location is null", LogLevel.Warn);
+                return;
+            }
+            foreach (var item in value.Split('|'))
+            {
+                var split = item.Split(' ');
+                Vector2 pos = new(int.Parse(split[1]), int.Parse(split[2]));
+                if (split[2] == "Monster")
+                {
+                    if(split.Length == 4)
+                    {
+                        location.characters.Add(new Monster(split[3], pos));
+                    }
+                    else if(split.Length == 5 && int.TryParse(split[4], out var facing))
+                    {
+                        location.characters.Add(new Monster(split[3], pos, facing));
+                    }
+                }
+                else
+                {
+                    foreach(var t in typeof(Monster).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(Monster))))
+                    {
+                        if (t.Name == split[0])
+                        {
+                            foreach (var c in t.GetConstructors(BindingFlags.Public | BindingFlags.Instance))
+                            {
+                                var p = c.GetParameters();
+                                if (split.Length == 3 && p.Length == 1 && p[0].ParameterType == typeof(Vector2))
+                                {
+                                    location.characters.Add((Monster)c.Invoke([pos]));
+                                    break;
+                                }
+                                else if (split.Length == 4 && p.Length == 2)
+                                {
+                                    if(p[0].ParameterType == typeof(Vector2))
+                                    {
+                                        if (TryGetParameter(split[3], p[1], out var p1))
+                                        {
+                                            location.characters.Add((Monster)c.Invoke([pos, p1]));
+                                            break;
+                                        }
+                                    }
+                                    else if (p[1].ParameterType == typeof(Vector2))
+                                    {
+                                        if (TryGetParameter(split[3], p[0], out var p0))
+                                        {
+                                            location.characters.Add((Monster)c.Invoke([p0, pos]));
+                                            break;
+                                        }
+                                    }
+                                }
+                                else if (split.Length == 5 && p.Length == 3 && p[0].ParameterType == typeof(Vector2))
+                                {
+                                    if (TryGetParameter(split[3], p[1], out var p1) && TryGetParameter(split[4], p[2], out var p2))
+                                    {
+                                        location.characters.Add((Monster)c.Invoke([pos, p1, p2]));
+                                        break;
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    
+                }
+            }
+        }
+
         public static void DoPlayEvent(string value)
         {
             if (!value.Contains('|'))
@@ -233,31 +306,51 @@ namespace DMT
 
         public static void DoPlayMusic(string value) => Game1.changeMusicTrack(value);
 
-        public static void DoAddMailflag(Farmer? who, string value) => who?.mailReceived.Add(value);
+        public static void DoAddMailflag(Farmer? who, string value) 
+        {
+            foreach(var item in value.Split('|'))
+            {
+                who?.mailReceived.Add(item);
+            }
+        }
 
-        public static void DoRemoveMailflag(Farmer? who, string value) => who?.mailReceived.Remove(value);
+        public static void DoRemoveMailflag(Farmer? who, string value)
+        {
+            foreach(var item in value.Split('|'))
+            {
+                who?.mailReceived.Remove(item);
+            }
+        }
 
         public static void DoAddMailForTomorrow(Farmer? who, string value)
         {
             if (who == null)
                 return;
-
-            if (!who.mailbox.Contains(value))
-                who.mailbox.Add(value);
+            foreach (var item in value.Split('|'))
+            {
+                if (!who.hasOrWillReceiveMail(item))
+                    who.mailbox.Add(item);
+            }
         }
 
         public static void DoAddQuest(Farmer? who, string value)
         {
             if (who == null)
                 return;
-            who.addQuest(value);
+            foreach (var item in value.Split('|'))
+            {
+                who.addQuest(item);
+            }
         }
 
         public static void DoRemoveQuest(Farmer? who, string value)
         {
             if (who == null)
-                return;
-            who.removeQuest(value);
+                return; 
+            foreach (var item in value.Split('|'))
+            {
+                who.removeQuest(item);
+            }
         }
 
         public static void DoInvalidateAsset(string value)

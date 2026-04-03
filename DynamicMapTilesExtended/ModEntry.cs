@@ -36,6 +36,7 @@ namespace DMT
 
         public Config Config { get; private set; }
 
+        public static IMonitor SMonitor;
         public static int animationCounter = 0;
 
         public static Dictionary<GameLocation, int> InvalidateOnTimeChanged = new();
@@ -69,7 +70,7 @@ namespace DMT
             context = this;
 
             Config = Helper.ReadConfig<Config>();
-
+            SMonitor = Monitor;
             Helper.Events.GameLoop.GameLaunched += onGameLaunched;
             Helper.Events.Player.Warped += onWarped;
             Helper.Events.Content.AssetRequested += onAssetRequested;
@@ -247,6 +248,11 @@ namespace DMT
                 e.LoadFrom(() => new Dictionary<string, DynamicTile>(), AssetLoadPriority.Exclusive);
             if (e.NameWithoutLocale.IsEquivalentTo(AnimationDataDictPath))
                 e.LoadFrom(() => new Dictionary<string, List<Animation>>(), AssetLoadPriority.Exclusive);
+            //if (e.NameWithoutLocale.IsEquivalentTo("Maps/Town"))
+            //    e.Edit((IAssetData data) =>
+            //    {
+            //        data.AsMap().Data.GetLayer("Back").Tiles[2, 54].Properties["DMT/monster_ObjectRemoved((BC)13)"] = "BigSlime 128 3456 40";
+            //    });
         }
 
         private void onWarped(object? sender, WarpedEventArgs e)
