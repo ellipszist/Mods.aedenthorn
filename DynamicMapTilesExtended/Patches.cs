@@ -344,7 +344,7 @@ namespace DMT
             if (!Enabled || !Game1.IsMasterGame || __instance.IsErrorCrop() || junimoHarvester is not null || !__result)
                 return;
             //context.Monitor.Log($"Crop {__instance.netSeedIndex.Value} grew up");
-            TriggerActions([.. __instance.currentLocation.Map.Layers], Game1.player, __instance.currentLocation, __instance.tilePosition.ToPoint(), [string.Format(Triggers.CropHarvest, Utils.BuildFormattedTrigger(__instance.netSeedIndex.Value))]);
+            TriggerActions([.. __instance.currentLocation.Map.Layers], Game1.player, __instance.currentLocation, __instance.tilePosition.ToPoint(), [string.Format(Triggers.CropHarvest, Utils.BuildFormattedTrigger(__instance.indexOfHarvest.Value)), string.Format(Triggers.CropHarvest, Utils.BuildFormattedTrigger(__instance.netSeedIndex.Value))]);
         }
         internal static void Object_placementAction_Postfix(Object __instance, GameLocation location, int x, int y, Farmer who)
         {

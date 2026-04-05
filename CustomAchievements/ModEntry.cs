@@ -15,7 +15,7 @@ namespace CustomAchievements
         
         public static readonly string dictPath = "custom_achievements_dictionary";
 
-        public static Dictionary<int, CustomAcheivementData> currentAchievements = new Dictionary<int, CustomAcheivementData>();
+        public static Dictionary<string, CustomAcheivementData> currentAchievements = new Dictionary<string, CustomAcheivementData>();
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
@@ -72,17 +72,16 @@ namespace CustomAchievements
                 while (dict.MoveNext())
                 {
                     var a = dict.Current.Value;
-                    int hash = a.name.GetHashCode();
-                    if (currentAchievements.ContainsKey(hash) && !currentAchievements[hash].achieved && a.achieved)
+                    if (currentAchievements.TryGetValue(a.ID, out var a1) && !a1.achieved && a.achieved)
                     {
                         PMonitor.Log($"Achievement {a.name} achieved!", LogLevel.Debug);
-                        currentAchievements[hash].achieved = true;
+                        currentAchievements[a.ID].achieved = true;
                         if (!sound)
                         {
                             Game1.playSound("achievement");
                             sound = true;
                         }
-                        Game1.addHUDMessage(new HUDMessage(a.name, true));
+                        Game1.addHUDMessage(new HUDMessage(a.name));
                     }
                 }
             }
@@ -95,8 +94,7 @@ namespace CustomAchievements
                 while (dict.MoveNext())
                 {
                     var a = dict.Current.Value;
-                    int hash = a.name.GetHashCode();
-                    currentAchievements[hash] = a;
+                    currentAchievements[a.ID] = a;
                 }
             }
         }

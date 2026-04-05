@@ -1,7 +1,7 @@
 {
   "Name": "Dynamic Map Tiles Extended",
   "Author": "aedenthorn",
-  "Version": "1.6.0",
+  "Version": "1.6.1",
   "Description": "Makes map tiles extensively dynamic.",
   "UniqueID": "aedenthorn.DynamicMapTilesExtended",
   "EntryDll": "DynamicMapTilesExtended.dll",
