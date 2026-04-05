@@ -60,18 +60,18 @@ namespace CustomAchievements
             while (dict.MoveNext())
             {
                 var a = dict.Current.Value;
-                ModEntry.currentAchievements[a.ID] = a;
+                ModEntry.currentAchievements[a.ID.GetHashCode()] = a;
 
                 int xPos = baseX + widthUsed % 10 * 68;
                 int yPos = baseY + widthUsed / 10 * 68;
-                if (a.iconPath.Length > 0)
+                if (!string.IsNullOrEmpty(a.iconPath))
                 {
                     var icon = Game1.content.Load<Texture2D>(a.iconPath);
-                    __instance.collections[5][0].Add(new ClickableTextureComponent($"{a.ID} {a.achieved}", new Rectangle(xPos, yPos, 64, 64), null, "", icon, a.iconRect == null ? new Rectangle(0, 0, icon.Width, icon.Height) : a.iconRect.Value, 1f, false));
+                    __instance.collections[5][0].Add(new ClickableTextureComponent($"{a.ID.GetHashCode()} {a.achieved}", new Rectangle(xPos, yPos, 64, 64), null, "", icon, a.iconRect == null ? new Rectangle(0, 0, icon.Width, icon.Height) : a.iconRect.Value, 1f, false));
                 }
                 else
                 {
-                    __instance.collections[5][0].Add(new ClickableTextureComponent($"{a.ID} {a.achieved}", new Rectangle(xPos, yPos, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 25, -1, -1), 1f, false));
+                    __instance.collections[5][0].Add(new ClickableTextureComponent($"{a.ID.GetHashCode()} {a.achieved}", new Rectangle(xPos, yPos, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 25, -1, -1), 1f, false));
                 }
                 widthUsed++;
             }
@@ -109,17 +109,17 @@ namespace CustomAchievements
 
         public static void DrawFace(SpriteBatch b, ClickableTextureComponent c)
         {
-            string id = c.name.Split(' ')[0];
-            if (!Config.EnableMod || !ModEntry.currentAchievements.ContainsKey(id) || ModEntry.currentAchievements[id].drawFace)
+            int id = c.name.Split(' ')[0].GetHashCode();
+            if (!Config.EnableMod || !ModEntry.currentAchievements.TryGetValue(id, out var value) || value.drawFace)
             {
-                int StarPos = new Random(id.GetHashCode()).Next(12);
+                int StarPos = new Random(id).Next(12);
                 b.Draw(Game1.mouseCursors, new Vector2((float)(c.bounds.X + 16 + 16), (float)(c.bounds.Y + 20 + 16)), new Rectangle?(new Rectangle(256 + StarPos % 6 * 64 / 2, 128 + StarPos / 6 * 64 / 2, 32, 32)), Color.White, 0f, new Vector2(16f, 16f), c.scale, SpriteEffects.None, 0.88f);
             }
         }
 
         private static bool CollectionsPage_createDescription_Prefix(CollectionsPage __instance, string id, ref string __result)
         {
-            if (!Config.EnableMod || __instance.currentTab != 5 || !ModEntry.currentAchievements.TryGetValue(id, out var a))
+            if (!Config.EnableMod || __instance.currentTab != 5 || !int.TryParse(id, out var iid) || !ModEntry.currentAchievements.TryGetValue(iid, out var a))
                 return true;
             __result = a.name + "\n\n" + a.description;
             return false;
