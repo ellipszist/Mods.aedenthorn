@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 
-namespace PlaygroundMod
+namespace PlaygroundFurniture
 {
     /// <summary>The mod entry point.</summary>
     public partial class ModEntry : Mod
@@ -18,10 +18,10 @@ namespace PlaygroundMod
         public static ModConfig Config;
 
         public static ModEntry context;
-        public static string swingKey = "aedenthorn.PlaygroundMod/swing";
-        public static string springKey = "aedenthorn.PlaygroundMod/spring";
-        public static string slideKey = "aedenthorn.PlaygroundMod/slide";
-        public static string climbKey = "aedenthorn.PlaygroundMod/climb";
+        public static string swingKey = "aedenthorn.PlaygroundFurniture_Swings";
+        public static string springKey = "aedenthorn.PlaygroundFurniture_Spring";
+        public static string slideKey = "aedenthorn.PlaygroundFurniture_Slide";
+        public static string climbKey = "aedenthorn.PlaygroundFurniture_Climb";
         public static string furniturePrefix = "aedenthorn.PlaygroundFurniture_";
         private static Texture2D slideTexture;
         private static Texture2D swingTexture;
@@ -55,6 +55,15 @@ namespace PlaygroundMod
         {
             if (!Config.ModEnabled)
                 return;
+            if (e.NameWithoutLocale.IsEquivalentTo("Data/Furniture"))
+            {
+                e.Edit((IAssetData data) =>
+                {
+                    data.AsDictionary<string, string>().Data[swingKey] = $"{swingKey}/chair/5 5/5 1/1/10000/-1{SHelper.Translation.Get("furniture.Swings.name")}/0/{swingKey}/false/";
+                    data.AsDictionary<string, string>().Data[slideKey] = $"{slideKey}/chair/5 5/5 1/1/10000/-1{SHelper.Translation.Get("furniture.Slide.name")}/0/{slideKey}/false/";
+                    data.AsDictionary<string, string>().Data[springKey] = $"{springKey}/chair/5 5/5 1/1/10000/-1{SHelper.Translation.Get("furniture.Spring.name")}/0/{springKey}/false/";
+                });
+            }
             if (e.NameWithoutLocale.IsEquivalentTo(swingKey))
             {
                 e.LoadFromModFile<Texture2D>(Path.Combine("assets", "swing.png"), AssetLoadPriority.Low);
@@ -99,12 +108,6 @@ namespace PlaygroundMod
                 name: () => "Mod Enabled",
                 getValue: () => Config.ModEnabled,
                 setValue: value => Config.ModEnabled = value
-            );
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Enabled For Festivals",
-                getValue: () => Config.Festivals,
-                setValue: value => Config.Festivals = value
             );
             configMenu.AddTextOption(
                 mod: ModManifest,

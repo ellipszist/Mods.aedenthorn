@@ -663,6 +663,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocationFurniture", "Locati
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImmersiveSprinklersAndScarecrows", "ImmersiveSprinklersAndScarecrows\ImmersiveSprinklersAndScarecrows.csproj", "{DE32B8AA-CADC-A494-1743-72D273D06D4C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlaygroundFurniture", "PlaygroundFurniture\PlaygroundFurniture.csproj", "{F869787B-4898-95D3-36C2-82E44D5B9D81}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3279,6 +3281,14 @@ Global
 		{DE32B8AA-CADC-A494-1743-72D273D06D4C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DE32B8AA-CADC-A494-1743-72D273D06D4C}.Release|x64.ActiveCfg = Release|x64
 		{DE32B8AA-CADC-A494-1743-72D273D06D4C}.Release|x64.Build.0 = Release|x64
+		{F869787B-4898-95D3-36C2-82E44D5B9D81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F869787B-4898-95D3-36C2-82E44D5B9D81}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F869787B-4898-95D3-36C2-82E44D5B9D81}.Debug|x64.ActiveCfg = Debug|x64
+		{F869787B-4898-95D3-36C2-82E44D5B9D81}.Debug|x64.Build.0 = Debug|x64
+		{F869787B-4898-95D3-36C2-82E44D5B9D81}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F869787B-4898-95D3-36C2-82E44D5B9D81}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F869787B-4898-95D3-36C2-82E44D5B9D81}.Release|x64.ActiveCfg = Release|x64
+		{F869787B-4898-95D3-36C2-82E44D5B9D81}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

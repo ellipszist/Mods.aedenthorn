@@ -30,6 +30,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="assets\" />
+    <Folder Include="[CP] Playground\assets\" />
   </ItemGroup>
 </Project>

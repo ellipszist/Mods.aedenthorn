@@ -1,10 +1,10 @@
 ﻿{
-  "Name": "Playground Mod",
+  "Name": "Playground Furniture",
   "Author": "aedenthorn",
-  "Version": "0.5.0",
-  "Description": "Playground Mod.",
-  "UniqueID": "aedenthorn.PlaygroundMod",
-  "EntryDll": "PlaygroundMod.dll",
+  "Version": "0.1.0",
+  "Description": "Playground Furniture Mod.",
+  "UniqueID": "aedenthorn.PlaygroundFurniture",
+  "EntryDll": "PlaygroundFurniture.dll",
   "MinimumApiVersion": "4.1.0",
-  "UpdateKeys": [ "Nexus:14125" ]
+  "UpdateKeys": [ "Nexus:" ]
 }

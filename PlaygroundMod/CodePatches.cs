@@ -298,7 +298,7 @@ namespace PlaygroundMod
                 skip = true;
                 foreach (long id in climbTicks.Keys)
                 {
-                    var f = Game1.getFarmer(id);
+                    var f = Game1.GetPlayer(id);
                     if(f is not null && f.currentLocation == __instance)
                     {
                         f.draw(b);
@@ -306,7 +306,7 @@ namespace PlaygroundMod
                 }
                 foreach (long id in swingTicks.Keys)
                 {
-                    var f = Game1.getFarmer(id);
+                    var f = Game1.GetPlayer(id);
                     if(f is not null && f.currentLocation == __instance)
                     {
                         var ticks = swingTicks[id];
@@ -330,7 +330,7 @@ namespace PlaygroundMod
                 }
                 foreach(long id in slideTicks.Keys)
                 {
-                    var f = Game1.getFarmer(id);
+                    var f = Game1.GetPlayer(id);
                     if(f is not null && f.currentLocation == __instance)
                     {
                         f.draw(b);

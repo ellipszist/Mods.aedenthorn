@@ -81,7 +81,7 @@ namespace CustomAchievements
                             Game1.playSound("achievement");
                             sound = true;
                         }
-                        Game1.addHUDMessage(new HUDMessage(a.name));
+                        Game1.addHUDMessage(HUDMessage.ForAchievement(a.name));
                     }
                 }
             }

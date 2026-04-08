@@ -12,7 +12,7 @@ using System.Reflection.Emit;
 using Object = StardewValley.Object;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
-namespace PlaygroundMod
+namespace PlaygroundFurniture
 {
     public partial class ModEntry
     {
@@ -133,7 +133,7 @@ namespace PlaygroundMod
         {
             public static bool Prefix(FarmerRenderer __instance, SpriteBatch b, ref float scale, ref Farmer who, ref Vector2 origin, ref FarmerSprite.AnimationFrame animationFrame, ref int currentFrame, ref Rectangle sourceRect, ref float rotation)
             {
-                if (!Config.ModEnabled || !CanBePlaygrounding(who) || (!Config.Festivals && Game1.isFestival()))
+                if (!Config.ModEnabled || !CanBePlaygrounding(who))
                 {
                     springTicks.Remove(who.UniqueMultiplayerID);
                     swingTicks.Remove(who.UniqueMultiplayerID);
@@ -290,12 +290,12 @@ namespace PlaygroundMod
                 return true;
             }
         }
-        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.drawAboveAlwaysFrontLayer))]
+        //[HarmonyPatch(typeof(GameLocation), nameof(GameLocation.drawAboveAlwaysFrontLayer))]
         public class GameLocation_drawAboveAlwaysFrontLayer_Patch
         {
             public static void Postfix(GameLocation __instance, SpriteBatch b)
             {
-                if (!Config.ModEnabled || __instance is not Town || (!Config.Festivals && Game1.isFestival()))
+                if (!Config.ModEnabled || __instance is not Town )
                     return;
                 skip = true;
                 foreach (long id in climbTicks.Keys)
@@ -387,16 +387,16 @@ namespace PlaygroundMod
         [HarmonyPatch(typeof(Furniture), nameof(Furniture.draw), new Type[] { typeof(SpriteBatch), typeof(int), typeof(int), typeof(float) })]
         public class Furniture_draw_Patch
         {
-            public static void Prefix(Furniture __instance, SpriteBatch spriteBatch)
+            public static bool Prefix(Furniture __instance, SpriteBatch spriteBatch)
             {
                 if (!Config.ModEnabled)
-                    return;
-                if(__instance.ItemId == "aedenthorn.PlaygroundFurniture_Swings")
+                    return true;
+                if(__instance.ItemId == swingKey)
                 {
                     if (!__instance.HasSittingFarmers())
                     {
                         __instance.sourceRect.Value = new Rectangle(0, 0, 80, 80);
-                        return;
+                        return true;
                     }
                     __instance.sourceRect.Value = new Rectangle(80, 0, 80, 80);
                     foreach(var kvp in __instance.sittingFarmers.Pairs)
@@ -421,6 +421,16 @@ namespace PlaygroundMod
                         }
                     }
                 }
+                if(__instance.ItemId == springKey)
+                {
+                    if (!__instance.HasSittingFarmers())
+                    {
+                        __instance.sourceRect.Value = new Rectangle(0, 0, 80, 80);
+                        return true;
+                    }
+                    return false;
+                }
+                return true;
             }
         }
     }

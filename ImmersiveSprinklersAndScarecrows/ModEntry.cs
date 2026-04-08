@@ -207,32 +207,36 @@ namespace ImmersiveSprinklersAndScarecrows
             }
             else if (e.Button == Config.ActivateButton && Context.CanPlayerMove)
             {
-                Point tile = GetMouseCornerTile();
-
-                var obj = GetSprinkler(Game1.currentLocation, tile.X, tile.Y);
-                if (obj is not null)
-                {
-                    obj.Location = Game1.currentLocation;
-                    ActivateSprinkler(Game1.currentLocation, tile.ToVector2(), obj, false);
-                    Helper.Input.Suppress(e.Button);
-                }
-                else if (Config.ActivateNearby || Constants.TargetPlatform == GamePlatform.Android)
+                if (Config.ActivateNearby || Constants.TargetPlatform == GamePlatform.Android)
                 {
                     foreach (var v in GetSprinklerVectors(Game1.currentLocation))
                     {
-                        if(Config.ActivateNearbyRange > 0)
+                        if (Config.ActivateNearbyRange > 0)
                         {
                             var distance = Vector2.Distance(v * 64, Game1.player.position.Value);
                             if (distance > 64 * Config.ActivateNearbyRange)
                                 continue;
                         }
-                        obj = GetSprinkler(Game1.currentLocation, tile.X, tile.Y);
+                        var obj = GetSprinkler(Game1.currentLocation, (int)v.X, (int)v.Y);
                         if (obj is not null)
                         {
                             obj.Location = Game1.currentLocation;
-                            ActivateSprinkler(Game1.currentLocation, tile.ToVector2(), obj, false);
+                            ActivateSprinkler(Game1.currentLocation, v, obj, false);
                             Helper.Input.Suppress(e.Button);
                         }
+                    }
+                }
+                else
+                {
+
+                    Point tile = GetMouseCornerTile();
+
+                    var obj = GetSprinkler(Game1.currentLocation, tile.X, tile.Y);
+                    if (obj is not null)
+                    {
+                        obj.Location = Game1.currentLocation;
+                        ActivateSprinkler(Game1.currentLocation, tile.ToVector2(), obj, false);
+                        Helper.Input.Suppress(e.Button);
                     }
                 }
             }
