@@ -82,7 +82,7 @@ namespace PlaygroundFurniture
             }
             else if (swingTicks.ContainsKey(farmer.UniqueMultiplayerID))
             {
-                if (number == 1 || number == 3 ||number ==61 ||number == 9)
+                if (number == 1 || number == 3 ||number == 61 ||number == 9)
                 {
                     return new Vector2(origin.X * 0.25f, origin.Y );
                 }
