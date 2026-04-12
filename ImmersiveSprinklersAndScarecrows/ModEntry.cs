@@ -184,7 +184,7 @@ namespace ImmersiveSprinklersAndScarecrows
                     foreach(var p in GetSprinklerVectors(Game1.currentLocation))
                     {
                         var distance = Vector2.Distance(new Vector2(p.X + 1, p.Y + 1) * 64, Game1.player.position.Value);
-                        if (distance > 64)
+                        if (distance > Config.PickupNearbyRange * 64)
                             continue;
                         if (ReturnOrDropSprinkler(Game1.currentLocation, (int)p.X, (int)p.Y, Game1.player, false))
                         {
@@ -265,92 +265,92 @@ namespace ImmersiveSprinklersAndScarecrows
 
             configMenu.AddBoolOption(
                 mod: ModManifest,
-                name: () => "Mod Enabled",
+                name: () => SHelper.Translation.Get("GMCM.EnableMod.Name"),
                 getValue: () => Config.EnableMod,
                 setValue: value => Config.EnableMod = value
             );
 
             configMenu.AddBoolOption(
                 mod: ModManifest,
-                name: () => "Show Range When Placing",
+                name: () => SHelper.Translation.Get("GMCM.ShowRangeWhenPlacing.Name"),
                 getValue: () => Config.ShowRangeWhenPlacing,
                 setValue: value => Config.ShowRangeWhenPlacing = value
             );
             configMenu.AddKeybind(
                 mod: ModManifest,
-                name: () => "Pickup Key",
+                name: () => SHelper.Translation.Get("GMCM.PickupButton.Name"),
                 getValue: () => Config.PickupButton,
                 setValue: value => Config.PickupButton = value
             );
             configMenu.AddBoolOption(
                 mod: ModManifest,
-                name: () => "Pickup Nearby",
+                name: () => SHelper.Translation.Get("GMCM.PickupNearby.Name"),
                 getValue: () => Config.PickupNearby,
                 setValue: value => Config.PickupNearby = value
             );
             configMenu.AddKeybind(
                 mod: ModManifest,
-                name: () => "Activate Key",
+                name: () => SHelper.Translation.Get("GMCM.ActivateButton.Name"),
                 getValue: () => Config.ActivateButton,
                 setValue: value => Config.ActivateButton = value
             );
             configMenu.AddBoolOption(
                 mod: ModManifest,
-                name: () => "Activate Nearby",
+                name: () => SHelper.Translation.Get("GMCM.ActivateNearby.Name"),
                 getValue: () => Config.ActivateNearby,
                 setValue: value => Config.ActivateNearby = value
             );
             configMenu.AddNumberOption(
                 mod: ModManifest,
-                name: () => "Activation Range",
+                name: () => SHelper.Translation.Get("GMCM.ActivateNearbyRange.Name"),
                 getValue: () => Config.ActivateNearbyRange,
                 setValue: value => Config.ActivateNearbyRange = value
             );
             configMenu.AddKeybind(
                 mod: ModManifest,
-                name: () => "Show Sprinkler Range",
+                name: () => SHelper.Translation.Get("GMCM.ShowSprinklerRangeButton.Name"),
                 getValue: () => Config.ShowSprinklerRangeButton,
                 setValue: value => Config.ShowSprinklerRangeButton = value
             );
             configMenu.AddKeybind(
                 mod: ModManifest,
-                name: () => "Show Scarecrow Range",
+                name: () => SHelper.Translation.Get("GMCM.ShowScarecrowRangeButton.Name"),
                 getValue: () => Config.ShowScarecrowRangeButton,
                 setValue: value => Config.ShowScarecrowRangeButton = value
             );
             configMenu.AddTextOption(
                 mod: ModManifest,
-                name: () => "Scale",
+                name: () => SHelper.Translation.Get("GMCM.Scale.Name"),
                 getValue: () => Config.Scale + "",
                 setValue: delegate (string value) { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out float f)) { Config.Scale = f; } }
             );
             configMenu.AddTextOption(
                 mod: ModManifest,
-                name: () => "Alpha",
+                name: () => SHelper.Translation.Get("GMCM.Alpha.Name"),
                 getValue: () => Config.Alpha + "",
                 setValue: delegate (string value) { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out float f)) { Config.Alpha = f; } }
             );
             configMenu.AddTextOption(
                 mod: ModManifest,
-                name: () => "RangeAlpha",
+                name: () => SHelper.Translation.Get("GMCM.RangeAlpha.Name"),
                 getValue: () => Config.RangeAlpha + "",
                 setValue: delegate (string value) { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out float f)) { Config.RangeAlpha = f; } }
             );
             configMenu.AddNumberOption(
                 mod: ModManifest,
-                name: () => "Offset X",
+                name: () => SHelper.Translation.Get("GMCM.DrawOffsetX.Name"),
                 getValue: () => Config.DrawOffsetX,
                 setValue: value => Config.DrawOffsetX = value
             );
             configMenu.AddNumberOption(
                 mod: ModManifest,
-                name: () => "Offset Y",
+                name: () => SHelper.Translation.Get("GMCM.DrawOffsetY.Name"),
                 getValue: () => Config.DrawOffsetY,
                 setValue: value => Config.DrawOffsetY = value
             );
             configMenu.AddNumberOption(
                 mod: ModManifest,
-                name: () => "Offset Z",
+                name: () => SHelper.Translation.Get("GMCM.DrawOffsetZ.Name"),
                 getValue: () => Config.DrawOffsetZ,
                 setValue: value => Config.DrawOffsetZ = value
             );

@@ -24,6 +24,7 @@ namespace ImmersiveSprinklersAndScarecrows
         public SButton ActivateButton { get; set; } = SButton.Enter;
         public bool ActivateNearby { get; set; } = false;
         public int ActivateNearbyRange { get; set; } = 2;
+        public int PickupNearbyRange { get; set; } = 2;
         public SButton ShowScarecrowRangeButton { get; set; } = SButton.RightControl;
         public SButton ShowSprinklerRangeButton { get; set; } = SButton.LeftControl;
         public Dictionary<string, int> SprinklerRadii { get; set; } = new()

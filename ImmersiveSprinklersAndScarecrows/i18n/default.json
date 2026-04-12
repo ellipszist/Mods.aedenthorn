@@ -1,0 +1,18 @@
+{
+	// GMCM
+	"GMCM.EnableMod.Name": "Mod Enabled",
+	"GMCM.ShowRangeWhenPlacing.Name": "Show Range When Placing",
+	"GMCM.PickupButton.Name": "Pickup Key",
+	"GMCM.PickupNearby.Name": "Pickup Nearby",
+	"GMCM.ActivateButton.Name": "Activate Key",
+	"GMCM.ActivateNearby.Name": "Activate Nearby",
+	"GMCM.ActivateNearbyRange.Name": "Activation Range",
+	"GMCM.ShowSprinklerRangeButton.Name": "Show Sprinkler Range",
+	"GMCM.ShowScarecrowRangeButton.Name": "Show Scarecrow Range",
+	"GMCM.Scale.Name": "Scale",
+	"GMCM.Alpha.Name": "Alpha",
+	"GMCM.RangeAlpha.Name": "Range Alpha",
+	"GMCM.DrawOffsetX.Name": "Offset X",
+	"GMCM.DrawOffsetY.Name": "Offset Y",
+	"GMCM.DrawOffsetZ.Name": "Offset Z"
+}

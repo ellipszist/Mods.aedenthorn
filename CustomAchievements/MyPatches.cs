@@ -57,6 +57,7 @@ namespace CustomAchievements
             int baseY = __instance.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder - 16;
 
             using var dict = Helper.GameContent.Load<Dictionary<string, CustomAcheivementData>>(ModEntry.dictPath).GetEnumerator();
+            List<ClickableTextureComponent> list = __instance.collections[5].Last();
             while (dict.MoveNext())
             {
                 var a = dict.Current.Value;
@@ -64,17 +65,26 @@ namespace CustomAchievements
 
                 int xPos = baseX + widthUsed % 10 * 68;
                 int yPos = baseY + widthUsed / 10 * 68;
+                if (yPos > __instance.yPositionOnScreen + __instance.height - 128)
+                {
+                    __instance.collections[5].Add(new List<ClickableTextureComponent>());
+                    widthUsed = 0;
+                    xPos = baseX;
+                    yPos = baseY;
+                    list = __instance.collections[5].Last();
+                }
                 if (!string.IsNullOrEmpty(a.iconPath))
                 {
                     var icon = Game1.content.Load<Texture2D>(a.iconPath);
-                    __instance.collections[5][0].Add(new ClickableTextureComponent($"{a.ID.GetHashCode()} {a.achieved}", new Rectangle(xPos, yPos, 64, 64), null, "", icon, a.iconRect == null ? new Rectangle(0, 0, icon.Width, icon.Height) : a.iconRect.Value, 1f, false));
+                    list.Add(new ClickableTextureComponent($"{a.ID.GetHashCode()} {a.achieved}", new Rectangle(xPos, yPos, 64, 64), null, "", icon, a.iconRect == null ? new Rectangle(0, 0, icon.Width, icon.Height) : a.iconRect.Value, 1f, false));
                 }
                 else
                 {
-                    __instance.collections[5][0].Add(new ClickableTextureComponent($"{a.ID.GetHashCode()} {a.achieved}", new Rectangle(xPos, yPos, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 25, -1, -1), 1f, false));
+                    list.Add(new ClickableTextureComponent($"{a.ID.GetHashCode()} {a.achieved}", new Rectangle(xPos, yPos, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 25, -1, -1), 1f, false));
                 }
                 widthUsed++;
             }
+
         }
 
         private static IEnumerable<CodeInstruction> CollectionsPage_draw_Transpiler(IEnumerable<CodeInstruction> instructions)
