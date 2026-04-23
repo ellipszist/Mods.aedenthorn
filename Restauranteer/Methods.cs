@@ -2,6 +2,7 @@
 using Netcode;
 using Newtonsoft.Json;
 using StardewValley;
+using StardewValley.GameData.Objects;
 using StardewValley.Locations;
 using StardewValley.Objects;
 using System;
@@ -32,11 +33,11 @@ namespace Restauranteer
 
         private void CheckOrder(NPC npc, GameLocation location)
         {
-            if (npc.modData.TryGetValue(orderKey, out string orderData))
+            if (npc.modData.ContainsKey(orderKey))
             {
                 try
                 {
-                    UpdateOrder(npc, JsonConvert.DeserializeObject<OrderData>(orderData));
+                    UpdateOrder(npc);
                 }
                 catch 
                 {
@@ -53,7 +54,7 @@ namespace Restauranteer
             }
         }
 
-        public static void UpdateOrder(NPC npc, OrderData orderData)
+        public static void UpdateOrder(NPC npc)
         {
             if (!npc.IsEmoting)
             {
@@ -66,14 +67,14 @@ namespace Restauranteer
             List<string> loves = new();
             foreach(var str in Game1.NPCGiftTastes["Universal_Love"].Split(' '))
             {
-                if (Game1.objectData.TryGetValue(str, out var data) && CraftingRecipe.cookingRecipes.ContainsKey(data.Name))
+                if (Game1.objectData.TryGetValue(str, out var data) && CraftingRecipe.cookingRecipes.ContainsKey(data.Name) && !IsIgnored(str, data))
                 {
                     loves.Add(str);
                 }
             }
             foreach(var str in Game1.NPCGiftTastes[npc.Name].Split('/')[1].Split(' '))
             {
-                if (Game1.objectData.TryGetValue(str, out var data) && CraftingRecipe.cookingRecipes.ContainsKey(data.Name))
+                if (Game1.objectData.TryGetValue(str, out var data) && CraftingRecipe.cookingRecipes.ContainsKey(data.Name) && !IsIgnored(str, data))
                 {
                     loves.Add(str);
                 }
@@ -81,14 +82,14 @@ namespace Restauranteer
             List<string> likes = new();
             foreach(var str in Game1.NPCGiftTastes["Universal_Like"].Split(' '))
             {
-                if (Game1.objectData.TryGetValue(str, out var data) && CraftingRecipe.cookingRecipes.ContainsKey(data.Name))
+                if (Game1.objectData.TryGetValue(str, out var data) && CraftingRecipe.cookingRecipes.ContainsKey(data.Name) && !IsIgnored(str, data))
                 {
                     likes.Add(str);
                 }
             }
             foreach (var str in Game1.NPCGiftTastes[npc.Name].Split('/')[3].Split(' '))
             {
-                if (Game1.objectData.TryGetValue(str, out var data) && CraftingRecipe.cookingRecipes.ContainsKey(data.Name))
+                if (Game1.objectData.TryGetValue(str, out var data) && CraftingRecipe.cookingRecipes.ContainsKey(data.Name) && !IsIgnored(str, data))
                 {
                     likes.Add(str);
                 }
@@ -115,7 +116,16 @@ namespace Restauranteer
                 FillFridge(location);
             }
         }
-
+        public static bool IsIgnored(string key, ObjectData data)
+        {
+            if (Config.IgnoredRecipes.Contains(key))
+                return true;
+            if (Config.IgnoredRecipes.Contains(data.Name))
+                return true;
+            if (Config.IgnoredRecipes.Any(r => r.EndsWith("*") && (key.StartsWith(r[..^1]) || data.Name.StartsWith(r[..^1]))))
+                return true;
+            return false;
+        }
         public static NetRef<Chest> GetFridge(GameLocation location)
         {
             if(location is FarmHouse)

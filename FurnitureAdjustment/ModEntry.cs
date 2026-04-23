@@ -91,12 +91,12 @@ namespace FurnitureAdjustment
             {
                 if (f.boundingBox.Value.Contains(Game1.viewport.X + Game1.getOldMouseX(), Game1.viewport.Y + Game1.getOldMouseY()))
                 {
-                    f.RemoveLightGlow(Game1.currentLocation);
+                    f.RemoveLightGlow();
                     f.boundingBox.Value = new Rectangle(f.boundingBox.Value.Location + shift, f.boundingBox.Value.Size);
                     f.updateDrawPosition();
                     if(Config.MoveCursor)
                         Game1.setMousePosition(Game1.getOldMouseX() + shift.X, Game1.getOldMouseY() + shift.Y);
-                    f.removeLights(Game1.currentLocation);
+                    f.removeLights();
 
                     Helper.Input.Suppress(button);
                     /*

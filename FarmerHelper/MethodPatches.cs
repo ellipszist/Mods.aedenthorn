@@ -14,7 +14,7 @@ namespace FarmerHelper
     {
         private static bool Utility_tryToPlaceItem_Prefix(GameLocation location, Item item, int x, int y, ref bool __result )
         {
-            if (!Config.EnableMod || !Config.PreventLatePlant || (new int[] { 495, 496, 497, 498, 770 }).Contains(item.ParentSheetIndex) || !(item is Object) || ((Object)item).Category != -74)
+            if (!Config.EnableMod || !Config.PreventLatePlant || item is not Object obj || (new int[] { 495, 496, 497, 498, 770 }).Contains(obj.ParentSheetIndex) || obj.Category != -74)
                 return true;
             if (location.SeedsIgnoreSeasonsHere())
                 return true;

@@ -34,6 +34,10 @@ namespace Restauranteer
             "Gus",
             "Emily"
         };
+        public List<string> IgnoredRecipes { get; set; } = new List<string>()
+        {
+            "Morghoula.AlchemistryCP*",
+        };
         public List<Point> KitchenTiles { get; set; } = new List<Point>()
         {
         };
