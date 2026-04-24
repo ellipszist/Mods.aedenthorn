@@ -5,6 +5,7 @@ using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Characters;
 using StardewValley.Monsters;
+using StardewValley.TerrainFeatures;
 using System.Globalization;
 using Object = StardewValley.Object;
 
@@ -82,6 +83,10 @@ namespace DMT
                 postfix: new(typeof(Patches), nameof(Crop_newDay_Postfix))
             );
             harmony.Patch(
+                original: AccessTools.Method(typeof(HoeDirt), nameof(HoeDirt.plant)),
+                postfix: new(typeof(Patches), nameof(HoeDirt_plant_Postfix))
+            );
+            harmony.Patch(
                 original: AccessTools.Method(typeof(Object), nameof(Object.placementAction)),
                 postfix: new(typeof(Patches), nameof(Object_placementAction_Postfix))
             );
@@ -127,7 +132,7 @@ namespace DMT
             foreach (var layer in __instance.map.Layers)
             {
                 var tile = layer.Tiles[(int)x, (int)y];
-                if (tile is null || !tile.HasProperty(Keys.ExplodeKey, out var prop))
+                if (tile is null || !tile.HasProperty(Actions.ExplodeKey, out var prop))
                     continue;
                 if (ExplodingFarmer.Value is not null && ExplodingFarmer.Value.currentLocation.Name == __instance.Name)
                 {
@@ -206,7 +211,7 @@ namespace DMT
                 return;
 
             var tile = __instance.currentLocation.Map.GetLayer("Back").Tiles[tilePos.X, tilePos.Y];
-            if (tile is not null && tile.HasProperty(Keys.SpeedKey, out var prop) && float.TryParse(prop, NumberStyles.Any, CultureInfo.InvariantCulture, out var multiplier))
+            if (tile is not null && tile.HasProperty(Actions.SpeedKey, out var prop) && float.TryParse(prop, NumberStyles.Any, CultureInfo.InvariantCulture, out var multiplier))
                 __result *= multiplier;
         }
 
@@ -218,7 +223,7 @@ namespace DMT
             if (__instance.currentLocation.isTileOnMap(tileLoc))
             {
                 var tile = __instance.currentLocation.Map?.GetLayer("Back")?.Tiles[(int)tileLoc.X, (int)tileLoc.Y];
-                if (tile?.HasProperty(Keys.MoveKey, out var prop) ?? false)
+                if (tile?.HasProperty(Actions.MoveKey, out var prop) ?? false)
                 {
                     var split = prop.ToString().Split(' ');
                     __instance.xVelocity = float.Parse(split[0], NumberStyles.Any, CultureInfo.InvariantCulture);
@@ -248,7 +253,7 @@ namespace DMT
                 var tile = layer.Tiles[tilePos.X, tilePos.Y];
                 var oldTile = layer.Tiles[oldTilePos.X, oldTilePos.Y];
 
-                if ((tile?.HasProperty(Keys.SlipperyKey, out var prop) ?? false) && float.TryParse(prop, NumberStyles.Any, CultureInfo.InvariantCulture, out var amount))
+                if ((tile?.HasProperty(Actions.SlipperyKey, out var prop) ?? false) && float.TryParse(prop, NumberStyles.Any, CultureInfo.InvariantCulture, out var amount))
                 {
                     //Cap off with Math.Max (determine max allowed speed)
                     if (f.movementDirections.Contains(0))
@@ -260,7 +265,7 @@ namespace DMT
                     if (f.movementDirections.Contains(3))
                         f.xVelocity = -Math.Max(Math.Abs(f.xVelocity) + amount, .16f);
                 }
-                else if ((oldTile?.HasProperty(Keys.SlipperyKey, out prop) ?? false) && float.TryParse(prop, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
+                else if ((oldTile?.HasProperty(Actions.SlipperyKey, out prop) ?? false) && float.TryParse(prop, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
                 {
                     f.xVelocity = 0f;
                     f.yVelocity = 0f;
@@ -280,7 +285,7 @@ namespace DMT
                 if (tile is null)
                     return;
 
-                if (!tile.HasProperty(Keys.PushKey, out var prop) && !tile.HasProperty(Keys.PushableKey, out prop))
+                if (!tile.HasProperty(Actions.PushKey, out var prop) && !tile.HasProperty(Actions.PushableKey, out prop))
                     return;
                 var destination = startTile + GetNextTile(f.FacingDirection);
                 foreach (var item in prop.ToString().Split(','))
@@ -345,6 +350,12 @@ namespace DMT
                 return;
             //context.Monitor.Log($"Crop {__instance.netSeedIndex.Value} grew up");
             TriggerActions([.. __instance.currentLocation.Map.Layers], Game1.player, __instance.currentLocation, __instance.tilePosition.ToPoint(), [string.Format(Triggers.CropHarvest, Utils.BuildFormattedTrigger(__instance.indexOfHarvest.Value)), string.Format(Triggers.CropHarvest, Utils.BuildFormattedTrigger(__instance.netSeedIndex.Value))]);
+        }
+        internal static void HoeDirt_plant_Postfix(HoeDirt __instance, string itemId, Farmer who, bool isFertilizer, bool __result)
+        {
+            if (!Enabled || !__result || isFertilizer || who is null || __instance.Location is null)
+                return;
+            TriggerActions([.. __instance.Location.Map.Layers], who, __instance.Location, __instance.Tile.ToPoint(), [string.Format(Triggers.CropPlanted, Utils.BuildFormattedTrigger(itemId))]);
         }
         internal static void Object_placementAction_Postfix(Object __instance, GameLocation location, int x, int y, Farmer who)
         {

@@ -509,7 +509,7 @@ namespace OmniTools
         }
         public static Tool GetToolFromInfo(ToolInfo toolInfo)
         {
-            Tool t = GetToolFromDescription(toolInfo.description.index, toolInfo.description.upgradeLevel, toolInfo.description.itemId);
+            Tool t = GetToolFromDescription(toolInfo.description.index, toolInfo.description.upgradeLevel, toolInfo.numSlots, toolInfo.description.itemId);
             for (int i = 0; i < toolInfo.enchantments.Count; i++)
             {
                 try
@@ -568,7 +568,7 @@ namespace OmniTools
             return new ToolDescription((byte)toolList.IndexOf(t.GetType()), (byte)t.UpgradeLevel);
         }
 
-        public static Tool GetToolFromDescription(int index, byte upgradeLevel, string itemId = null)
+        public static Tool GetToolFromDescription(int index, byte upgradeLevel, int numSlots, string itemId = null)
         {
             Tool t = null;
             switch (index)
@@ -617,7 +617,11 @@ namespace OmniTools
                     break;
             }
             if (t is not null)
+            {
                 t.UpgradeLevel = upgradeLevel;
+                if (numSlots > -1)
+                    t.numAttachmentSlots.Value = numSlots;
+            }
             return t;
         }
         public static Tool[] GetToolsFromTool(Tool tool)

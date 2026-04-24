@@ -1,9 +1,8 @@
 ﻿using HarmonyLib;
-using System.Reflection;
 
 namespace DMT.Data
 {
-    public static class Keys
+    public static class Actions
     {
         public const string ActionKey = "DMT/action";
         public const string AddLayerKey = "DMT/addLayer";
@@ -22,6 +21,7 @@ namespace DMT.Data
         public const string ExplodeKey = "DMT/explode";
         public const string ExplosionKey = "DMT/explosion";
         public const string FriendsKey = "DMT/friends";
+        public const string FertilizeKey = "DMT/fertilize";
         public const string GiveKey = "DMT/give";
         public const string HealthPerSecondContKey = "DMT/healthPerSecondContinuous";
         public const string HealthPerSecondKey = "DMT/healthPerSecond";
@@ -50,22 +50,22 @@ namespace DMT.Data
         public const string TakeKey = "DMT/take";
         public const string WarpKey = "DMT/warp";
 
-        private static List<string?> allKeys;
+        private static List<string?> allActions;
 
-        public static List<string?> AllKeys
+        public static List<string?> AllActions
         {
             get
             {
-                if (allKeys == null)
+                if (allActions == null)
                 {
-                    allKeys = new();
-                    foreach (var t in AccessTools.GetDeclaredFields(typeof(Keys)))
+                    allActions = new();
+                    foreach (var t in AccessTools.GetDeclaredFields(typeof(Actions)))
                     {
                         if(t.IsLiteral)
-                            allKeys.Add((string?)typeof(Keys).GetField(t.Name)?.GetValue(null));
+                            allActions.Add((string?)typeof(Actions).GetField(t.Name)?.GetValue(null));
                     }
                 }
-                return allKeys;
+                return allActions;
             }
         }
 

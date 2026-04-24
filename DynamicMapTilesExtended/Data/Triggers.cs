@@ -3,6 +3,7 @@
     public static class Triggers
     {
         public const string Action = "Action";
+        public const string CropPlanted = "CropPlanted{0}";
         public const string CropGrown = "CropGrown{0}";
         public const string CropHarvest = "CropHarvest{0}";
         public const string EnterLocation = "Enter";
@@ -24,6 +25,7 @@
         public const string Mount = "Mount{0}";
         public const string Dismount = "Dismount{0}";
 
+        public const string CropPlantedRegex = @"CropPlanted(\([A-z]{1,}\)){0,1}";
         public const string CropGrownRegex = @"CropGrown(\([A-z]{1,}\)){0,1}";
         public const string CropHarvestRegex = @"CropHarvest(\([A-z]{1,}\)){0,1}";
         public const string DismountRegex = @"Dismount(\([A-z]{1,}\)){0,1}";
@@ -38,17 +40,21 @@
 
         public static readonly HashSet<string> Regexes = [
             Action,
+            CropPlantedRegex,
             CropGrownRegex,
+            CropHarvestRegex,
             EnterLocation,
             Explode,
             MonsterSlainRegex,
+            ObjectClickedRegex,
             ObjectPlacedRegex,
             ObjectRemovedRegex,
-            ObjectClickedRegex,
             PushTile,
             PushedTile,
             StepOff,
             StepOn,
+            StepOffNPC,
+            StepOnNPC,
             TalkToNPCRegex,
             UseItemRegex,
             UseToolRegex,

@@ -5,6 +5,7 @@ using StardewValley;
 using StardewValley.Extensions;
 using StardewValley.Monsters;
 using StardewValley.Objects;
+using StardewValley.TerrainFeatures;
 using System.Reflection;
 using xTile.Dimensions;
 using xTile.Layers;
@@ -13,7 +14,7 @@ using static HarmonyLib.Code;
 
 namespace DMT
 {
-    public static class Actions
+    public static partial class Utils
     {
         public static readonly Dictionary<string, Action<Farmer, string, Tile, Point>> ModActions = [];
 
@@ -700,6 +701,33 @@ namespace DMT
                 foreach (var animal in farm.Animals.Values)
                     if (animal.type.Value == name)
                         animal.friendshipTowardFarmer.Add(amount);
+            }
+        }
+
+        public static void DoFertilize(Farmer? who, GameLocation location, string value)
+        {
+            if (who == null)
+                return;
+
+            var split = value.Split('|');
+            foreach (var item in split)
+            {
+                var kv = item.Split('=');
+                if (kv.Length != 2)
+                {
+                    context.Monitor.Log($"[{nameof(Actions)}.{nameof(DoFertilize)}] Missing argument for {item}");
+                    continue;
+                }
+                var xy = kv[0].Split(',');
+                if (xy.Length != 2)
+                {
+                    context.Monitor.Log($"[{nameof(Actions)}.{nameof(DoFertilize)}] Missing argument for {item}");
+                    continue;
+                }
+                string name = kv[1].Trim();
+                if (!int.TryParse(xy[0].Trim(), out int x) || !int.TryParse(xy[1].Trim(), out int y) || !location.terrainFeatures.TryGetValue(new Vector2(x, y), out var tf) || tf is not HoeDirt dirt)
+                    continue;
+                dirt.fertilizer.Value = ItemRegistry.QualifyItemId(name) ?? name;
             }
         }
     }

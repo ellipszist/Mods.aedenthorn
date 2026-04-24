@@ -31,124 +31,124 @@ namespace DMT
                     var tile = item.tile;
                     switch (item.prop.Key)
                     {
-                        case Keys.ActionKey:
-                            Actions.DoAction(who, value);
+                        case Actions.ActionKey:
+                            DoAction(who, value);
                             break;
-                        case Keys.AddLayerKey:
-                            Actions.DoAddLayer(location, value);
+                        case Actions.AddLayerKey:
+                            DoAddLayer(location, value);
                             break;
-                        case Keys.AddQuestKey:
-                            Actions.DoAddQuest(who, value);
+                        case Actions.AddQuestKey:
+                            DoAddQuest(who, value);
                             break;
-                        case Keys.AddTilesheetKey:
-                            Actions.DoAddTileSheet(location, value);
+                        case Actions.AddTilesheetKey:
+                            DoAddTileSheet(location, value);
                             break;
-                        case Keys.AnimationKey:
-                            Actions.DoAnimate(location, value, false);
+                        case Actions.AnimationKey:
+                            DoAnimate(location, value, false);
                             break;
-                        case Keys.AnimationOffKey:
-                            Actions.DoAnimate(location, value, true);
+                        case Actions.AnimationOffKey:
+                            DoAnimate(location, value, true);
                             break;
-                        case Keys.BuffKey:
-                            Actions.DoAddBuff(who, value);
+                        case Actions.BuffKey:
+                            DoAddBuff(who, value);
                             break;
-                        case Keys.ChangeIndexKey:
-                            Actions.DoChangeIndex(location, value, tile, tilePosition);
+                        case Actions.ChangeIndexKey:
+                            DoChangeIndex(location, value, tile, tilePosition);
                             break;
-                        case Keys.ChangeMultipleIndexKey:
-                            Actions.DoChangeMultipleIndexes(location, value, tile, tilePosition);
+                        case Actions.ChangeMultipleIndexKey:
+                            DoChangeMultipleIndexes(location, value, tile, tilePosition);
                             break;
-                        case Keys.ChangePropertiesKey:
-                            Actions.DoChangeProperties(value, tile);
+                        case Actions.ChangePropertiesKey:
+                            DoChangeProperties(value, tile);
                             break;
-                        case Keys.ChangeMultiplePropertiesKey:
-                            Actions.DoChangeMultipleProperties(location, value, tile);
+                        case Actions.ChangeMultiplePropertiesKey:
+                            DoChangeMultipleProperties(location, value, tile);
                             break;
-                        case Keys.ChestKey:
-                            Actions.DoSpawnChest(location, value);
+                        case Actions.ChestKey:
+                            DoSpawnChest(location, value);
                             break;
-                        case Keys.EmoteKey:
-                            Actions.DoEmote(who, value);
+                        case Actions.EmoteKey:
+                            DoEmote(who, value);
                             break;
-                        case Keys.EventKey:
-                            Actions.DoPlayEvent(value);
+                        case Actions.EventKey:
+                            DoPlayEvent(value);
                             break;
-                        case Keys.ExplosionKey:
-                            Actions.DoExplode(who, location, value, tilePosition);
+                        case Actions.ExplosionKey:
+                            DoExplode(who, location, value, tilePosition);
                             break;
-                        case Keys.GiveKey:
-                            Actions.DoGive(who, value);
+                        case Actions.GiveKey:
+                            DoGive(who, value);
                             break;
-                        case Keys.HealthKey:
-                            Actions.DoUpdateHealth(who, value);
+                        case Actions.HealthKey:
+                            DoUpdateHealth(who, value);
                             break;
-                        case Keys.HealthPerSecondKey:
-                            Actions.DoUpdateHealthPerSecond(who, value);
+                        case Actions.HealthPerSecondKey:
+                            DoUpdateHealthPerSecond(who, value);
                             break;
-                        case Keys.HealthPerSecondContKey:
-                            Actions.DoUpdateHealthPerSecondCont(who, value);
+                        case Actions.HealthPerSecondContKey:
+                            DoUpdateHealthPerSecondCont(who, value);
                             break;
-                        case Keys.InvalidateKey:
-                            Actions.DoInvalidateAsset(value);
+                        case Actions.InvalidateKey:
+                            DoInvalidateAsset(value);
                             break;
-                        case Keys.MailBoxKey:
-                            Actions.DoAddMailForTomorrow(who, value);
+                        case Actions.MailBoxKey:
+                            DoAddMailForTomorrow(who, value);
                             break;
-                        case Keys.MailKey:
-                            Actions.DoAddMailflag(who, value);
+                        case Actions.MailKey:
+                            DoAddMailflag(who, value);
                             break;
-                        case Keys.MailRemoveKey:
-                            Actions.DoRemoveMailflag(who, value);
+                        case Actions.MailRemoveKey:
+                            DoRemoveMailflag(who, value);
                             break;
-                        case Keys.MessageKey:
-                            Actions.DoShowMessage(value);
+                        case Actions.MessageKey:
+                            DoShowMessage(value);
                             break;
-                        case Keys.MonsterKey:
-                            Actions.DoSpawnMonster(location, value);
+                        case Actions.MonsterKey:
+                            DoSpawnMonster(location, value);
                             break;
-                        case Keys.MusicKey:
-                            Actions.DoPlayMusic(value);
+                        case Actions.MusicKey:
+                            DoPlayMusic(value);
                             break;
-                        case Keys.PushKey:
-                            Actions.DoPushTiles(who, tile, tilePosition);
+                        case Actions.PushKey:
+                            DoPushTiles(who, tile, tilePosition);
                             break;
-                        case Keys.PushOthersKey:
-                            Actions.DoPushOtherTiles(who, value, tile, tilePosition);
+                        case Actions.PushOthersKey:
+                            DoPushOtherTiles(who, value, tile, tilePosition);
                             break;
-                        case Keys.RemoveQuestKey:
-                            Actions.DoRemoveQuest(who, value);
+                        case Actions.RemoveQuestKey:
+                            DoRemoveQuest(who, value);
                             break;
-                        case Keys.StaminaKey:
-                            Actions.DoUpdateStamina(who, value);
+                        case Actions.StaminaKey:
+                            DoUpdateStamina(who, value);
                             break;
-                        case Keys.StaminaPerSecondKey:
-                            Actions.DoUpdateStaminaPerSecond(who, value);
+                        case Actions.StaminaPerSecondKey:
+                            DoUpdateStaminaPerSecond(who, value);
                             break;
-                        case Keys.StaminaPerSecondContKey:
-                            Actions.DoUpdateStaminaPerSecondCont(who, value);
+                        case Actions.StaminaPerSecondContKey:
+                            DoUpdateStaminaPerSecondCont(who, value);
                             break;
-                        case Keys.SoundKey:
-                            Actions.DoPlaySound(location, value);
+                        case Actions.SoundKey:
+                            DoPlaySound(location, value);
                             break;
-                        case Keys.TakeKey:
-                            Actions.DoTake(who, value);
+                        case Actions.TakeKey:
+                            DoTake(who, value);
                             break;
-                        case Keys.TeleportKey:
-                            Actions.DoTeleport(who, value);
+                        case Actions.TeleportKey:
+                            DoTeleport(who, value);
                             break;
-                        case Keys.TeleportTileKey:
-                            Actions.DoTeleportTile(who, value);
+                        case Actions.TeleportTileKey:
+                            DoTeleportTile(who, value);
                             break;
-                        case Keys.WarpKey:
-                            Actions.DoWarp(who, value);
+                        case Actions.WarpKey:
+                            DoWarp(who, value);
                             break;
-                        case Keys.FriendsKey:
-                            Actions.DoFriendshipChange(who, value);
+                        case Actions.FriendsKey:
+                            DoFriendshipChange(who, value);
                             break;
                         default:
-                            if (Keys.ModKeys.Contains(item.prop.key))
+                            if (Actions.ModKeys.Contains(item.prop.key))
                             {
-                                Actions.ModActions[item.prop.Key]?.Invoke(who, value, tile, tilePosition);
+                                ModActions[item.prop.Key]?.Invoke(who, value, tile, tilePosition);
                             }
                             else
                                 found = false;

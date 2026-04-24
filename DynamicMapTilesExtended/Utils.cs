@@ -51,8 +51,8 @@ namespace DMT
                 if (!l.isTileOnMap(tiles[i].p) || !l.isTileOnMap(destination) || 
                     (
                         tiles[i].t.Layer.Tiles[destination.X, destination.Y] is Tile t &&
-                        (t.HasProperty(Keys.PushKey, out _) || t.HasProperty(Keys.PushableKey, out _)) &&
-                        !tiles.Any(x => x.p == destination && x.t.Layer.Id == tiles[i].t.Layer.Id)
+                        (t.HasProperty(Actions.PushKey, out _) || t.HasProperty(Actions.PushableKey, out _)) &&
+                        !tiles.Any(x => x.p == destination && t.Layer.Id == tiles[i].t.Layer.Id)
                     ))
                     return false;
             }
@@ -76,7 +76,7 @@ namespace DMT
                 return;
 
             List<(Point, Tile)> tiles = [(start, t)];
-            if (!t.HasProperty(Keys.PushAlsoKey, out var others))
+            if (!t.HasProperty(Actions.PushAlsoKey, out var others))
             {
                 _ = PushTiles(f.currentLocation, tiles, f.FacingDirection, f);
                 return;
@@ -263,7 +263,7 @@ namespace DMT
             List<string> localTriggers = [];
             List<string> globalTriggers = [];
             List<(DynamicTileProperty prop, Tile tile)> properties = [];
-            IOrderedEnumerable<string> allKeys = (IOrderedEnumerable<string>)Keys.AllKeys.Union(Keys.ModKeys).OrderByDescending(x => x.Length);
+            IOrderedEnumerable<string> allKeys = (IOrderedEnumerable<string>)Actions.AllActions.Union(Actions.ModKeys).OrderByDescending(x => x.Length);
             foreach (var trigger in (string[])[.. triggers])
             {
                 if (IsGlobalTrigger(trigger))
@@ -359,7 +359,7 @@ namespace DMT
                     keys.RemoveAt(i);
                 }
             }
-            IOrderedEnumerable<string> allKeys = (IOrderedEnumerable<string>)Keys.AllKeys.Union(Keys.ModKeys).OrderByDescending(x => x.Length);
+            IOrderedEnumerable<string> allKeys = (IOrderedEnumerable<string>)Actions.AllActions.Union(Actions.ModKeys).OrderByDescending(x => x.Length);
 
             foreach (var layer in l.Map.Layers)
             {

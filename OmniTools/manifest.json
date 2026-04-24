@@ -1,16 +1,10 @@
 ﻿{
   "Name": "Omni Tools",
   "Author": "aedenthorn",
-  "Version": "1.0.3",
+  "Version": "1.0.4",
   "Description": "Omni Tools.",
   "UniqueID": "aedenthorn.OmniTools",
   "EntryDll": "OmniTools.dll",
   "MinimumApiVersion": "4.0.0",
-  "ModUpdater": {
-    "Repository": "StardewValleyMods",
-    "User": "aedenthorn",
-    "Directory": "_releases",
-    "ModFolder": "OmniTools"
-  },
   "UpdateKeys": [ "Nexus:14865" ]
 }

@@ -25,6 +25,7 @@ namespace OmniTools
     {
         public ToolDescription description;
         public string displayName;
+        public int numSlots = -1;
         public List<string> enchantments = new();
         public List<int> enchantLevels = new();
         public List<ObjectInfo> attachments = new();
@@ -40,6 +41,7 @@ namespace OmniTools
             ModEntry.skip = true;
             displayName = tool.DisplayName;
             ModEntry.skip = false;
+            numSlots = tool.numAttachmentSlots.Value;
             foreach (var e in tool.enchantments)
             {
                 enchantments.Add(e.GetType().ToString());

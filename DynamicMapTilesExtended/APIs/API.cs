@@ -17,9 +17,9 @@ namespace DMT.APIs
 
         public bool RegisterAction(string key, Action<Farmer, string, Tile, Point> handler)
         {
-            if (!Keys.ModKeys.Add(key))
+            if (!Data.Actions.ModKeys.Add(key))
                 return false;
-            Actions.ModActions.Add(key, handler);
+            ModActions.Add(key, handler);
             return true;
         }
     }

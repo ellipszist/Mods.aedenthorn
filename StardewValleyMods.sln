@@ -667,6 +667,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlaygroundFurniture", "Play
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaintedFences", "PaintedFences\PaintedFences.csproj", "{F3FA3E62-2EA2-5D7C-7CB4-9D4C63BBD4E0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShippingBonuses", "ShippingBonuses\ShippingBonuses.csproj", "{26875B35-6DB9-8475-E71C-6869AA99818E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3299,6 +3301,14 @@ Global
 		{F3FA3E62-2EA2-5D7C-7CB4-9D4C63BBD4E0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F3FA3E62-2EA2-5D7C-7CB4-9D4C63BBD4E0}.Release|x64.ActiveCfg = Release|x64
 		{F3FA3E62-2EA2-5D7C-7CB4-9D4C63BBD4E0}.Release|x64.Build.0 = Release|x64
+		{26875B35-6DB9-8475-E71C-6869AA99818E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26875B35-6DB9-8475-E71C-6869AA99818E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26875B35-6DB9-8475-E71C-6869AA99818E}.Debug|x64.ActiveCfg = Debug|x64
+		{26875B35-6DB9-8475-E71C-6869AA99818E}.Debug|x64.Build.0 = Debug|x64
+		{26875B35-6DB9-8475-E71C-6869AA99818E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26875B35-6DB9-8475-E71C-6869AA99818E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26875B35-6DB9-8475-E71C-6869AA99818E}.Release|x64.ActiveCfg = Release|x64
+		{26875B35-6DB9-8475-E71C-6869AA99818E}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
