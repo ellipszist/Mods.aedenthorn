@@ -76,6 +76,10 @@ namespace DMT
                         case Actions.ExplosionKey:
                             DoExplode(who, location, value, tilePosition);
                             break;
+                            break;
+                        case Actions.FertilizeKey:
+                            DoFertilize(location, value);
+                            break;
                         case Actions.GiveKey:
                             DoGive(who, value);
                             break;

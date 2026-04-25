@@ -248,10 +248,11 @@ namespace DMT
                 e.LoadFrom(() => new Dictionary<string, DynamicTile>(), AssetLoadPriority.Exclusive);
             if (e.NameWithoutLocale.IsEquivalentTo(AnimationDataDictPath))
                 e.LoadFrom(() => new Dictionary<string, List<Animation>>(), AssetLoadPriority.Exclusive);
-            //if (e.NameWithoutLocale.IsEquivalentTo("Maps/Town"))
+            //if (e.NameWithoutLocale.IsEquivalentTo("Maps/Farm"))
             //    e.Edit((IAssetData data) =>
             //    {
-            //        data.AsMap().Data.GetLayer("Back").Tiles[2, 54].Properties["DMT/monster_ObjectRemoved((BC)13)"] = "BigSlime 128 3456 40";
+            //        data.AsMap().Data.GetLayer("Back").Tiles[65, 19].Properties["DMT/fertilize_On"] = "65,19=Basic Fertilizer";
+            //        data.AsMap().Data.GetLayer("Back").Tiles[65, 20].Properties["DMT/fertilize_CropPlanted"] = "65,20=Basic Fertilizer";
             //    });
         }
 

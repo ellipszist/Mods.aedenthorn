@@ -704,10 +704,8 @@ namespace DMT
             }
         }
 
-        public static void DoFertilize(Farmer? who, GameLocation location, string value)
+        public static void DoFertilize(GameLocation location, string value)
         {
-            if (who == null)
-                return;
 
             var split = value.Split('|');
             foreach (var item in split)
