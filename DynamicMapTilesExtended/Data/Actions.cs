@@ -23,9 +23,11 @@ namespace DMT.Data
         public const string FriendsKey = "DMT/friends";
         public const string FertilizeKey = "DMT/fertilize";
         public const string GiveKey = "DMT/give";
+        public const string GrowCropKey = "DMT/growCrop";
         public const string HealthPerSecondContKey = "DMT/healthPerSecondContinuous";
         public const string HealthPerSecondKey = "DMT/healthPerSecond";
         public const string InvalidateKey = "DMT/invalidate";
+        public const string KillCropKey = "DMT/killCrop";
         public const string MailBoxKey = "DMT/mailbox";
         public const string MailKey = "DMT/mail";
         public const string MailRemoveKey = "DMT/mailRemove";
@@ -39,6 +41,7 @@ namespace DMT.Data
         public const string PushAlsoKey = "DMT/pushAlso";
         public const string PushOthersKey = "DMT/pushOthers";
         public const string RemoveQuestKey = "DMT/removeQuest";
+        public const string SetCropKey = "DMT/setCrop";
         public const string SoundKey = "DMT/sound";
         public const string SlipperyKey = "DMT/slippery";
         public const string SpeedKey = "DMT/speed";

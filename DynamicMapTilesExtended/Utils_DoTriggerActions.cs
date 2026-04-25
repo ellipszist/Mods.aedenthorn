@@ -76,9 +76,11 @@ namespace DMT
                         case Actions.ExplosionKey:
                             DoExplode(who, location, value, tilePosition);
                             break;
-                            break;
                         case Actions.FertilizeKey:
                             DoFertilize(location, value);
+                            break;
+                        case Actions.GrowCropKey:
+                            DoGrowCrop(location, value);
                             break;
                         case Actions.GiveKey:
                             DoGive(who, value);
@@ -94,6 +96,9 @@ namespace DMT
                             break;
                         case Actions.InvalidateKey:
                             DoInvalidateAsset(value);
+                            break;
+                        case Actions.KillCropKey:
+                            DoKillCrop(location, value);
                             break;
                         case Actions.MailBoxKey:
                             DoAddMailForTomorrow(who, value);
@@ -121,6 +126,9 @@ namespace DMT
                             break;
                         case Actions.RemoveQuestKey:
                             DoRemoveQuest(who, value);
+                            break;
+                        case Actions.SetCropKey:
+                            DoSetCrop(location, value);
                             break;
                         case Actions.StaminaKey:
                             DoUpdateStamina(who, value);

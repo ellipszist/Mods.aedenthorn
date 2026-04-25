@@ -728,5 +728,86 @@ namespace DMT
                 dirt.fertilizer.Value = ItemRegistry.QualifyItemId(name) ?? name;
             }
         }
+
+        public static void DoKillCrop(GameLocation location, string value)
+        {
+
+            var split = value.Split('|');
+            foreach (var item in split)
+            {
+                var xy = item.Split(',');
+                if (xy.Length != 2)
+                {
+                    context.Monitor.Log($"[{nameof(DoKillCrop)}] Error in argument for {item}");
+                    continue;
+                }
+                if (!int.TryParse(xy[0].Trim(), out int x) || !int.TryParse(xy[1].Trim(), out int y) || !location.terrainFeatures.TryGetValue(new Vector2(x, y), out var tf) || tf is not HoeDirt dirt || dirt.crop == null)
+                    continue;
+                dirt.destroyCrop(true);
+            }
+        }
+
+        public static void DoGrowCrop(GameLocation location, string value)
+        {
+
+            var split = value.Split('|');
+            foreach (var item in split)
+            {
+                var xy = item.Split(',');
+                if (xy.Length != 2)
+                {
+                    context.Monitor.Log($"[{nameof(DoKillCrop)}] Error in argument for {item}");
+                    continue;
+                }
+                if (!int.TryParse(xy[0].Trim(), out int x) || !int.TryParse(xy[1].Trim(), out int y) || !location.terrainFeatures.TryGetValue(new Vector2(x, y), out var tf) || tf is not HoeDirt dirt || dirt.crop == null)
+                    continue;
+                dirt.crop.growCompletely();
+            }
+        }
+
+        public static void DoSetCrop(GameLocation location, string value)
+        {
+
+            var split = value.Split('|');
+            foreach (var item in split)
+            {
+                var kv = item.Split('=');
+                if (kv.Length != 2)
+                {
+                    context.Monitor.Log($"[{nameof(DoSetCrop)}] Error in argument for {item}");
+                    continue;
+                }
+                var xy = kv[0].Split(',');
+                if (xy.Length != 2)
+                {
+                    context.Monitor.Log($"[{nameof(DoSetCrop)}] Error in argument for {item}");
+                    continue;
+                }
+                if (!int.TryParse(xy[0].Trim(), out int x) || !int.TryParse(xy[1].Trim(), out int y) || !location.terrainFeatures.TryGetValue(new Vector2(x, y), out var tf) || tf is not HoeDirt dirt)
+                    continue;
+                var crop = kv[0].Split(',');
+                if (crop.Length > 2)
+                {
+                    context.Monitor.Log($"[{nameof(DoSetCrop)}] Error in argument for {item}");
+                    continue;
+                }
+                if(dirt.crop != null && crop.Length == 1)
+                {
+                    var newCrop = new Crop(crop[0].Trim(), x, y, location);
+                    newCrop.currentPhase.Value = dirt.crop.currentPhase.Value;
+                    newCrop.dayOfCurrentPhase.Value = dirt.crop.dayOfCurrentPhase.Value;
+                    dirt.crop = newCrop;
+                }
+                else
+                {
+                    dirt.crop = new Crop(crop[0].Trim(), x, y, location);
+                    if (crop.Length == 2 && int.TryParse(crop[1].Trim(), out int phase))
+                    {
+                        dirt.crop.currentPhase.Value = phase;
+                        dirt.crop.dayOfCurrentPhase.Value = 0;
+                    }
+                }
+            }
+        }
     }
 }
