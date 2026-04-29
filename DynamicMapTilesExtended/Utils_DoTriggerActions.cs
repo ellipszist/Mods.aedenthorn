@@ -203,7 +203,7 @@ namespace DMT
                 catch (Exception ex)
                 {
                     context.Monitor.Log($"Error while trying to run action {item.prop.Key}", LogLevel.Error);
-                    context.Monitor.Log($"[{ex.GetType().Name}] {ex.Message}\n{ex.Message}", LogLevel.Error);
+                    context.Monitor.Log($"{ex}", LogLevel.Error);
                 }
             }
             if (triggered.Any())

@@ -104,12 +104,26 @@ namespace Gravedigger
 					setValue: value => Config.ModEnabled = value
 				);
                 
+                gmcm.AddBoolOption(
+					mod: ModManifest,
+					name: () => SHelper.Translation.Get("GMCM.NPCReactAsGarbage.Name"),
+					getValue: () => Config.NPCReactAsGarbage,
+					setValue: value => Config.NPCReactAsGarbage = value
+				);
+                gmcm.AddNumberOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("GMCM.GhostChance.Name"),
+                    getValue: () => Config.GhostChance,
+                    setValue: value => Config.GhostChance = value
+                );
+
                 gmcm.AddNumberOption(
 					mod: ModManifest,
-					name: () => SHelper.Translation.Get("GMCM.VanillaChance.Name"),
-					getValue: () => Config.VanillaChance,
-					setValue: value => Config.VanillaChance = value
+					name: () => SHelper.Translation.Get("GMCM.DigChance.Name"),
+					getValue: () => Config.DigChance,
+					setValue: value => Config.DigChance = value
 				);
+                
                 
                 gmcm.AddNumberOption(
 					mod: ModManifest,

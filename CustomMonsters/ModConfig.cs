@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Gravedigger
+namespace CustomMonsters
 {
 	public class ModConfig
 	{

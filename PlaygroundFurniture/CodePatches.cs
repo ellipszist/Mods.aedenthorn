@@ -146,7 +146,8 @@ namespace PlaygroundFurniture
 
                 var n = who.TilePoint;
                 int ticks;
-                if (IsSwinging(who))
+                Furniture f = who.sittingFurniture as Furniture;
+                if (f?.ItemId == swingKey)
                 {
                     if (!swingTicks.TryGetValue(who.UniqueMultiplayerID, out ticks))
                         ticks = 0;
@@ -168,7 +169,7 @@ namespace PlaygroundFurniture
                             who.currentLocation.playSound(sound);
                     }
                 }
-                else if (who.IsSitting() && n == new Point(24, 11))
+                else if (f?.ItemId == springKey)
                 {
                     if (!springTicks.TryGetValue(who.UniqueMultiplayerID, out ticks))
                     {
@@ -179,10 +180,11 @@ namespace PlaygroundFurniture
                         if (!string.IsNullOrEmpty(Config.springSound))
                             who.currentLocation.playSound(Config.springSound);
                     }
+                    var pos = Game1.GlobalToLocal(f.TileLocation * 64);
                     float factor = (float)Math.Sin((Math.PI / 180f) * ticks * Config.springSpeed) / 4f;
-                    b.Draw(springTexture, Game1.GlobalToLocal(new Vector2(23 * 64, 10 * 64)), new Rectangle(Game1.currentSeason == "winter" ? 144 : 0, 0, 48, 32), Color.White, 0, Vector2.Zero, 4, SpriteEffects.None, who.getDrawLayer() + 0.0000002f);
-                    b.Draw(springTexture, Game1.GlobalToLocal(new Vector2(23 * 64, 10 * 64)) + new Vector2(16, 28) * 4, new Rectangle(48, 0, 48, 32), Color.White, factor, new Vector2(16, 28), 4, SpriteEffects.None, who.getDrawLayer() + 0.0000004f);
-                    b.Draw(springTexture, Game1.GlobalToLocal(new Vector2(23 * 64, 10 * 64)) + new Vector2(16, 24) * 4, new Rectangle(96, 0, 48, 32), Color.White, factor * 2, new Vector2(16, 24), 4, SpriteEffects.None, who.getDrawLayer() + 0.0000005f);
+                    b.Draw(springTexture, pos, new Rectangle(Game1.currentSeason == "winter" ? 144 : 0, 0, 48, 32), Color.White, 0, Vector2.Zero, 4, SpriteEffects.None, who.getDrawLayer() + 0.0000002f);
+                    b.Draw(springTexture, pos + new Vector2(16, 28) * 4, new Rectangle(48, 0, 48, 32), Color.White, factor, new Vector2(16, 28), 4, SpriteEffects.None, who.getDrawLayer() + 0.0000004f);
+                    b.Draw(springTexture, pos + new Vector2(16, 24) * 4, new Rectangle(96, 0, 48, 32), Color.White, factor * 2, new Vector2(16, 24), 4, SpriteEffects.None, who.getDrawLayer() + 0.0000005f);
 
                     ticks++;
                     ticks %= 360;
@@ -194,11 +196,9 @@ namespace PlaygroundFurniture
                     springEyes[who.UniqueMultiplayerID] = who.currentEyes;
                     who.currentEyes = 0;
                 }
-                else if (slideTicks.TryGetValue(who.UniqueMultiplayerID, out ticks))
+                else if (f?.ItemId == slideKey && slideTicks.TryGetValue(who.UniqueMultiplayerID, out ticks))
                 {
                     float slideSpeed = Config.slideSpeed / 2f;
-                    who.isSitting.Value = true;
-                    who.sittingFurniture = new MySeat();
                     who.canMove = false;
                     who.FacingDirection = 1;
                     who.FarmerSprite.setCurrentSingleFrame(117, 32000, false, false);
@@ -214,7 +214,7 @@ namespace PlaygroundFurniture
                             slideTicks[who.UniqueMultiplayerID] = 170;
                         }
 
-                        var dest = new Vector2(25 * 64, 13 * 64 + 8);
+                        var dest = new Vector2((f.TileLocation.X + 5) * 64, (f.TileLocation.Y + 3) * 64 + 8);
                         who.isSitting.Value = false;
                         who.sittingFurniture = null;
                         who.FarmerSprite.setCurrentSingleFrame(6, 32000, false, false);
@@ -239,14 +239,14 @@ namespace PlaygroundFurniture
                     {
                         if (who == Game1.player)
                         {
-                            who.Position = new Vector2(20 * 64 + 32, 10 * 64 + 56) + new Vector2(ticks, ticks);
+                            who.Position = new Vector2(f.TileLocation.X * 64 + 32, f.TileLocation.Y * 64 + 56) + new Vector2(ticks, ticks);
                             ticks += (int)Math.Round(slideSpeed + ticks / 25f);
                             slideTicks[who.UniqueMultiplayerID] = ticks;
                         }
                     }
                     return false;
                 }
-                else if (climbTicks.TryGetValue(who.UniqueMultiplayerID, out ticks))
+                else if (f?.ItemId == slideKey && climbTicks.TryGetValue(who.UniqueMultiplayerID, out ticks))
                 {
                     who.canMove = false;
                     who.FacingDirection = 0;
@@ -256,7 +256,7 @@ namespace PlaygroundFurniture
                     if (who == Game1.player)
                     {
                         climbSpeed = 2 / Config.climbSpeed;
-                        who.Position = new Vector2(who.Position.X, 14 * 64 - ticks / climbSpeed * 4);
+                        who.Position = new Vector2(who.Position.X, f.TileLocation.Y * 64 - ticks / climbSpeed * 4);
                         ticks++;
                         if (ticks % 24 == 0)
                         {
@@ -276,16 +276,10 @@ namespace PlaygroundFurniture
                     }
                     return false;
                 }
-                else if ((n.Y == 14 && (n.X == 19 || n.X == 20)) && who.movementDirections.Contains(0) && who.Position.Y % 64 < 8)
-                {
-                    climbTicks[who.UniqueMultiplayerID] = 1;
-                }
                 else
                 {
                     springTicks.Remove(who.UniqueMultiplayerID);
                     swingTicks.Remove(who.UniqueMultiplayerID);
-                    climbTicks.Remove(who.UniqueMultiplayerID);
-                    slideTicks.Remove(who.UniqueMultiplayerID);
                 }
                 return true;
             }

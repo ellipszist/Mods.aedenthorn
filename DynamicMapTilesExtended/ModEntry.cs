@@ -13,7 +13,6 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
-using System.Diagnostics;
 
 namespace DMT
 {
@@ -37,6 +36,7 @@ namespace DMT
         public Config Config { get; private set; }
 
         public static IMonitor SMonitor;
+        public static IModHelper SHelper;
         public static int animationCounter = 0;
 
         public static Dictionary<GameLocation, int> InvalidateOnTimeChanged = new();
@@ -64,6 +64,7 @@ namespace DMT
         internal PerScreen<List<SecondUpdateData>> SecondUpdateFiredLoops = new(() => new());
         internal PerScreen<List<SecondUpdateData>> SecondUpdateContinuousLoops = new(() => new());
         internal PerScreen<long> UpdateTicks = new(() => new());
+        
 
         public override void Entry(IModHelper helper)
         {
@@ -71,6 +72,7 @@ namespace DMT
 
             Config = Helper.ReadConfig<Config>();
             SMonitor = Monitor;
+            SHelper = helper;
             Helper.Events.GameLoop.GameLaunched += onGameLaunched;
             Helper.Events.Player.Warped += onWarped;
             Helper.Events.Content.AssetRequested += onAssetRequested;
@@ -248,12 +250,13 @@ namespace DMT
                 e.LoadFrom(() => new Dictionary<string, DynamicTile>(), AssetLoadPriority.Exclusive);
             if (e.NameWithoutLocale.IsEquivalentTo(AnimationDataDictPath))
                 e.LoadFrom(() => new Dictionary<string, List<Animation>>(), AssetLoadPriority.Exclusive);
-            //if (e.NameWithoutLocale.IsEquivalentTo("Maps/Farm"))
-            //    e.Edit((IAssetData data) =>
-            //    {
-            //        data.AsMap().Data.GetLayer("Back").Tiles[65, 19].Properties["DMT/fertilize_On"] = "65,19=Basic Fertilizer";
-            //        data.AsMap().Data.GetLayer("Back").Tiles[65, 20].Properties["DMT/fertilize_CropPlanted"] = "65,20=Basic Fertilizer";
-            //    });
+            if (e.NameWithoutLocale.IsEquivalentTo("Maps/Farm"))
+                e.Edit((IAssetData data) =>
+                {
+                    data.AsMap().Data.GetLayer("Back").Tiles[65, 19].Properties["DMT/setCrop_On"] = "65,19=483";
+                    data.AsMap().Data.GetLayer("Back").Tiles[65, 20].Properties["DMT/setCrop_On"] = "65,20=483,4";
+                    data.AsMap().Data.GetLayer("Back").Tiles[65, 21].Properties["DMT/setCrop_On"] = "65,21=483,-1";
+                });
         }
 
         private void onWarped(object? sender, WarpedEventArgs e)

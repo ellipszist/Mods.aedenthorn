@@ -213,11 +213,21 @@ namespace DMT
                 SMonitor.Log($"[{nameof(Actions)}.{nameof(DoSpawnMonster)}] Location is null", LogLevel.Warn);
                 return;
             }
+            var cmapi = SHelper.ModRegistry.GetApi<ICustomMonstersAPI>("aedenthorn.CustomMonsters");
             foreach (var item in value.Split('|'))
             {
                 var split = item.Split(' ');
                 Vector2 pos = new(int.Parse(split[1]), int.Parse(split[2]));
-                if (split[2] == "Monster")
+                if(cmapi != null)
+                {
+                    var monster = cmapi.CreateMonster(split[0], pos);
+                    if (monster != null)
+                    {
+                        location.characters.Add(monster);
+                        continue;
+                    }
+                }
+                if (split[0] == "Monster")
                 {
                     if(split.Length == 4)
                     {
@@ -725,7 +735,7 @@ namespace DMT
                 string name = kv[1].Trim();
                 if (!int.TryParse(xy[0].Trim(), out int x) || !int.TryParse(xy[1].Trim(), out int y) || !location.terrainFeatures.TryGetValue(new Vector2(x, y), out var tf) || tf is not HoeDirt dirt)
                     continue;
-                dirt.fertilizer.Value = ItemRegistry.QualifyItemId(name) ?? name;
+                dirt.fertilizer.Value = string.IsNullOrEmpty(name) ? null : ItemRegistry.QualifyItemId(name) ?? name;
             }
         }
 
@@ -785,7 +795,7 @@ namespace DMT
                 }
                 if (!int.TryParse(xy[0].Trim(), out int x) || !int.TryParse(xy[1].Trim(), out int y) || !location.terrainFeatures.TryGetValue(new Vector2(x, y), out var tf) || tf is not HoeDirt dirt)
                     continue;
-                var crop = kv[0].Split(',');
+                var crop = kv[1].Split(',');
                 if (crop.Length > 2)
                 {
                     context.Monitor.Log($"[{nameof(DoSetCrop)}] Error in argument for {item}");
@@ -796,6 +806,7 @@ namespace DMT
                     var newCrop = new Crop(crop[0].Trim(), x, y, location);
                     newCrop.currentPhase.Value = dirt.crop.currentPhase.Value;
                     newCrop.dayOfCurrentPhase.Value = dirt.crop.dayOfCurrentPhase.Value;
+                    newCrop.fullyGrown.Value = dirt.crop.fullyGrown.Value;
                     dirt.crop = newCrop;
                 }
                 else
@@ -803,8 +814,11 @@ namespace DMT
                     dirt.crop = new Crop(crop[0].Trim(), x, y, location);
                     if (crop.Length == 2 && int.TryParse(crop[1].Trim(), out int phase))
                     {
-                        dirt.crop.currentPhase.Value = phase;
+                        dirt.crop.currentPhase.Value = phase < 0 ? dirt.crop.phaseDays.Count - 1 : Math.Min(phase, dirt.crop.phaseDays.Count - 1);
                         dirt.crop.dayOfCurrentPhase.Value = 0;
+                        if (dirt.crop.currentPhase.Value == dirt.crop.phaseDays.Count - 1 && dirt.crop.RegrowsAfterHarvest())
+                            dirt.crop.fullyGrown.Value = true;
+                        dirt.crop.updateDrawMath(dirt.Tile);
                     }
                 }
             }

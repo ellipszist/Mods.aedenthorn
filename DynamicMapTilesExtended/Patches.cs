@@ -192,7 +192,7 @@ namespace DMT
                     string.Format(Triggers.UseItem, BuildFormattedTrigger(item.Name, '-', item.Quality)),
                     string.Format(Triggers.UseItem, BuildFormattedTrigger(item.ItemId, '-', item.Quality)),
                     string.Format(Triggers.UseItem, BuildFormattedTrigger(item.QualifiedItemId, '-', item.Quality)),
-                    "Action"
+                    Triggers.Action
                 ]))
                 return true;
 

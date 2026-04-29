@@ -1,0 +1,561 @@
+﻿using HarmonyLib;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using StardewValley;
+using StardewValley.Extensions;
+using StardewValley.Monsters;
+using StardewValley.Projectiles;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
+
+namespace CustomMonsters
+{
+	public partial class ModEntry
+    {
+        public static IEnumerable<CodeInstruction> ChangeMoveSoundTranspiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var codes = new List<CodeInstruction>(instructions);
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (codes[i].opcode == OpCodes.Ldstr && new string[] { "croak", "fishSlap", "batFlap", "slimeHit", "squid_move", "Duggy", "dustMeep", "waterSlosh", "skeletonStep" }.Contains((string)codes[i].operand))
+                {
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeMoveSound))));
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                }
+                else if (codes[i].opcode == OpCodes.Ldstr && new string[] { "squid_bubble" }.Contains((string)codes[i].operand))
+                {
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeMoveSound2))));
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                }
+                else if (codes[i].opcode == OpCodes.Ldstr && new string[] { "furnace", "fireball", "flameSpellHit", "skeletonHit" }.Contains((string)codes[i].operand))
+                {
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeProjectileSound))));
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                }
+                else if (codes[i].opcode == OpCodes.Ldstr && new string[] { "flameSpell", "skeletonStep" }.Contains((string)codes[i].operand))
+                {
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeProjectileSound2))));
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                }
+                else if (codes[i].opcode == OpCodes.Ldstr && new string[] { "rockGolemSpawn" }.Contains((string)codes[i].operand))
+                {
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeSpawnSound))));
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                }
+            }
+
+            return codes.AsEnumerable();
+        }
+        public static IEnumerable<CodeInstruction> ChangeDamageSoundTranspiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var codes = new List<CodeInstruction>(instructions);
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (codes[i].opcode == OpCodes.Ldstr && (string)codes[i].operand == "crafting")
+                {
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeArmorSound))));
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+
+                }
+                else if (codes[i].opcode == OpCodes.Ldstr && new string[] { "clank", "magma_sprite_hit", "hitEnemy", "rockGolemHit", "slimeHit", "shadowHit", "serpentHit", "skeletonHit" }.Contains((string)codes[i].operand))
+                {
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeDamageSound))));
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                }
+                else if (codes[i].opcode == OpCodes.Ldstr && new string[] { "squid_hit", "skeletonStep" }.Contains((string)codes[i].operand))
+                {
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeDamageSound2))));
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                }
+                else if (codes[i].opcode == OpCodes.Ldstr && new string[] { "magma_sprite_die", "batScreech", "monsterdead", "slimedead", "shadowDie", "ghost" }.Contains((string)codes[i].operand))
+                {
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeDeathSound))));
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                }
+            }
+
+            return codes.AsEnumerable();
+        }
+
+
+        public static IEnumerable<CodeInstruction> ChangeDeathSoundTranspiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var codes = new List<CodeInstruction>(instructions);
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (codes[i].opcode == OpCodes.Ldstr && new string[] { "ghost", "fireball", "slimedead", "monsterdead", "dustMeep", "rockGolemDie", "serpentDie", "shadowDie", "skeletonDie" }.Contains((string)codes[i].operand))
+                {
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeDeathSound))));
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                }
+                else if (codes[i].opcode == OpCodes.Ldstr && new string[] { "grunt" }.Contains((string)codes[i].operand))
+                {
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeDeathSound2))));
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                }
+            }
+
+            return codes.AsEnumerable();
+        }
+
+        public static bool ReloadSpritePrefix(Monster __instance)
+        {
+            if (!__instance.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.Sprite == null)
+                return true;
+            if (__instance is Bat)
+            {
+                if (__instance.Sprite == null)
+                {
+                    __instance.Sprite = new AnimatedSprite(data.Sprite);
+                }
+                else
+                {
+                    __instance.Sprite.textureName.Value = data.Sprite;
+                }
+                __instance.HideShadow = true;
+                return false;
+            }
+            if (__instance is BlueSquid)
+            {
+                __instance.Sprite = new AnimatedSprite(data.Sprite, 0, 24, 24);
+                return false;
+            }
+            __instance.Sprite = new AnimatedSprite(data.Sprite);
+            if (__instance is AngryRoger)
+            {
+                __instance.Sprite.SpriteWidth = 32;
+                __instance.Sprite.SpriteHeight = 32;
+                __instance.HideShadow = true;
+            }
+            else if (__instance is BigSlime)
+            {
+                __instance.Sprite.SpriteWidth = 32;
+                __instance.Sprite.SpriteHeight = 32;
+                __instance.Sprite.interval = 300f;
+                __instance.Sprite.ignoreStopAnimation = true;
+                AccessTools.FieldRefAccess<Character, bool>(__instance, "ignoreMovementAnimations") = true;
+                __instance.HideShadow = true;
+                __instance.Sprite.framesPerAnimation = 8;
+            }
+            else if (__instance is Bug)
+            {
+                __instance.Sprite.SpriteHeight = 16;
+            }
+            else if (__instance is DinoMonster)
+            {
+                __instance.Sprite.SpriteWidth = 32;
+                __instance.Sprite.SpriteHeight = 32;
+            }
+            else if (__instance is GreenSlime)
+            {
+                __instance.Sprite.SpriteHeight = 24;
+                __instance.HideShadow = true;
+            }
+            else if (__instance is LavaLurk)
+            {
+                __instance.Sprite.SpriteWidth = 16;
+                __instance.Sprite.SpriteHeight = 16;
+            }
+            else if (__instance is Leaper)
+            {
+                __instance.Sprite.SpriteWidth = 32;
+                __instance.Sprite.SpriteHeight = 32;
+            }
+            else if (__instance is Mummy)
+            {
+                __instance.Sprite.SpriteHeight = 32;
+                __instance.Sprite.ignoreStopAnimation = true;
+            }
+            else if (__instance is Serpent)
+            {
+                __instance.Scale = data.Scale;
+                __instance.Sprite.SpriteWidth = 32;
+                __instance.Sprite.SpriteHeight = 32;
+                __instance.HideShadow = true;
+            }
+            else if (__instance is ShadowBrute)
+            {
+                __instance.Sprite.SpriteHeight = 32;
+            }
+            else if (__instance is Shooter sh)
+            {
+                sh.Sprite.SpriteHeight = 32;
+                sh.Sprite.SpriteWidth = 32;
+                sh.forceOneTileWide.Value = true;
+                sh.InitializeVariant();
+            }
+            else if (__instance is Skeleton)
+            {
+                __instance.Sprite.SpriteHeight = 32;
+            }
+            else if (__instance is Spiker)
+            {
+                __instance.Sprite.SpriteWidth = 16;
+                __instance.Sprite.SpriteHeight = 16;
+                __instance.HideShadow = true;
+            }
+            if (data.HideShadow != null)
+            {
+                __instance.HideShadow = data.HideShadow.Value;
+            }
+            __instance.Sprite.UpdateSourceRect();
+            return false;
+        }
+        private static bool GetExtraDropItemsPrefix(Monster __instance, ref List<Item> __result)
+        {
+            if (!__instance.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.Drops == null)
+                return true;
+            __instance.objectsToDrop.Clear();
+            __result = new List<Item>();
+            foreach (var item in data.Drops)
+            {
+                if (Game1.random.NextDouble() < item.Chance / 100.0)
+                {
+                    __result.Add(ItemRegistry.Create(item.ItemId, Game1.random.Next(item.MinQuantity, item.MaxQuantity + 1), item.Quality));
+                }
+            }
+
+            return false;
+        }
+        [HarmonyPatch(typeof(DwarvishSentry), new Type[] { typeof(Vector2) })]
+        [HarmonyPatch(MethodType.Constructor)]
+        public static class DwarvishSentry_Patch
+        {
+
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling DwarvishSentry.ctor");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Ldstr && (string)codes[i].operand == "DwarvishSentry")
+                    {
+                        SMonitor.Log($"adding method for spawn sound");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeSpawnSound))));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                        break;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+        [HarmonyPatch(typeof(GreenSlime), "doJump")]
+        public static class GreenSlime_doJump_Patch
+        {
+
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling GreenSlime.doJump");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Ldstr && (string)codes[i].operand == "slime")
+                    {
+                        SMonitor.Log($"adding method for move sound");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeMoveSound))));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                        break;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+        [HarmonyPatch(typeof(Mummy), "performCrumble")]
+        public static class Mummy_performCrumble_Patch
+        {
+
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling Mummy.performCrumble");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Ldstr && (string)codes[i].operand == "monsterdead")
+                    {
+                        SMonitor.Log($"adding method for crumble sound");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeCrumbleSound))));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                        i += 2;
+                    }
+                    else if (codes[i].opcode == OpCodes.Ldstr && (string)codes[i].operand == "skeletonDie")
+                    {
+                        SMonitor.Log($"adding method for uncrumble sound");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeUncrumbleSound))));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                        i += 2;
+                    }
+                    else if (codes[i].opcode == OpCodes.Ldc_I4 && (int)codes[i].operand == 10000)
+                    {
+                        SMonitor.Log($"adding method for revive timer");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeReviveTimer))));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                        i += 2;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+        [HarmonyPatch(typeof(RockCrab), "hitWithTool")]
+        public static class RockCrab_hitWithTool_Patch
+        {
+
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling RockCrab_hitWithTool");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Ldstr && (string)codes[i].operand == "hammer")
+                    {
+                        SMonitor.Log($"adding method for hit sound");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeHitSound))));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                        i += 2;
+                    }
+                    else if (codes[i].opcode == OpCodes.Ldstr && (string)codes[i].operand == "stoneCrack")
+                    {
+                        SMonitor.Log($"adding method for break sound");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeBreakSound))));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                        i += 2;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+
+        [HarmonyPatch(typeof(HotHead), "DropBomb")]
+        public static class HotHead_DropBomb_Patch
+        {
+
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling HotHead_DropBomb");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Ldstr && (string)codes[i].operand == "Characters\\Monsters\\Hot Head")
+                    {
+                        SMonitor.Log($"adding method for sprite path");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeSpritePath))));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                        break;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+        
+
+        [HarmonyPatch(typeof(LavaLurk), "behaviorAtGameTick")]
+        public static class LavaLurk_behaviorAtGameTick_Patch
+        {
+
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling LavaLurk.behaviorAtGameTick");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (i < codes.Count - 4 && codes[i].opcode == OpCodes.Callvirt && codes[i].operand is MethodInfo mi && mi == AccessTools.Method(typeof(GameLocation), nameof(GameLocation.playSound)) && codes[i + 1].opcode == OpCodes.Ldc_I4_S && codes[i + 1].opcode == OpCodes.Ldc_I4_S)
+                    {
+                        SMonitor.Log($"adding methods for projectile");
+                        codes.Insert(i + 3, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeProjectileIndex))));
+                        codes.Insert(i + 3, new CodeInstruction(OpCodes.Ldarg_0));
+                        codes.Insert(i + 2, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeProjectileDamage))));
+                        codes.Insert(i + 2, new CodeInstruction(OpCodes.Ldarg_0));
+                        break;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+
+        [HarmonyPatch(typeof(Skeleton), "behaviorAtGameTick")]
+        public static class Skeleton_behaviorAtGameTick_Patch
+        {
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling Skeleton.behaviorAtGameTick");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Ldfld && codes[i].operand is FieldInfo fi && fi == AccessTools.Field(typeof(GameLocation), nameof(GameLocation.projectiles)))
+                    {
+                        if (codes[i + 1].opcode == OpCodes.Ldstr)
+                        {
+                            SMonitor.Log($"adding method for debuff projectile");
+                            codes.Insert(i + 3, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeProjectileIndex))));
+                            codes.Insert(i + 3, new CodeInstruction(OpCodes.Ldarg_0));
+                            codes.Insert(i + 2, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeProjectileDebuff))));
+                            codes.Insert(i + 2, new CodeInstruction(OpCodes.Ldarg_0));
+                        }
+                        else if (codes[i + 1].opcode == OpCodes.Ldarg_0)
+                        {
+                            if(codes[i + 3].opcode == OpCodes.Ldc_I4_4)
+                            {
+                                SMonitor.Log($"adding method for basic projectile");
+                                codes.Insert(i + 4, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeProjectileIndex))));
+                                codes.Insert(i + 4, new CodeInstruction(OpCodes.Ldarg_0));
+                            }
+                            else if(i < codes.Count - 6 && codes[i + 5].opcode == OpCodes.Ldc_I4_S && (sbyte)codes[i+5].operand == 9)
+                            {
+                                SMonitor.Log($"adding method for basic projectile");
+                                codes.Insert(i + 6, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeProjectileIndex))));
+                                codes.Insert(i + 6, new CodeInstruction(OpCodes.Ldarg_0));
+                            }
+                        }
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+
+
+
+        [HarmonyPatch(typeof(DinoMonster.BreathProjectile), "Draw")]
+        public static class DinoMonster_BreathProjectile_Draw_Patch
+        {
+            public static bool Prefix(DinoMonster.BreathProjectile __instance, SpriteBatch b)
+            {
+                if (__instance is not CustomBreathProjectile bp)
+                    return true;
+                if (!bp.active.Value)
+                {
+                    return false;
+                }
+                float currentScale = bp.data.ProjectileScale ?? 4f;
+                Texture2D texture = bp.data.ProjectileSprite == null ? Projectile.projectileSheet : SHelper.GameContent.Load<Texture2D>(bp.data.ProjectileSprite);
+                Rectangle sourceRect = bp.data.ProjectileSource == null ? Game1.getSourceRectForStandardTileSheet(texture, bp.data.ProjectileIndex ?? 0, 16, 16) : bp.data.ProjectileSource.Value;
+
+                Vector2 pixelPosition = bp.position.Value;
+                b.Draw(texture, Game1.GlobalToLocal(Game1.viewport, pixelPosition + new Vector2(32f, 32f)), new Rectangle?(sourceRect), Color.White * bp.alpha, bp.rotation, new Vector2(8f, 8f), currentScale, SpriteEffects.None, (pixelPosition.Y + 96f) / 10000f); return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(ShadowShaman), "draw")]
+        public static class ShadowShaman_draw_Patch
+        {
+            public static bool Prefix(ShadowShaman __instance, SpriteBatch b)
+            {
+                if(!Config.ModEnabled || !__instance.casting.Value || !__instance.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || (data.ProjectileSprite == null && data.ProjectileIndex == null))
+                    return true;
+                var method = typeof(Monster).GetMethod("draw", new Type[] { typeof(SpriteBatch) });
+                var ftn = method.MethodHandle.GetFunctionPointer();
+                var func = (Action<SpriteBatch>)Activator.CreateInstance(typeof(Action<SpriteBatch>), __instance, ftn);
+                func(b);
+                var texture = data.ProjectileSprite == null ? Projectile.projectileSheet : SHelper.GameContent.Load<Texture2D>(data.ProjectileSprite);
+                var src = data.ProjectileSource == null ? (data.ProjectileIndex == null ? new Rectangle?(new Rectangle(119, 6, 3, 3)) : Game1.getSourceRectForStandardTileSheet(texture, data.ProjectileIndex.Value, 16, 16)) : data.ProjectileSource;
+                for (int i = 0; i < 8; i++)
+                {
+                    b.Draw(texture, Game1.GlobalToLocal(Game1.viewport, __instance.getStandingPosition()), src, Color.White * 0.7f, __instance.rotationTimer + (float)i * 3.1415927f / 4f, new Vector2(8f, 48f), 6f, SpriteEffects.None, 0.95f);
+                }
+                return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(DinoMonster.BreathProjectile), "Update")]
+        public static class DinoMonster_BreathProjectile_Update_Patch
+        {
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling BreathProjectile.Update");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Callvirt && codes[i].operand is MethodInfo mi && mi == AccessTools.Method(typeof(Farmer), nameof(Farmer.takeDamage)))
+                    {
+                        SMonitor.Log($"adding method for sprinkle color");
+                        codes.Insert(i - 2, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeProjectileDamage2))));
+                        codes.Insert(i - 2, new CodeInstruction(OpCodes.Ldarg_0));
+                        break;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+
+
+        [HarmonyPatch(typeof(AngryRoger), nameof(AngryRoger.takeDamage))]
+        public static class AngryRoger_takeDamage_Patch
+        {
+
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling AngryRoger.takeDamage");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Call && codes[i].operand is MethodInfo mi && mi == AccessTools.PropertyGetter(typeof(Color), nameof(Color.LightBlue)))
+                    {
+                        SMonitor.Log($"adding method for sprinkle color");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeSprinkleColor))));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                        break;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+
+        [HarmonyPatch(typeof(AngryRoger), "updateAnimation")]
+        public static class AngryRoger_updateAnimation_Patch
+        {
+
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling AngryRoger.updateAnimation");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Ldfld && codes[i].operand is FieldInfo fi && fi == AccessTools.Field(typeof(AngryRoger), nameof(AngryRoger.lightSourceId)) && codes[i + 1].opcode == OpCodes.Ldc_I4_5)
+                    {
+                        SMonitor.Log($"adding method for light type");
+                        codes.Insert(i + 2, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeLightType))));
+                        codes.Insert(i + 2, new CodeInstruction(OpCodes.Ldarg_0));
+                        break;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+
+        }
+
+        [HarmonyPatch(typeof(Ghost), "updateAnimation")]
+        public static class Ghost_updateAnimation_Patch
+        {
+
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling Ghost.updateAnimation");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Ldfld && codes[i].operand is FieldInfo fi && fi == AccessTools.Field(typeof(Ghost), nameof(Ghost.lightSourceId)) && (codes[i + 1].opcode == OpCodes.Ldc_I4_5 || codes[i + 1].opcode == OpCodes.Ldc_I4_4))
+                    {
+                        SMonitor.Log($"adding method for light type");
+                        codes.Insert(i + 2, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeLightType))));
+                        codes.Insert(i + 2, new CodeInstruction(OpCodes.Ldarg_0));
+                        break;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+
+        }
+    }
+}

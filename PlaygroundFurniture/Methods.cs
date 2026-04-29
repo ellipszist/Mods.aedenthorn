@@ -20,9 +20,5 @@ namespace PlaygroundFurniture
             return (who.IsSitting() && who.sittingFurniture is Furniture f && f.ItemId.StartsWith(furniturePrefix));
         }
 
-        private static bool IsSwinging(Farmer who)
-        {
-            return (who.IsSitting() && who.sittingFurniture is Furniture f && f.ItemId == swingKey);
-        }
     }
 }

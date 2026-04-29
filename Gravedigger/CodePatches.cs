@@ -5,6 +5,7 @@ using StardewValley.Characters;
 using StardewValley.Extensions;
 using StardewValley.GameData.Characters;
 using StardewValley.Locations;
+using StardewValley.Monsters;
 using System;
 using System.Linq;
 using xTile.Tiles;
@@ -25,7 +26,7 @@ namespace Gravedigger
                 {
                     foreach (NPC npc in Utility.GetNpcsWithinDistance(new Vector2(xLocation, yLocation), 7, __instance))
                     {
-                        if (!(npc is Horse))
+                        if (npc.IsVillager)
                         {
                             CharacterData data = null;
                             int friendshipChange = -25;
@@ -58,7 +59,11 @@ namespace Gravedigger
                         }
                     }
                 }
-                if(Game1.random.NextDouble() < Config.VanillaChance / 100f)
+                if(Game1.random.NextDouble() < Config.GhostChance / 100f)
+                {
+                    __instance.characters.Add(new Ghost(new Vector2(xLocation, yLocation) * 64f));
+                }
+                if(Game1.random.NextDouble() >= Config.DigChance / 100f)
                     return true;
                 if (Game1.random.NextDouble() < Config.ArtifactChance / 100f)
                 {
