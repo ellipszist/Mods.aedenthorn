@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
 using System.Collections.Generic;
 
 namespace CustomMonsters
@@ -7,7 +6,7 @@ namespace CustomMonsters
     public class MonsterData
     {
         public string Type { get; set; }
-        public string Parameters { get; set; }
+        public string Parameters { get; set; } = "position";
         public int Level { get; set; }
         public int Facing { get; set; }
         public string Color { get; set; }
@@ -17,6 +16,7 @@ namespace CustomMonsters
 
         public float Scale { get; set; } = -1;
         public int Damage { get; set; } = -1;
+        public bool HardMode { get; set; }
         public int Health { get; set; } = -1;
         public int Speed { get; set; } = -1;
         public int Experience { get; set; } = -1;
@@ -25,7 +25,7 @@ namespace CustomMonsters
         public int Slipperiness { get; set; } = -1;
         public int LightType { get; set; } = -1;
 
-        public bool? HideShadow { get; set; } = null;
+        public bool? HideShadow { get; set; }
         public int ShakeTimer { get; set; } = -1;
         public List<CustomDropData> Drops { get; set; }
 
@@ -81,6 +81,7 @@ namespace CustomMonsters
         public int? MinSegment { get; set; }
         public int? MaxSegment { get; set; }
 
+
         // Shooter specific
         public int? ProjectileSpeed { get; set; }
         public int? ShotsPerFire { get; set; }
@@ -89,6 +90,13 @@ namespace CustomMonsters
         public float? AimEndTime { get; set; }
         public int? DesiredDistance { get; set; }
         public int? FireRange { get; set; }
+
+        // Spiker specific
+        public bool? Vulnerable { get; set; }
+
+        // SquidKid specific
+        public int? ProjectileCount { get; set; }
+        public float? ProjectileTimer { get; set; }
 
     }
 

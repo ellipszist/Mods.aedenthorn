@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
-using StardewValley.Extensions;
 using StardewValley.Monsters;
 using StardewValley.Projectiles;
 using System;
@@ -20,12 +19,12 @@ namespace CustomMonsters
             var codes = new List<CodeInstruction>(instructions);
             for (int i = 0; i < codes.Count; i++)
             {
-                if (codes[i].opcode == OpCodes.Ldstr && new string[] { "croak", "fishSlap", "batFlap", "slimeHit", "squid_move", "Duggy", "dustMeep", "waterSlosh", "skeletonStep" }.Contains((string)codes[i].operand))
+                if (codes[i].opcode == OpCodes.Ldstr && new string[] { "croak", "fishSlap", "batFlap", "slimeHit", "squid_move", "Duggy", "dustMeep", "waterSlosh", "skeletonStep", "parry" }.Contains((string)codes[i].operand))
                 {
                     codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeMoveSound))));
                     codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
                 }
-                else if (codes[i].opcode == OpCodes.Ldstr && new string[] { "squid_bubble" }.Contains((string)codes[i].operand))
+                else if (codes[i].opcode == OpCodes.Ldstr && new string[] { "squid_bubble", "hammer" }.Contains((string)codes[i].operand))
                 {
                     codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeMoveSound2))));
                     codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
@@ -103,27 +102,34 @@ namespace CustomMonsters
 
         public static bool ReloadSpritePrefix(Monster __instance)
         {
-            if (!__instance.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.Sprite == null)
+            if (!__instance.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data))
                 return true;
-            if (__instance is Bat)
+            if (__instance is Bat b)
             {
-                if (__instance.Sprite == null)
+                if (b.Sprite == null)
                 {
-                    __instance.Sprite = new AnimatedSprite(data.Sprite);
+                    b.Sprite = new AnimatedSprite(data.Sprite ?? "Characters\\Monsters\\" + __instance.Name);
                 }
                 else
                 {
-                    __instance.Sprite.textureName.Value = data.Sprite;
+                    b.Sprite.textureName.Value = data.Sprite ?? "Characters\\Monsters\\" + __instance.Name;
                 }
-                __instance.HideShadow = true;
+                if (b.hauntedSkull.Value)
+                {
+                    b.Sprite.SpriteHeight = 16;
+                }
+                b.HideShadow = true;
                 return false;
             }
             if (__instance is BlueSquid)
             {
-                __instance.Sprite = new AnimatedSprite(data.Sprite, 0, 24, 24);
+                __instance.Sprite = new AnimatedSprite(data.Sprite ?? "Characters\\Monsters\\Blue Squid", 0, 24, 24);
                 return false;
             }
-            __instance.Sprite = new AnimatedSprite(data.Sprite);
+            if(data.Sprite != null)
+            {
+                __instance.Sprite = new AnimatedSprite(data.Sprite);
+            }
             if (__instance is AngryRoger)
             {
                 __instance.Sprite.SpriteWidth = 32;
@@ -380,6 +386,43 @@ namespace CustomMonsters
             }
         }
 
+        [HarmonyPatch(typeof(SquidKid), "behaviorAtGameTick")]
+        public static class SquidKid_behaviorAtGameTick_Patch
+        {
+
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling SquidKid.behaviorAtGameTick");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (i < codes.Count - 1 && codes[i].opcode == OpCodes.Ldc_I4_S && (sbyte)codes[i].operand == 15 && codes[i + 1].opcode == OpCodes.Ldc_I4_S && (sbyte)codes[i + 1].operand == 10)
+                    {
+                        SMonitor.Log($"adding methods for projectile");
+                        codes.Insert(i + 2, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeProjectileIndex))));
+                        codes.Insert(i + 2, new CodeInstruction(OpCodes.Ldarg_0));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeProjectileDamage))));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                        i += 4;
+                    }
+                    else if (codes[i].opcode == OpCodes.Stfld && codes[i].operand is FieldInfo fi && fi == AccessTools.Field(typeof(SquidKid), "numFireballsLeft") && codes[i - 1].opcode == OpCodes.Ldc_I4_4)
+                    {
+                        codes.Insert(i, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeProjectileCount))));
+                        codes.Insert(i, new CodeInstruction(OpCodes.Ldarg_0));
+                        i += 2;
+                    }
+                    else if (codes[i].opcode == OpCodes.Stfld && codes[i].operand is FieldInfo fi2 && fi2 == AccessTools.Field(typeof(SquidKid), "firingTimer") && codes[i - 1].opcode == OpCodes.Ldc_R4 && (float)codes[i - 1].operand == 400)
+                    {
+                        codes.Insert(i, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeProjectileTimer))));
+                        codes.Insert(i, new CodeInstruction(OpCodes.Ldarg_0));
+                        i += 2;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+
         [HarmonyPatch(typeof(Skeleton), "behaviorAtGameTick")]
         public static class Skeleton_behaviorAtGameTick_Patch
         {
@@ -460,6 +503,21 @@ namespace CustomMonsters
                 {
                     b.Draw(texture, Game1.GlobalToLocal(Game1.viewport, __instance.getStandingPosition()), src, Color.White * 0.7f, __instance.rotationTimer + (float)i * 3.1415927f / 4f, new Vector2(8f, 48f), 6f, SpriteEffects.None, 0.95f);
                 }
+                return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(Spiker), "takeDamage")]
+        public static class Spiker_takeDamage_Patch
+        {
+            public static bool Prefix(Spiker __instance, int damage, int xTrajectory, int yTrajectory, bool isBomb, double addedPrecision, Farmer who)
+            {
+                if(!Config.ModEnabled || !__instance.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.Vulnerable != true)
+                    return true;
+                var method = typeof(Monster).GetMethod("takeDamage", new Type[] { typeof(int), typeof(int), typeof(int), typeof(bool), typeof(double), typeof(Farmer) });
+                var ftn = method.MethodHandle.GetFunctionPointer();
+                var func = (Action<int, int, int, bool, double, Farmer>)Activator.CreateInstance(typeof(Action<int, int, int, bool, double, Farmer>), __instance, ftn);
+                func(damage, xTrajectory, yTrajectory, isBomb, addedPrecision, who);
                 return false;
             }
         }

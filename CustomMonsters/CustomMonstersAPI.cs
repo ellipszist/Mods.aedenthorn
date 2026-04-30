@@ -16,7 +16,6 @@ namespace CustomMonsters
     {
         public Monster CreateMonster(string id, Vector2 position)
         {        
-
             if (!ModEntry.Monsters.TryGetValue(id, out var data))
             {
                 return null;
@@ -26,7 +25,10 @@ namespace CustomMonsters
 
             var type = typeof(Monster).Assembly.GetTypes().Where(t => t.IsSubclassOf(typeof(Monster))).FirstOrDefault(t => t.Name == data.Type);
             if (type == null)
+            {
+                ModEntry.SMonitor.Log($"Invalid monster type {data.Type}", StardewModdingAPI.LogLevel.Warn);
                 return null;
+            }
             List<object> parameters = new List<object>();
             foreach (var param in data.Parameters.Split(','))
             {
@@ -55,7 +57,16 @@ namespace CustomMonsters
                         break;
                 }
             }
+            if (type.GetConstructor(parameters.Select(p => p.GetType()).ToArray()) == null)
+            {
+                ModEntry.SMonitor.Log($"Invalid parameters for monster type {data.Type} {string.Join(",", parameters.Select(p => p.GetType()))}", StardewModdingAPI.LogLevel.Warn);
+                return null;
+            }
             var monster = (Monster)Activator.CreateInstance(type, parameters.ToArray());
+            if (!parameters.Any())
+            {
+                monster.Position = position;
+            }
             monster.modData[ModEntry.monsterKey] = id;
             if(monster is RockCrab crab)
             {
@@ -98,13 +109,14 @@ namespace CustomMonsters
             {
                 monster.resilience.Value = data.Resilience;
             }
-            if (data.Sprite != null)
-            {
-                monster.reloadSprite();
-            }
-            if(monster is not DwarvishSentry && monster is not RockGolem && data.SpawnSound != null)
+            monster.reloadSprite();
+            if (monster is not DwarvishSentry && monster is not RockGolem && data.SpawnSound != null)
             {
                 DelayedAction.playSoundAfterDelay(data.SpawnSound, 500, null, null, -1, false);
+            }
+            if (data.HardMode)
+            {
+                monster.isHardModeMonster.Value = true;
             }
             if(monster is AngryRoger)
             {
@@ -127,7 +139,11 @@ namespace CustomMonsters
                 {
                     b.HideShadow = data.HideShadow.Value;
                 }
-                b.shakeTimer = data.ShakeTimer;
+                if(data.ShakeTimer > -1)
+                {
+                    b.shakeTimer = data.ShakeTimer;
+                }
+                b.reloadSprite();
                 return b;
             }
             else if (monster is BigSlime bs)

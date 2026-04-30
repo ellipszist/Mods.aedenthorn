@@ -74,6 +74,14 @@ namespace CustomMonsters
         {
             return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.ProjectileDamage == null) ? value : data.ProjectileDamage.Value;
         }
+        public static int ChangeProjectileCount(int value, Monster m)
+        {
+            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.ProjectileCount == null) ? value : data.ProjectileCount.Value;
+        }
+        public static float ChangeProjectileTimer(float value, Monster m)
+        {
+            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.ProjectileTimer == null) ? value : data.ProjectileTimer.Value;
+        }
         public static int ChangeProjectileDamage2(int value, DinoMonster.BreathProjectile bp)
         {
             return (!Config.ModEnabled || bp is not CustomBreathProjectile cbp|| cbp.data.ProjectileDamage == null) ? value : cbp.data.ProjectileDamage.Value;

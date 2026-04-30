@@ -154,36 +154,45 @@ namespace Restauranteer
             {
                 if (c.modData.TryGetValue(orderKey, out string dataString))
                 {
-                    OrderData data = JsonConvert.DeserializeObject<OrderData>(dataString);
-                    CraftingRecipe r = new CraftingRecipe(data.dishName, true);
-                    if (r is not null)
+                    try
                     {
-                        foreach (var key in r.recipeList.Keys)
+                        OrderData data = JsonConvert.DeserializeObject<OrderData>(dataString, new JsonSerializerSettings());
+
+                        CraftingRecipe r = new CraftingRecipe(data.dishName, true);
+                        if (r is not null)
                         {
-                            if (Game1.objectData.ContainsKey(key))
+                            foreach (var key in r.recipeList.Keys)
                             {
-                                var obj = new Object(key, r.recipeList[key]);
-                                SMonitor.Log($"Adding {obj.Name} ({obj.ParentSheetIndex}) x{obj.Stack} to fridge");
-                                fridge.Value.addItem(obj);
-                            }
-                            else
-                            {
-                                List<string> list = new List<string>();
-                                foreach (var kvp in Game1.objectData)
+                                if (Game1.objectData.ContainsKey(key))
                                 {
-                                    if (kvp.Value.Category.ToString() == key)
-                                    {
-                                        list.Add(kvp.Key);
-                                    }
-                                }
-                                if (list.Any())
-                                {
-                                    var obj = new Object(list[Game1.random.Next(list.Count)], r.recipeList[key]);
+                                    var obj = new Object(key, r.recipeList[key]);
                                     SMonitor.Log($"Adding {obj.Name} ({obj.ParentSheetIndex}) x{obj.Stack} to fridge");
                                     fridge.Value.addItem(obj);
                                 }
+                                else
+                                {
+                                    List<string> list = new List<string>();
+                                    foreach (var kvp in Game1.objectData)
+                                    {
+                                        if (kvp.Value.Category.ToString() == key)
+                                        {
+                                            list.Add(kvp.Key);
+                                        }
+                                    }
+                                    if (list.Any())
+                                    {
+                                        var obj = new Object(list[Game1.random.Next(list.Count)], r.recipeList[key]);
+                                        SMonitor.Log($"Adding {obj.Name} ({obj.ParentSheetIndex}) x{obj.Stack} to fridge");
+                                        fridge.Value.addItem(obj);
+                                    }
+                                }
                             }
                         }
+                    }
+                    catch
+                    {
+                        c.modData.Remove(orderKey);
+                        continue;
                     }
                 }
             }
