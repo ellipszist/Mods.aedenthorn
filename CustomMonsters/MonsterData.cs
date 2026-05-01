@@ -108,6 +108,7 @@ namespace CustomMonsters
         public int MinLevel { get; set; }
         public int MaxLevel { get; set; }
         public int Chance { get; set; }
+        public List<string> Types { get; set; }
     }
 
     public class CustomDropData

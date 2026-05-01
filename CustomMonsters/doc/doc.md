@@ -155,6 +155,8 @@ List of entries for causing this monster type to spawn on specific mine floors. 
 	MinLevel - the minimum mine level for the monster to spawn.
 	MaxLevel - the maximum mine level for the monster to spawn.
 	Chance - percent chance for the monster to spawn instead of a given vanilla monster.
+	Types - optional list of vanilla monster types to replace with this custom monster type. Possible values:
+		AngryRoger,Bat,BigSlime,BlueSquid,Bug,DinoMonster,Duggy,DustSpirit,DwarvishSentry,Fly,Ghost,GreenSlime,Grub,HotHead,LavaLurk,Leaper,MetalHead,Mummy,RockCrab,RockGolem,Serpent,ShadowBrute,ShadowGirl,ShadowGuy,ShadowShaman,Shooter,Skeleton,SquidKid
 
 ### VolcanoSpawns
 List of entries for causing this monster type to spawn on specific mine floors. Each entry takes the following fields:
@@ -162,6 +164,8 @@ List of entries for causing this monster type to spawn on specific mine floors. 
 	MinLevel - the minimum volcano level for the monster to spawn.
 	MaxLevel - the maximum volcano level for the monster to spawn.
 	Chance - percent chance for the monster to spawn instead of a given vanilla monster.
+	Types - optional list of vanilla monster types to replace with this custom monster type. Possible values:
+		AngryRoger,Bat,BigSlime,BlueSquid,Bug,DinoMonster,Duggy,DustSpirit,DwarvishSentry,Fly,Ghost,GreenSlime,Grub,HotHead,LavaLurk,Leaper,MetalHead,Mummy,RockCrab,RockGolem,Serpent,ShadowBrute,ShadowGirl,ShadowGuy,ShadowShaman,Shooter,Skeleton,SquidKid
 
 
 ## AngryRoger specific

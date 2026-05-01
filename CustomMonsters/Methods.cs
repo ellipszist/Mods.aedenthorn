@@ -115,7 +115,21 @@ namespace CustomMonsters
                 int.Parse(value.Substring(5, 2), System.Globalization.NumberStyles.HexNumber)
             );
         }
-
+        public static Monster GetSpawnMonster(Monster old, string newId, List<MonsterSpawnData> list, int level, Vector2 position)
+        {
+            if (old == null)
+                return null;
+            var spawnData = list.FirstOrDefault(m => m.MinLevel <= level && m.MaxLevel >= level && m.Types?.Contains(old.GetType().ToString()) != false);
+            if (spawnData != default && Game1.random.NextDouble() < spawnData.Chance / 100.0)
+            {
+                var m = CreateMonster(newId, position);
+                if (m != null)
+                {
+                    return m;
+                }
+            }
+            return null;
+        }
         public static Monster CreateMonster(string id, Vector2 position)
         {
             if (!ModEntry.Monsters.TryGetValue(id, out var data))
@@ -320,6 +334,7 @@ namespace CustomMonsters
                 if (data.MinSegment != null && data.MaxSegment != null)
                 {
                     s.segmentCount.Value = Game1.random.Next(data.MinSegment.Value, data.MaxSegment.Value + 1);
+                    s.reloadSprite();
                 }
                 return s;
             }

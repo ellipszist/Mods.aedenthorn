@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.ExceptionServices;
+using static HarmonyLib.Code;
 
 namespace CustomMonsters
 {
@@ -177,9 +178,16 @@ namespace CustomMonsters
                 __instance.Sprite.SpriteHeight = 32;
                 __instance.Sprite.ignoreStopAnimation = true;
             }
-            else if (__instance is Serpent)
+            else if (__instance is Serpent s)
             {
-                __instance.Scale = data.Scale;
+                if (data.Scale > -1) 
+                {
+                    __instance.Scale =  data.Scale;
+                }
+                else 
+                { 
+                    __instance.Scale = s.IsRoyalSerpent() ? 1f : 0.75f; 
+                }
                 __instance.Sprite.SpriteWidth = 32;
                 __instance.Sprite.SpriteHeight = 32;
                 __instance.HideShadow = true;
@@ -624,24 +632,19 @@ namespace CustomMonsters
         [HarmonyPatch(typeof(MineShaft), "getMonsterForThisLevel")]
         public static class MineShaft_getMonsterForThisLevel_Patch
         {
-            public static bool Prefix(MineShaft __instance, int level, int xTile, int yTile, ref Monster __result)
+            public static void Postfix(MineShaft __instance, int level, int xTile, int yTile, ref Monster __result)
             {
                 if (!Config.ModEnabled)
-                    return true;
+                    return;
                 foreach (var kvp in Monsters.Where(kvp => kvp.Value.MineSpawns != null))
                 {
-                    var spawnData = kvp.Value.MineSpawns.FirstOrDefault(m => m.MinLevel <= level && m.MaxLevel >= level);
-                    if (spawnData != default && Game1.random.NextDouble() < spawnData.Chance / 100.0)
+                    __result = GetSpawnMonster(__result, kvp.Key, kvp.Value.MineSpawns, level, new Vector2(xTile, yTile) * 64);
+                    if (__result != null)
                     {
-                        __result = CreateMonster(kvp.Key, new Vector2(xTile, yTile) * 64);
-                        if(__result != null)
-                        {
-                            SMonitor.Log($"Spawning monster {kvp.Key} at mine level {level}");
-                            return false;
-                        }
+                        SMonitor.Log($"Spawning monster {kvp.Key} at mine level {level}");
+                        return;
                     }
                 }
-                return true;
             }
         }
 
@@ -658,16 +661,12 @@ namespace CustomMonsters
                     {
                         foreach (var kvp in Monsters.Where(m => m.Value.VolcanoSpawns != null))
                         {
-                            var spawnData = kvp.Value.VolcanoSpawns.FirstOrDefault(m => m.MinLevel <= __instance.level.Value && m.MaxLevel >= __instance.level.Value);
-                            if (spawnData != default && Game1.random.NextDouble() < spawnData.Chance / 100.0)
+                            var m = GetSpawnMonster(old, kvp.Key, kvp.Value.VolcanoSpawns, __instance.level.Value, old.Position);
+                            if (m != null)
                             {
-                                var m = CreateMonster(kvp.Key, old.Position);
-                                if(m != null)
-                                {
-                                    SMonitor.Log($"Spawning monster {kvp.Key} at volcano level {__instance.level.Value}");
-                                    __instance.characters[i] = m;
-                                    break;
-                                }
+                                SMonitor.Log($"Spawning monster {kvp.Key} at volcano level {__instance.level.Value}");
+                                __instance.characters[i] = m;
+                                break;
                             }
                         }
                     }
