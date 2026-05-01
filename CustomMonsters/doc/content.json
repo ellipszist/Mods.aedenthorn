@@ -14,50 +14,50 @@
       "Entries": {
         "MyCustomMonster": {
           "Type": "DinoMonster",
-          "Parameters":"position",
-          "MoveSound":"squid_hit",
-          "ProjectileSound":"yoba",
-          "Sprite":"{{ModId}}/CustomDino",
-          "ProjectileSprite":"{{ModId}}/CustomFire",
-		  "Drops":[
-			  {
-				  "ItemId":"(O)74",
-				  "MinQuantity": 1,
-				  "MaxQuantity":4,
-				  "Chance":10
-			  }
-		  ]
+          "Parameters": "position",
+          "MoveSound": "squid_hit",
+          "ProjectileSound": "yoba",
+          "Sprite": "{{ModId}}/CustomDino",
+          "ProjectileSprite": "{{ModId}}/CustomFire",
+          "Drops": [
+            {
+              "ItemId": "(O)74",
+              "MinQuantity": 1,
+              "MaxQuantity": 4,
+              "Chance": 10
+            }
+          ]
         },
         "MyCustomMonster2": {
           "Type": "AngryRoger",
-          "Parameters":"position",
-          "Sprite":"Characters/Monsters/Angry Roger",
-          "MoveSound":"squid_hit",
-		  "Drops":[
-			  {
-				  "ItemId":"(O)74",
-				  "MinQuantity": 1,
-				  "MaxQuantity":4,
-				  "Chance":10
-			  }
-		  ]
+          "Parameters": "position",
+          "Sprite": "Characters/Monsters/Angry Roger",
+          "MoveSound": "squid_hit",
+          "Drops": [
+            {
+              "ItemId": "(O)74",
+              "MinQuantity": 1,
+              "MaxQuantity": 4,
+              "Chance": 10
+            }
+          ]
         },
         "MyCustomMonster3": {
           "Type": "Spiker",
-          "Parameters":"position,facing",
-		  "Facing":1,
-          "MoveSound":"squid_hit",
-          "MoveSound2":"yoba",
-          "Sprite":"{{ModId}}/Spiker",
-		  "Vulnerable": true,
-		  "Drops":[
-			  {
-				  "ItemId":"(O)74",
-				  "MinQuantity": 1,
-				  "MaxQuantity":4,
-				  "Chance":10
-			  }
-		  ]
+          "Parameters": "position,facing",
+          "Facing": 1,
+          "MoveSound": "squid_hit",
+          "MoveSound2": "yoba",
+          "Sprite": "{{ModId}}/Spiker",
+          "Vulnerable": true,
+          "Drops": [
+            {
+              "ItemId": "(O)74",
+              "MinQuantity": 1,
+              "MaxQuantity": 4,
+              "Chance": 10
+            }
+          ]
         }
       }
     },
@@ -73,7 +73,7 @@
           },
           "Layer": "Back",
           "SetProperties": {
-            "DMT/monster_Once_Action":"MyCustomMonster 1792 4288",
+            "DMT/monster_Once_Action": "MyCustomMonster 1792 4288"
           }
         },
         {
@@ -83,7 +83,7 @@
           },
           "Layer": "Back",
           "SetProperties": {
-            "DMT/monster_Once_Action":"MyCustomMonster2 1792 4288",
+            "DMT/monster_Once_Action": "MyCustomMonster2 1792 4288"
           }
         },
         {
@@ -93,7 +93,7 @@
           },
           "Layer": "Back",
           "SetProperties": {
-            "DMT/monster_Once_Action":"MyCustomMonster3 1792 4288",
+            "DMT/monster_Once_Action": "MyCustomMonster3 1792 4288"
           }
         }
       ]

@@ -1,3 +1,24 @@
+This is a list of all the constructors for the vanilla monsters. the parameters are what you pass to the "Parameters" field in your content.json file. e.g.: 
+
+{
+  "Format": "2.9.0",
+  "Changes": [
+    {
+      "Action": "EditData",
+      "Target": "aedenthorn.CustomMonsters/dict",
+      "Entries": {
+      "MyCustomMonster": {
+        "Type": "Serpent",
+        "Parameters":"position,name",
+        "Name":"Royal Serpent"
+      }
+    }
+  ]
+}
+
+See doc.md for more info.
+
+
 AngryRoger:
 AngryRoger: position
 AngryRoger: position,name

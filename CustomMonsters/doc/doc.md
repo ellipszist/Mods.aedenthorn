@@ -50,7 +50,7 @@ comma-separated list of the parameters that describe the c# constructor used to 
 
 Some of these will work differently for different monster types. See each corresponding field for more info.
 
-[A list of constructors is here.](https://github.com/aedenthorn/StardewValleyMods/blob/master/CustomMonsters/doc/ctor.md)
+[A list of constructors is here.](https://github.com/aedenthorn/StardewValleyMods/blob/master/CustomMonsters/doc/ctor.txt)
 
 
 ### Level
