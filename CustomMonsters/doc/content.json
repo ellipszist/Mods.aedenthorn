@@ -58,6 +58,26 @@
               "Chance": 10
             }
           ]
+        },
+        "MyCustomMonster4": {
+          "Type": "BigSlime",
+          "Parameters": "position,level",
+          "MoveSound": "squid_hit",
+          "HeldItem": [
+            {
+              "ItemId": "(O)74",
+              "MinQuantity": 1,
+              "MaxQuantity": 4,
+              "Chance": 100
+            }
+          ],
+          "MineSpawns": [
+            {
+              "MinLevel": 100,
+              "MaxLevel": 120,
+              "Chance": 10
+            }
+          ]
         }
       }
     },
