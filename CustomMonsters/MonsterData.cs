@@ -47,6 +47,9 @@ namespace CustomMonsters
         public int? ProjectileDamage { get; set; }
         public int? ProjectileRange { get; set; }
 
+        public List<MonsterSpawnData> MineSpawns { get; set; }
+        public List<MonsterSpawnData> VolcanoSpawns { get; set; }
+
         //Angry Roger specific
         public string SprinkleColor { get; set; }
 
@@ -98,6 +101,13 @@ namespace CustomMonsters
         public int? ProjectileCount { get; set; }
         public float? ProjectileTimer { get; set; }
 
+    }
+
+    public class MonsterSpawnData
+    {
+        public int MinLevel { get; set; }
+        public int MaxLevel { get; set; }
+        public int Chance { get; set; }
     }
 
     public class CustomDropData

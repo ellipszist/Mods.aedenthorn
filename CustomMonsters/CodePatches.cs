@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
+using StardewValley.Locations;
 using StardewValley.Monsters;
 using StardewValley.Projectiles;
 using System;
@@ -9,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.ExceptionServices;
 
 namespace CustomMonsters
 {
@@ -223,7 +225,10 @@ namespace CustomMonsters
                     __result.Add(ItemRegistry.Create(item.ItemId, Game1.random.Next(item.MinQuantity, item.MaxQuantity + 1), item.Quality));
                 }
             }
-
+            if(__instance is BigSlime bs && bs.heldItem.Value != null)
+            {
+                __result.Add(bs.heldItem.Value);
+            }
             return false;
         }
         [HarmonyPatch(typeof(DwarvishSentry), new Type[] { typeof(Vector2) })]
@@ -614,6 +619,60 @@ namespace CustomMonsters
                 return codes.AsEnumerable();
             }
 
+        }
+
+        [HarmonyPatch(typeof(MineShaft), "getMonsterForThisLevel")]
+        public static class MineShaft_getMonsterForThisLevel_Patch
+        {
+            public static bool Prefix(MineShaft __instance, int level, int xTile, int yTile, ref Monster __result)
+            {
+                if (!Config.ModEnabled)
+                    return true;
+                foreach (var kvp in Monsters.Where(kvp => kvp.Value.MineSpawns != null))
+                {
+                    var spawnData = kvp.Value.MineSpawns.FirstOrDefault(m => m.MinLevel <= level && m.MaxLevel >= level);
+                    if (spawnData != default && Game1.random.NextDouble() < spawnData.Chance / 100.0)
+                    {
+                        __result = CreateMonster(kvp.Key, new Vector2(xTile, yTile) * 64);
+                        if(__result != null)
+                        {
+                            SMonitor.Log($"Spawning monster {kvp.Key} at mine level {level}");
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+        }
+
+        [HarmonyPatch(typeof(VolcanoDungeon), "GenerateEntities")]
+        public static class VolcanoDungeon_GenerateEntities_Patch
+        {
+            public static void Postfix(VolcanoDungeon __instance)
+            {
+                if (!Config.ModEnabled)
+                    return;
+                for(int i = 0; i< __instance.characters.Count; i++)
+                {
+                    if( __instance.characters[i] is Monster old) 
+                    {
+                        foreach (var kvp in Monsters.Where(m => m.Value.VolcanoSpawns != null))
+                        {
+                            var spawnData = kvp.Value.VolcanoSpawns.FirstOrDefault(m => m.MinLevel <= __instance.level.Value && m.MaxLevel >= __instance.level.Value);
+                            if (spawnData != default && Game1.random.NextDouble() < spawnData.Chance / 100.0)
+                            {
+                                var m = CreateMonster(kvp.Key, old.Position);
+                                if(m != null)
+                                {
+                                    SMonitor.Log($"Spawning monster {kvp.Key} at volcano level {__instance.level.Value}");
+                                    __instance.characters[i] = m;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

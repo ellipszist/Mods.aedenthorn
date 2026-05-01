@@ -149,6 +149,21 @@ damage value for some projectiles.
 ### ProjectileRange
 range of some projectiles.
 
+### MineSpawns
+List of entries for causing this monster type to spawn on specific mine floors. Each entry takes the following fields:
+
+	MinLevel - the minimum mine level for the monster to spawn.
+	MaxLevel - the maximum mine level for the monster to spawn.
+	Chance - percent chance for the monster to spawn on those floors (default 0).
+
+### VolcanoSpawns
+List of entries for causing this monster type to spawn on specific mine floors. Each entry takes the following fields:
+
+	MinLevel - the minimum volcano level for the monster to spawn.
+	MaxLevel - the maximum volcano level for the monster to spawn.
+	Chance - percent chance for the monster to spawn on those floors (default 0).
+
+
 ## AngryRoger specific
 
 ### SprinkleColor
