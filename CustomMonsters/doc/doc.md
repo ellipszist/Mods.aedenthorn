@@ -154,14 +154,14 @@ List of entries for causing this monster type to spawn on specific mine floors. 
 
 	MinLevel - the minimum mine level for the monster to spawn.
 	MaxLevel - the maximum mine level for the monster to spawn.
-	Chance - percent chance for the monster to spawn on those floors (default 0).
+	Chance - percent chance for the monster to spawn instead of a given vanilla monster.
 
 ### VolcanoSpawns
 List of entries for causing this monster type to spawn on specific mine floors. Each entry takes the following fields:
 
 	MinLevel - the minimum volcano level for the monster to spawn.
 	MaxLevel - the maximum volcano level for the monster to spawn.
-	Chance - percent chance for the monster to spawn on those floors (default 0).
+	Chance - percent chance for the monster to spawn instead of a given vanilla monster.
 
 
 ## AngryRoger specific
