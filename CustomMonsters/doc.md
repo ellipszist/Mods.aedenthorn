@@ -1,44 +1,44 @@
 
 **Type** - The vanilla monster type to base the custom monster type on. Possible values:
 
-	**AngryRoger**
-	**Bat**
-	**BigSlime**
-	**BlueSquid**
-	**Bug**
-	**DinoMonster**
-	**Duggy**
-	**DustSpirit**
-	**DwarvishSentry**
-	**Fly**
-	**Ghost**
-	**GreenSlime**
-	**Grub**
-	**HotHead**
-	**LavaLurk**
-	**Leaper**
-	**MetalHead**
-	**Mummy**
-	**RockCrab**
-	**RockGolem**
-	**Serpent**
-	**ShadowBrute**
-	**ShadowGirl**
-	**ShadowGuy**
-	**ShadowShaman**
-	**Shooter**
-	**Skeleton**
-	**Spiker**
-	**SquidKid**
+	AngryRoger
+	Bat
+	BigSlime
+	BlueSquid
+	Bug
+	DinoMonster
+	Duggy
+	DustSpirit
+	DwarvishSentry
+	Fly
+	Ghost
+	GreenSlime
+	Grub
+	HotHead
+	LavaLurk
+	Leaper
+	MetalHead
+	Mummy
+	RockCrab
+	RockGolem
+	Serpent
+	ShadowBrute
+	ShadowGirl
+	ShadowGuy
+	ShadowShaman
+	Shooter
+	Skeleton
+	Spiker
+	SquidKid
 
 **Parameters** - comma-separated list of the parameters that describe the c# constructor used to instantiate the custom monster type (default "position"). Possible parameter types:
 
-	**position** - refers to the position passed to the API by your spawning mod (e.g. Dynamic Map Tiles)
-	**level** - taken from the Level field
-	**facing** - taken from the Facing field
-	**name** - taken from the Name field
-	**color** - taken from the Color field
-	**switch** - taken from the Switch field
+	position - refers to the position passed to the API by your spawning mod (e.g. Dynamic Map Tiles)
+	level - taken from the Level field
+	facing - taken from the Facing field
+	name - taken from the Name field
+	color - taken from the Color field
+	switch - taken from the Switch field
 
 Some of these will work differently for different monster types. See each corresponding field for more info.
 
