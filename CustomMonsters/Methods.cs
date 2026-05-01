@@ -109,11 +109,18 @@ namespace CustomMonsters
         }
         public static Color MakeColor(string value)
         {
-            return new Color(
-                int.Parse(value.Substring(1, 2), System.Globalization.NumberStyles.HexNumber),
-                int.Parse(value.Substring(3, 2), System.Globalization.NumberStyles.HexNumber),
-                int.Parse(value.Substring(5, 2), System.Globalization.NumberStyles.HexNumber)
-            );
+            try
+            {
+                return new Color(
+                    int.Parse(value.Substring(1, 2), System.Globalization.NumberStyles.HexNumber),
+                    int.Parse(value.Substring(3, 2), System.Globalization.NumberStyles.HexNumber),
+                    int.Parse(value.Substring(5, 2), System.Globalization.NumberStyles.HexNumber)
+                );
+            }
+            catch
+            {
+                return Color.White;
+            }
         }
         public static Monster GetSpawnMonster(Monster old, string newId, List<MonsterSpawnData> list, int level, Vector2 position)
         {
@@ -132,17 +139,17 @@ namespace CustomMonsters
         }
         public static Monster CreateMonster(string id, Vector2 position)
         {
-            if (!ModEntry.Monsters.TryGetValue(id, out var data))
+            if (!Monsters.TryGetValue(id, out var data))
             {
                 return null;
             }
 
-            ModEntry.SMonitor.Log($"Creating monster '{id}' of type '{data.Type}' at position {position}.", StardewModdingAPI.LogLevel.Info);
+            SMonitor.Log($"Creating monster '{id}' of type '{data.Type}' at position {position}.");
 
             var type = typeof(Monster).Assembly.GetTypes().Where(t => t.IsSubclassOf(typeof(Monster))).FirstOrDefault(t => t.Name == data.Type);
             if (type == null)
             {
-                ModEntry.SMonitor.Log($"Invalid monster type {data.Type}", StardewModdingAPI.LogLevel.Warn);
+                SMonitor.Log($"Invalid monster type {data.Type}", LogLevel.Warn);
                 return null;
             }
             List<object> parameters = new List<object>();
@@ -163,19 +170,19 @@ namespace CustomMonsters
                         parameters.Add(data.Name);
                         break;
                     case "color":
-                        parameters.Add(ModEntry.MakeColor(data.Color));
+                        parameters.Add(MakeColor(data.Color));
                         break;
                     case "switch":
                         parameters.Add(data.Switch);
                         break;
                     default:
-                        ModEntry.SMonitor.Log($"Unknown parameter '{param}' for monster '{id}'.", StardewModdingAPI.LogLevel.Warn);
+                        SMonitor.Log($"Unknown parameter '{param}' for monster '{id}'.", LogLevel.Warn);
                         break;
                 }
             }
             if (type.GetConstructor(parameters.Select(p => p.GetType()).ToArray()) == null)
             {
-                ModEntry.SMonitor.Log($"Invalid parameters for monster type {data.Type} {string.Join(",", parameters.Select(p => p.GetType()))}", StardewModdingAPI.LogLevel.Warn);
+                SMonitor.Log($"Invalid parameters for monster type {data.Type} {string.Join(",", parameters.Select(p => p.GetType()))}", LogLevel.Warn);
                 return null;
             }
             var monster = (Monster)Activator.CreateInstance(type, parameters.ToArray());
@@ -183,7 +190,7 @@ namespace CustomMonsters
             {
                 monster.Position = position;
             }
-            monster.modData[ModEntry.monsterKey] = id;
+            monster.modData[monsterKey] = id;
             if (monster is RockCrab crab)
             {
                 if (data.StickBug)
@@ -281,7 +288,7 @@ namespace CustomMonsters
                 }
                 if (data.Color != null)
                 {
-                    bs.c.Value = ModEntry.MakeColor(data.Color);
+                    bs.c.Value = MakeColor(data.Color);
                 }
                 return bs;
             }
@@ -313,7 +320,7 @@ namespace CustomMonsters
             {
                 if (data.Color != null)
                 {
-                    gs.color.Value = ModEntry.MakeColor(data.Color);
+                    gs.color.Value = MakeColor(data.Color);
                 }
                 if (data.HideShadow != null)
                 {
@@ -325,7 +332,7 @@ namespace CustomMonsters
             {
                 if (data.Color != null)
                 {
-                    mh.c.Value = ModEntry.MakeColor(data.Color);
+                    mh.c.Value = MakeColor(data.Color);
                 }
                 return mh;
             }

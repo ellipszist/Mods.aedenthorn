@@ -173,6 +173,11 @@ namespace CustomMonsters
                 __instance.Sprite.SpriteWidth = 32;
                 __instance.Sprite.SpriteHeight = 32;
             }
+            else if (__instance is MetalHead mh)
+            {
+                __instance.Sprite.SpriteHeight = 16;
+                mh.c.Value = data.Color != null ? MakeColor(data.Color) : Color.White;
+            }
             else if (__instance is Mummy)
             {
                 __instance.Sprite.SpriteHeight = 32;

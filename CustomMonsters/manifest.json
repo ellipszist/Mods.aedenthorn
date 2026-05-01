@@ -1,7 +1,7 @@
 ﻿{
 	"Name": "Custom Monsters",
 	"Author": "aedenthorn",
-	"Version": "0.2.1",
+	"Version": "0.2.3",
 	"Description": "Custom Monsters.",
 	"UniqueID": "aedenthorn.CustomMonsters",
 	"EntryDll": "CustomMonsters.dll",
