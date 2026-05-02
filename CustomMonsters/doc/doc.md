@@ -41,12 +41,12 @@ The vanilla monster type to base the custom monster type on. Possible values:
 ### Parameters
 comma-separated list of the parameters that describe the c# constructor used to instantiate the custom monster type (default "position"). Possible parameter types:
 
-	position - refers to the position passed to the API by your spawning mod (e.g. Dynamic Map Tiles)
-	level - taken from the Level field
-	facing - taken from the Facing field
-	name - taken from the Name field
-	color - taken from the Color field
-	switch - taken from the Switch field
+- position - refers to the position passed to the API by your spawning mod (e.g. Dynamic Map Tiles)
+- level - taken from the Level field
+- facing - taken from the Facing field
+- name - taken from the Name field
+- color - taken from the Color field
+- switch - taken from the Switch field
 
 Some of these will work differently for different monster types. See each corresponding field for more info.
 
@@ -93,11 +93,11 @@ how long to shake a monster (bats).
 ### Drops
 a list of items to replace the base type's item drops. Each item takes the following fields:
 
-	ItemId - the qualified item id to drop.
-	MinQuantity - minimum amount to drop.
-	MaxQuantity - maximum amount to drop.
-	Quality - dropped item quality.
-	Chance - percent chance to drop (default 100).
+- ItemId - the qualified item id to drop.
+- MinQuantity - minimum amount to drop.
+- MaxQuantity - maximum amount to drop.
+- Quality - dropped item quality.
+- Chance - percent chance to drop (default 100).
 
 e.g.:
 
@@ -154,18 +154,18 @@ range of some projectiles.
 ### MineSpawns
 List of entries for causing this monster type to spawn on specific mine floors. Each entry takes the following fields:
 
-	MinLevel - the minimum mine level for the monster to spawn.
-	MaxLevel - the maximum mine level for the monster to spawn.
-	Chance - percent chance for the monster to spawn instead of a given vanilla monster.
-	Types - optional list of vanilla monster types to replace with this custom monster type (see [Type](#Type) above). If omitted, can spawn instead of any vanilla monster. 
+- MinLevel - the minimum mine level for the monster to spawn.
+- MaxLevel - the maximum mine level for the monster to spawn.
+- Chance - percent chance for the monster to spawn instead of a given vanilla monster.
+- Types - optional list of vanilla monster types to replace with this custom monster type (see [Type](https://github.com/aedenthorn/StardewValleyMods/edit/master/CustomMonsters/doc/doc.md#type) above). If omitted, can spawn instead of any vanilla monster. 
 
 ### VolcanoSpawns
 List of entries for causing this monster type to spawn on specific mine floors. Each entry takes the following fields:
 
-	MinLevel - the minimum volcano level for the monster to spawn.
-	MaxLevel - the maximum volcano level for the monster to spawn.
-	Chance - percent chance for the monster to spawn instead of a given vanilla monster.
-	Types - optional list of vanilla monster types to replace with this custom monster type (see [Type](#Type) above). If omitted, can spawn instead of any vanilla monster. 
+- MinLevel - the minimum volcano level for the monster to spawn.
+- MaxLevel - the maximum volcano level for the monster to spawn.
+- Chance - percent chance for the monster to spawn instead of a given vanilla monster.
+- Types - optional list of vanilla monster types to replace with this custom monster type (see [Type](https://github.com/aedenthorn/StardewValleyMods/edit/master/CustomMonsters/doc/doc.md#type) above). If omitted, can spawn instead of any vanilla monster. 
 
 
 
