@@ -22,6 +22,7 @@ namespace CustomMonsters
         public int Experience { get; set; } = -1;
         public int Resilience { get; set; } = -1;
 
+        public double Jitteriness { get; set; } = -1;
         public int Slipperiness { get; set; } = -1;
         public int LightType { get; set; } = -1;
 

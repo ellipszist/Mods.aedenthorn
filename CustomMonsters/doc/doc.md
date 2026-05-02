@@ -79,10 +79,12 @@ monster speed.
 ### Experience
 experience gained for killing the monster.
 ### Resilience
-monster resilience.
+monster resilience - reduces damage taken.
 
+### Jitteriness
+monster jitteriness - causes them to change direction.
 ### Slipperiness
-monster slipperiness.
+monster slipperiness - affects velocity.
 ### LightType
 an index for the vanilla light type used by certain monsters (not really implemented yet).
 

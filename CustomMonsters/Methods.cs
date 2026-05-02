@@ -211,6 +211,10 @@ namespace CustomMonsters
             {
                 monster.Slipperiness = data.Slipperiness;
             }
+            if (data.Jitteriness > -1)
+            {
+                monster.jitteriness.Value = data.Jitteriness;
+            }
             if (data.Speed > -1)
             {
                 monster.speed = data.Speed;
