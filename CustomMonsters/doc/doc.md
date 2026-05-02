@@ -111,6 +111,8 @@ e.g.:
 		  ]
 		  
 This causes the monster to have a 10% chance to drop 1-4 prismatic shards.
+### ClearDrops
+whether to remove the base type's item drops (default: true).
 
 
 ### MoveSound
@@ -155,8 +157,7 @@ List of entries for causing this monster type to spawn on specific mine floors. 
 	MinLevel - the minimum mine level for the monster to spawn.
 	MaxLevel - the maximum mine level for the monster to spawn.
 	Chance - percent chance for the monster to spawn instead of a given vanilla monster.
-	Types - optional list of vanilla monster types to replace with this custom monster type. Possible values:
-		AngryRoger,Bat,BigSlime,BlueSquid,Bug,DinoMonster,Duggy,DustSpirit,DwarvishSentry,Fly,Ghost,GreenSlime,Grub,HotHead,LavaLurk,Leaper,MetalHead,Mummy,RockCrab,RockGolem,Serpent,ShadowBrute,ShadowGirl,ShadowGuy,ShadowShaman,Shooter,Skeleton,SquidKid
+	Types - optional list of vanilla monster types to replace with this custom monster type (see [Type](#Type) above). If omitted, can spawn instead of any vanilla monster. 
 
 ### VolcanoSpawns
 List of entries for causing this monster type to spawn on specific mine floors. Each entry takes the following fields:
@@ -164,8 +165,8 @@ List of entries for causing this monster type to spawn on specific mine floors. 
 	MinLevel - the minimum volcano level for the monster to spawn.
 	MaxLevel - the maximum volcano level for the monster to spawn.
 	Chance - percent chance for the monster to spawn instead of a given vanilla monster.
-	Types - optional list of vanilla monster types to replace with this custom monster type. Possible values:
-		AngryRoger,Bat,BigSlime,BlueSquid,Bug,DinoMonster,Duggy,DustSpirit,DwarvishSentry,Fly,Ghost,GreenSlime,Grub,HotHead,LavaLurk,Leaper,MetalHead,Mummy,RockCrab,RockGolem,Serpent,ShadowBrute,ShadowGirl,ShadowGuy,ShadowShaman,Shooter,Skeleton,SquidKid
+	Types - optional list of vanilla monster types to replace with this custom monster type (see [Type](#Type) above). If omitted, can spawn instead of any vanilla monster. 
+
 
 
 ## AngryRoger specific

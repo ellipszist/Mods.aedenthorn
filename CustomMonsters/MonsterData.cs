@@ -28,6 +28,7 @@ namespace CustomMonsters
         public bool? HideShadow { get; set; }
         public int ShakeTimer { get; set; } = -1;
         public List<CustomDropData> Drops { get; set; }
+        public bool ClearDrops { get; set; } = true;
 
         public string MoveSound { get; set; }
         public string MoveSound2 { get; set; }

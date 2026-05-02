@@ -225,12 +225,19 @@ namespace CustomMonsters
             __instance.Sprite.UpdateSourceRect();
             return false;
         }
-        private static bool GetExtraDropItemsPrefix(Monster __instance, ref List<Item> __result)
+        private static void GetExtraDropItemsPostfix(Monster __instance, ref List<Item> __result)
         {
-            if (!__instance.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.Drops == null)
-                return true;
-            __instance.objectsToDrop.Clear();
-            __result = new List<Item>();
+            if (!__instance.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data))
+                return;
+            if (data.ClearDrops)
+            {
+                __instance.objectsToDrop.Clear();
+                __result?.Clear();
+            }
+            if (data.Drops == null)
+                return;
+            if (__result == null)
+                __result = new List<Item>();
             foreach (var item in data.Drops)
             {
                 if (Game1.random.NextDouble() < item.Chance / 100.0)
