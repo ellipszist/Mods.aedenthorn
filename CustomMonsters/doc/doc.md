@@ -54,7 +54,7 @@ Some of these will work differently for different monster types. See each corres
 
 
 ### Level
-The level of the monster, often corresponding to a mine level. Will be passed to constructors with "level" parameter. E.g. MetalHead: "position,level".
+The level of the monster, sometimes corresponding to a mine level, sometimes to a range of mine levels. See [ctor.txt](https://github.com/aedenthorn/StardewValleyMods/blob/master/CustomMonsters/doc/ctor.txt) for hints. Will be passed to constructors with "level" parameter. E.g. MetalHead: "position,level".
 ### Facing
 The facing direction (0 = up, 1 = right, 2 = down, 3 = left). For Spikers it's the direction they will sense players and move to hit them. Will be passed to constructors with "facing" parameter.
 ### Name
