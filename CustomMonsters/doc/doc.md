@@ -157,7 +157,7 @@ List of entries for causing this monster type to spawn on specific mine floors. 
 - MinLevel - the minimum mine level for the monster to spawn.
 - MaxLevel - the maximum mine level for the monster to spawn.
 - Chance - percent chance for the monster to spawn instead of a given vanilla monster.
-- Types - optional list of vanilla monster types to replace with this custom monster type (see [Type](https://github.com/aedenthorn/StardewValleyMods/edit/master/CustomMonsters/doc/doc.md#type) above). If omitted, can spawn instead of any vanilla monster. 
+- Types - optional list of vanilla monster types to replace with this custom monster type (see [Type](https://github.com/aedenthorn/StardewValleyMods/blob/master/CustomMonsters/doc/doc.md#type) above). If omitted, can spawn instead of any vanilla monster. 
 
 ### VolcanoSpawns
 List of entries for causing this monster type to spawn on specific mine floors. Each entry takes the following fields:
@@ -165,7 +165,7 @@ List of entries for causing this monster type to spawn on specific mine floors. 
 - MinLevel - the minimum volcano level for the monster to spawn.
 - MaxLevel - the maximum volcano level for the monster to spawn.
 - Chance - percent chance for the monster to spawn instead of a given vanilla monster.
-- Types - optional list of vanilla monster types to replace with this custom monster type (see [Type](https://github.com/aedenthorn/StardewValleyMods/edit/master/CustomMonsters/doc/doc.md#type) above). If omitted, can spawn instead of any vanilla monster. 
+- Types - optional list of vanilla monster types to replace with this custom monster type (see [Type](https://github.com/aedenthorn/StardewValleyMods/blob/master/CustomMonsters/doc/doc.md#type) above). If omitted, can spawn instead of any vanilla monster. 
 
 
 
