@@ -1,4 +1,4 @@
-This is a list of all the constructors for the vanilla monsters. The parameters are what you pass to the "Parameters" field in your content.json file. e.g.: 
+This is a list of all the constructors for the vanilla monsters. The parameters are what you pass to the "Parameters" field in your content.json file to tell the mod which C# constructor to use. e.g.: 
 
 {
   "Format": "2.9.0",
@@ -16,6 +16,10 @@ This is a list of all the constructors for the vanilla monsters. The parameters 
   ]
 }
 
+This will call the constructor for Serpent that has two parameters (position and name). The position parameter will be passed by whatever mod is spawning the monster. Here I supply the name parameter with "Name": "Royal Serpent", which tells the game to make a royal serpent type monster.
+
+For name I have included in parentheses names used by the game to create specific monster types.
+
 For switch, I have included in parenthesis the name of the switch that will toggle if you set "Switch": true for that monster type.
 
 See doc.md for more info.
@@ -23,7 +27,7 @@ See doc.md for more info.
 
 AngryRoger:
 AngryRoger: position
-AngryRoger: position,name
+AngryRoger: position,name ("Angry Roger")
 Bat:
 Bat: position
 Bat: position,level
@@ -32,7 +36,7 @@ BigSlime: position,level
 BlueSquid:
 BlueSquid: position
 Bug:
-Bug: position,facing,name
+Bug: position,facing,name ("Assassin Bug")
 Bug: position,Int32 areaType
 DinoMonster:
 DinoMonster: position
@@ -49,7 +53,7 @@ Fly: position
 Fly: position,switch (hard)
 Ghost:
 Ghost: position
-Ghost: position,name
+Ghost: position,name ("Putrid Ghost", "Carbon Ghost")
 GreenSlime:
 GreenSlime: position
 GreenSlime: position,level
@@ -64,7 +68,7 @@ LavaLurk: position
 Leaper:
 Leaper: position
 MetalHead:
-MetalHead: name,position
+MetalHead: name,position ("Hot Head")
 MetalHead: position,level
 Monster:
 Monster: name,position
@@ -73,14 +77,14 @@ Mummy:
 Mummy: position
 RockCrab:
 RockCrab: position
-RockCrab: position,name
+RockCrab: position,name ("Truffle Crab", "Iridium Crab", "False Magma Cap")
 RockGolem:
 RockGolem: position
 RockGolem: position,level
 RockGolem: position,switch (alreadySpawned)
 Serpent:
 Serpent: position
-Serpent: position,name
+Serpent: position,name ("Royal Serpent")
 ShadowBrute:
 ShadowBrute: position
 ShadowGirl: position
@@ -91,7 +95,7 @@ ShadowShaman:
 ShadowShaman: position
 Shooter:
 Shooter: position
-Shooter: position,name
+Shooter: position,name ("Shadow Sniper")
 Skeleton:
 Skeleton: position,switch (isMage)
 Spiker:
