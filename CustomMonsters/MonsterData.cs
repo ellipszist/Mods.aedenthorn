@@ -62,12 +62,16 @@ namespace CustomMonsters
         public int SpeedMax { get; set; } = -1;
         public float? ExtraVelocity { get; set; } = null;
 
-        // big slime specific
+        // BigSlime specific
         public List<CustomDropData> HeldItem { get; set; }
 
         // bug specific
         public string ArmorSound { get; set; }
         public bool? Armored { get; set; }
+
+        // GreenSlime specific
+        public int MinStacks { get; set; }
+        public int MaxStacks { get; set; }
 
         // Mummy specific
         public string CrumbleSound { get; set; }

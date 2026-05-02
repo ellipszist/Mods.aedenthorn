@@ -673,6 +673,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomMonsters", "CustomMon
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedPerfection", "SharedPerfection\SharedPerfection.csproj", "{365A47F5-0C8C-0695-3CD3-C844F2D3069A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VideoMovies", "VideoMovies\VideoMovies.csproj", "{909EBC4D-29C5-9910-1704-9F07E38BC19A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3329,6 +3331,14 @@ Global
 		{365A47F5-0C8C-0695-3CD3-C844F2D3069A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{365A47F5-0C8C-0695-3CD3-C844F2D3069A}.Release|x64.ActiveCfg = Release|Any CPU
 		{365A47F5-0C8C-0695-3CD3-C844F2D3069A}.Release|x64.Build.0 = Release|Any CPU
+		{909EBC4D-29C5-9910-1704-9F07E38BC19A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{909EBC4D-29C5-9910-1704-9F07E38BC19A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{909EBC4D-29C5-9910-1704-9F07E38BC19A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{909EBC4D-29C5-9910-1704-9F07E38BC19A}.Debug|x64.Build.0 = Debug|Any CPU
+		{909EBC4D-29C5-9910-1704-9F07E38BC19A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{909EBC4D-29C5-9910-1704-9F07E38BC19A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{909EBC4D-29C5-9910-1704-9F07E38BC19A}.Release|x64.ActiveCfg = Release|Any CPU
+		{909EBC4D-29C5-9910-1704-9F07E38BC19A}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

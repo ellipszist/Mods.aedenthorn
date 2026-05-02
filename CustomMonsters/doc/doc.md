@@ -202,6 +202,14 @@ the item to display inside the monster.
 whether the bug is armored.
 
 
+## GreenSlime specific
+
+### MinStacks
+minimum number of stacked slimes.
+### MaxStacks
+maximum number of stacked slimes.
+
+
 ## Mummy specific
 
 ### CrumbleSound

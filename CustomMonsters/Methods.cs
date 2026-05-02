@@ -322,6 +322,10 @@ namespace CustomMonsters
                 {
                     gs.color.Value = MakeColor(data.Color);
                 }
+                if (data.MinStacks > -1 && data.MaxStacks > -1)
+                {
+                    gs.stackedSlimes.Value = Game1.random.Next(data.MinStacks, data.MaxStacks + 1);
+                }
                 if (data.HideShadow != null)
                 {
                     gs.HideShadow = data.HideShadow.Value;
