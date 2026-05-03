@@ -56,7 +56,7 @@ Ghost: "position"
 Ghost: "position,name" ("Putrid Ghost", "Carbon Ghost")
 GreenSlime:
 GreenSlime: "position"
-GreenSlime: "position,level" (corresponds to mine level, but 77377 makes a "Sludge" and 9999899 makes an aqua slime)
+GreenSlime: "position,level" (corresponds to mine level, but 77377 makes a "Sludge" and 9999899 makes a special aqua slime)
 GreenSlime: "position,color"
 Grub:
 Grub: "position"

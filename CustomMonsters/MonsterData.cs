@@ -5,11 +5,13 @@ namespace CustomMonsters
 {
     public class MonsterData
     {
+        public string MonsterId { get; set; }
         public string Type { get; set; }
         public string Parameters { get; set; } = "position";
         public int Level { get; set; }
         public int Facing { get; set; }
         public string Color { get; set; }
+        public List<ColorData> Colors { get; set; }
         public string Name { get; set; }
         public bool Switch { get; set; }
         public string Sprite { get; set; }
@@ -21,6 +23,7 @@ namespace CustomMonsters
         public int Speed { get; set; } = -1;
         public int Experience { get; set; } = -1;
         public int Resilience { get; set; } = -1;
+        public int MissChance { get; set; } = -1;
 
         public double Jitteriness { get; set; } = -1;
         public int Slipperiness { get; set; } = -1;
@@ -72,8 +75,9 @@ namespace CustomMonsters
         public bool? Armored { get; set; }
 
         // GreenSlime specific
-        public int MinStacks { get; set; }
-        public int MaxStacks { get; set; }
+        public int MinStacks { get; set; } = -1;
+        public int MaxStacks { get; set; } = -1;
+        public int? ChildhoodLength { get; set; }
 
         // Mummy specific
         public string CrumbleSound { get; set; }
@@ -124,5 +128,20 @@ namespace CustomMonsters
         public int MaxQuantity { get; set; }
         public int Quality { get; set; }
         public int Chance { get; set; } = 100;
+    }
+
+    public class ColorData
+    {
+        public ColorChannel R { get; set; }
+        public ColorChannel G { get; set; }
+        public ColorChannel B { get; set; }
+        public int Chance { get; set; }
+
+    }
+
+    public class ColorChannel
+    {
+        public byte Min { get; set; }
+        public byte Max { get; set; }
     }
 }

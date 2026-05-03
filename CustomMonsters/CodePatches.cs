@@ -2,6 +2,8 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
+using StardewValley.Audio;
+using StardewValley.Extensions;
 using StardewValley.Locations;
 using StardewValley.Monsters;
 using StardewValley.Projectiles;
@@ -10,8 +12,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Runtime.ExceptionServices;
-using static HarmonyLib.Code;
 
 namespace CustomMonsters
 {
@@ -176,7 +176,6 @@ namespace CustomMonsters
             else if (__instance is MetalHead mh)
             {
                 __instance.Sprite.SpriteHeight = 16;
-                mh.c.Value = data.Color != null ? MakeColor(data.Color) : Color.White;
             }
             else if (__instance is Mummy)
             {
@@ -236,8 +235,7 @@ namespace CustomMonsters
             }
             if (data.Drops == null)
                 return;
-            if (__result == null)
-                __result = new List<Item>();
+            __result ??= new List<Item>();
             foreach (var item in data.Drops)
             {
                 if (Game1.random.NextDouble() < item.Chance / 100.0)
@@ -249,7 +247,6 @@ namespace CustomMonsters
             {
                 __result.Add(bs.heldItem.Value);
             }
-            return false;
         }
         [HarmonyPatch(typeof(DwarvishSentry), new Type[] { typeof(Vector2) })]
         [HarmonyPatch(MethodType.Constructor)]
@@ -295,6 +292,76 @@ namespace CustomMonsters
 
                 return codes.AsEnumerable();
             }
+        }
+        [HarmonyPatch(typeof(GreenSlime), "draw", new Type[] { typeof(SpriteBatch) })]
+        public static class GreenSlime_draw_Patch
+        {
+
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling GreenSlime.draw");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Ldc_R4 && (float)codes[i].operand == 120000)
+                    {
+                        SMonitor.Log($"adding method for childhood length");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeChildhoodLength))));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                        break;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+        [HarmonyPatch(typeof(GreenSlime), nameof(GreenSlime.mateWith))]
+        public static class GreenSlime_mateWith_Patch
+        {
+            public static bool Prefix(GreenSlime __instance, GreenSlime mateToPursue, GameLocation location)
+            {
+                if (!TryGetData(__instance, out var data) & !TryGetData(mateToPursue, out var data2))
+                    return true;
+                if(data == null || data2 == null || data.MonsterId != data2.MonsterId)
+                {
+                    return false;
+                }
+                if (location.canSlimeMateHere())
+                {
+                    GreenSlime baby = (GreenSlime)CreateMonster(data.MonsterId, Vector2.Zero);
+                    Utility.recursiveFindPositionForCharacter(baby, location, __instance.Tile, 30);
+                    Random r = Utility.CreateRandom(Game1.stats.DaysPlayed, Game1.uniqueIDForThisGame / 10.0, (double)__instance.Scale * 100.0, (double)mateToPursue.Scale * 100.0, 0.0);
+                    
+                    baby.Health = r.Choose(__instance.Health, mateToPursue.Health);
+                    baby.Health = Math.Max(1, __instance.Health + r.Next(-4, 5));
+                    baby.DamageToFarmer = r.Choose(__instance.DamageToFarmer, mateToPursue.DamageToFarmer);
+                    baby.DamageToFarmer = Math.Max(0, __instance.DamageToFarmer + r.Next(-1, 2));
+                    baby.resilience.Value = r.Choose(__instance.resilience.Value, mateToPursue.resilience.Value);
+                    baby.resilience.Value = Math.Max(0, __instance.resilience.Value + r.Next(-1, 2));
+                    baby.missChance.Value = r.Choose(__instance.missChance.Value, mateToPursue.missChance.Value);
+                    baby.missChance.Value = Math.Max(0.0, __instance.missChance.Value + (double)((float)r.Next(-1, 2) / 100f));
+                    baby.Scale = r.Choose(__instance.Scale, mateToPursue.Scale);
+                    baby.Scale = Math.Max(0.6f, Math.Min(1.5f, __instance.Scale + (float)r.Next(-2, 3) / 100f));
+                    baby.Slipperiness = 8;
+                    __instance.speed = r.Choose(__instance.speed, mateToPursue.speed);
+                    if (r.NextDouble() < 0.015)
+                    {
+                        __instance.speed = Math.Max(1, Math.Min(6, __instance.speed + r.Next(-1, 2)));
+                    }
+                    baby.setTrajectory(Utility.getAwayFromPositionTrajectory(baby.GetBoundingBox(), __instance.getStandingPosition()) / 2f);
+                    baby.ageUntilFullGrown.Value = data.ChildhoodLength ?? 120000;
+                    baby.Halt();
+                    baby.firstGeneration.Value = false;
+                    if (Utility.isOnScreen(__instance.Position, 128))
+                    {
+                        __instance.currentLocation.playSound(data.SpawnSound ?? "slime", null, null, SoundContext.Default);
+                    }
+                }
+                mateToPursue.doneMating();
+                __instance.doneMating();
+                return false;
+            }
+
         }
         [HarmonyPatch(typeof(Mummy), "performCrumble")]
         public static class Mummy_performCrumble_Patch

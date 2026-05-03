@@ -11,81 +11,99 @@ namespace CustomMonsters
 {
 	public partial class ModEntry : Mod
     {
+        private static bool TryGetData(Monster m, out MonsterData data)
+        {
+            if (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out data))
+            {
+                data = null;
+                return false;
+            }
+            if(data.MonsterId == null)
+            {
+                data.MonsterId = id;
+            }
+            return true;
+        }
         public static string ChangeSpawnSound(string value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.SpawnSound == null) ? value : data.SpawnSound;
+            return (!TryGetData(m, out var data) || data.SpawnSound == null) ? value : data.SpawnSound;
         }
         public static string ChangeDamageSound(string value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.DamageSound == null) ? value : (value == "rockGolemHit" && m is Bat ? data.DeathSound ?? value : data.DamageSound);
+            return (!TryGetData(m, out var data) || data.DamageSound == null) ? value : (value == "rockGolemHit" && m is Bat ? data.DeathSound ?? value : data.DamageSound);
         }
         public static string ChangeDamageSound2(string value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.DamageSound2 == null) ? value : data.DamageSound2;
+            return (!TryGetData(m, out var data) || data.DamageSound2 == null) ? value : data.DamageSound2;
         }
         public static string ChangeDeathSound(string value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.DeathSound == null) ? value : data.DeathSound;
+            return (!TryGetData(m, out var data) || data.DeathSound == null) ? value : data.DeathSound;
         }
         public static string ChangeDeathSound2(string value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.DeathSound2 == null) ? value : data.DeathSound2;
+            return (!TryGetData(m, out var data) || data.DeathSound2 == null) ? value : data.DeathSound2;
         }
         public static string ChangeMoveSound(string value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.MoveSound == null) ? value : data.MoveSound;
+            return (!TryGetData(m, out var data) || data.MoveSound == null) ? value : data.MoveSound;
         }
         public static string ChangeCrumbleSound(string value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.CrumbleSound == null) ? value : data.CrumbleSound;
+            return (!TryGetData(m, out var data) || data.CrumbleSound == null) ? value : data.CrumbleSound;
         }
         public static string ChangeUncrumbleSound(string value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.UncrumbleSound == null) ? value : data.UncrumbleSound;
+            return (!TryGetData(m, out var data) || data.UncrumbleSound == null) ? value : data.UncrumbleSound;
         }
         public static string ChangeHitSound(string value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.ShellSound == null) ? value : data.ShellSound;
+            return (!TryGetData(m, out var data) || data.ShellSound == null) ? value : data.ShellSound;
         }
         public static string ChangeBreakSound(string value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.BreakSound == null) ? value : data.BreakSound;
+            return (!TryGetData(m, out var data) || data.BreakSound == null) ? value : data.BreakSound;
         }
         public static int ChangeReviveTimer(int value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.ReviveTimer == null) ? value : data.ReviveTimer.Value;
+            return (!TryGetData(m, out var data) || data.ReviveTimer == null) ? value : data.ReviveTimer.Value;
+        }
+        public static float ChangeChildhoodLength(float value, Monster m)
+        {
+            return (!TryGetData(m, out var data) || data.ChildhoodLength == null) ? value : data.ChildhoodLength.Value;
         }
         public static string ChangeSpritePath(string value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.Sprite == null) ? value : data.Sprite;
+            return (!TryGetData(m, out var data) || data.Sprite == null) ? value : data.Sprite;
         }
         public static string ChangeMoveSound2(string value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.MoveSound2 == null) ? value : data.MoveSound2;
+            return (!TryGetData(m, out var data) || data.MoveSound2 == null) ? value : data.MoveSound2;
         }
         public static string ChangeProjectileSound(string value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.ProjectileSound == null) ? value : data.ProjectileSound;
+            return (!TryGetData(m, out var data) || data.ProjectileSound == null) ? value : data.ProjectileSound;
         }
         public static string ChangeProjectileSound2(string value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.ProjectileSound2 == null) ? value : data.ProjectileSound2;
+            return (!TryGetData(m, out var data) || data.ProjectileSound2 == null) ? value : data.ProjectileSound2;
         }
         public static string ChangeProjectileDebuff(string value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.ProjectileDebuff == null) ? value : data.ProjectileDebuff;
+            return (!TryGetData(m, out var data) || data.ProjectileDebuff == null) ? value : data.ProjectileDebuff;
         }
         public static int ChangeProjectileDamage(int value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.ProjectileDamage == null) ? value : data.ProjectileDamage.Value;
+            return (!TryGetData(m, out var data) || data.ProjectileDamage == null) ? value : data.ProjectileDamage.Value;
         }
         public static int ChangeProjectileCount(int value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.ProjectileCount == null) ? value : data.ProjectileCount.Value;
+            return (!TryGetData(m, out var data) || data.ProjectileCount == null) ? value : data.ProjectileCount.Value;
         }
+
         public static float ChangeProjectileTimer(float value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.ProjectileTimer == null) ? value : data.ProjectileTimer.Value;
+            return (!TryGetData(m, out var data) || data.ProjectileTimer == null) ? value : data.ProjectileTimer.Value;
         }
         public static int ChangeProjectileDamage2(int value, DinoMonster.BreathProjectile bp)
         {
@@ -93,35 +111,59 @@ namespace CustomMonsters
         }
         public static int ChangeProjectileIndex(int value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.ProjectileIndex == null) ? value : data.ProjectileIndex.Value;
+            return (!TryGetData(m, out var data) || data.ProjectileIndex == null) ? value : data.ProjectileIndex.Value;
         }
         public static string ChangeArmorSound(string value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.ArmorSound == null) ? value : data.ArmorSound;
+            return (!TryGetData(m, out var data) || data.ArmorSound == null) ? value : data.ArmorSound;
         }
         public static Color ChangeSprinkleColor(Color value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.SprinkleColor == null) ? value : MakeColor(data.SprinkleColor);
+            return (!TryGetData(m, out var data) || data.SprinkleColor == null) ? value : MakeColor(data.SprinkleColor);
         }
         public static int ChangeLightType(int value, Monster m)
         {
-            return (!Config.ModEnabled || !m.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data) || data.LightType == -1) ? value : data.LightType;
+            return (!TryGetData(m, out var data) || data.LightType == -1) ? value : data.LightType;
         }
-        public static Color MakeColor(string value)
+        public static Color MakeColor(MonsterData data)
         {
             try
             {
-                return new Color(
-                    int.Parse(value.Substring(1, 2), System.Globalization.NumberStyles.HexNumber),
-                    int.Parse(value.Substring(3, 2), System.Globalization.NumberStyles.HexNumber),
-                    int.Parse(value.Substring(5, 2), System.Globalization.NumberStyles.HexNumber)
-                );
+                if(data.Colors != null)
+                {
+                    int maxWeight = data.Colors.Sum(c => c.Chance);
+                    int cumWeight = 0;
+                    int chance = Game1.random.Next(maxWeight);
+                    foreach(var c in data.Colors)
+                    {
+                        cumWeight += c.Chance;
+                        if(chance < cumWeight) 
+                        {
+                            return new Color((byte)Game1.random.Next(c.R.Min, c.R.Max + 1),(byte)Game1.random.Next(c.G.Min, c.G.Max + 1),(byte)Game1.random.Next(c.B.Min, c.B.Max + 1));
+                        }
+                    }
+                }
+                else if(data.Color.StartsWith("#") && data.Color.Length == 7)
+                {
+                    return MakeColor(data.Color);
+                }
             }
             catch
             {
                 return Color.White;
             }
+            return Color.White;
         }
+
+        private static Color MakeColor(string color)
+        {
+            return new Color(
+                int.Parse(color.Substring(1, 2), System.Globalization.NumberStyles.HexNumber),
+                int.Parse(color.Substring(3, 2), System.Globalization.NumberStyles.HexNumber),
+                int.Parse(color.Substring(5, 2), System.Globalization.NumberStyles.HexNumber)
+            );
+        }
+
         public static Monster GetSpawnMonster(Monster old, string newId, List<MonsterSpawnData> list, int level, Vector2 position)
         {
             if (old == null)
@@ -170,7 +212,7 @@ namespace CustomMonsters
                         parameters.Add(data.Name);
                         break;
                     case "color":
-                        parameters.Add(MakeColor(data.Color));
+                        parameters.Add(MakeColor(data));
                         break;
                     case "switch":
                         parameters.Add(data.Switch);
@@ -206,6 +248,10 @@ namespace CustomMonsters
             if (data.Scale > -1)
             {
                 monster.Scale = data.Scale;
+            }
+            if (data.MissChance > -1)
+            {
+                monster.missChance.Value = data.MissChance / 100.0;
             }
             if (data.Slipperiness > -1)
             {
@@ -290,9 +336,9 @@ namespace CustomMonsters
                         }
                     }
                 }
-                if (data.Color != null)
+                if (data.Colors != null || data.Color != null)
                 {
-                    bs.c.Value = MakeColor(data.Color);
+                    bs.c.Value = MakeColor(data);
                 }
                 return bs;
             }
@@ -322,9 +368,9 @@ namespace CustomMonsters
             }
             else if (monster is GreenSlime gs)
             {
-                if (data.Color != null)
+                if (data.Colors != null || data.Color != null)
                 {
-                    gs.color.Value = MakeColor(data.Color);
+                    gs.color.Value = MakeColor(data);
                 }
                 if (data.MinStacks > -1 && data.MaxStacks > -1)
                 {
@@ -338,9 +384,9 @@ namespace CustomMonsters
             }
             else if (monster is MetalHead mh)
             {
-                if (data.Color != null)
+                if (data.Colors != null || data.Color != null)
                 {
-                    mh.c.Value = MakeColor(data.Color);
+                    mh.c.Value = MakeColor(data);
                 }
                 return mh;
             }

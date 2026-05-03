@@ -60,7 +60,18 @@ The facing direction (0 = up, 1 = right, 2 = down, 3 = left). For Spikers it's t
 ### Name
 The custom subtype used for certain monsters, e.g. Serpent has "Royal Serpent". Will be passed to constructors with "name" parameter.
 ### Color
-The color used for certain monsters, e.g. slimes. Will be passed to constructors with "color" parameter.
+The color used for certain monsters, e.g. slimes. Will be passed to constructors with "color" parameter but will affect GreenSlimes, BigSlimes, and MetalHeads no matter the constructor used. Must be in the hex-based format "#RRGGBB". E.g. "#FF0000" for red.
+### Colors
+Alternatively, a list of colors to randomly choose from for each monster instance. Will be passed to constructors with "color" parameter but will affect GreenSlimes, BigSlimes, and MetalHeads no matter the constructor used. Format for each entry in the list should be:
+	"Colors":[
+		{
+			"R":255,
+			"G":0,
+			"B":0,
+			"Chance":10
+		}
+	]
+R, G, and B are the red, green, and blue values for the color (0-255). Chance is the comparative weighted chance of each color when choosing.
 ### Switch
 A type dependent true or false value. Does very different things for different types. See the constructor data for more info. Will be passed to constructors with "switch" parameter.
 
@@ -80,6 +91,8 @@ monster speed.
 experience gained for killing the monster.
 ### Resilience
 monster resilience - reduces damage taken.
+### MissChance
+percent chance to miss monster when attacking.
 
 ### Jitteriness
 monster jitteriness - causes them to change direction.
@@ -211,6 +224,8 @@ whether the bug is armored.
 minimum number of stacked slimes.
 ### MaxStacks
 maximum number of stacked slimes.
+### ChildhoodLength
+how long until a baby grows up (this value is halved every day until it reaches 0).
 
 
 ## Mummy specific

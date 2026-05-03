@@ -46,7 +46,7 @@ namespace CustomMonsters
 				var mi = t.GetMethod("getExtraDropItems");
                 if (mi != null && mi.DeclaringType == t)
 				{
-					harmony.Patch(mi, prefix: new HarmonyMethod(typeof(ModEntry), nameof(GetExtraDropItemsPrefix)));
+					harmony.Patch(mi, postfix: new HarmonyMethod(typeof(ModEntry), nameof(GetExtraDropItemsPostfix)));
                 }
 				mi = t.GetMethod("reloadSprite");
                 if (mi != null && mi.DeclaringType == t)
