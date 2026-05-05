@@ -717,9 +717,10 @@ namespace CustomMonsters
                     return;
                 foreach (var kvp in Monsters.Where(kvp => kvp.Value.MineSpawns != null))
                 {
-                    __result = GetSpawnMonster(__result, kvp.Key, kvp.Value.MineSpawns, level, new Vector2(xTile, yTile) * 64);
-                    if (__result != null)
+                    var monster = GetSpawnMonster(__result, kvp.Key, kvp.Value.MineSpawns, level, new Vector2(xTile, yTile) * 64);
+                    if (monster != null)
                     {
+                        __result = monster;
                         SMonitor.Log($"Spawning monster {kvp.Key} at mine level {level}");
                         return;
                     }

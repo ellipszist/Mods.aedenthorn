@@ -172,10 +172,7 @@ namespace CustomMonsters
             if (spawnData != default && Game1.random.NextDouble() < spawnData.Chance / 100.0)
             {
                 var m = CreateMonster(newId, position);
-                if (m != null)
-                {
-                    return m;
-                }
+                return m;
             }
             return null;
         }
@@ -222,12 +219,23 @@ namespace CustomMonsters
                         break;
                 }
             }
-            if (type.GetConstructor(parameters.Select(p => p.GetType()).ToArray()) == null)
+            Monster monster = null;
+            try
             {
-                SMonitor.Log($"Invalid parameters for monster type {data.Type} {string.Join(",", parameters.Select(p => p.GetType()))}", LogLevel.Warn);
-                return null;
+                monster = (Monster)Activator.CreateInstance(type, parameters.ToArray());
             }
-            var monster = (Monster)Activator.CreateInstance(type, parameters.ToArray());
+            catch
+            {
+                if(parameters.Count == 1 && parameters[0] is Vector2)
+                {
+                    monster = (Monster)Activator.CreateInstance(type, new object[] { });
+                }
+                else
+                {
+                    SMonitor.Log($"Failed to create monster of type {data.Type} with parameters {string.Join(",", parameters)}", LogLevel.Warn);
+                    return null;
+                }
+            }
             if (!parameters.Any())
             {
                 monster.Position = position;
@@ -372,9 +380,20 @@ namespace CustomMonsters
                 {
                     gs.color.Value = MakeColor(data);
                 }
-                if (data.MinStacks > -1 && data.MaxStacks > -1)
+                if (data.Stacks != null)
                 {
-                    gs.stackedSlimes.Value = Game1.random.Next(data.MinStacks, data.MaxStacks + 1);
+                    int totalWeight = data.Stacks.Sum(s => s.Chance);
+                    int roll = Game1.random.Next(0, totalWeight);
+                    int cumulativeWeight = 0;
+                    foreach (var  stack in data.Stacks)
+                    {
+                        cumulativeWeight += stack.Chance;
+                        if (cumulativeWeight < totalWeight)
+                        {
+                            gs.stackedSlimes.Value = stack.Stacks;
+                            break;
+                        }
+                    }
                 }
                 if (data.HideShadow != null)
                 {

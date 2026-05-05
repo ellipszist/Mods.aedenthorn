@@ -103,8 +103,6 @@ an index for the vanilla light type used by certain monsters (not really impleme
 
 ### HideShadow
 whether to hide the monster's shadow.
-### ShakeTimer
-how long to shake a monster (bats).
 ### Drops
 a list of items to replace the base type's item drops. Each item takes the following fields:
 
@@ -220,10 +218,29 @@ whether the bug is armored.
 
 ## GreenSlime specific
 
-### MinStacks
-minimum number of stacked slimes.
-### MaxStacks
-maximum number of stacked slimes.
+### Stacks
+a list of possible stack sizes for the slime to spawn with. Each entry takes the following fields:
+- Chance - weight for the slime to spawn with this stack size (relative to the other entries in the list).
+- Stacks - the number of stacks for the slime to spawn with.
+
+e.g.
+		  "Stacks":[
+			  {
+				  "Chance":4,
+				  "Stacks":1
+			  },
+			  {
+				  "Chance":3,
+				  "Stacks":2
+			  },
+			  {
+				  "Chance":1,
+				  "Stacks":3
+			  }
+		  ]
+
+This makes it so the slime has a 4/8 chance to spawn with 1 stack, a 3/8 chance to spawn with 2 stacks, and a 1/8 chance to spawn with 3 stacks (since total of all chances is 8).
+
 ### ChildhoodLength
 how long until a baby grows up (this value is halved every day until it reaches 0).
 

@@ -75,8 +75,7 @@ namespace CustomMonsters
         public bool? Armored { get; set; }
 
         // GreenSlime specific
-        public int MinStacks { get; set; } = -1;
-        public int MaxStacks { get; set; } = -1;
+        public List<StackData> Stacks { get; set; }
         public int? ChildhoodLength { get; set; }
 
         // Mummy specific
@@ -111,6 +110,12 @@ namespace CustomMonsters
         public int? ProjectileCount { get; set; }
         public float? ProjectileTimer { get; set; }
 
+    }
+
+    public class StackData
+    {
+        public int Chance { get; set; }
+        public int Stacks { get; set; }
     }
 
     public class MonsterSpawnData
