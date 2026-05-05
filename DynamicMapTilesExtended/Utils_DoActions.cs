@@ -3,9 +3,12 @@ using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using StardewValley;
 using StardewValley.Extensions;
+using StardewValley.GameData.MakeoverOutfits;
+using StardewValley.ItemTypeDefinitions;
 using StardewValley.Monsters;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
+using System.Numerics;
 using System.Reflection;
 using xTile.Dimensions;
 using xTile.Layers;
@@ -361,6 +364,126 @@ namespace DMT
             foreach (var item in value.Split('|'))
             {
                 who.removeQuest(item);
+            }
+        }
+
+        public static void DoMakeover(Farmer? who, string value, bool gendered, bool required, bool replace)
+        {
+            if (who == null)
+                return;
+            string[] outfits = value.Split("|");
+            List<MakeoverOutfit?> makeoverOutfits = outfits.Select(o => DataLoader.MakeoverOutfits(Game1.content).FirstOrDefault(m => m.Id == o)).ToList();
+            if (makeoverOutfits.Count != outfits.Length)
+            {
+                SMonitor.Log($"[{nameof(Actions)}.{nameof(DoMakeover)}] Makeover outfits don't match; requested: {value}, got {string.Join("|", makeoverOutfits.Select(o => o.Id))}", LogLevel.Warn);
+                return;
+            }
+            MakeoverOutfit? selectedOutfit;
+            if (gendered)
+            {
+                selectedOutfit = makeoverOutfits[(int)Game1.player.Gender];
+                if(selectedOutfit.Gender is Gender g && g != Game1.player.Gender)
+                {
+                    SMonitor.Log($"[{nameof(DoMakeover)}] Makeover outfit {makeoverOutfits.ElementAt((int)Game1.player.Gender).Id} is not valid for the player's gender", LogLevel.Warn);
+                    return;
+                }
+            }
+            else
+            {
+                for (int i = makeoverOutfits.Count -1; i >= 0; i--)
+                {
+                    var outfit = makeoverOutfits[i];
+                    if (outfit.Gender is Gender g && g != Game1.player.Gender)
+                    {
+                        makeoverOutfits.RemoveAt(i);
+                        continue;
+                    }
+                    foreach (MakeoverItem outfitPart in outfit.OutfitParts)
+                    {
+                        if (!outfitPart.MatchesGender(Game1.player.Gender))
+                        {
+                            makeoverOutfits.RemoveAt(i);
+                            break;
+                        }
+                    }
+                }
+                if (makeoverOutfits.Count == 0)
+                {
+                    SMonitor.Log($"[{nameof(DoMakeover)}] No valid makeover outfits found for player gender", LogLevel.Warn);
+                    return;
+                }
+                selectedOutfit = Game1.random.ChooseFrom(makeoverOutfits);
+            }
+            if (selectedOutfit == null)
+            {
+                SMonitor.Log($"[{nameof(DoMakeover)}] Selected makeover outfit is invalid", LogLevel.Warn);
+                return;
+            }
+            Farmer player = Game1.player;
+
+            if (selectedOutfit.OutfitParts == null)
+                return;
+
+            SMonitor.Log($"[{nameof(DoMakeover)}] Applying makeover outfit {selectedOutfit.Id}");
+
+            bool appliedHat = false;
+            bool appliedShirt = false;
+            bool appliedPants = false;
+            foreach (MakeoverItem part in selectedOutfit.OutfitParts)
+            {
+                if (part.MatchesGender(Game1.player.Gender))
+                {
+                    Item? item = required ? Game1.player.Items.GetById(part.ItemId).FirstOrDefault() : ItemRegistry.Create(part.ItemId, 1, 0, false);
+                    if (item == null)
+                        continue;
+                    if (required)
+                    {
+                        Game1.player.removeItemFromInventory(item);
+                    }
+                    if (item is Hat hat)
+                    {
+                        if (!appliedHat)
+                        {
+                            var oldHat = player.Equip<Hat>(hat, player.hat);
+                            if (!replace)
+                                ReturnClothes(oldHat);
+                            appliedHat = true;
+                        }
+                    }
+                    else if (item is Clothing clothing)
+                    {
+                        Color? color = Utility.StringToColor(part.Color);
+                        if (color != null)
+                        {
+                            clothing.clothesColor.Value = color.Value;
+                        }
+                        Clothing.ClothesType type = clothing.clothesType.Value;
+                        if (type == Clothing.ClothesType.PANTS && !appliedPants)
+                        {
+                            var oldPants = player.Equip<Clothing>(clothing, player.pantsItem);
+                            if (!replace)
+                                ReturnClothes(oldPants);
+                            appliedPants = true;
+                        }
+                        else if (type == Clothing.ClothesType.SHIRT && !appliedShirt)
+                        {
+                            var oldShirt = player.Equip<Clothing>(clothing, player.shirtItem);
+                            if (!replace)
+                                ReturnClothes(oldShirt);
+                            appliedShirt = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void ReturnClothes(Item oldItem)
+        {
+            Item clothes = Utility.PerformSpecialItemGrabReplacement(oldItem);
+            if (clothes != null && Game1.player.addItemToInventory(clothes) != null)
+            {
+                Game1.player.team.returnedDonations.Add(clothes);
+                Game1.player.team.newLostAndFoundItems.Value = true;
             }
         }
 

@@ -174,9 +174,13 @@ namespace DMT
             {
                 for (int i = 1; i < key.Length - 1; i++) // first is the action, last is the trigger
                 {
-                    if (key[i].StartsWith("Once", StringComparison.OrdinalIgnoreCase))
+                    if (key[i].Equals("Once", StringComparison.OrdinalIgnoreCase))
                     {
                         prop.Once = true;
+                    }
+                    else if (key[i].Equals("Swap", StringComparison.OrdinalIgnoreCase))
+                    {
+                        prop.Swap = true;
                     }
                     else if (key[i].StartsWith("Invalidate", StringComparison.OrdinalIgnoreCase))
                     {
@@ -299,7 +303,15 @@ namespace DMT
                         continue;
 
                     if (prop.Once)
+                    {
                         tile.Properties.Remove(key);
+                    }
+                    else if (prop.Swap && tile.Properties.TryGetValue("Swap" + key, out var swap))
+                    {
+                        var old = tile.Properties[key];
+                        tile.Properties[key] = swap;
+                        tile.Properties["Swap" + key] = old;
+                    }
 
                     properties.Add(new(prop, tile));
                 }

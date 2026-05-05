@@ -79,6 +79,9 @@ namespace DMT
                         case Actions.FertilizeKey:
                             DoFertilize(location, value);
                             break;
+                        case Actions.FriendsKey:
+                            DoFriendshipChange(who, value);
+                            break;
                         case Actions.GrowCropKey:
                             DoGrowCrop(location, value);
                             break;
@@ -108,6 +111,12 @@ namespace DMT
                             break;
                         case Actions.MailRemoveKey:
                             DoRemoveMailflag(who, value);
+                            break;;
+                        case Actions.MakeoverKey:
+                            DoMakeover(who, value, false, false, false);
+                            break;
+                        case Actions.MakeoverGenderedKey:
+                            DoMakeover(who, value, true, false, false);
                             break;
                         case Actions.MessageKey:
                             DoShowMessage(value);
@@ -151,11 +160,20 @@ namespace DMT
                         case Actions.TeleportTileKey:
                             DoTeleportTile(who, value);
                             break;
+                        case Actions.TransmogKey:
+                            DoMakeover(who, value, false, false, true);
+                            break;
+                        case Actions.TransmogGenderedKey:
+                            DoMakeover(who, value, true, false, true);
+                            break;
                         case Actions.WarpKey:
                             DoWarp(who, value);
                             break;
-                        case Actions.FriendsKey:
-                            DoFriendshipChange(who, value);
+                        case Actions.WardrobeKey:
+                            DoMakeover(who, value, false, true, false);
+                            break;
+                        case Actions.WardrobeGenderedKey:
+                            DoMakeover(who, value, true, true, false);
                             break;
                         default:
                             if (Actions.ModKeys.Contains(item.prop.key))

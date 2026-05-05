@@ -36,6 +36,12 @@
             get => once;
             set => once = value;
         }
+        public bool swap = false;
+        public bool Swap
+        {
+            get => swap;
+            set => swap = value;
+        }
         public string invalidate = "None";
         public string Invalidate
         {

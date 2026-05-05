@@ -20,7 +20,7 @@ namespace CraftableBalloons
         public static string balloonKey = "aedenthorn.CraftableBalloons_balloon";
         public static string balloonPath = "aedenthorn.CraftableBalloons/balloon";
         public static string colorKey = "aedenthorn.CraftableBalloons/color";
-        public static Dictionary<long, (Vector2 pos, Point vel)> farmerMovement = new Dictionary<long, (Vector2 pos, Point vel)>();
+        public static Dictionary<Character, (Vector2 pos, Point vel)> characterMovement = new Dictionary<Character, (Vector2 pos, Point vel)>();
         public override void Entry(IModHelper helper)
 		{
 			Config = Helper.ReadConfig<ModConfig>();
@@ -38,18 +38,21 @@ namespace CraftableBalloons
 			harmony.PatchAll();
         }
 
+
         private void GameLoop_UpdateTicked(object sender, StardewModdingAPI.Events.UpdateTickedEventArgs e)
         {
+            if (!Config.ModEnabled || !Context.IsWorldReady)
+                return;
             foreach(var farmer in Game1.getAllFarmers())
             {
-                if(farmer.currentLocation != Game1.currentLocation || farmer.ActiveObject?.ItemId != balloonKey)
+                if(farmer.currentLocation != Game1.currentLocation || !TryGetBalloonColor(farmer, out var color))
                 {
-                    farmerMovement.Remove(farmer.UniqueMultiplayerID);
+                    characterMovement.Remove(farmer);
                     continue;
                 }
-                if (!farmerMovement.TryGetValue(farmer.UniqueMultiplayerID, out var data))
+                if (!characterMovement.TryGetValue(farmer, out var data))
                 {
-                    farmerMovement[farmer.UniqueMultiplayerID] = (farmer.Position, Point.Zero);
+                    characterMovement[farmer] = (farmer.Position, Point.Zero);
                 }
                 else
                 {
@@ -59,7 +62,29 @@ namespace CraftableBalloons
                     newVel = data.vel + newVel;
                     newVel = new Point(MathHelper.Clamp(newVel.X, -max, max), MathHelper.Clamp(newVel.Y, -max, max));
                     newVel -= new Point(Math.Sign(newVel.X) * 1, Math.Sign(newVel.Y) * 1);
-                    farmerMovement[farmer.UniqueMultiplayerID] = (farmer.Position, newVel);
+                    characterMovement[farmer] = (farmer.Position, newVel);
+                }
+            }
+            foreach(var npc in Game1.currentLocation.characters)
+            {
+                if(!TryGetBalloonColor(npc, out var color))
+                {
+                    characterMovement.Remove(npc);
+                    continue;
+                }
+                if (!characterMovement.TryGetValue(npc, out var data))
+                {
+                    characterMovement[npc] = (npc.Position, Point.Zero);
+                }
+                else
+                {
+                    int max = 40;
+                    Vector2 change = npc.Position - data.pos;
+                    Point newVel = change.ToPoint();
+                    newVel = data.vel + newVel;
+                    newVel = new Point(MathHelper.Clamp(newVel.X, -max, max), MathHelper.Clamp(newVel.Y, -max, max));
+                    newVel -= new Point(Math.Sign(newVel.X) * 1, Math.Sign(newVel.Y) * 1);
+                    characterMovement[npc] = (npc.Position, newVel);
                 }
             }
         }
@@ -117,7 +142,7 @@ namespace CraftableBalloons
                 e.Edit(asset =>
                 {
                     var dict = asset.AsDictionary<string, string>();
-                    dict.Data[balloonKey] = $"766 5 768 1 769 1/Home/aedenthorn.PortableFurnace_CopperFurnace/false/default/";
+                    dict.Data[balloonKey] = $"766 5 768 1 769 1/Home/{balloonKey}/false/default/";
                 });
             }
             else if (e.NameWithoutLocale.IsEquivalentTo(balloonPath))

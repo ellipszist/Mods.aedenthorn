@@ -250,12 +250,13 @@ namespace DMT
                 e.LoadFrom(() => new Dictionary<string, DynamicTile>(), AssetLoadPriority.Exclusive);
             if (e.NameWithoutLocale.IsEquivalentTo(AnimationDataDictPath))
                 e.LoadFrom(() => new Dictionary<string, List<Animation>>(), AssetLoadPriority.Exclusive);
-            if (e.NameWithoutLocale.IsEquivalentTo("Maps/Farm"))
+            if (Config.Debug && e.NameWithoutLocale.IsEquivalentTo("Maps/Town"))
                 e.Edit((IAssetData data) =>
                 {
-                    data.AsMap().Data.GetLayer("Back").Tiles[65, 19].Properties["DMT/setCrop_On"] = "65,19=483";
-                    data.AsMap().Data.GetLayer("Back").Tiles[65, 20].Properties["DMT/setCrop_On"] = "65,20=483,4";
-                    data.AsMap().Data.GetLayer("Back").Tiles[65, 21].Properties["DMT/setCrop_On"] = "65,21=483,-1";
+                    data.AsMap().Data.GetLayer("Back").Tiles[43, 58].Properties["DMT/makeoverGendered_Swap_On"] = "Beanie_SkullShirt_FarmerPants|Beanie_ClassyTop_Dress";
+                    data.AsMap().Data.GetLayer("Back").Tiles[43, 58].Properties["SwapDMT/makeoverGendered_Swap_On"] = "None_GraySuit_FarmerPants|LogoCap_SugarShirt_Skirt";
+                    data.AsMap().Data.GetLayer("Back").Tiles[44, 58].Properties["DMT/wardrobeGendered_Swap_On"] = "Beanie_SkullShirt_FarmerPants|Beanie_ClassyTop_Dress";
+                    data.AsMap().Data.GetLayer("Back").Tiles[44, 58].Properties["SwapDMT/wardrobeGendered_Swap_On"] = "None_GraySuit_FarmerPants|LogoCap_SugarShirt_Skirt";
                 });
         }
 

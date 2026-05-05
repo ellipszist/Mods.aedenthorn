@@ -2,15 +2,26 @@
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Objects;
 using System;
 
 namespace CraftableBalloons
 {
     public partial class ModEntry : Mod
     {
-        public static Color MakeColor(string v)
+        public static Color GetDisplayColor(string hex)
         {
-            return v.StartsWith("#") && v.Length == 7 ? new Color(Convert.ToByte(v.Substring(1, 2), 16), Convert.ToByte(v.Substring(3, 2), 16), Convert.ToByte(v.Substring(5, 2), 16)) : Color.White;
+            var color = GetColor(hex);
+            if(color == new Color(6, 6, 6))
+            {
+                color = Utility.GetPrismaticColor();
+            }
+            return color;
+        }
+        public static Color GetColor(string hex)
+        {
+            var color = hex.StartsWith("#") && hex.Length == 7 ? new Color(Convert.ToByte(hex.Substring(1, 2), 16), Convert.ToByte(hex.Substring(3, 2), 16), Convert.ToByte(hex.Substring(5, 2), 16)) : Color.White;
+            return color;
         }
         public static string MakeColorString(Color color)
         {
@@ -32,6 +43,7 @@ namespace CraftableBalloons
 
                 right = MathHelper.Clamp(vel.X / div, -max, max);
                 height -= Math.Abs(up);
+                height += (int)Math.Round(Math.Sin(Game1.ticks / 4f));
                 segments = Math.Min(Math.Abs(right) + 1, height);
             }
             else
@@ -63,16 +75,39 @@ namespace CraftableBalloons
                     break;
             }
             Vector2 pos = Game1.GlobalToLocal(position + offset);
-            b.Draw(tex, pos, new Rectangle(0, 16, 16, 16), color, 0f, Vector2.Zero, 4f, SpriteEffects.None, drawOffset);
-            b.Draw(tex, pos, new Rectangle(16, 0, 16, 16), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, drawOffset + 1/10000f);
-            b.Draw(tex, pos + new Vector2(0, 64), new Rectangle(16, 16, 16, 1), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, drawOffset);
+            offset = new Vector2(32 - right * 2, 32 + Math.Abs(right * 2));
+            Vector2 origin = new Vector2(8f, 8f);
+            
+            float rot = -right / 12f;
+            b.Draw(tex, pos + offset, new Rectangle(0, 16, 16, 16), color, rot, origin, 4f, SpriteEffects.None, drawOffset);
+            b.Draw(tex, pos + offset, new Rectangle(16, 0, 16, 16), Color.White, rot, origin, 4f, SpriteEffects.None, drawOffset + 1/10000f);
+            b.Draw(tex, pos + new Vector2(0, 64), new Rectangle(16, 16, 16, 1), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, drawOffset - 1 / 10000f);
 
             int segmentHeight = (int)Math.Max(height / (float)segments, 1);
             for(int i = 0; i < segments; i++)
             {
-                b.DrawString(Game1.dialogueFont, $"{segments}, {segmentHeight}, {height}", Vector2.Zero, Color.White);
-                b.Draw(tex, pos + new Vector2(i * 4 * Math.Sign(right), 68 + segmentHeight * i * 4), new Rectangle(16, 17, 16, segmentHeight), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, drawOffset);
+                //b.DrawString(Game1.dialogueFont, $"{segments}, {segmentHeight}, {height}", Vector2.Zero, Color.White);
+                b.Draw(tex, pos + new Vector2((i + 1) * 4 * Math.Sign(right), 68 + segmentHeight * i * 4), new Rectangle(16, 17, 16, segmentHeight), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, drawOffset - 1 / 10000f);
             }
+        }
+        public static bool TryGetBalloonColor(Character character, out Color color)
+        {
+            if (character is Farmer f && f.ActiveObject is ColoredObject c && c.ItemId == balloonKey)
+            {
+                color = c.color.Value;
+                if (color == new Color(6, 6, 6))
+                    color = Utility.GetPrismaticColor();
+            }
+            else if (character.modData.TryGetValue(colorKey, out var str))
+            {
+                color = GetDisplayColor(str);
+            }
+            else
+            {
+                color = Color.White;
+                return false;
+            }
+            return true;
         }
     }
 }

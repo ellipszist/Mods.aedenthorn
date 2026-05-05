@@ -31,6 +31,8 @@ namespace DMT.Data
         public const string MailBoxKey = "DMT/mailbox";
         public const string MailKey = "DMT/mail";
         public const string MailRemoveKey = "DMT/mailRemove";
+        public const string MakeoverKey = "DMT/makeover";
+        public const string MakeoverGenderedKey = "DMT/makeoverGendered";
         public const string MessageKey = "DMT/message";
         public const string MonsterKey = "DMT/monster";
         public const string MoveKey = "DMT/move";
@@ -51,7 +53,11 @@ namespace DMT.Data
         public const string TeleportKey = "DMT/teleport";
         public const string TeleportTileKey = "DMT/teleportTile";
         public const string TakeKey = "DMT/take";
+        public const string TransmogKey = "DMT/transmog";
+        public const string TransmogGenderedKey = "DMT/transmogGendered";
         public const string WarpKey = "DMT/warp";
+        public const string WardrobeKey = "DMT/wardrobe";
+        public const string WardrobeGenderedKey = "DMT/wardrobeGendered";
 
         private static List<string?> allActions;
 
