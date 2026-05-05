@@ -62,16 +62,32 @@ The custom subtype used for certain monsters, e.g. Serpent has "Royal Serpent". 
 ### Color
 The color used for certain monsters, e.g. slimes. Will be passed to constructors with "color" parameter but will affect GreenSlimes, BigSlimes, and MetalHeads no matter the constructor used. Must be in the hex-based format "#RRGGBB". E.g. "#FF0000" for red.
 ### Colors
-Alternatively, a list of colors to randomly choose from for each monster instance. Will be passed to constructors with "color" parameter but will affect GreenSlimes, BigSlimes, and MetalHeads no matter the constructor used. Format for each entry in the list should be:
+Alternatively, a list of colors to randomly choose from for each monster instance. Will be passed to constructors with "color" parameter but will affect GreenSlimes, BigSlimes, and MetalHeads no matter the constructor used. Each entry has a Chance field for comparative weight of the entry, and can have either a "Color" field with a hex-based format above or R, G, and B fields with Min and Max values. E.g.:
 	"Colors":[
 		{
-			"R":255,
-			"G":0,
-			"B":0,
+			"Color":"#FF0000",
+			"Chance":10
+		},
+		{
+			"R":
+			{
+				"Min":200,
+				"Max":255,
+			},
+			"G":
+			{
+				"Min":0,
+				"Max":0,
+			},
+			"B":
+			{
+				"Min":0,
+				"Max":0,
+			},
 			"Chance":10
 		}
 	]
-R, G, and B are the red, green, and blue values for the color (0-255). Chance is the comparative weighted chance of each color when choosing.
+R, G, and B are the red, green, and blue values for the color, and Min and Max can be between 0 and 255. 
 ### Switch
 A type dependent true or false value. Does very different things for different types. See the constructor data for more info. Will be passed to constructors with "switch" parameter.
 
@@ -144,6 +160,8 @@ sound made when hitting the armor of some monster types (e.g. bugs)
 sound to play when the monster dies.
 ### DeathSound2
 secondary sound on death in combination with the first for a few monsters.
+### ContactSound
+sound to play when contacting farmer (green slime).
 
 ### ProjectileSound
 sound when firing a projectile.
@@ -221,28 +239,35 @@ whether the bug is armored.
 ### Stacks
 a list of possible stack sizes for the slime to spawn with. Each entry takes the following fields:
 - Chance - weight for the slime to spawn with this stack size (relative to the other entries in the list).
-- Stacks - the number of stacks for the slime to spawn with.
+- MinStacks - min number of stacks for the slime to spawn with.
+- MaxStacks - max number of stacks for the slime to spawn with.
 
 e.g.
-		  "Stacks":[
-			  {
-				  "Chance":4,
-				  "Stacks":1
-			  },
-			  {
-				  "Chance":3,
-				  "Stacks":2
-			  },
-			  {
-				  "Chance":1,
-				  "Stacks":3
-			  }
-		  ]
+	"Stacks":[
+		{
+			"Chance":4,
+			"MinStacks":1,
+			"MaxStacks":1
+		},
+		{
+			"Chance":3,
+			"MinStacks":2,
+			"MaxStacks":3
+		},
+		{
+			"Chance":1,
+			"MinStacks":3,
+			"MaxStacks":5
+		}
+	]
 
-This makes it so the slime has a 4/8 chance to spawn with 1 stack, a 3/8 chance to spawn with 2 stacks, and a 1/8 chance to spawn with 3 stacks (since total of all chances is 8).
-
+This makes it so the slime has a 4/8 chance to spawn with 1 stack, a 3/8 chance to spawn with 2 - 3 stacks, and a 1/8 chance to spawn with 3 - 5 stacks (total of all chances is 8).
 ### ChildhoodLength
 how long until a baby grows up (this value is halved every day until it reaches 0).
+### Prismatic
+this will override the monster's color, making it prismatic instead. Also affects vanilla drops.
+### ContactDebuff
+the buff id applied to farmers hit by this monster.
 
 
 ## Mummy specific

@@ -78,6 +78,11 @@ namespace CustomMonsters
 				{
 					harmony.Patch(mi, transpiler: new HarmonyMethod(typeof(ModEntry), nameof(ChangeMoveSoundTranspiler)));
                 }
+				mi = t.GetMethod("onDealContactDamage");
+                if (mi != null && mi.DeclaringType == t)
+				{
+					harmony.Patch(mi, transpiler: new HarmonyMethod(typeof(ModEntry), nameof(ChangeContactSoundTranspiler)));
+                }
             }
         }
 

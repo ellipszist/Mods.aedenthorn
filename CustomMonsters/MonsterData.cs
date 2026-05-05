@@ -41,6 +41,7 @@ namespace CustomMonsters
         public string DamageSound2 { get; set; }
         public string DeathSound { get; set; }
         public string DeathSound2 { get; set; }
+        public string ContactSound { get; set; }
 
         public string ProjectileSound { get; set; }
         public string ProjectileSound2 { get; set; }
@@ -59,7 +60,7 @@ namespace CustomMonsters
         public string SprinkleColor { get; set; }
 
 
-        // bat specific
+        // Bat specific
         public bool CanLunge { get; set; } = false;
         public bool CursedDoll { get; set; } = false;
         public bool HauntedSkull { get; set; } = false;
@@ -77,6 +78,8 @@ namespace CustomMonsters
         // GreenSlime specific
         public List<StackData> Stacks { get; set; }
         public int? ChildhoodLength { get; set; }
+        public bool? Prismatic { get; set; }
+        public string ContactDebuff { get; set; }
 
         // Mummy specific
         public string CrumbleSound { get; set; }
@@ -115,7 +118,8 @@ namespace CustomMonsters
     public class StackData
     {
         public int Chance { get; set; }
-        public int Stacks { get; set; }
+        public int MinStacks { get; set; }
+        public int MaxStacks { get; set; }
     }
 
     public class MonsterSpawnData
@@ -137,6 +141,7 @@ namespace CustomMonsters
 
     public class ColorData
     {
+        public string Color { get; set; }
         public ColorChannel R { get; set; }
         public ColorChannel G { get; set; }
         public ColorChannel B { get; set; }

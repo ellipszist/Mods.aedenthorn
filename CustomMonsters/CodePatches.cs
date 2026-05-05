@@ -103,6 +103,22 @@ namespace CustomMonsters
             return codes.AsEnumerable();
         }
 
+        public static IEnumerable<CodeInstruction> ChangeContactSoundTranspiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var codes = new List<CodeInstruction>(instructions);
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (codes[i].opcode == OpCodes.Ldstr && new string[] { "slime" }.Contains((string)codes[i].operand))
+                {
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeContactSound))));
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                    break;
+                }
+            }
+
+            return codes.AsEnumerable();
+        }
+
         public static bool ReloadSpritePrefix(Monster __instance)
         {
             if (!__instance.modData.TryGetValue(monsterKey, out var id) || !Monsters.TryGetValue(id, out var data))
@@ -285,6 +301,28 @@ namespace CustomMonsters
                     {
                         SMonitor.Log($"adding method for move sound");
                         codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeMoveSound))));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                        break;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+        [HarmonyPatch(typeof(GreenSlime), nameof(GreenSlime.onDealContactDamage))]
+        public static class GreenSlime_onDealContactDamage_Patch
+        {
+
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling GreenSlime.onDealContactDamage");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Ldstr && (string)codes[i].operand == "13")
+                    {
+                        SMonitor.Log($"adding method for contact debuff");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ChangeContactDebuff))));
                         codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
                         break;
                     }

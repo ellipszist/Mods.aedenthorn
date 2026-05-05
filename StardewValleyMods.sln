@@ -675,6 +675,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedPerfection", "SharedP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VideoMovies", "VideoMovies\VideoMovies.csproj", "{909EBC4D-29C5-9910-1704-9F07E38BC19A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlinkTeleport", "BlinkTeleport\BlinkTeleport.csproj", "{D448DBB6-57D2-E917-4E97-6D8DF08971D6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CraftableBalloons", "CraftableBalloons\CraftableBalloons.csproj", "{19F16415-C473-DB15-1A30-02710B7A251D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3339,6 +3343,22 @@ Global
 		{909EBC4D-29C5-9910-1704-9F07E38BC19A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{909EBC4D-29C5-9910-1704-9F07E38BC19A}.Release|x64.ActiveCfg = Release|Any CPU
 		{909EBC4D-29C5-9910-1704-9F07E38BC19A}.Release|x64.Build.0 = Release|Any CPU
+		{D448DBB6-57D2-E917-4E97-6D8DF08971D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D448DBB6-57D2-E917-4E97-6D8DF08971D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D448DBB6-57D2-E917-4E97-6D8DF08971D6}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D448DBB6-57D2-E917-4E97-6D8DF08971D6}.Debug|x64.Build.0 = Debug|Any CPU
+		{D448DBB6-57D2-E917-4E97-6D8DF08971D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D448DBB6-57D2-E917-4E97-6D8DF08971D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D448DBB6-57D2-E917-4E97-6D8DF08971D6}.Release|x64.ActiveCfg = Release|Any CPU
+		{D448DBB6-57D2-E917-4E97-6D8DF08971D6}.Release|x64.Build.0 = Release|Any CPU
+		{19F16415-C473-DB15-1A30-02710B7A251D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19F16415-C473-DB15-1A30-02710B7A251D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19F16415-C473-DB15-1A30-02710B7A251D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{19F16415-C473-DB15-1A30-02710B7A251D}.Debug|x64.Build.0 = Debug|Any CPU
+		{19F16415-C473-DB15-1A30-02710B7A251D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19F16415-C473-DB15-1A30-02710B7A251D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19F16415-C473-DB15-1A30-02710B7A251D}.Release|x64.ActiveCfg = Release|Any CPU
+		{19F16415-C473-DB15-1A30-02710B7A251D}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

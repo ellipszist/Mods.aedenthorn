@@ -1,0 +1,10 @@
+﻿{
+	"Name": "Craftable Balloons",
+	"Author": "aedenthorn",
+	"Version": "0.1.0",
+	"Description": "Craftable Balloons.",
+	"UniqueID": "aedenthorn.CraftableBalloons",
+	"EntryDll": "CraftableBalloons.dll",
+	"MinimumApiVersion": "4.0.0",
+	"UpdateKeys": [ "Nexus:" ]
+}
