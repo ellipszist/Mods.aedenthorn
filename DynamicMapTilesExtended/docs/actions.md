@@ -1,47 +1,37 @@
 # Tile Actions
 DMT currently recognizes the following action keys:
 
+## Map-Related Actions
+
 - [DMT/action](#DMTaction)
 - [DMT/addLayer](#DMTaddLayer)
-- [DMT/addQuest](#DMTaddQuest)
 - [DMT/addTilesheet](#DMTaddTilesheet)
-- [DMT/animation](#DMTanimation)
-- [DMT/animationOff](#DMTanimationOff)
-- [DMT/buff](#DMTbuff)
 - [DMT/changeIndex](#DMTchangeIndex)
 - [DMT/changeMultipleIndex](#DMTchangeMultipleIndex)
 - [DMT/changeMultipleProperties](#DMTchangeMultipleProperties)
 - [DMT/changeProperties](#DMTchangeProperties)
-- [DMT/chest](#DMTchest)
+- [DMT/push](#DMTpush)
+- [DMT/pushable](#DMTpushable)
+- [DMT/pushAlso](#DMTpushAlso)
+- [DMT/pushOthers](#DMTpushOthers)
+
+## Player-Related Actions
+
+- [DMT/addQuest](#DMTaddQuest)
+- [DMT/buff](#DMTbuff)
 - [DMT/emote](#DMTemote)
-- [DMT/event](#DMTevent)
-- [DMT/explode](#DMTexplode)
-- [DMT/explosion](#DMTexplosion)
-- [DMT/fertilize](#DMTfertilize)
 - [DMT/friends](#DMTfriends)
-- [DMT/give](#DMTgive)
-- [DMT/growCrop](#DMTgrowCrop)
 - [DMT/health](#DMThealth)
 - [DMT/healthPerSecond](#DMThealthPerSecond)
 - [DMT/healthPerSecondContinuous](#DMThealthPerSecondContinuous)
-- [DMT/invalidate](#DMTinvalidate)
-- [DMT/killCrop](#DMTkillCrop)
+- [DMT/give](#DMTgive)
 - [DMT/mailbox](#DMTmailbox)
 - [DMT/mail](#DMTmail)
 - [DMT/mailRemove](#DMTmailRemove)
 - [DMT/makeover](#DMTmakeover)
 - [DMT/makeoverGendered](#DMTmakeoverGendered)
-- [DMT/message](#DMTmessage)
-- [DMT/monster](#DMTmonster)
 - [DMT/move](#DMTmove)
-- [DMT/music](#DMTmusic)
-- [DMT/push](#DMTpush)
-- [DMT/pushable](#DMTpushable)
-- [DMT/pushAlso](#DMTpushAlso)
-- [DMT/pushOthers](#DMTpushOthers)
 - [DMT/removeQuest](#DMTremoveQuest)
-- [DMT/setCrop](#DMTsetCrop)
-- [DMT/sound](#DMTsound)
 - [DMT/slippery](#DMTslippery)
 - [DMT/speed](#DMTspeed)
 - [DMT/stamina](#DMTstamina)
@@ -56,7 +46,34 @@ DMT currently recognizes the following action keys:
 - [DMT/wardrobe](#DMTwardrobe)
 - [DMT/wardrobeGendered](#DMTwardrobeGendered)
 
----
+## Visual and Audio Actions
+
+- [DMT/animation](#DMTanimation)
+- [DMT/animationOff](#DMTanimationOff)
+- [DMT/message](#DMTmessage)
+- [DMT/music](#DMTmusic)
+- [DMT/sound](#DMTsound)
+
+## Gameplay Actions
+
+- [DMT/chest](#DMTchest)
+- [DMT/event](#DMTevent)
+- [DMT/explode](#DMTexplode)
+- [DMT/explosion](#DMTexplosion)
+- [DMT/monster](#DMTmonster)
+
+## Crop Actions
+
+- [DMT/fertilize](#DMTfertilize)
+- [DMT/growCrop](#DMTgrowCrop)
+- [DMT/killCrop](#DMTkillCrop)
+- [DMT/setCrop](#DMTsetCrop)
+
+## Misc Actions
+
+- [DMT/invalidate](#DMTinvalidate)
+
+
 
 ## DMT/action
 Trigger an existing tile action.
@@ -67,7 +84,7 @@ The x,y coordinates of the tile to trigger, separated by a comma (',').
 ### Example
 "DMT/action_On": "69,20"
 
----
+
 
 ## DMT/addLayer
 Add a layer to the current map.
@@ -78,7 +95,7 @@ The id of the layer as a string, must be unique.
 ### Example
 "DMT/addLayer_Enter": "DMT/TestLayer"
 
----
+
 
 ## DMT/addQuest
 Give a player a quest.
@@ -89,7 +106,7 @@ The quest ID you wish to add.
 ### Example
 "DMT/addQuest_Once_MonsterSlain(GoopAlienBrood)": "MindMeltMax.WeirdEvents/FriendOfTheGoop"
 
----
+
 
 ## DMT/addTilesheet
 Add a tilesheet to the current map.
@@ -100,17 +117,17 @@ A comma (',') delimited string of the id of the tilesheet (must be unique), and 
 ### Example
 "DMT/addTilesheet_Enter": "DMT/TestTilesheet,Assets/Maps/Tilesheets/paths.png"
 
----
+
 
 ## DMT/animation
 Animations are such complex objects (even with the new format), that they deserve their own file, which you can find [here](animations.md).
 
----
+
 
 ## DMT/animationOff
 Animations are such complex objects (even with the new format), that they deserve their own file, which you can find [here](animations.md).
 
----
+
 
 ## DMT/buff
 Add a buff or debuff to the player.
@@ -122,7 +139,7 @@ A string with multiple id's of items in ``Data\\Buffs`` separated by bars ('|').
 "DMT/buff_Once_On": "22|27"  
 "DMT/buff_On": "MindMeltMax.WeirdEvents/Gooped,Sludge Tile"
 
----
+
 
 ## DMT/changeIndex
 Change the index of the tile currently under the player.
@@ -139,7 +156,7 @@ Change the index of the tile currently under the player.
 * "DMT/changeIndex_On": "indoors/57"  
 * "DMT/changeIndex_On": "indoors/1741 indoors/1773 indoors/1805 indoors/1773 indoors/1741,250"
 
----
+
 
 ## DMT/changeMultipleIndex
 Change multiple tile indexes on the current map.
@@ -152,7 +169,7 @@ This example mixes some available values from [Change Index](#change-index), you
 
 "DMT/changeMultipleIndex_Enter": "Buildings 12 27=indoors/472|Buildings 12 28=indoors/473|Buildings 12 29=indoors/474|Buildings 13 27=indoors/504|Buildings 13 28=indoors/505|Buildings 13 29=indoors/506|Buildings 14 27=indoors/536|Buildings 14 28=indoors/537|Buildings 14 29=indoors/538"
 
----
+
 
 ## DMT/changeMultipleProperties
 Change the properties of multiple tiles.
@@ -175,7 +192,7 @@ These parts are formatted like:
 "DMT/changeMultipleProperties_Once_On": "Buildings,17,8,Action=MindMeltMax.YouWishThisExisted/CouponMachine|Buildings,17,8,Passable|17,8,NoFurniture=T"  
 "DMT/changeMultipleProperties_Enter": "NoFurniture=T|TouchAction=MindMeltMax.WeirdEvents/BossFight7"
 
----
+
 
 ## DMT/changeProperties
 Change the properties of a tile.
@@ -188,7 +205,7 @@ A pipe ('|') delimited string of key=value pairs.
 ### Example
 "DMT/changeProperties_On": "TouchAction|Action=kitchen"
 
----
+
 
 ## DMT/chest
 Spawn a chest with item's (and/or money).
@@ -205,7 +222,7 @@ A string with multiple parts, defined as follows:
 "DMT/chest_Once_MonsterSlain": "7 12=BigChest|Money/10 (O)336,5 (O)384,17 (O)125"  
 "DMT/chest_Once_On": "15 15=(O)349,3 (O)773,3 (O)772" 
 
----
+
 
 ## DMT/emote
 Make the player perform an emote.
@@ -216,7 +233,7 @@ The numerical id of the emote in string form. This can be found by opening ``Til
 ### Example
 "DMT/emote_Talk(Abigail)": "52"
 
----
+
 
 ## DMT/event
 Start an event.
@@ -234,7 +251,7 @@ The format for this is as follows, each part must be split by a pipe ('|'):
 "DMT/event_Once_Enter": "|MindMeltMax.WeirdEvents#GoopAliens|goopAlienLanding"  
 "DMT/event_Once_On": "I need to write an event script here..."
 
----
+
 
 ## DMT/explode
 Makes a tile vulnerable to explosions.
@@ -248,7 +265,7 @@ An optional mail flag to set when the tile explodes.
 "DMT/explode": ""  
 "DMT/explode": "myTileExplodedMailFlag"  
 
----
+
 
 ## DMT/explosion
 Triggers an explosion.
@@ -269,7 +286,7 @@ A comma (',') delimited string with multiple options to use when triggering the 
 "DMT/explosion_MonsterSlain(Mummy)": "7,15,3,,,,thunder"  
 "DMT/explosion_On": ",,5,120,false,true"
 
----
+
 
 ## DMT/fertilize
 Fertilize one or more tiles with a given fertilizer.
@@ -281,7 +298,7 @@ A string of the format x,y=fertilizerName. If fertilizerName is omitted, the fer
 "DMT/fertilize": "64,19,368"
 "DMT/fertilize": "64,19,"
 
----
+
 
 ## DMT/friends
 Increase or decrease friendship with an npc or animal type
@@ -292,7 +309,7 @@ A string with pairs of the NPC's internal name or the animal type, and the amoun
 ### Example
 "DMT/friends": "Marnie,50|Cow,15|Chicken,15"
 
----
+
 
 ## DMT/give
 Give the player a specified item (or money)
@@ -308,7 +325,7 @@ Give the player a specified item (or money)
 "DMT/give_Talk(Abigail)": "(O)66"  
 "DMT/give_Talk(Willy)": "(O)131,1,4"
 
----
+
 
 ## DMT/growCrop
 Grow one or more crops completely when triggered.
@@ -320,7 +337,7 @@ A string a pair of x and y tile coordinates separated by a comma (','). To chang
 ### Example
 "DMT/growCrop_On": "64,19|64,20"
 
----
+
 
 ## DMT/health
 Add or remove health from the player.
@@ -332,7 +349,7 @@ A number value in string form. Can be either positive to add health, or negative
 "DMT/health_On" "-12"  
 "DMT/health_MonsterSlain": "2"
 
----
+
 
 ## DMT/healthPerSecond
 Add or remove health from the player every second for a duration.
@@ -344,7 +361,7 @@ Add or remove health from the player every second for a duration.
 "DMT/healthPerSecond_On": "10,2"  
 "DMT/healthPerSecond_Off": "15,-1"
 
----
+
 
 ## DMT/healthPerSecondContinuous
 Add or remove health from the player every second until they move from the tile they were on when this was triggered.
@@ -356,7 +373,7 @@ a number value in string form specifying the amount of health restored/taken.
 "DMT/healthPerSecondContinuous_On": "2"  
 "DMT/healthPerSecondContinuous_On": "-1"
 
----
+
 
 ## DMT/invalidate
 Invalidate an asset from the game's asset cache, forcing it to be reloaded when next requested.
@@ -368,7 +385,7 @@ The name of the asset you want to invalidate, may be split by bars ('|') to inva
 "DMT/invalidate_Enter": "Data/Locations"  
 "DMT/invalidate_On": "Data/Objects|Strings/Objects|Strings/BigCraftables|Data/BigCraftables"
 
----
+
 
 ## DMT/killCrop
 Kill one or more crops when triggered.
@@ -380,7 +397,7 @@ A string a pair of x and y tile coordinates separated by a comma (','). To chang
 ### Example
 "DMT/killCrop_On": "64,19|64,20"
 
----
+
 
 ## DMT/mail
 Add a mail flag from the player if they don't have it yet.
@@ -391,7 +408,7 @@ The mail flag you wish to set, if not added already.
 ### Example
 "DMT/mail_Once_Talk(Haley)": "MindMeltMax.BestGirl/MetTheQueen"
 
----
+
 
 ## DMT/mailbox
 Add mail for tomorrow to the players mailbox.
@@ -402,7 +419,7 @@ The id of the item in ``Data\\Mail`` you wish to add to the mailbox, if it's not
 ### Example
 "DMT/mailbox_Once_MonsterSlain(GoopAlienBrood)": "MindMeltMax.WeirdEvents/MYSONHOWCOULDYOU"
 
----
+
 
 ## DMT/mailRemove
 Remove a mail flag from the player if they have it.
@@ -413,7 +430,7 @@ The mail flag you wish to remove, if it's known by the player.
 ### Example
 "DMT/mailRemove_Once_MonsterSlain(GoopAlienBrood)": "MindMeltMax.WeirdEvents/FriendOfTheGoop"
 
----
+
 
 ## DMT/makeover
 Give a farmer a makeover outfit from "Data/MakeoverOutfits". Currently worn clothing will be returned to the player inventory or lost & found.
@@ -424,7 +441,7 @@ The id of the makeover outfit. Multiple ids can be separated with a pipe '|' to 
 ### Example
 "DMT/makeover_Once_On": "JojaCap_Shirt105_FarmerPants"
 
----
+
 
 ## DMT/makeoverGendered
 Give a farmer a makeover outfit from "Data/MakeoverOutfits" based on their gender. Currently worn clothing will be returned to the player inventory or lost & found.
@@ -435,7 +452,7 @@ Two ids of makeover outfits for each gender, separated with a pipe '|'.
 ### Example
 "DMT/makeoverGendered_Once_On": "Beanie_SkullShirt_FarmerPants|Beanie_ClassyTop_Dress"
 
----
+
 
 ## DMT/message
 Show a message box.
@@ -452,7 +469,7 @@ However another accepted value starts with a boolean value ("True" or "False") f
 "DMT/message_Item((O)289)": "T-This is huge!#What kind of chickens do you have on that farm!"  
 "DMT/message_MonsterSlain": "True|It is done...^The ritual is complete...^Now all that rests you is to claim the loot in the last dungeon.^I promise it's the last this time...^I think...  %item quest MindMeltMax.EndlessDungeon/TotallyTheLastOne true %% [textcolor red][#]Found Letter #237"
 
----
+
 
 ## DMT/monster
 Spawn one or more monsters.
@@ -474,7 +491,7 @@ Each monster to spawn should be a comma-separated list of values. Multiple moste
 "DMT/monster_On": "GreenSlime,640,1280,#00FF00|GreenSlime,704,1280,#0000FF"  
 "DMT/monster_Enter": "MyCustomMonster,640,1280" 
 
----
+
 
 ## DMT/move
 Move the player in a direction.
@@ -490,7 +507,7 @@ The second number is the y position, same logic applies here: negative = down, p
 "DMT/move_On": "256,77"  
 "DMT/move_Off": "-122,320"
 
----
+
 
 ## DMT/music
 Play an existing music track.
@@ -501,7 +518,7 @@ The name of a known music track. This does accept mod added songs in the same wa
 ### Example
 "DMT/music_Enter": "winter1"
 
----
+
 
 ## "DMT/push"
 Push a tile when triggered.
@@ -516,7 +533,7 @@ A string of tile positions in the form of '{x} {y}' representing the allowed des
 ### Example
 "DMT/push_On": "7 15, 7 17"  
 
----
+
 ## "DMT/pushable"
 Allow a tile to be pushed by farmers.
 
@@ -530,7 +547,7 @@ A string of tile positions in the form of '{x} {y}' representing the allowed des
 ### Example
 "DMT/pushable": "3 3, 3 5, 2 4, 4 4"
 
----
+
 
 ## "DMT/pushAlso"
 Allow a tile to be pushed when a neighbor tile is pushed.
@@ -544,7 +561,7 @@ A string of tile offsets with the layer id to push the tile from in the form of 
 ### Example
 "DMT/pushAlso": "Front 0 -1, Front 0 -2, Buildings 0 -3"
 
----
+
 
 ## "DMT/pushOthers"
 Specify other tiles to be pushed.
@@ -558,7 +575,7 @@ A string of tile positions with the layer id to push the tile from in the form o
 ### Example
 "DMT/pushOthers_On": "Buildings 5 15, Front 4 16, Front 5 16, Front 6 16"
 
----
+
 
 ## DMT/removeQuest
 Remove a quest from a player.
@@ -569,7 +586,7 @@ The quest ID you wish to remove.
 ### Example
 "DMT/removeQuest_Once_MonsterSlain(GoopAlienBrood)": "MindMeltMax.WeirdEvents/FriendOfTheGoop"
 
----
+
 
 ## DMT/setCrop
 Set crop for one or more hoe dirt when triggered.
@@ -584,7 +601,7 @@ A string in the format x,y=SeedId,GrowthPhase. To change multiple values at once
 ### Example
 "DMT/setCrop_On": "64,19=433,1"
 
----
+
 
 ## DMT/sound
 Play one or more sounds.
@@ -597,7 +614,7 @@ A pipe ('|') delimited string of sound names with optional delays (split by comm
 "DMT/sound_Item((O)335)": "hammer,150"  
 "DMT/sound_Item((O)335)": "pickupItem|money,300|money,450"
 
----
+
 
 ## DMT/slippery
 Make the player slide across tiles.
@@ -611,7 +628,7 @@ A decimal number in string form representing the speed at which to slide the pla
 ### Example
 "DMT/slippery": "1.2"
 
----
+
 
 ## DMT/speed
 Set a speed multiplier for the player.
@@ -622,7 +639,7 @@ A decimal number value in string form.
 ### Example
 "DMT/speed_Enter": "1.2"
 
----
+
 
 ## DMT/stamina
 Add or remove stamina from the player.
@@ -636,7 +653,7 @@ A number value in string form. Can be either positive to add health, or negative
 "DMT/stamina_Item((O)306)": "25"  
 "DMT/stamina_Talk(Piere)": "-5"
 
----
+
 
 ## DMT/staminaPerSecond
 Add or remove stamina from the player every second for a duration.
@@ -650,7 +667,7 @@ Add or remove stamina from the player every second for a duration.
 "DMT/staminaPerSecond_Once_Enter": "60,1.5"  
 "DMT/staminaPerSecond_Explode": "5,-2"
 
----
+
 
 ## DMT/staminaPerSecondContinuous
 Add or remove stamina from the player every second until they move from the tile they were on when this was triggered.
@@ -662,7 +679,7 @@ a number value in string form specifying the amount of stamina restored/taken.
 "DMT/staminaPerSecondContinuous": "2"  
 "DMT/staminaPerSecondContinuous": "-1"
 
----
+
 
 ## DMT/teleport
 Teleport the player to a specified pixel coordinate.
@@ -673,7 +690,7 @@ A comma (',') delimited string with the X and Y pixel coordinates.
 ### Example
 "DMT/teleport_On": "516,1272"
 
----
+
 
 ## DMT/teleportTile
 Teleport the player to a specified tile coordinate.
@@ -684,7 +701,7 @@ A comma (',') delimited string with the X and Y tile coordinates.
 ### Example
 "DMT/teleportTile_Off": "6,13"
 
----
+
 
 ## DMT/take
 Take a specified item (or money) from the player.
@@ -699,7 +716,7 @@ Take a specified item (or money) from the player.
 "DMT/take_Talk(Piere)": "(O)MindMeltMax.YouWishThisExisted/DiscountCoupon"  
 "DMT/take_Talk(Abigail)": "(O)66,5"
 
----
+
 
 ## DMT/transmog
 Give a farmer a makeover outfit from "Data/MakeoverOutfits". Currently worn clothing will be irrevocably replaced.
@@ -710,7 +727,7 @@ The id of the makeover outfit. Multiple ids can be separated with a pipe '|' to 
 ### Example
 "DMT/transmog_On": "JojaCap_Shirt105_FarmerPants"
 
----
+
 
 ## DMT/transmogGendered
 Give a farmer a makeover outfit from "Data/MakeoverOutfits" based on their gender. Currently worn clothing will be irrevocably replaced.
@@ -721,7 +738,7 @@ Two ids of makeover outfits for each gender, separated with a pipe '|'.
 ### Example
 "DMT/transmogGendered_Once_On": "Beanie_SkullShirt_FarmerPants|Beanie_ClassyTop_Dress"
 
----
+
 
 ## DMT/wardrobe
 Give a farmer a makeover outfit from "Data/MakeoverOutfits" if they have the required items in their inventory. Currently worn clothing will be returned to the player inventory or lost & found.
@@ -732,7 +749,7 @@ The id of the makeover outfit. Multiple ids can be separated with a pipe '|' to 
 ### Example
 "DMT/wardrobe_On": "JojaCap_Shirt105_FarmerPants"
 
----
+
 
 ## DMT/wardrobeGendered
 Give a farmer a makeover outfit from "Data/MakeoverOutfits" based on their gender if they have the required items in their inventory. Currently worn clothing will be returned to the player inventory or lost & found.
@@ -744,7 +761,7 @@ Two ids of makeover outfits for each gender, separated with a pipe '|'.
 "DMT/wardrobeGendered_Swap_On": "Beanie_SkullShirt_FarmerPants|Beanie_ClassyTop_Dress"
 "SwapDMT/wardrobeGendered_Swap_On": "None_GraySuit_FarmerPants|LogoCap_SugarShirt_Skirt"
 
----
+
 
 ## DMT/warp
 Warp a farmer to a given location and coordinates.
