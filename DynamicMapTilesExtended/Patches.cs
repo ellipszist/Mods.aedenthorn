@@ -225,7 +225,11 @@ namespace DMT
                 var tile = __instance.currentLocation.Map?.GetLayer("Back")?.Tiles[(int)tileLoc.X, (int)tileLoc.Y];
                 if (tile?.HasProperty(Actions.MoveKey, out var prop) ?? false)
                 {
-                    var split = prop.ToString().Split(' ');
+                    var split = prop.ToString().Split(',');
+                    if(split.Length == 1)
+                    {
+                        split = prop.ToString().Split(' ');
+                    }
                     __instance.xVelocity = float.Parse(split[0], NumberStyles.Any, CultureInfo.InvariantCulture);
                     __instance.yVelocity = float.Parse(split[1], NumberStyles.Any, CultureInfo.InvariantCulture);
                 }

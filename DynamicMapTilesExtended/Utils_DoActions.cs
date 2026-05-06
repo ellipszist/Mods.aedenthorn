@@ -8,7 +8,6 @@ using StardewValley.ItemTypeDefinitions;
 using StardewValley.Monsters;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
-using System.Numerics;
 using System.Reflection;
 using xTile.Dimensions;
 using xTile.Layers;
@@ -187,10 +186,7 @@ namespace DMT
                         DelayedAction.playSoundAfterDelay(split2[0], delay, location);
                     continue;
                 }
-                if (i == 0)
-                    location.playSound(split[i]);
-                else
-                    DelayedAction.playSoundAfterDelay(split[i], i * 300, location);
+                location.playSound(split[i]);
             }
         }
 
@@ -219,7 +215,11 @@ namespace DMT
             var cmapi = SHelper.ModRegistry.GetApi<ICustomMonstersAPI>("aedenthorn.CustomMonsters");
             foreach (var item in value.Split('|'))
             {
-                var split = item.Split(' ');
+                var split = item.Split(',');
+                if (split.Length == 1)
+                {
+                    split = item.Split(' ');
+                }
                 Vector2 pos = new(int.Parse(split[1]), int.Parse(split[2]));
                 if(cmapi != null)
                 {
@@ -318,7 +318,7 @@ namespace DMT
             }
         }
 
-        public static void DoPlayMusic(string value) => Game1.changeMusicTrack(value);
+        public static void DoPlayMusic(string value) => Game1.changeMusicTrack(Game1.random.Choose(value.Split('|')));
 
         public static void DoAddMailflag(Farmer? who, string value) 
         {
@@ -498,7 +498,9 @@ namespace DMT
             if (who == null)
                 return;
 
-            var split = value.Split(' ');
+            var split = value.Split(',');
+            if (split.Length == 1)
+                split = value.Split(' ');
             if (split.Length != 2 || !int.TryParse(split[0], out int x) || !int.TryParse(split[1], out int y))
                 return;
             who.Position = new Vector2(x, y);
@@ -508,8 +510,9 @@ namespace DMT
         {
             if (who == null)
                 return;
-
-            var split = value.Split(' ');
+            var split = value.Split(',');
+            if (split.Length == 1)
+                split = value.Split(' ');
             if (split.Length != 2 || !int.TryParse(split[0], out int x) || !int.TryParse(split[1], out int y))
                 return;
             who.Position = new Vector2(x * 64, y * 64);
@@ -622,9 +625,11 @@ namespace DMT
             if (who == null)
                 return;
 
-            if (!value.Contains('|'))
+            if (!value.Contains(',') && !value.Contains('|'))
                 return;
-            var split = value.Split('|');
+            var split = value.Split(',');
+            if(split.Length == 1)
+                split = value.Split('|');
             if (!int.TryParse(split[0], out int loops) || !int.TryParse(split[1], out int number))
                 return;
             context.SecondUpdateFiredLoops.Value.Add(new() { Loops = loops, Value = number, type = SecondUpdateData.SecondUpdateType.Health, Who = who });
@@ -653,9 +658,11 @@ namespace DMT
             if (who == null)
                 return;
 
-            if (!value.Contains('|'))
+            if (!value.Contains(',') && !value.Contains('|'))
                 return;
-            var split = value.Split('|');
+            var split = value.Split(',');
+            if (split.Length == 1)
+                split = value.Split('|');
             if (!int.TryParse(split[0], out int loops) || !float.TryParse(split[1], out var number))
                 return;
             context.SecondUpdateFiredLoops.Value.Add(new() { Loops = loops, Value = number, type = SecondUpdateData.SecondUpdateType.Stamina, Who = who });
@@ -701,7 +708,11 @@ namespace DMT
 
         public static void DoExplode(Farmer? who, GameLocation location, string value, Point tilePos)
         {
-            var split = value.Split(' ');
+            var split = value.Split(',');
+            if (split.Length == 1)
+            {
+                split = value.Split(' ');
+            }
             string explodeSound = "explosion";
             bool damagesFarmer = true;
             int damageRadius = 1;
@@ -811,30 +822,49 @@ namespace DMT
         {
             if (who == null)
                 return;
-
-            var split = value.Split(',');
-            foreach (var item in split)
+            try
             {
-                var kv = item.Split('|');
-                if (kv.Length < 2)
+                var split = value.Split('|');
+                foreach (var item in split)
                 {
-                    context.Monitor.Log($"[{nameof(Actions)}.{nameof(DoFriendshipChange)}] Missing argument for {item}");
-                    continue;
+                    var kv = item.Split(',');
+                    string name = kv[0].Trim();
+                    if (!int.TryParse(kv[1].Trim(), out int amount))
+                        continue;
+                    var npc = Game1.getCharacterFromName<NPC>(name, false);
+                    if (npc is not null)
+                    {
+                        who.changeFriendship(amount, npc);
+                        continue;
+                    }
+                    var farm = Game1.RequireLocation<Farm>("Farm");
+                    foreach (var animal in farm.Animals.Values)
+                        if (animal.type.Value == name)
+                            animal.friendshipTowardFarmer.Add(amount);
                 }
-                string name = kv[0].Trim();
-                if (!int.TryParse(kv[1].Trim(), out int amount))
-                    continue;
-                var npc = Game1.getCharacterFromName<NPC>(name, false);
-                if (npc is not null)
-                {
-                    who.changeFriendship(amount, npc);
-                    continue;
-                }
-                var farm = Game1.RequireLocation<Farm>("Farm");
-                foreach (var animal in farm.Animals.Values)
-                    if (animal.type.Value == name)
-                        animal.friendshipTowardFarmer.Add(amount);
             }
+            catch
+            {
+                var split = value.Split(',');
+                foreach (var item in split)
+                {
+                    var kv = item.Split('|');
+                    string name = kv[0].Trim();
+                    if (!int.TryParse(kv[1].Trim(), out int amount))
+                        continue;
+                    var npc = Game1.getCharacterFromName<NPC>(name, false);
+                    if (npc is not null)
+                    {
+                        who.changeFriendship(amount, npc);
+                        continue;
+                    }
+                    var farm = Game1.RequireLocation<Farm>("Farm");
+                    foreach (var animal in farm.Animals.Values)
+                        if (animal.type.Value == name)
+                            animal.friendshipTowardFarmer.Add(amount);
+                }
+            }
+
         }
 
         public static void DoFertilize(GameLocation location, string value)
@@ -846,19 +876,19 @@ namespace DMT
                 var kv = item.Split('=');
                 if (kv.Length != 2)
                 {
-                    context.Monitor.Log($"[{nameof(Actions)}.{nameof(DoFertilize)}] Missing argument for {item}");
+                    context.Monitor.Log($"[{nameof(DoFertilize)}] Missing argument for {item}");
                     continue;
                 }
                 var xy = kv[0].Split(',');
                 if (xy.Length != 2)
                 {
-                    context.Monitor.Log($"[{nameof(Actions)}.{nameof(DoFertilize)}] Missing argument for {item}");
+                    context.Monitor.Log($"[{nameof(DoFertilize)}] Missing argument for {item}");
                     continue;
                 }
-                string name = kv[1].Trim();
+                string itemId = kv[1].Trim();
                 if (!int.TryParse(xy[0].Trim(), out int x) || !int.TryParse(xy[1].Trim(), out int y) || !location.terrainFeatures.TryGetValue(new Vector2(x, y), out var tf) || tf is not HoeDirt dirt)
                     continue;
-                dirt.fertilizer.Value = string.IsNullOrEmpty(name) ? null : ItemRegistry.QualifyItemId(name) ?? name;
+                dirt.fertilizer.Value = string.IsNullOrEmpty(itemId) ? null : ItemRegistry.QualifyItemId(itemId) ?? itemId;
             }
         }
 
