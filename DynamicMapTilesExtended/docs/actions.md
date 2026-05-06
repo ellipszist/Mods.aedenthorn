@@ -56,6 +56,16 @@ DMT currently recognizes the following action keys:
 - [DMT/wardrobe](#DMTwardrobe)
 - [DMT/wardrobeGendered](#DMTwardrobeGendered)
 
+---
+
+## DMT/action
+Trigger an existing tile action.
+
+### Accepted Value
+The x,y coordinates of the tile to trigger, separated by a comma (',').
+
+### Example
+"DMT/action_On": "69,20"
 
 ---
 
@@ -63,7 +73,7 @@ DMT currently recognizes the following action keys:
 Add a layer to the current map.
 
 ### Accepted Value
-The id of the layer as a string, must be unique
+The id of the layer as a string, must be unique.
 
 ### Example
 "DMT/addLayer_Enter": "DMT/TestLayer"
