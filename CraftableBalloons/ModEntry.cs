@@ -172,6 +172,12 @@ namespace CraftableBalloons
 					getValue: () => Config.ModEnabled,
 					setValue: value => Config.ModEnabled = value
 				);
+                gmcm.AddKeybind(
+					mod: ModManifest,
+					name: () => SHelper.Translation.Get("GMCM.ModKey.Name"),
+					getValue: () => Config.ModKey,
+					setValue: value => Config.ModKey = value
+				);
             }
 		}
 	}

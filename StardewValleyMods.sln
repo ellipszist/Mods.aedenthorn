@@ -679,6 +679,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlinkTeleport", "BlinkTelep
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CraftableBalloons", "CraftableBalloons\CraftableBalloons.csproj", "{19F16415-C473-DB15-1A30-02710B7A251D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FillableVases", "FillableVases\FillableVases.csproj", "{57274881-E718-A1E6-8240-20FF69575AE7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3359,6 +3361,14 @@ Global
 		{19F16415-C473-DB15-1A30-02710B7A251D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{19F16415-C473-DB15-1A30-02710B7A251D}.Release|x64.ActiveCfg = Release|Any CPU
 		{19F16415-C473-DB15-1A30-02710B7A251D}.Release|x64.Build.0 = Release|Any CPU
+		{57274881-E718-A1E6-8240-20FF69575AE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57274881-E718-A1E6-8240-20FF69575AE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57274881-E718-A1E6-8240-20FF69575AE7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{57274881-E718-A1E6-8240-20FF69575AE7}.Debug|x64.Build.0 = Debug|Any CPU
+		{57274881-E718-A1E6-8240-20FF69575AE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57274881-E718-A1E6-8240-20FF69575AE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57274881-E718-A1E6-8240-20FF69575AE7}.Release|x64.ActiveCfg = Release|Any CPU
+		{57274881-E718-A1E6-8240-20FF69575AE7}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

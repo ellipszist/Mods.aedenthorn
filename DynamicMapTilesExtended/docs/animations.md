@@ -103,57 +103,85 @@ The fields for animations can be divided up into three categories:
 Some examples of how these fields are applied are:
 ```json
 {
-	"Format": "2.3.0",
-	"Changes": [
-		{
-			"Action": "EditData",
-			"Target": "DMT/Animations",
-			"Entries": {
-				"ExampleMod.DMTAnimations": [
-					{
-						"Name": "Sparkle",
-						"TextureRowIndex": 10,
-						"Position": {"X": 27, "Y": 12},
-						"Color": {"R": 255, "G": 255, "B": 255},
-						"Interval": 150,
-						"LayerDepth": 0.79,
-						"Delay": 250,
-						"Loops": 3
-					},
-					{
-						"Name": "Custom",
-						"Texture": "ExampleMod/MyAnimations",
-						"SourceRect": {"X": 0, "Y": 0, "Width": 16, "Height": 16},
-						"Position": {"X": 8, "Y": 34},
-						"Scale": 4,
-						"Id": 196748,
-						"Delay": 500,
-						"Length": 4,
-						"Loops": 4,
-						"Local": true,
-						"Flicker": true
-					}
-				]
-			}
-		},
-		{
-			"Action": "EditData",
-			"Target": "DMT/Tiles",
-			"Entries": {
-				"ExampleMod.DMT_AnimatedTiles": {
-					"Locations": ["ExampleMod.MyTown"],
-					"Layers": ["Back"],
-					"Actions": [
-						{
-							"LogName": "PlayAnimation_1",
-							"Key": "DMT/animate",
-							"Value": "ExampleMod.DMTAnimations,Sparkle",
-							"Trigger": "On"
-						}
-					]
-				}
-			}
-		}
-	]
+  "Format": "2.8.0",
+  "Changes": [
+    {
+      "LogName": "MyAnimations Tilesheet Load",
+      "Action": "Load",
+      "Target": "{{ModId}}/MyAnimations",
+      "FromFile": "assets/MyAnimations.png"
+    },
+    {
+      "LogName": "List of Animations",
+      "Action": "EditData",
+      "Target": "DMT/Animations",
+      "Entries": {
+        "{{ModId}}.DMTAnimations": [
+          {
+            "Name": "Sparkle",
+            "TextureRowIndex": 10,
+            "Position": {
+              "X": 27,
+              "Y": 12
+            },
+            "Color": {
+              "R": 255,
+              "G": 255,
+              "B": 255,
+              "A": 255
+            },
+            "Interval": 150,
+            "LayerDepth": 0.79,
+            "Delay": 250,
+            "Loops": 3
+          },
+          {
+            "Name": "Custom",
+            "Texture": "{{ModId}}/MyAnimations",
+            "SourceRect": {
+              "X": 0,
+              "Y": 0,
+              "Width": 16,
+              "Height": 16
+            },
+            "Position": {
+              "X": 8,
+              "Y": 34
+            },
+            "Scale": 4,
+            "Id": 196748,
+            "Delay": 500,
+            "Length": 4,
+            "Loops": 4,
+            "Local": true,
+            "Flicker": true
+          }
+        ]
+      }
+    },
+    {
+      "LogName": "Play Animation When In My Town",
+      "Action": "EditData",
+      "Target": "DMT/Tiles",
+      "Entries": {
+        "{{ModId}}.DMT_AnimatedTiles": {
+          "Locations": [
+            "{{ModId}}.MyTown"
+          ],
+          "Layers": [
+            "Back"
+          ],
+          "Actions": [
+            {
+              "LogName": "PlayAnimation_1",
+              "Key": "DMT/animation",
+              "Value": "{{ModId}}.DMTAnimations,Sparkle|Custom",
+              "Trigger": "On"
+            }
+          ]
+        }
+      }
+    }
+  ]
 }
 ```
