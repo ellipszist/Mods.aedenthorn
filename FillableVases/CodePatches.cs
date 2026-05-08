@@ -65,7 +65,9 @@ namespace FillableVases
                         cachedFlowerData[split[0]] = cache;
                     }
                     var pos = actualDrawPosition + new Vector2(fd.X, fd.Y);
-                    var color = split.Length > 3 && split[3] == "true" ? Utility.GetPrismaticColor() : StringToColor(split[1]);
+                    var color = StringToColor(split[1]);
+                    if(split.Length > 3 && prismaticFlowersAPI is not null)
+                        prismaticFlowersAPI.GetPrismaticColor(split[0], color);
                     if (!cache.SameIndex)
                     {
                         spriteBatch.Draw(cache.Texture, pos, cache.SourceRect, Color.White * alpha, fd.Rotation, fd.Origin, fd.Scale, SpriteEffects.None, (layerOffset + 4700 + i * 10) / 100000f);
@@ -100,6 +102,7 @@ namespace FillableVases
                     foreach (var kvp in Game1.getFarm().terrainFeatures.Pairs.Where(kvp => kvp.Value is HoeDirt))
                     {
                         var crop = new Crop(Game1.random.Choose("455", "453", "429", "427", "425", "431"), (int)kvp.Key.X, (int)kvp.Key.Y, Game1.getFarm());
+                        //var crop = new Crop("429", (int)kvp.Key.X, (int)kvp.Key.Y, Game1.getFarm());
                         crop.growCompletely();
                         (kvp.Value as HoeDirt).crop = crop;
                     }
@@ -118,7 +121,7 @@ namespace FillableVases
                             return false;
                         }
                     }
-                    flowers.Add($"{obj.ItemId},{(obj is ColoredObject co ? MakeColorString(co.color.Value) : "")},{obj.Quality}{(obj.modData.ContainsKey(prismaticKey) ? ",true":"")}");
+                    flowers.Add($"{obj.ItemId},{(obj is ColoredObject co ? MakeColorString(co.color.Value) : "")},{obj.Quality}{(obj.modData.TryGetValue(prismaticKey, out var p) ? "," + p : "")}");
                     __instance.modData[flowerKey] = string.Join('|', flowers);
                     who.currentLocation.playSound("woodyStep", null, null, SoundContext.Default);
                     who.reduceActiveItemByOne();

@@ -50,6 +50,7 @@ namespace FillableVases
             if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
             {
 				e.LoadFrom(() => new Dictionary<string, VaseData>(), StardewModdingAPI.Events.AssetLoadPriority.Exclusive);
+                
             }
         }
 

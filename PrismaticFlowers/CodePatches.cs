@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Netcode;
 using StardewValley;
 using StardewValley.ItemTypeDefinitions;
@@ -23,15 +22,15 @@ namespace PrismaticFlowers
         {
             public static void Postfix(Crop __instance)
             {
-                if (!Config.ModEnabled || !__instance.programColored.Value)
+                if (!Config.ModEnabled || !__instance.programColored.Value || Config.Ignore.Contains(__instance.indexOfHarvest.Value))
                     return;
                 ParsedItemData data = ItemRegistry.GetData(__instance.indexOfHarvest.Value);
                 if (data?.Category != Object.flowersCategory)
                     return;
 
-                if (__instance.tintColor.Value == new Color(6,6,6,0) || Game1.random.Next(100) < Config.PrismaticChance)
+                if (Game1.random.Next(100) < Config.PrismaticChance || Config.Debug)
                 {
-                    __instance.modData[prismaticKey] = Game1.random.Next(Utility.PRISMATIC_COLORS.Length)+"";
+                    __instance.modData[prismaticKey] = Game1.random.Next(Utility.PRISMATIC_COLORS.Length) + (SHelper.GameContent.Load<Dictionary<string, PrismaticData>>(dictPath).TryGetValue(__instance.indexOfHarvest.Value, out var pData) && Game1.random.Next(100) < pData.Chance ? "," + __instance.indexOfHarvest.Value : "");
                 }
             }
         }

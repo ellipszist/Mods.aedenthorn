@@ -27,9 +27,9 @@ namespace FillableVases
                     {
                         Quality = int.Parse(split[2])
                     };
-                    if (split.Length > 3 && split[3] == "true")
+                    if (split.Length > 3)
                     {
-                        obj.modData[prismaticKey] = "true";
+                        obj.modData[prismaticKey] = split[3];
                     }
                 }
                 else

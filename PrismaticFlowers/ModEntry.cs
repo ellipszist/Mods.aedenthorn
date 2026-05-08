@@ -65,6 +65,13 @@ namespace PrismaticFlowers
 			if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
 			{
 				e.LoadFrom(() => new Dictionary<string, PrismaticData>(), StardewModdingAPI.Events.AssetLoadPriority.Exclusive);
+                if (Config.Debug)
+                {
+                    e.Edit((IAssetData data) =>
+                    {
+                        data.AsDictionary<string, PrismaticData>().Data["597"] = new PrismaticData() { Chance = 50, CropType = "Random", ObjectType = "Random", Speed = 4, Color1 = "#237FFF", Color2 = "#BFE4FF" };
+                    });
+                }
             }
         }
 
