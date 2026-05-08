@@ -260,7 +260,6 @@ namespace CustomBouquets
                     {
                         var bouquet1 = new List<ColoredObject>();
                         bouquet1.AddRange(bouquet);
-                        SMonitor.Log($"1 Adding {bouquet1[0].color.Value} {bouquet1[1].color.Value} {bouquet1[2].color.Value}");
                         bouquetList.Add(bouquet1);
                         bouquet.Clear();
                         continue;
@@ -270,7 +269,6 @@ namespace CustomBouquets
                         var bouquet1 = new List<ColoredObject>();
                         bouquet1.AddRange(bouquet);
                         bouquet1.Add(flowers[i]);
-                        SMonitor.Log($"2 Adding {bouquet1[0].color.Value} {bouquet1[1].color.Value} {bouquet1[2].color.Value}");
                         bouquetList.Add(bouquet1);
                     }
                     if (bouquet.Count == 1 && flowers[i].Stack > 2)
@@ -279,7 +277,6 @@ namespace CustomBouquets
                         bouquet1.AddRange(bouquet);
                         bouquet1.Add(flowers[i]);
                         bouquet1.Add(flowers[i]);
-                        SMonitor.Log($"3 Adding {bouquet1[0].color.Value} {bouquet1[1].color.Value} {bouquet1[2].color.Value}");
                         bouquetList.Add(bouquet1);
                     }
                     if (bouquet.Count == 1 && flowers[i].Stack > 1)
@@ -502,9 +499,9 @@ namespace CustomBouquets
             {
                 if (!Config.EnableMod || __state == null)
                     return;
-                __result.modData[flowerPath1] = __state[0].color.Value.R + "," + __state[0].color.Value.G + "," + __state[0].color.Value.B;
-                __result.modData[flowerPath2] = __state[1].color.Value.R + "," + __state[1].color.Value.G + "," + __state[1].color.Value.B;
-                __result.modData[flowerPath3] = __state[2].color.Value.R + "," + __state[2].color.Value.G + "," + __state[2].color.Value.B;
+                __result.modData[flowerPath1] = __state[0].modData.ContainsKey(prismaticKey) ? "6,6,6" : __state[0].color.Value.R + "," + __state[0].color.Value.G + "," + __state[0].color.Value.B;
+                __result.modData[flowerPath2] = __state[1].modData.ContainsKey(prismaticKey) ? "6,6,6" : __state[1].color.Value.R + "," + __state[1].color.Value.G + "," + __state[1].color.Value.B;
+                __result.modData[flowerPath3] = __state[2].modData.ContainsKey(prismaticKey) ? "6,6,6" : __state[2].color.Value.R + "," + __state[2].color.Value.G + "," + __state[2].color.Value.B;
             }
         }
     }

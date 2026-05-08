@@ -4,6 +4,7 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Objects;
 using System;
+using System.Collections.Generic;
 
 namespace CraftableBalloons
 {
@@ -14,7 +15,7 @@ namespace CraftableBalloons
             var color = GetColor(hex);
             if(color == new Color(6, 6, 6))
             {
-                color = Utility.GetPrismaticColor();
+                color = Utility.GetPrismaticColor(0, Config.PrismaticSpeed);
             }
             return color;
         }
@@ -28,9 +29,10 @@ namespace CraftableBalloons
             return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
         }
 
-        public static void DrawBalloon(SpriteBatch b, Color color, Vector2 position, int facing, Point vel, int standing)
+        public static void DrawBalloon(SpriteBatch b, string id, Color color, Vector2 position, int facing, Point vel, int standing)
         {
-
+            if (!TryGetBalloonTexture(id, out var texturePath))
+                return;
             int up = 0;
             int right = 0;
             int max = 10;
@@ -51,7 +53,7 @@ namespace CraftableBalloons
                 right += (int)Math.Round(Math.Sin(Game1.ticks / 50f));
             }
 
-            var tex = SHelper.GameContent.Load<Texture2D>(balloonPath);
+            var tex = SHelper.GameContent.Load<Texture2D>(texturePath);
             Vector2 offset = new Vector2(-18 - segments * 4 * Math.Sign(right), -128 + (12 - height) * 4);
             float drawOffset = (standing + (up <= 0 ? 1 : 0)) / 10000f;
             switch (facing)
@@ -90,17 +92,33 @@ namespace CraftableBalloons
                 b.Draw(tex, pos + new Vector2((i + 1) * 4 * Math.Sign(right), 68 + segmentHeight * i * 4), new Rectangle(16, 17, 16, segmentHeight), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, drawOffset - 1 / 10000f);
             }
         }
-        public static bool TryGetBalloonColor(Character character, out Color color)
+        public static bool TryGetBalloonTexture(string itemId, out string texturePath)
         {
-            if (character is Farmer f && f.ActiveObject is ColoredObject c && c.ItemId == balloonKey)
+            if(itemId == balloonKey)
             {
+                texturePath = balloonPath;
+                return true;
+            }
+            return SHelper.GameContent.Load<Dictionary<string, string>>(dictPath).TryGetValue(itemId, out texturePath);
+        }
+        public static bool TryGetBalloonFromCharacter(Character character, out string id, out Color color)
+        {
+            id = balloonKey;
+            if (character is Farmer f && f.ActiveObject is ColoredObject c)
+            {
+                id = c.ItemId;
                 color = c.color.Value;
                 if (color == new Color(6, 6, 6))
-                    color = Utility.GetPrismaticColor();
+                    color = Utility.GetPrismaticColor(0, Config.PrismaticSpeed);
             }
-            else if (character.modData.TryGetValue(colorKey, out var str))
+            else if (character.modData.TryGetValue(modKey, out var ct))
             {
-                color = GetDisplayColor(str);
+                var split = ct.Split(' ');
+                color = GetDisplayColor(split[0]);
+                if(split.Length > 1)
+                {
+                    id = split[1];
+                }
             }
             else
             {

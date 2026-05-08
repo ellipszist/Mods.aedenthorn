@@ -19,7 +19,8 @@ namespace CraftableBalloons
         public static List<Point> graveTiles = new List<Point>();
         public static string balloonKey = "aedenthorn.CraftableBalloons_balloon";
         public static string balloonPath = "aedenthorn.CraftableBalloons/balloon";
-        public static string colorKey = "aedenthorn.CraftableBalloons/color";
+        public static string dictPath = "aedenthorn.CraftableBalloons/dict";
+        public static string modKey = "aedenthorn.CraftableBalloons/color";
         public static Dictionary<Character, (Vector2 pos, Point vel)> characterMovement = new Dictionary<Character, (Vector2 pos, Point vel)>();
         public override void Entry(IModHelper helper)
 		{
@@ -45,7 +46,7 @@ namespace CraftableBalloons
                 return;
             foreach(var farmer in Game1.getAllFarmers())
             {
-                if(farmer.currentLocation != Game1.currentLocation || !TryGetBalloonColor(farmer, out var color))
+                if(farmer.currentLocation != Game1.currentLocation || !TryGetBalloonFromCharacter(farmer, out _, out _))
                 {
                     characterMovement.Remove(farmer);
                     continue;
@@ -67,7 +68,7 @@ namespace CraftableBalloons
             }
             foreach(var npc in Game1.currentLocation.characters)
             {
-                if(!TryGetBalloonColor(npc, out var color))
+                if(!TryGetBalloonFromCharacter(npc, out _, out _))
                 {
                     characterMovement.Remove(npc);
                     continue;
@@ -149,6 +150,10 @@ namespace CraftableBalloons
             {
                 e.LoadFromModFile<Texture2D>("assets/Balloon.png", StardewModdingAPI.Events.AssetLoadPriority.Exclusive);
             }
+            else if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
+            {
+                e.LoadFrom(() => new Dictionary<string, string>(), StardewModdingAPI.Events.AssetLoadPriority.Exclusive);
+            }
         }
 
 
@@ -177,6 +182,12 @@ namespace CraftableBalloons
 					name: () => SHelper.Translation.Get("GMCM.ModKey.Name"),
 					getValue: () => Config.ModKey,
 					setValue: value => Config.ModKey = value
+				);
+                gmcm.AddNumberOption(
+					mod: ModManifest,
+					name: () => SHelper.Translation.Get("GMCM.PrismaticChance.Name"),
+					getValue: () => Config.PrismaticChance,
+					setValue: value => Config.PrismaticChance = value
 				);
             }
 		}

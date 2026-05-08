@@ -18,6 +18,9 @@ namespace FillableVases
 		public static ModEntry context;
         public static string dictPath = "aedenthorn.FillableVases/dict";
         public static string flowerKey = "aedenthorn.FillableVases/flowers";
+        public static string prismaticKey = "aedenthorn.PrismaticFlowers/prismatic";
+		public static IPrismaticFlowersAPI prismaticFlowersAPI;
+
         public override void Entry(IModHelper helper)
 		{
 			Config = Helper.ReadConfig<ModConfig>();
@@ -55,6 +58,7 @@ namespace FillableVases
 		{
 			// Get Generic Mod Config Menu's API
 			var gmcm = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+            prismaticFlowersAPI = Helper.ModRegistry.GetApi<IPrismaticFlowersAPI>("aedenthorn.PrismaticFlowers");
 
             if (gmcm is not null)
 			{

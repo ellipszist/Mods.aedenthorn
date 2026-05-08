@@ -34,7 +34,6 @@ namespace CustomChestTypes
             SHelper = Helper;
 
 
-            helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
             helper.Events.Content.AssetRequested += Content_AssetRequested;
 
             var harmony = new Harmony(this.ModManifest.UniqueID);
@@ -105,23 +104,11 @@ namespace CustomChestTypes
             }
             else if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
             {
-                e.LoadFrom(() => new Dictionary<string, CustomChestTypeData>(), StardewModdingAPI.Events.AssetLoadPriority.Exclusive);
+                e.LoadFrom(() => new Dictionary<string, CustomChestType>(), StardewModdingAPI.Events.AssetLoadPriority.Exclusive);
             }
         }
 
 
-        private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
-        {
-            customChestTypesDict = SHelper.GameContent.Load<Dictionary<string, CustomChestType>>(dictPath);
-            foreach (var kvp in customChestTypesDict)
-            {
-                for (int frame = 1; frame <= kvp.Value.frames; frame++)
-                {
-                    var texturePath = kvp.Value.texturePath.Replace("{frame}", frame.ToString());
-                    kvp.Value.texture.Add(SHelper.GameContent.Load<Texture2D>(texturePath));
-                }
-            }
-        }
 
         private static bool GameLocation_isCollidingPosition_Prefix(GameLocation __instance, Rectangle position, ref bool __result)
         {
@@ -144,7 +131,7 @@ namespace CustomChestTypes
 
             float base_sort_order = Math.Max(0f, ((y + 1f) * 64f - 24f) / 10000f) + y * 1E-05f;
             int currentFrame = alpha < 1 ? 1 : (int) MathHelper.Clamp(SHelper.Reflection.GetField<int>(__instance, "currentLidFrame").GetValue(), 1, chestInfo.frames);
-            Texture2D texture = chestInfo.texture.ElementAt(currentFrame-1);
+            Texture2D texture = SHelper.GameContent.Load<Texture2D>(chestInfo.texture.ElementAt(currentFrame - 1));
             spriteBatch.Draw(texture, Game1.GlobalToLocal(Game1.viewport, new Vector2(x * 64f + (float)((__instance.shakeTimer > 0) ? Game1.random.Next(-1, 2) : 0), (y - texture.Height / 16 + 1) * 64f)), new Rectangle(0,0, texture.Width, texture.Height), __instance.Tint * alpha, 0f, Vector2.Zero, 4f, SpriteEffects.None, base_sort_order);
 
             return false;
@@ -156,7 +143,7 @@ namespace CustomChestTypes
                 return true;
 
             bool shouldDrawStackNumber = ((drawStackNumber == StackDrawType.Draw && __instance.maximumStackSize() > 1 && __instance.Stack > 1) || drawStackNumber == StackDrawType.Draw_OneInclusive) && scaleSize > 0.3 && __instance.Stack != int.MaxValue;
-            Texture2D texture = chestInfo.texture.First();
+            Texture2D texture = SHelper.GameContent.Load<Texture2D>(chestInfo.texture.First());
             float extraSize = Math.Max(texture.Height, texture.Width) / 32f;
             Rectangle sourceRect = new Rectangle(0, 0, texture.Width, texture.Height);
             spriteBatch.Draw(texture, location + new Vector2(32f / extraSize, 32f / extraSize), sourceRect, color * transparency, 0f, new Vector2(8f, 16f), 4f * (((double)scaleSize < 0.2) ? scaleSize : (scaleSize / 2f)) / extraSize, SpriteEffects.None, layerDepth);
@@ -174,7 +161,7 @@ namespace CustomChestTypes
             
             float base_sort_order = Math.Max(0f, ((y + 1f) * 64f - 24f) / 10000f) + y * 1E-05f;
             int currentFrame = alpha < 1 ? 1 : (int) MathHelper.Clamp(SHelper.Reflection.GetField<int>(__instance, "currentLidFrame").GetValue(), 1, chestInfo.frames);
-            Texture2D texture = chestInfo.texture.ElementAt(currentFrame-1);
+            Texture2D texture = SHelper.GameContent.Load<Texture2D>(chestInfo.texture.ElementAt(currentFrame - 1));
             spriteBatch.Draw(texture, Game1.GlobalToLocal(Game1.viewport, new Vector2(x * 64f + (float)((__instance.shakeTimer > 0) ? Game1.random.Next(-1, 2) : 0), (y - texture.Height / 16 + 1) * 64f)), new Rectangle(0,0, texture.Width, texture.Height), Color.White * alpha, 0f, Vector2.Zero, 4f, SpriteEffects.None, base_sort_order);
 
             return false;
@@ -184,7 +171,7 @@ namespace CustomChestTypes
         {
             if (!customChestTypesDict.TryGetValue(__instance.ParentSheetIndex, out var chestInfo))
                 return true;
-            Texture2D texture = chestInfo.texture.First();
+            Texture2D texture = SHelper.GameContent.Load<Texture2D>(chestInfo.texture.First());
             objectPosition.X -= texture.Width * 2f - 32;
             objectPosition.Y -= (texture.Height - chestInfo.boundingBox.Height) * 4f - 64;
             var tint = __instance is Chest chest ? chest.Tint : Color.White;
@@ -228,7 +215,7 @@ namespace CustomChestTypes
 
         private static void Utility_getCarpenterStock_Postfix(ref Dictionary<ISalable, int[]> __result)
         {
-            foreach(KeyValuePair<int, CustomChestType> kvp in customChestTypesDict)
+            foreach(var kvp in customChestTypesDict)
             {
                 Chest chest = new Chest(kvp.Value.id, Vector2.Zero, 217, 2);
                 chest.Price = kvp.Value.price;

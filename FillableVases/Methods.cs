@@ -13,7 +13,7 @@ namespace FillableVases
         {
             return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
         }
-        public static void ReturnFlower(string flowerData, Farmer who)
+        public static void ReturnFlowers(string flowerData, Farmer who)
         {
             var list = flowerData.Split('|').ToList();
             foreach (var item in list)
@@ -21,12 +21,16 @@ namespace FillableVases
                 var split = item.Split(',');
                 var color = Utility.StringToColor(split[1]);
                 Object obj;
-                if(color != null)
+                if(color is Color c)
                 {
-                    obj = new ColoredObject(split[0], 1, color.Value)
+                    obj = new ColoredObject(split[0], 1, c)
                     {
                         Quality = int.Parse(split[2])
                     };
+                    if (split.Length > 3 && split[3] == "true")
+                    {
+                        obj.modData[prismaticKey] = "true";
+                    }
                 }
                 else
                 {

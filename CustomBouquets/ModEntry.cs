@@ -19,6 +19,7 @@ namespace CustomBouquets
         public static string flowerPath3 = "aedenthorn.CustomBouquets/flower3";
         public static string bouquetPath = "aedenthorn.CustomBouquets/bouquet";
         public static string recipeKey = "aedenthorn.CustomBouquets_Bouquet";
+        public static string prismaticKey = "aedenthorn.PrismaticFlowers/prismatic";
         public static Texture2D flower1;
         public static Texture2D flower2;
         public static Texture2D flower3;

@@ -7,10 +7,9 @@ namespace CustomChestTypes
     public class CustomChestType
     {
         public string name;
-        public int id;
         public int capacity;
         public int price;
-        public IList<Texture2D> texture = new List<Texture2D>();
+        public IList<string> texture = new List<string>();
         public int frames = 1;
         public string openSound = "openChest";
         public string texturePath;

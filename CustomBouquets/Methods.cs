@@ -1,12 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
-using StardewValley.Characters;
-using StardewValley.GameData.Pets;
 using StardewValley.Objects;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Object = StardewValley.Object;
 
 namespace CustomBouquets
@@ -16,7 +11,12 @@ namespace CustomBouquets
         public static Color GetColor(string color)
         {
             string[] bytes = color.Split(',');
-            return new Color(byte.Parse(bytes[0]), byte.Parse(bytes[1]), byte.Parse(bytes[2]));
+            Color c = new Color(byte.Parse(bytes[0]), byte.Parse(bytes[1]), byte.Parse(bytes[2]));
+            if(c == new Color(6, 6, 6))
+            {
+                c = Utility.GetPrismaticColor();
+            }
+            return c;
         }
         public static void CacheTextures()
         {
@@ -34,7 +34,7 @@ namespace CustomBouquets
             {
                 return obj != null;
             }
-            obj.drawInMenu(spriteBatch, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(f.boundingBox.Center.X - 32), (float)(f.boundingBox.Center.Y - (f.drawHeldObjectLow.Value ? 32 : 85)))), 1f, 1f, (float)(f.boundingBox.Bottom + 1) / 10000f, StackDrawType.Hide, Color.White, false);
+            obj.drawInMenu(spriteBatch, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(f.boundingBox.Center.X - 32), (float)(f.boundingBox.Center.Y - (f.drawHeldObjectLow.Value ? 32 : 85)))), 1f, 1f, (float)(f.boundingBox.Bottom + 1) / 10000f, StackDrawType.Hide, Color.White * alpha, false);
             return false;
         }
     }

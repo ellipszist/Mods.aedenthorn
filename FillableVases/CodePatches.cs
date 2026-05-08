@@ -65,21 +65,26 @@ namespace FillableVases
                         cachedFlowerData[split[0]] = cache;
                     }
                     var pos = actualDrawPosition + new Vector2(fd.X, fd.Y);
-                    var color = Utility.StringToColor(split[1]) ?? Color.White;
+                    var color = split.Length > 3 && split[3] == "true" ? Utility.GetPrismaticColor() : StringToColor(split[1]);
                     if (!cache.SameIndex)
                     {
-                        spriteBatch.Draw(cache.Texture, pos, cache.SourceRect, Color.White * alpha, fd.Rotation, fd.Origin, fd.Scale, SpriteEffects.None, (layerOffset + 4700 + i) / 100000f);
-                        spriteBatch.Draw(cache.Texture, pos, cache.ColorSourceRect, color * alpha, fd.Rotation, fd.Origin, fd.Scale, SpriteEffects.None, (layerOffset + 4750 + i) / 100000f);
+                        spriteBatch.Draw(cache.Texture, pos, cache.SourceRect, Color.White * alpha, fd.Rotation, fd.Origin, fd.Scale, SpriteEffects.None, (layerOffset + 4700 + i * 10) / 100000f);
+                        spriteBatch.Draw(cache.Texture, pos, cache.ColorSourceRect, color * alpha, fd.Rotation, fd.Origin, fd.Scale, SpriteEffects.None, (layerOffset + 4701 + i * 10) / 100000f);
                     }
                     else
                     {
-                        spriteBatch.Draw(cache.Texture, pos, cache.SourceRect, color * alpha, fd.Rotation, fd.Origin, fd.Scale, SpriteEffects.None, (layerOffset + 4750 + i) / 100000f);
+                        spriteBatch.Draw(cache.Texture, pos, cache.SourceRect, color * alpha, fd.Rotation, fd.Origin, fd.Scale, SpriteEffects.None, (layerOffset + 4700 + i * 10) / 100000f);
                     }
                 }
                 if(vaseData.MaskTexture != null)
                 {
                     spriteBatch.Draw(SHelper.GameContent.Load<Texture2D>(vaseData.MaskTexture), actualDrawPosition, null, Color.White * alpha, 0, Vector2.Zero, 4f, SpriteEffects.None, (layerOffset + 4800) / 100000f);
                 }
+            }
+
+            private static Color StringToColor(string hex)
+            {
+                return Utility.StringToColor(hex) ?? Color.White;
             }
         }
 
@@ -107,13 +112,13 @@ namespace FillableVases
                         flowers = flowerData.Split('|').ToList();
                         if (flowers.Count == vaseData.Flowers.Length)
                         {
-                            ReturnFlower(flowerData, who);
+                            ReturnFlowers(flowerData, who);
                             __instance.modData.Remove(flowerKey);
                             __result = true;
                             return false;
                         }
                     }
-                    flowers.Add($"{obj.ItemId},{(obj is ColoredObject co ? MakeColorString(co.color.Value) : "")},{obj.Quality}");
+                    flowers.Add($"{obj.ItemId},{(obj is ColoredObject co ? MakeColorString(co.color.Value) : "")},{obj.Quality}{(obj.modData.ContainsKey(prismaticKey) ? ",true":"")}");
                     __instance.modData[flowerKey] = string.Join('|', flowers);
                     who.currentLocation.playSound("woodyStep", null, null, SoundContext.Default);
                     who.reduceActiveItemByOne();
@@ -122,7 +127,7 @@ namespace FillableVases
                 {
                     if (!__instance.modData.TryGetValue(flowerKey, out var flowerData))
                         return false;
-                    ReturnFlower(flowerData, who);
+                    ReturnFlowers(flowerData, who);
                     __instance.modData.Remove(flowerKey);
                     Game1.playSound("coin", null);
                 }
