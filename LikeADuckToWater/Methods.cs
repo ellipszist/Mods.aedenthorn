@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using StardewValley;
+using StardewValley.Pathfinding;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Microsoft.Xna.Framework;
-using StardewValley;
-using StardewValley.Pathfinding;
 
 namespace LikeADuckToWater
 {
@@ -186,11 +186,15 @@ namespace LikeADuckToWater
 
 		private static void SwamToday(FarmAnimal animal)
 		{
-			if (!animal.modData.ContainsKey(swamTodayKey) && Config.FriendshipGain > 0)
+            if (!animal.modData.ContainsKey(swamTodayKey) && Config.FriendshipGain > 0 && animal.moodMessage.Value != 5 && animal.moodMessage.Value != 6)
 			{
 				animal.friendshipTowardFarmer.Value = Math.Min(1000, animal.friendshipTowardFarmer.Value + Config.FriendshipGain);
 			}
 			animal.modData[swamTodayKey] = "true";
-		}
+			if(Config.EatWhenSwimming)
+			{
+				animal.fullness.Value = 255;
+            }
+        }
 	}
 }

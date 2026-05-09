@@ -37,7 +37,9 @@ namespace FillableVases
                 if (flowers.Length > vaseData.Flowers.Length)
                     return;
                 Vector2 actualDrawPosition = Game1.GlobalToLocal(Game1.viewport, ___drawPosition.Value + ((__instance.shakeTimer > 0) ? new Vector2((float)Game1.random.Next(-1, 2), (float)Game1.random.Next(-1, 2)) : Vector2.Zero));
+                var b = Furniture.isDrawingLocationFurniture;
                 var layerOffset = (__instance.furniture_type.Value == 12) ? (2E-09f + __instance.TileLocation.Y) : ((float)(__instance.boundingBox.Value.Bottom - ((__instance.furniture_type.Value == 6 || __instance.furniture_type.Value == 17 || __instance.furniture_type.Value == 13) ? 48 : 8)));
+                layerOffset += 5200;
                 for (int i = 0; i < flowers.Length; i++)
                 {
                     var split = flowers[i].Split(',');
@@ -64,23 +66,23 @@ namespace FillableVases
                         }
                         cachedFlowerData[split[0]] = cache;
                     }
-                    var pos = actualDrawPosition + new Vector2(fd.X, fd.Y);
+                    var pos = actualDrawPosition + new Vector2(fd.X, fd.Y + 4);
                     var color = StringToColor(split[1]);
                     if(split.Length > 3 && prismaticFlowersAPI is not null)
-                        prismaticFlowersAPI.GetPrismaticColor(split[0], color);
+                        color = prismaticFlowersAPI.GetPrismaticColorForItemId(split[0], int.TryParse(split[3], out var offset) ? offset : 0);
                     if (!cache.SameIndex)
                     {
-                        spriteBatch.Draw(cache.Texture, pos, cache.SourceRect, Color.White * alpha, fd.Rotation, fd.Origin, fd.Scale, SpriteEffects.None, (layerOffset + 4700 + i * 10) / 100000f);
-                        spriteBatch.Draw(cache.Texture, pos, cache.ColorSourceRect, color * alpha, fd.Rotation, fd.Origin, fd.Scale, SpriteEffects.None, (layerOffset + 4701 + i * 10) / 100000f);
+                        spriteBatch.Draw(cache.Texture, pos, cache.SourceRect, Color.White * alpha, fd.Rotation, fd.Origin, fd.Scale, SpriteEffects.None, (layerOffset + i * 10) / 100000f);
+                        spriteBatch.Draw(cache.Texture, pos, cache.ColorSourceRect, color * alpha, fd.Rotation, fd.Origin, fd.Scale, SpriteEffects.None, (layerOffset + 1 + i * 10) / 100000f);
                     }
                     else
                     {
-                        spriteBatch.Draw(cache.Texture, pos, cache.SourceRect, color * alpha, fd.Rotation, fd.Origin, fd.Scale, SpriteEffects.None, (layerOffset + 4700 + i * 10) / 100000f);
+                        spriteBatch.Draw(cache.Texture, pos, cache.SourceRect, color * alpha, fd.Rotation, fd.Origin, fd.Scale, SpriteEffects.None, (layerOffset + i * 10) / 100000f);
                     }
                 }
                 if(vaseData.MaskTexture != null)
                 {
-                    spriteBatch.Draw(SHelper.GameContent.Load<Texture2D>(vaseData.MaskTexture), actualDrawPosition, null, Color.White * alpha, 0, Vector2.Zero, 4f, SpriteEffects.None, (layerOffset + 4800) / 100000f);
+                    spriteBatch.Draw(SHelper.GameContent.Load<Texture2D>(vaseData.MaskTexture), actualDrawPosition, null, Color.White * alpha, 0, Vector2.Zero, 4f, SpriteEffects.None, (layerOffset + 100) / 100000f);
                 }
             }
 

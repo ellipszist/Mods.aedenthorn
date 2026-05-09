@@ -16,8 +16,8 @@ namespace PrismaticFlowers
 		public static IManifest SModManifest;
 		public static ModConfig Config;
 		public static ModEntry context;
-		public static string prismaticKey = "aedenthorn.PrismaticFlowers/prismatic";
-		public static string dictPath = "aedenthorn.PrismaticFlowers/dict";
+		public const string prismaticKey = "aedenthorn.PrismaticFlowers/prismatic";
+		public const string dictPath = "aedenthorn.PrismaticFlowers/dict";
         public override void Entry(IModHelper helper)
 		{
 			Config = Helper.ReadConfig<ModConfig>();

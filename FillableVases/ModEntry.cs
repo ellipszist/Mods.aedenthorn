@@ -49,7 +49,33 @@ namespace FillableVases
                 return;
             if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
             {
-				e.LoadFrom(() => new Dictionary<string, VaseData>(), StardewModdingAPI.Events.AssetLoadPriority.Exclusive);
+				e.LoadFrom(() => new Dictionary<string, VaseData>()
+				{
+					{ 
+						"ElegantVase", 
+						new VaseData()
+						{
+							Flowers = new FlowerData[]
+							{
+								new FlowerData() { X = 20, Y = 20, Rotation = -0.4f, Origin = new Vector2(9,9) },
+								new FlowerData() { X = 52, Y = 20, Rotation = 0.4f, Origin = new Vector2(9,9) },
+								new FlowerData() { X = 36, Y = 20, Rotation = 0, Origin = new Vector2(9,9) },
+							}
+						}
+					},
+					{
+						"1299", 
+						new VaseData()
+						{
+							Flowers = new FlowerData[]
+							{
+								new FlowerData() { X = 20, Y = 28, Rotation = -0.4f, Origin = new Vector2(9,9) },
+								new FlowerData() { X = 52, Y = 28, Rotation = 0.4f, Origin = new Vector2(9,9) },
+								new FlowerData() { X = 36, Y = 28, Rotation = 0, Origin = new Vector2(9,9) },
+							}
+						} 
+					}
+				}, StardewModdingAPI.Events.AssetLoadPriority.Exclusive);
                 
             }
         }

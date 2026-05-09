@@ -4,6 +4,8 @@ namespace FillableVases
 {
     public interface IPrismaticFlowersAPI
     {
-        public Color GetPrismaticColor(object obj, Color fallback);
+        public Color GetPrismaticColorForCropHarvest(string id, int offset, int x, int y);
+        public Color GetPrismaticColorForItemId(string id, int offset);
+        public Color GetPrismaticColorForObject(object obj, Color fallback);
     }
 }

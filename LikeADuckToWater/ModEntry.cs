@@ -177,6 +177,12 @@ namespace LikeADuckToWater
 			);
 			configMenu.AddBoolOption(
 				mod: ModManifest,
+				name: () => SHelper.Translation.Get("GMCM.EatWhenSwimming.Name"),
+				getValue: () => Config.EatWhenSwimming,
+				setValue: value => Config.EatWhenSwimming = value
+			);
+			configMenu.AddBoolOption(
+				mod: ModManifest,
 				name: () => SHelper.Translation.Get("GMCM.SwimAfterAutoPet.Name"),
 				getValue: () => Config.SwimAfterAutoPet,
 				setValue: value => Config.SwimAfterAutoPet = value

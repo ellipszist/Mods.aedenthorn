@@ -28,7 +28,7 @@ namespace PrismaticFlowers
                 if (data?.Category != Object.flowersCategory)
                     return;
 
-                if (Game1.random.Next(100) < Config.PrismaticChance || Config.Debug)
+                if (Game1.random.Next(100) < Config.PrismaticChance)
                 {
                     __instance.modData[prismaticKey] = Game1.random.Next(Utility.PRISMATIC_COLORS.Length) + (SHelper.GameContent.Load<Dictionary<string, PrismaticData>>(dictPath).TryGetValue(__instance.indexOfHarvest.Value, out var pData) && Game1.random.Next(100) < pData.Chance ? "," + __instance.indexOfHarvest.Value : "");
                 }
@@ -116,7 +116,7 @@ namespace PrismaticFlowers
                 if (codes[i].opcode == OpCodes.Callvirt && codes[i].operand is MethodInfo mi && mi == AccessTools.PropertyGetter(typeof(NetFieldBase<Color, NetColor>), nameof(NetFieldBase<Color, NetColor>.Value)))
                 {
                     SMonitor.Log($"adding check for prismatic color");
-                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(GetPrismaticColor))));
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(GetPrismaticColorForObject))));
                     codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
                 }
             }
@@ -133,7 +133,7 @@ namespace PrismaticFlowers
                 if (codes[i].opcode == OpCodes.Callvirt && codes[i].operand is MethodInfo mi && mi == AccessTools.PropertyGetter(typeof(NetFieldBase<Color, NetColor>), nameof(NetFieldBase<Color, NetColor>.Value)))
                 {
                     SMonitor.Log($"adding check for prismatic color");
-                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(GetPrismaticColor))));
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(GetPrismaticColorForObject))));
                     codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
                 }
             }
