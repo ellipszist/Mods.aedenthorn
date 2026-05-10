@@ -6,5 +6,5 @@
 	"UniqueID": "aedenthorn.PrismaticFlowers",
 	"EntryDll": "PrismaticFlowers.dll",
 	"MinimumApiVersion": "4.0.0",
-	"UpdateKeys": [ "Nexus:" ]
+	"UpdateKeys": [ "Nexus:46031" ]
 }
