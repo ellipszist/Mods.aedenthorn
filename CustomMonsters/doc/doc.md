@@ -120,7 +120,7 @@ an index for the vanilla light type used by certain monsters (not really impleme
 ### HideShadow
 whether to hide the monster's shadow.
 ### Despawn
-optional value to cause this monster to despawn. Can be "Day" to despawn at the end of the day or a number representing the time in 24 hour format (e.g. 1300 for 1:00 PM) to despawn at that time of day.
+optional field to force this monster to despawn. Can be "Day" to despawn at the end of the day or a number representing the time in 24 hour format (e.g. 1300 for 1:00 PM) to despawn at that time of day. Without this field monsters outside of the mines will not despawn unless they are killed.
 
 ### PlayerThreshold
 max tile distance from the player for the monster to begin acting (actions vary per monster).
