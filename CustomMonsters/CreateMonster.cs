@@ -156,10 +156,6 @@ namespace CustomMonsters
                 {
                     b.HideShadow = data.HideShadow.Value;
                 }
-                if (data.ShakeTimer > -1)
-                {
-                    b.shakeTimer = data.ShakeTimer;
-                }
                 b.reloadSprite();
                 return b;
             }

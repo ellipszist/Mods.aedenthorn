@@ -353,12 +353,22 @@ namespace CustomMonsters
                 return codes.AsEnumerable();
             }
         }
+        [HarmonyPatch(typeof(NPC), nameof(NPC.withinPlayerThreshold))]
+        public static class NPC_withinPlayerThreshold_Patch
+        {
+            public static void Prefix(NPC __instance, ref int threshold)
+            {
+                if (__instance is not Monster m || !TryGetData(m, out var data) || data.PlayerThreshold < 0)
+                    return;
+                threshold = data.PlayerThreshold;
+            }
+        }
         [HarmonyPatch(typeof(GreenSlime), nameof(GreenSlime.mateWith))]
         public static class GreenSlime_mateWith_Patch
         {
             public static bool Prefix(GreenSlime __instance, GreenSlime mateToPursue, GameLocation location)
             {
-                if (!TryGetData(__instance, out var data) & !TryGetData(mateToPursue, out var data2))
+                if (!TryGetData(__instance, out var data) || !TryGetData(mateToPursue, out var data2))
                     return true;
                 if(data == null || data2 == null || data.MonsterId != data2.MonsterId)
                 {

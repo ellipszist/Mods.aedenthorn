@@ -119,6 +119,10 @@ an index for the vanilla light type used by certain monsters (not really impleme
 
 ### HideShadow
 whether to hide the monster's shadow.
+
+### PlayerThreshold
+Max tile distance from the player for the monster to begin acting (actions vary per monster).
+
 ### Drops
 a list of items to replace the base type's item drops. Each item takes the following fields:
 

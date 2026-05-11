@@ -24,13 +24,13 @@ namespace CustomMonsters
         public int Experience { get; set; } = -1;
         public int Resilience { get; set; } = -1;
         public int MissChance { get; set; } = -1;
-
         public double Jitteriness { get; set; } = -1;
         public int Slipperiness { get; set; } = -1;
         public int LightType { get; set; } = -1;
-
         public bool? HideShadow { get; set; }
-        public int ShakeTimer { get; set; } = -1;
+
+        public int PlayerThreshold { get; set; } = -1;
+
         public List<CustomDropData> Drops { get; set; }
         public bool ClearDrops { get; set; } = true;
 

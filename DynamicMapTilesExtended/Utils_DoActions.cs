@@ -322,17 +322,21 @@ namespace DMT
 
         public static void DoAddMailflag(Farmer? who, string value) 
         {
+            if (who is null)
+                return;
             foreach(var item in value.Split('|'))
             {
-                who?.mailReceived.Add(item);
+                who.mailReceived.Add(item);
             }
         }
 
         public static void DoRemoveMailflag(Farmer? who, string value)
         {
-            foreach(var item in value.Split('|'))
+            if (who is null)
+                return;
+            foreach (var item in value.Split('|'))
             {
-                who?.mailReceived.Remove(item);
+                who.mailReceived.Remove(item);
             }
         }
 
