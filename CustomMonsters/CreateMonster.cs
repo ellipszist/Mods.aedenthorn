@@ -77,6 +77,14 @@ namespace CustomMonsters
                 monster.Position = position;
             }
             monster.modData[monsterKey] = id;
+            if (!string.IsNullOrEmpty(data.Despawn))
+            {
+                if (!despawnDict.ContainsKey(data.Despawn))
+                {
+                    despawnDict[data.Despawn] = new List<Monster>();
+                }
+                despawnDict[data.Despawn].Add(monster);
+            }
             if (monster is RockCrab crab)
             {
                 if (data.StickBug)

@@ -16,7 +16,9 @@ namespace CustomMonsters
 		public static ModConfig Config;
 		public static ModEntry context;
 
-		public static Dictionary<string, MonsterData> Monsters
+		public static Dictionary<string, List<Monster>> despawnDict = new Dictionary<string, List<Monster>>();
+
+        public static Dictionary<string, MonsterData> Monsters
 		{
 			get
 			{
@@ -37,6 +39,10 @@ namespace CustomMonsters
 			SModManifest = ModManifest;
 
 			helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
+            helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
+            helper.Events.GameLoop.ReturnedToTitle += GameLoop_ReturnedToTitle;
+            helper.Events.GameLoop.TimeChanged += GameLoop_TimeChanged;
+            helper.Events.GameLoop.DayEnding += GameLoop_DayEnding;
             helper.Events.Content.AssetRequested += Content_AssetRequested;
 
             Harmony harmony = new Harmony(ModManifest.UniqueID);
@@ -86,6 +92,42 @@ namespace CustomMonsters
             }
         }
 
+        private void GameLoop_ReturnedToTitle(object sender, StardewModdingAPI.Events.ReturnedToTitleEventArgs e)
+        {
+            despawnDict.Clear();
+        }
+
+        private void GameLoop_SaveLoaded(object sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)
+        {
+			despawnDict.Clear();
+        }
+
+        private void GameLoop_TimeChanged(object sender, StardewModdingAPI.Events.TimeChangedEventArgs e)
+        {
+			foreach(var k in despawnDict.Keys)
+			{
+				if(int.TryParse(k, out var i) && e.NewTime >= i)
+				{
+					foreach(var m in despawnDict[k])
+					{
+						m.currentLocation?.characters.Remove(m);
+					}
+					despawnDict.Remove(k);
+				}
+            }
+        }
+
+        private void GameLoop_DayEnding(object sender, StardewModdingAPI.Events.DayEndingEventArgs e)
+        {
+			if(despawnDict.TryGetValue("Day", out var list))
+			{
+				foreach (var m in list)
+				{
+					m.currentLocation?.characters.Remove(m);
+				}
+            }
+			despawnDict.Clear();
+        }
 
         public override object GetApi()
         {

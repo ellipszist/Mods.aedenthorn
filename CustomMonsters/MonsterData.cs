@@ -30,6 +30,7 @@ namespace CustomMonsters
         public bool? HideShadow { get; set; }
 
         public int PlayerThreshold { get; set; } = -1;
+        public string Despawn { get; set; }
 
         public List<CustomDropData> Drops { get; set; }
         public bool ClearDrops { get; set; } = true;
