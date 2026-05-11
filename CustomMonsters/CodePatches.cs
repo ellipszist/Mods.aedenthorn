@@ -353,7 +353,7 @@ namespace CustomMonsters
                 return codes.AsEnumerable();
             }
         }
-        [HarmonyPatch(typeof(NPC), nameof(NPC.withinPlayerThreshold))]
+        [HarmonyPatch(typeof(NPC), nameof(NPC.withinPlayerThreshold), new Type[] { typeof(int) })]
         public static class NPC_withinPlayerThreshold_Patch
         {
             public static void Prefix(NPC __instance, ref int threshold)
