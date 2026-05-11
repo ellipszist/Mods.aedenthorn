@@ -39,7 +39,7 @@ The vanilla monster type to base the custom monster type on. Possible values:
 	SquidKid
 
 ### Parameters
-comma-separated list of the parameters that describe the c# constructor used to instantiate the custom monster type (default "position"). Possible parameter types:
+comma-separated list of the parameters that describe the C# constructor used to instantiate the custom monster type (default "position"). Possible parameter types:
 
 - position - refers to the position passed to the API by your spawning mod (e.g. Dynamic Map Tiles)
 - level - taken from the Level field
