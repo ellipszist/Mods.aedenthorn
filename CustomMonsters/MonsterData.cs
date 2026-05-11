@@ -127,6 +127,8 @@ namespace CustomMonsters
     {
         public int MinLevel { get; set; }
         public int MaxLevel { get; set; }
+        public int MinDifficulty { get; set; } = -1;
+        public int MaxDifficulty { get; set; } = -1;
         public int Chance { get; set; }
         public List<string> Types { get; set; }
     }

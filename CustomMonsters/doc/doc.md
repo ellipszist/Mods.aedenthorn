@@ -54,7 +54,7 @@ Some of these will work differently for different monster types. See each corres
 
 
 ### Level
-The level of the monster, sometimes corresponding to a mine level, sometimes to a range of mine levels. See [ctor.txt](https://github.com/aedenthorn/StardewValleyMods/blob/master/CustomMonsters/doc/ctor.txt) for hints. Will be passed to constructors with "level" parameter. E.g. MetalHead: "position,level".
+The level of the monster, sometimes corresponding to a mine level, sometimes to a range of mine levels. See [the constructor data](https://github.com/aedenthorn/StardewValleyMods/blob/master/CustomMonsters/doc/ctor.txt) for hints. Will be passed to constructors with "level" parameter. E.g. MetalHead: "position,level".
 ### Facing
 The facing direction (0 = up, 1 = right, 2 = down, 3 = left). For Spikers it's the direction they will sense players and move to hit them. Will be passed to constructors with "facing" parameter.
 ### Name
@@ -89,7 +89,7 @@ Alternatively, a list of colors to randomly choose from for each monster instanc
 	]
 R, G, and B are the red, green, and blue values for the color, and Min and Max can be between 0 and 255. 
 ### Switch
-A type dependent true or false value. Does very different things for different types. See the constructor data for more info. Will be passed to constructors with "switch" parameter.
+A true or false switch that does very different things for different monster types. See [the constructor data](https://github.com/aedenthorn/StardewValleyMods/blob/master/CustomMonsters/doc/ctor.txt) for more info. Will be passed to constructors with "switch" parameter.
 
 ### Sprite
 a path to a custom or vanilla sprite. Custom paths must be implemented using Content Patcher.
@@ -193,6 +193,8 @@ List of entries for causing this monster type to spawn on specific mine floors. 
 
 - MinLevel - the minimum mine level for the monster to spawn.
 - MaxLevel - the maximum mine level for the monster to spawn.
+- MinDifficulty - the minimum mine floor difficulty for the monster to spawn (ordinary mine floors are 0 difficulty).
+- MaxDifficulty - the maximum mine floor difficulty for the monster to spawn (ordinary mine floors are 0 difficulty).
 - Chance - percent chance for the monster to spawn instead of a given vanilla monster.
 - Types - optional list of vanilla monster types to replace with this custom monster type (see [Type](https://github.com/aedenthorn/StardewValleyMods/blob/master/CustomMonsters/doc/doc.md#type) above). If omitted, can spawn instead of any vanilla monster. 
 

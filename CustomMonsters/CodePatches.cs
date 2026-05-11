@@ -765,7 +765,7 @@ namespace CustomMonsters
                     return;
                 foreach (var kvp in Monsters.Where(kvp => kvp.Value.MineSpawns != null))
                 {
-                    var monster = GetSpawnMonster(__result, kvp.Key, kvp.Value.MineSpawns, level, new Vector2(xTile, yTile) * 64);
+                    var monster = GetSpawnMonster(__result, kvp.Key, kvp.Value.MineSpawns, level, __instance.GetAdditionalDifficulty(), new Vector2(xTile, yTile) * 64);
                     if (monster != null)
                     {
                         __result = monster;
@@ -789,7 +789,7 @@ namespace CustomMonsters
                     {
                         foreach (var kvp in Monsters.Where(m => m.Value.VolcanoSpawns != null))
                         {
-                            var m = GetSpawnMonster(old, kvp.Key, kvp.Value.VolcanoSpawns, __instance.level.Value, old.Position);
+                            var m = GetSpawnMonster(old, kvp.Key, kvp.Value.VolcanoSpawns, __instance.level.Value, 0, old.Position);
                             if (m != null)
                             {
                                 SMonitor.Log($"Spawning monster {kvp.Key} at volcano level {__instance.level.Value}");

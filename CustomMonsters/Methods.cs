@@ -176,11 +176,11 @@ namespace CustomMonsters
             );
         }
 
-        public static Monster GetSpawnMonster(Monster old, string newId, List<MonsterSpawnData> list, int level, Vector2 position)
+        public static Monster GetSpawnMonster(Monster old, string newId, List<MonsterSpawnData> list, int level, int difficulty, Vector2 position)
         {
             if (old == null)
                 return null;
-            var spawnData = list.FirstOrDefault(m => m.MinLevel <= level && m.MaxLevel >= level && m.Types?.Contains(old.GetType().ToString()) != false);
+            var spawnData = list.FirstOrDefault(m => m.MinLevel <= level && m.MaxLevel >= level && m.Types?.Contains(old.GetType().ToString()) != false && (m.MinDifficulty < 0 || difficulty >= m.MinDifficulty) && (m.MaxDifficulty < 0 || difficulty <= m.MaxDifficulty));
             if (spawnData != default && Game1.random.NextDouble() < spawnData.Chance / 100.0)
             {
                 var m = CreateMonster(newId, position);
