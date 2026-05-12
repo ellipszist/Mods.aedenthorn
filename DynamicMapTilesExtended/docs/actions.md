@@ -18,6 +18,7 @@ DMT currently recognizes the following action keys:
 ## Player-Related Actions
 
 - [DMT/addQuest](#DMTaddQuest)
+- [DMT/appearance](#DMTappearance)
 - [DMT/buff](#DMTbuff)
 - [DMT/emote](#DMTemote)
 - [DMT/friends](#DMTfriends)
@@ -128,12 +129,30 @@ Animations are such complex objects (even with the new format), that they deserv
 Animations are such complex objects (even with the new format), that they deserve their own file, which you can find [here](animations.md).
 
 
+## DMT/appearance
+Changes various aspects of the triggering farmer's appearance. 
+
+### Accepted Value
+Changes take a comma-separated pair: {type},{value}. Types can include:
+
+- hairstyle (number value)
+- haircolor (#FFFFFF color value)
+- eyecolor  (#FFFFFF color value)
+- accessory (number value)
+- skincolor (number value)
+
+Multiple changes can be triggered using pipes to separate ('|').
+
+### Example
+"DMT/appearance_On": "hairstyle,1"  
+"DMT/appearance_Off": "hairstyle,2|haircolor,#000000|"
+
 
 ## DMT/buff
 Add a buff or debuff to the player.
 
 ### Accepted Value
-A string with multiple id's of items in ``Data\\Buffs`` separated by bars ('|'). Each id can also have a custom display source specified when followed by a comma (',').
+A string with multiple id's of items in ``Data\\Buffs`` separated by pipes ('|'). Each id can also have a custom display source specified when followed by a comma (',').
 
 ### Example
 "DMT/buff_Once_On": "22|27"  
@@ -292,7 +311,7 @@ A comma (',') delimited string with multiple options to use when triggering the 
 Fertilize one or more tiles with a given fertilizer.
 
 ### Accepted Value
-A string of the format x,y=fertilizerName. If fertilizerName is omitted, the fertilizer will be removed from that tile. To fertilize multiple tiles at once repeat this pattern separated by bars ('|').
+A string of the format x,y=fertilizerName. If fertilizerName is omitted, the fertilizer will be removed from that tile. To fertilize multiple tiles at once repeat this pattern separated by pipes ('|').
 
 ### Example
 "DMT/fertilize": "64,19,368"
@@ -304,7 +323,7 @@ A string of the format x,y=fertilizerName. If fertilizerName is omitted, the fer
 Increase or decrease friendship with an npc or animal type
 
 ### Accepted Value
-A string with pairs of the NPC's internal name or the animal type, and the amount by which to change friendship, separated by a comma (','). To change multiple values at once repeat this pattern separated by bars ('|')
+A string with pairs of the NPC's internal name or the animal type, and the amount by which to change friendship, separated by a comma (','). To change multiple values at once repeat this pattern separated by pipes ('|')
 
 ### Example
 "DMT/friends": "Marnie,50|Cow,15|Chicken,15"
@@ -331,7 +350,7 @@ Give the player a specified item (or money)
 Grow one or more crops completely when triggered.
 
 ### Accepted Values
-A string a pair of x and y tile coordinates separated by a comma (','). To change multiple values at once repeat this pattern separated by bars ('|')
+A string a pair of x and y tile coordinates separated by a comma (','). To change multiple values at once repeat this pattern separated by pipes ('|')
 
 
 ### Example
@@ -379,7 +398,7 @@ a number value in string form specifying the amount of health restored/taken.
 Invalidate an asset from the game's asset cache, forcing it to be reloaded when next requested.
 
 ### Accepted Value
-The name of the asset you want to invalidate, may be split by bars ('|') to invalidate multiple assets
+The name of the asset you want to invalidate, may be split by pipes ('|') to invalidate multiple assets
 
 ### Example
 "DMT/invalidate_Enter": "Data/Locations"  
@@ -391,7 +410,7 @@ The name of the asset you want to invalidate, may be split by bars ('|') to inva
 Kill one or more crops when triggered.
 
 ### Accepted Values
-A string a pair of x and y tile coordinates separated by a comma (','). To change multiple values at once repeat this pattern separated by bars ('|')
+A string a pair of x and y tile coordinates separated by a comma (','). To change multiple values at once repeat this pattern separated by pipes ('|')
 
 
 ### Example
@@ -592,7 +611,7 @@ The quest ID you wish to remove.
 Set crop for one or more hoe dirt when triggered.
 
 ### Accepted Values
-A string in the format x,y=SeedId,GrowthPhase. To change multiple values at once repeat this pattern separated by bars ('|')
+A string in the format x,y=SeedId,GrowthPhase. To change multiple values at once repeat this pattern separated by pipes ('|')
 
 **Note** GrowthPhase can be omitted to just plant a seed, or set to -1 to fully grow the crop.
 

@@ -49,6 +49,9 @@ namespace DMT
                         case Actions.AnimationOffKey:
                             DoAnimate(location, value, true);
                             break;
+                        case Actions.AppearanceKey:
+                            DoChangeAppearance(who, value);
+                            break;
                         case Actions.BuffKey:
                             DoAddBuff(who, value);
                             break;

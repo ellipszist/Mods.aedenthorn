@@ -371,6 +371,49 @@ namespace DMT
             }
         }
 
+        public static void DoChangeAppearance(Farmer? who, string value)
+        {
+            if (who == null)
+                return;
+            var changes = value.Split("|");
+            foreach (var item in changes)
+            {
+                var split = item.Split(",");
+                if(split.Length != 2) continue;
+                bool isNum = int.TryParse(split[1], out var i);
+                switch (split[0].ToLower())
+                {
+                    case "hairstyle":
+                        if (isNum)
+                        {
+                            who.changeHairStyle(i);
+                        }
+                        break;
+                    case "haircolor":
+                        Color? c = Utility.StringToColor(split[1]);
+                        if (c is not null)
+                            who.changeHairColor(c.Value);
+                        break;
+                    case "eyecolor":
+                        Color? c2 = Utility.StringToColor(split[1]);
+                        if (c2 is not null)
+                            who.changeEyeColor(c2.Value);
+                        break;
+                    case "accessory":
+                        if (isNum)
+                        {
+                            who.changeAccessory(i);
+                        }
+                        break;
+                    case "skincolor":
+                        if (isNum)
+                        {
+                            who.changeSkinColor(i);
+                        }
+                        break;
+                }
+            }
+        }
         public static void DoMakeover(Farmer? who, string value, bool gendered, bool required, bool replace)
         {
             if (who == null)
