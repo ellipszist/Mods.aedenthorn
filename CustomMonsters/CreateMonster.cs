@@ -95,7 +95,6 @@ namespace CustomMonsters
                 {
                     crab.waiter = Game1.random.NextDouble() < data.WaiterChance.Value / 100.0;
                 }
-                monster = crab;
             }
             if (data.Scale > -1)
             {

@@ -40,7 +40,7 @@ namespace AdvancedAutoGrabber
                         if ((Config.GrabRange < 0 || Vector2.Distance(product.TileLocation, grabber.TileLocation) <= Config.GrabRange))
                         {
                             Chest chest = grabber.heldObject.Value as Chest;
-                            if (chest != null && TryGrab(grabber, chest, product))
+                            if (chest != null && TryGrab( grabber, chest, product))
                             {
                                 grabber.showNextIndex.Value = true;
                                 location.Objects.Remove(pk);
@@ -63,6 +63,17 @@ namespace AdvancedAutoGrabber
                 var obj = ItemRegistry.Create<Object>(itemId, 1, 0, false);
                 obj.Flipped = false;
                 obj.draw(spriteBatch, x * 64, y * 64 - 32, (__instance.TileLocation.Y + 0.66f) * 64f / 10000f + (float)x * 1E-05f, alpha * (Config.OpacityPercent / 100f));
+            }
+        }
+
+        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.loadObjects))]
+        public class GameLocation_loadObjects_Patch
+        {
+            public static void Prefix(GameLocation __instance)
+            {
+                if (!Config.ModEnabled)
+                    return;
+                RegisterLocationTriggers(__instance);
             }
         }
         [HarmonyPatch(typeof(Game1), nameof(Game1.pressUseToolButton))]
@@ -103,7 +114,6 @@ namespace AdvancedAutoGrabber
                             animal.growFully(Game1.random);
                             animal.currentProduce.Value = animal.GetProduceID(Game1.random, Game1.random.NextBool());
                             Game1.player.currentLocation.animals.Add(animal.myID.Value, animal);
-                            TriggerAutoGrabbers();
                         }
                         return true;
                     }

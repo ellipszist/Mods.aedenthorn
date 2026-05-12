@@ -209,7 +209,7 @@ namespace DMT
         {
             if (location == null)
             {
-                SMonitor.Log($"[{nameof(Actions)}.{nameof(DoSpawnMonster)}] Location is null", LogLevel.Warn);
+                SMonitor.Log($"[{nameof(DoSpawnMonster)}] Location is null", LogLevel.Warn);
                 return;
             }
             var cmapi = SHelper.ModRegistry.GetApi<ICustomMonstersAPI>("aedenthorn.CustomMonsters");
@@ -219,6 +219,10 @@ namespace DMT
                 if (split.Length == 1)
                 {
                     split = item.Split(' ');
+                }
+                if(split.Length < 3)
+                {
+                    SMonitor.Log($"[{nameof(DoSpawnMonster)}] Missing parameters in {item}", LogLevel.Warn);
                 }
                 Vector2 pos = new(int.Parse(split[1]), int.Parse(split[2]));
                 if(cmapi != null)
@@ -409,6 +413,12 @@ namespace DMT
                         if (isNum)
                         {
                             who.changeSkinColor(i);
+                        }
+                        break;
+                    case "gender":
+                        if (isNum)
+                        {
+                            who.changeGender(split[1].ToLower() == "male");
                         }
                         break;
                 }

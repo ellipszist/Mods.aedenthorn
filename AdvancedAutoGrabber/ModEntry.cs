@@ -28,28 +28,11 @@ namespace AdvancedAutoGrabber
 			SModManifest = ModManifest;
 
 			helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
-            helper.Events.GameLoop.TimeChanged += GameLoop_TimeChanged;
-            helper.Events.GameLoop.OneSecondUpdateTicked += GameLoop_OneSecondUpdateTicked;
+            
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
         }
 
-        private void GameLoop_OneSecondUpdateTicked(object sender, StardewModdingAPI.Events.OneSecondUpdateTickedEventArgs e)
-        {
-            if(Game1.IsMasterGame && Context.IsPlayerFree && Config.ModEnabled && Config.GrabAfterSeconds > 0 && ++seconds >= Config.GrabAfterSeconds)
-            {
-                seconds = 0;
-                TriggerAutoGrabbers();
-            }
-        }
-
-        private void GameLoop_TimeChanged(object sender, StardewModdingAPI.Events.TimeChangedEventArgs e)
-        {
-            if (Game1.IsMasterGame && Config.ModEnabled && Config.GrabOnTimeChange)
-            {
-                TriggerAutoGrabbers();
-            }
-        }
 
         private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
 		{
@@ -80,22 +63,17 @@ namespace AdvancedAutoGrabber
 
                 configMenu.AddBoolOption(
                     mod: ModManifest,
-                    name: () => SHelper.Translation.Get("GMCM.GrabOnTimeChange.Name"),
-                    getValue: () => Config.GrabOnTimeChange,
-                    setValue: value => Config.GrabOnTimeChange = value
-                );
-                configMenu.AddNumberOption(
-                    mod: ModManifest,
-                    name: () => SHelper.Translation.Get("GMCM.GrabAfterSeconds.Name"),
-                    getValue: () => Config.GrabAfterSeconds,
-                    setValue: value => Config.GrabAfterSeconds = value
+                    name: () => SHelper.Translation.Get("GMCM.SendToChests.Name"),
+                    tooltip: () => SHelper.Translation.Get("GMCM.SendToChests.Desc"),
+                    getValue: () => Config.SendToChests,
+                    setValue: value => Config.SendToChests = value
                 );
 
                 configMenu.AddBoolOption(
                     mod: ModManifest,
-                    name: () => SHelper.Translation.Get("GMCM.SendToChests.Name"),
-                    getValue: () => Config.SendToChests,
-                    setValue: value => Config.SendToChests = value
+                    name: () => SHelper.Translation.Get("GMCM.IncludeBuildingChests.Name"),
+                    getValue: () => Config.IncludeBuildingChests,
+                    setValue: value => Config.IncludeBuildingChests = value
                 );
                 configMenu.AddNumberOption(
                     mod: ModManifest,
@@ -106,12 +84,14 @@ namespace AdvancedAutoGrabber
                 configMenu.AddNumberOption(
                     mod: ModManifest,
                     name: () => SHelper.Translation.Get("GMCM.GrabRange.Name"),
+                    tooltip: () => SHelper.Translation.Get("GMCM.GrabRange.Desc"),
                     getValue: () => Config.GrabRange,
                     setValue: value => Config.GrabRange = value
                 );
                 configMenu.AddNumberOption(
                     mod: ModManifest,
                     name: () => SHelper.Translation.Get("GMCM.ChestRange.Name"),
+                    tooltip: () => SHelper.Translation.Get("GMCM.ChestRange.Desc"),
                     getValue: () => Config.ChestRange,
                     setValue: value => Config.ChestRange = value
                 );

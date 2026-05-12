@@ -5,7 +5,7 @@ namespace CustomMonsters
 {
     public interface ICustomMonstersAPI
     {
-        Monster CreateMonster(string name, Vector2 position);
+        Monster CreateMonster(string id, Vector2 position);
     }
     public class CustomMonstersAPI : ICustomMonstersAPI
     {

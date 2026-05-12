@@ -135,11 +135,12 @@ Changes various aspects of the triggering farmer's appearance.
 ### Accepted Value
 Changes take a comma-separated pair: {type},{value}. Types can include:
 
-- hairstyle (number value)
+- hairstyle (number value - each hairstyle has an associated number (see `Data/HairData` for vanilla hairstyles)
 - haircolor (#FFFFFF color value)
 - eyecolor  (#FFFFFF color value)
-- accessory (number value)
-- skincolor (number value)
+- accessory (number value -1 to 29)
+- skincolor (number value 0 to 23)
+- gender ("female" or "male" value)
 
 Multiple changes can be triggered using pipes to separate ('|').
 
