@@ -13,5 +13,6 @@
 	"GMCM.UseMana.Name": "Use Mana",
 	"GMCM.UseMana.Tooltip": "Determines whether to consume mana instead of stamina to maintain the rainbow trail.",
 	"GMCM.EnableSound.Name": "Enable Sound",
-	"GMCM.MaxDuration.Name": "Max Rainbow Trail Duration"
+	"GMCM.MaxDuration.Name": "Max Trail Duration",
+	"GMCM.MaxOpacity.Name": "Max Trail Opacity"
 }

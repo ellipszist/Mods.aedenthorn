@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using HarmonyLib;
+﻿using HarmonyLib;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 
 namespace RainbowTrail
 {
@@ -248,6 +249,12 @@ namespace RainbowTrail
 				getValue: () => Config.MaxDuration,
 				setValue: value => Config.MaxDuration = value,
 				min: 0
+			);
+			configMenu.AddTextOption(
+				mod: ModManifest,
+				name: () => SHelper.Translation.Get("GMCM.MaxOpacity.Name"),
+				getValue: () => Config.MaxOpacity + "",
+				setValue: value => { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var f)) Config.MaxOpacity = f; }
 			);
 		}
 	}

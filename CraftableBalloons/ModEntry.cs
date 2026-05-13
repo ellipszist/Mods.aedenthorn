@@ -107,7 +107,7 @@ namespace CraftableBalloons
                         Type = "Equipment",
                         Category = -29,
                         Price = 100,
-                        Texture = "aedenthorn.CraftableBalloons/Balloon",
+                        Texture = balloonPath,
                         SpriteIndex = 0,
                         ColorOverlayFromNextIndex = false,
                         Edibility = -300,

@@ -1,7 +1,7 @@
 ﻿{
 	"Name": "Rainbow Trail",
 	"Author": "aedenthorn",
-	"Version": "0.1.2",
+	"Version": "0.2.0",
 	"Description": "Gives your farmer a customizable rainbow trail and optional speed buff.",
 	"UniqueID": "aedenthorn.RainbowTrail",
 	"EntryDll": "RainbowTrail.dll",

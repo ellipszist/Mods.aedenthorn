@@ -1,8 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Graphics.PackedVector;
 using StardewValley;
+using System;
+using System.Collections.Generic;
 
 namespace RainbowTrail
 {
@@ -14,7 +15,6 @@ namespace RainbowTrail
 			{
 				if (!Config.ModEnabled)
 					return;
-
 				trailDictionary.TryGetValue(__instance.UniqueMultiplayerID, out List<RainbowTrailElement> rainbowTrailElements);
 				if (IsRainbowTrailActive(__instance))
 				{
@@ -26,8 +26,9 @@ namespace RainbowTrail
 					rainbowTrailElements.Add(new RainbowTrailElement(__instance.Position, __instance.FacingDirection));
 				}
 				if (rainbowTrailElements is not null)
-				{
-					for (int i = 0; i < rainbowTrailElements.Count; i++)
+                {
+                    b.DrawString(Game1.dialogueFont, $"{rainbowTrailElements.Count} | {mr}", Vector2.Zero, Color.White);
+                    for (int i = 0; i < rainbowTrailElements.Count; i++)
 					{
 						Vector2 position = rainbowTrailElements[i].Position;
 						int direction = rainbowTrailElements[i].Direction;
@@ -55,12 +56,12 @@ namespace RainbowTrail
 								{
 									if (__instance.FacingDirection == 1 && rangeY < 32 && rangeX < maxRange)
 									{
-										sourceRectangle = new(0, 0, 64 - maxRange + rangeX, 64);
+										sourceRectangle = new(0, 0, 64 - (int)maxRange + rangeX, 64);
 										destinationSize = new(sourceRectangle.Value.Size.X * 2, sourceRectangle.Value.Size.Y * 2);
 									}
 									else if (__instance.FacingDirection == 3 && rangeY < 32 && rangeX < maxRange)
 									{
-										sourceRectangle = new(maxRange - rangeX, 0, maxRange + rangeX, 64);
+										sourceRectangle = new((int)maxRange - rangeX, 0, (int)maxRange + rangeX, 64);
 										offsetX = 2 * (rangeX - maxRange);
 										destinationSize = new(sourceRectangle.Value.Size.X * 2, sourceRectangle.Value.Size.Y * 2);
 									}
@@ -81,7 +82,10 @@ namespace RainbowTrail
 									offsetX += 96;
 									offsetY -= 118;
 								}
-								b.Draw(rainbowTexture, new Rectangle(Utility.Vector2ToPoint(Game1.GlobalToLocal(position) - new Vector2(32f + offsetX - (direction == 2 ? 128 : 0), 88 + offsetY)), destinationSize), sourceRectangle, Color.White * (0.5f - (Config.MaxDuration - i) / Config.MaxDuration / 2), rotation, Vector2.Zero, SpriteEffects.None, position.Y / 10000f - 0.005f + (__instance.FacingDirection == 0 ? 0.0067f : 0) - (Config.MaxDuration + 1 - i) / 10000f);
+                                var alpha = Config.MaxOpacity - ((Config.MaxDuration - duration)/ (float)Config.MaxDuration) * Config.MaxOpacity;
+
+
+                                b.Draw(rainbowTexture, new Rectangle(Utility.Vector2ToPoint(Game1.GlobalToLocal(position) - new Vector2(32f + offsetX - (direction == 2 ? 128 : 0), 88 + offsetY)), destinationSize), sourceRectangle, Color.White * alpha, rotation, Vector2.Zero, SpriteEffects.None, position.Y / 10000f - 0.005f + (__instance.FacingDirection == 0 ? 0.0067f : 0) - (Config.MaxDuration + 1 - i) / 10000f);
 							}
 						}
 						else

@@ -11,6 +11,7 @@ namespace RainbowTrail
 		public int MoveSpeed { get; set; } = 10;
 		public int StaminaUse { get; set; } = 0;
 		public bool UseMana { get; set; } = true;
-		public int MaxDuration { get; set; } = 500;
+		public int MaxDuration { get; set; } = 50;
+		public float MaxOpacity { get; set; } = 0.5f;
 	}
 }

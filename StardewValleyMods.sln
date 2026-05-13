@@ -685,6 +685,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrismaticFlowers", "Prismat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdvancedAutoGrabber", "AdvancedAutoGrabber\AdvancedAutoGrabber.csproj", "{58BE29B6-EF2B-9323-1AA8-66B3AC320CDA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FertilizerFramework", "FertilizerFramework\FertilizerFramework.csproj", "{B926CBF4-361B-9268-B610-A8BA482BE028}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LetterBlocks", "LetterBlocks\LetterBlocks.csproj", "{E64DF87D-3F0B-C43C-8EB8-5115D533BFF1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3389,6 +3393,22 @@ Global
 		{58BE29B6-EF2B-9323-1AA8-66B3AC320CDA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{58BE29B6-EF2B-9323-1AA8-66B3AC320CDA}.Release|x64.ActiveCfg = Release|Any CPU
 		{58BE29B6-EF2B-9323-1AA8-66B3AC320CDA}.Release|x64.Build.0 = Release|Any CPU
+		{B926CBF4-361B-9268-B610-A8BA482BE028}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B926CBF4-361B-9268-B610-A8BA482BE028}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B926CBF4-361B-9268-B610-A8BA482BE028}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B926CBF4-361B-9268-B610-A8BA482BE028}.Debug|x64.Build.0 = Debug|Any CPU
+		{B926CBF4-361B-9268-B610-A8BA482BE028}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B926CBF4-361B-9268-B610-A8BA482BE028}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B926CBF4-361B-9268-B610-A8BA482BE028}.Release|x64.ActiveCfg = Release|Any CPU
+		{B926CBF4-361B-9268-B610-A8BA482BE028}.Release|x64.Build.0 = Release|Any CPU
+		{E64DF87D-3F0B-C43C-8EB8-5115D533BFF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E64DF87D-3F0B-C43C-8EB8-5115D533BFF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E64DF87D-3F0B-C43C-8EB8-5115D533BFF1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E64DF87D-3F0B-C43C-8EB8-5115D533BFF1}.Debug|x64.Build.0 = Debug|Any CPU
+		{E64DF87D-3F0B-C43C-8EB8-5115D533BFF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E64DF87D-3F0B-C43C-8EB8-5115D533BFF1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E64DF87D-3F0B-C43C-8EB8-5115D533BFF1}.Release|x64.ActiveCfg = Release|Any CPU
+		{E64DF87D-3F0B-C43C-8EB8-5115D533BFF1}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
