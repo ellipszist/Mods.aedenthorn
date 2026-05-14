@@ -27,7 +27,7 @@ namespace RainbowTrail
 				}
 				if (rainbowTrailElements is not null)
                 {
-                    b.DrawString(Game1.dialogueFont, $"{rainbowTrailElements.Count} | {mr}", Vector2.Zero, Color.White);
+                    //b.DrawString(Game1.dialogueFont, $"{rainbowTrailElements.Count} | {mr}", Vector2.Zero, Color.White);
                     for (int i = 0; i < rainbowTrailElements.Count; i++)
 					{
 						Vector2 position = rainbowTrailElements[i].Position;

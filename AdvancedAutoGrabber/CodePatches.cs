@@ -108,12 +108,18 @@ namespace AdvancedAutoGrabber
                     {
                         if (Config.Debug)
                         {
-                            var animal = new FarmAnimal("Dairy Cow", Game1.Multiplayer.getNewID(), Game1.player.UniqueMultiplayerID);
-                            animal.currentLocation = Game1.player.currentLocation;
-                            animal.Position = Game1.player.Position + new Vector2(64, 0);
+                            var animal = new FarmAnimal("Pig", Game1.Multiplayer.getNewID(), Game1.player.UniqueMultiplayerID)
+                            {
+                                currentLocation = Game1.player.currentLocation,
+                                Position = Game1.player.Position + new Vector2(64, 0)
+                            };
                             animal.growFully(Game1.random);
-                            animal.currentProduce.Value = animal.GetProduceID(Game1.random, Game1.random.NextBool());
+                            animal.friendshipTowardFarmer.Value = 1500;
                             Game1.player.currentLocation.animals.Add(animal.myID.Value, animal);
+                            animal.currentProduce.Value = animal.GetProduceID(Game1.random, Game1.random.NextBool());
+                            Object p = ItemRegistry.Create<Object>(animal.currentProduce.Value, 1, 0, false);
+                            animal.DigUpProduce(animal.currentLocation, p);
+                            
                         }
                         return true;
                     }

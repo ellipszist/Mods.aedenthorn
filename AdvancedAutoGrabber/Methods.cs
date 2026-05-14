@@ -7,6 +7,7 @@ using StardewValley.GameData.FarmAnimals;
 using StardewValley.Monsters;
 using StardewValley.Network;
 using StardewValley.Objects;
+using System;
 using System.Linq;
 using Object = StardewValley.Object;
 
@@ -115,6 +116,9 @@ namespace AdvancedAutoGrabber
 
         public static bool TryGrab(Object grabber, Chest chest, Object produce)
         {
+            Random r = Utility.CreateDaySaveRandom(produce.TileLocation.X, produce.TileLocation.Y * 777f, 0.0);
+            produce.Quality = produce.Location.GetHarvestSpawnedObjectQuality(Game1.MasterPlayer, produce.isForage(), produce.TileLocation, r);
+
             return produce.HasTypeObject() && (!grabber.modData.TryGetValue(limitKey, out var itemId) || IsSameAnimal(produce.ItemId, itemId)) && chest.addItem(produce) == null;
         }
 

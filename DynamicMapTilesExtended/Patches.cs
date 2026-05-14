@@ -4,9 +4,14 @@ using Microsoft.Xna.Framework;
 using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Characters;
+using StardewValley.Extensions;
 using StardewValley.Monsters;
 using StardewValley.TerrainFeatures;
 using System.Globalization;
+using System.Reflection;
+using System.Reflection.Emit;
+using xTile.Layers;
+using xTile.Tiles;
 using Object = StardewValley.Object;
 
 namespace DMT
@@ -34,6 +39,11 @@ namespace DMT
             harmony.Patch(
                 original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.isCollidingPosition), [typeof(Rectangle), typeof(xRectangle), typeof(bool), typeof(int), typeof(bool), typeof(Character)]),
                 prefix: new(typeof(Patches), nameof(GameLocation_IsCollidingPosition_Prefix))
+            );
+
+            harmony.Patch(
+                original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.isCollidingPosition), [typeof(Rectangle), typeof(xRectangle), typeof(bool), typeof(int), typeof(bool), typeof(Character), typeof(bool), typeof(bool), typeof(bool), typeof(bool)]),
+                transpiler: new(typeof(Patches), nameof(GameLocation_IsCollidingPosition_Transpiler))
             );
 
             harmony.Patch(
@@ -142,6 +152,57 @@ namespace DMT
                 }
                 layer.Tiles[(int)x, (int)y] = null;
             }
+        }
+
+        public static IEnumerable<CodeInstruction> GameLocation_IsCollidingPosition_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            SMonitor.Log($"Transpiling GameLocation_IsCollidingPosition");
+            var codes = new List<CodeInstruction>(instructions);
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (codes[i].opcode == OpCodes.Call && codes[i].operand is MethodInfo && (MethodInfo)codes[i].operand == AccessTools.Method(typeof(GameLocation), "_TestCornersTiles"))
+                {
+                    SMonitor.Log($"adding check DMT/barrier");
+                    codes[i].operand = AccessTools.Method(typeof(Patches), nameof(Patches.CheckBarrier));
+                    codes.Insert(i, new CodeInstruction(OpCodes.Ldarg_S, 6));
+                    break;
+                }
+            }
+
+            return codes.AsEnumerable();
+        }
+
+        private static bool CheckBarrier(GameLocation location, Vector2 top_right, Vector2 top_left, Vector2 bottom_right, Vector2 bottom_left, Vector2 top_mid, Vector2 bottom_mid, Vector2? player_top_right, Vector2? player_top_left, Vector2? player_bottom_right, Vector2? player_bottom_left, Vector2? player_top_mid, Vector2? player_bottom_mid, bool bigger_than_tile, Func<Vector2, bool> action, Character character)
+        {
+            Tile t; 
+            Layer back_layer = location.map.RequireLayer("Back");
+
+            if (Enabled && character != null && (bool)(AccessTools.Method(typeof(GameLocation), "_TestCornersTiles").Invoke(location, new object[] { top_right, top_left, bottom_right, bottom_left, top_mid, bottom_mid, player_top_right, player_top_left, player_bottom_right, player_bottom_left, player_top_mid, player_bottom_mid, bigger_than_tile, (Vector2 tile) => 
+            {
+                t = back_layer.Tiles[(int)tile.X, (int)tile.Y];
+                if(t != null && t.Properties.TryGetValue(Actions.BarrierKey, out var value))
+                {
+                    var split = value.ToString().Split('|');
+                    foreach(var type in split)
+                    {
+                        var ct = character.GetType();
+                        var vt1 = Type.GetType($"StardewValley.{type}, Stardew Valley");
+                        var vt2 = Type.GetType($"StardewValley.Characters.{type}, Stardew Valley");
+                        var vt3 = Type.GetType($"StardewValley.Monsters.{type}, Stardew Valley");
+                        if(vt1?.IsAssignableFrom(ct) == true)
+                            return true;
+                        if(vt2?.IsAssignableFrom(character.GetType()) == true)
+                            return true;
+                        if(vt3?.IsAssignableFrom(character.GetType()) == true)
+                            return true;
+                    }
+                }
+                return false;
+            }}) ?? false))
+            {
+                return true;
+            }
+            return (bool)(AccessTools.Method(typeof(GameLocation), "_TestCornersTiles").Invoke(location, new object[] { top_right, top_left, bottom_right, bottom_left, top_mid, bottom_mid, player_top_right, player_top_left, player_bottom_right, player_bottom_left, player_top_mid, player_bottom_mid, bigger_than_tile, action }) ?? false);
         }
 
         internal static bool GameLocation_IsCollidingPosition_Prefix(GameLocation __instance, Rectangle position, ref bool __result)

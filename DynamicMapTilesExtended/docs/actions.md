@@ -6,6 +6,7 @@ DMT currently recognizes the following action keys:
 - [DMT/action](#DMTaction)
 - [DMT/addLayer](#DMTaddLayer)
 - [DMT/addTilesheet](#DMTaddTilesheet)
+- [DMT/barrier](#DMTbarrier)
 - [DMT/changeIndex](#DMTchangeIndex)
 - [DMT/changeMultipleIndex](#DMTchangeMultipleIndex)
 - [DMT/changeMultipleProperties](#DMTchangeMultipleProperties)
@@ -117,6 +118,32 @@ A comma (',') delimited string of the id of the tilesheet (must be unique), and 
 
 ### Example
 "DMT/addTilesheet_Enter": "DMT/TestTilesheet,Assets/Maps/Tilesheets/paths.png"
+
+
+
+## DMT/barrier
+Prevent certain character types from entering this tile.
+
+### Accepted Value
+A list of character types separated by pipes ('|'). Possibe character types include:
+
+- Character
+- FarmAnimal
+- NPC
+- Pet
+- Child
+- Horse
+- Junimo
+- JunimoHarvester
+- TrashBear
+- Raccoon
+- Farmer
+- Monster
+
+and all specific monster types. Note that character types will also check subtypes, so Character will check every character type, NPC will check NPCs and any NPC subtypes (like Pet, Monster, etc).
+
+### Example
+"DMT/barrier": "AngryRoger|Serpent|Farmer|Pet"
 
 
 

@@ -94,6 +94,11 @@ namespace CraftableBalloons
         }
         public static bool TryGetBalloonTexture(string itemId, out string texturePath)
         {
+            if (itemId is null)
+            {
+                texturePath = null;
+                return false;
+            }
             if(itemId == balloonKey)
             {
                 texturePath = balloonPath;

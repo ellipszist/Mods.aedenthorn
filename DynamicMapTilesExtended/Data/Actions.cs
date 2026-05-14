@@ -11,6 +11,7 @@ namespace DMT.Data
         public const string AnimationKey = "DMT/animation";
         public const string AnimationOffKey = "DMT/animationOff";
         public const string AppearanceKey = "DMT/appearance";
+        public const string BarrierKey = "DMT/barrier";
         public const string BuffKey = "DMT/buff";
         public const string ChangeIndexKey = "DMT/changeIndex";
         public const string ChangeMultipleIndexKey = "DMT/changeMultipleIndex";

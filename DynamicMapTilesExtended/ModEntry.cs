@@ -253,6 +253,7 @@ namespace DMT
             if (Config.Debug && e.NameWithoutLocale.IsEquivalentTo("Maps/Town"))
                 e.Edit((IAssetData data) =>
                 {
+                    data.AsMap().Data.GetLayer("Back").Tiles[42, 58].Properties["DMT/barrier"] = "Farmer";
                     data.AsMap().Data.GetLayer("Back").Tiles[43, 58].Properties["DMT/makeoverGendered_Swap_On"] = "Beanie_SkullShirt_FarmerPants|Beanie_ClassyTop_Dress";
                     data.AsMap().Data.GetLayer("Back").Tiles[43, 58].Properties["SwapDMT/makeoverGendered_Swap_On"] = "None_GraySuit_FarmerPants|LogoCap_SugarShirt_Skirt";
                     data.AsMap().Data.GetLayer("Back").Tiles[44, 58].Properties["DMT/wardrobeGendered_Swap_On"] = "Beanie_SkullShirt_FarmerPants|Beanie_ClassyTop_Dress";
