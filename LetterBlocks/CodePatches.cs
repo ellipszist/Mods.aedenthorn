@@ -28,8 +28,21 @@ namespace LetterBlocks
                 }
                 __instance.modData[letterKey] = letterData;
                 var split = letterData.Split(',');
-                var letter = data.Letters[int.Parse(split[0])][int.Parse(split[1])].ToString();
-                var color = DiscreteColorPicker.getColorFromSelection(int.Parse(split[2]));
+                var letter = data.Letters[int.Parse(split[0])].ToString();
+                var colorI = int.Parse(split[1]);
+                var color = data.Colors != null ? data.Colors[Math.Min(data.Colors.Length - 1, colorI)] : DiscreteColorPicker.getColorFromSelection(int.Parse(split[2]));
+                if (color.A == 0)
+                {
+                    colorI = Math.Min(data.Colors.Length - 1, colorI);
+                    if (data.Colors2 != null && data.Colors2.Length > colorI)
+                    {
+                        color = Utility.Get2PhaseColor(data.Colors[colorI], data.Colors2[colorI]);
+                    }
+                    else
+                    {
+                        color = Utility.GetPrismaticColor();
+                    }
+                }
                 var layer = (__instance.GetBoundingBoxAt(x, y).Center.Y + 1) / 10000f;
                 var pos = Game1.GlobalToLocal(new Vector2(x, y) * 64) + new Vector2(32, 32);
                 if (data.SpriteText)

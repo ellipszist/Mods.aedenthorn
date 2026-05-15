@@ -19,6 +19,8 @@ namespace LetterBlocks
 		public static ModEntry context;
         public const string stoneBlockKey = "aedenthorn.LetterBlocks_stone_block";
         public const string woodBlockKey = "aedenthorn.LetterBlocks_wood_block";
+        public const string deluxeStoneBlockKey = "aedenthorn.LetterBlocks_stone_block_delux";
+        public const string deluxeWoodBlockKey = "aedenthorn.LetterBlocks_wood_block_delux";
         public const string blockPath = "aedenthorn.LetterBlocks/block";
         public const string dictPath = "aedenthorn.LetterBlocks/dict";
         public const string letterKey = "aedenthorn.LetterBlocks/letter";
@@ -57,6 +59,8 @@ namespace LetterBlocks
                 int color = Math.Min(int.Parse(split[2]), 20);
 				if (SHelper.Input.IsDown(Config.ShiftKey))
 				{
+                    if (data.Letters.Length == 1)
+                        return;
                     letter = 0;
                     row -= Math.Sign(e.Delta);
                     if (row < 0)
@@ -71,12 +75,15 @@ namespace LetterBlocks
                 }
 				else if (SHelper.Input.IsDown(Config.ColorKey))
 				{
+                    if (data.Colors?.Length == 1)
+                        return;
+                    int max = data.Colors != null ? data.Colors.Length - 1 : 20;
                     color += Math.Sign(e.Delta);
                     if (color < 0)
                     {
-                        color = 20;
+                        color = max;
                     }
-                    else if (color > 20)
+                    else if (color > max)
                     {
                         color = 0;
                     }
@@ -134,6 +141,17 @@ namespace LetterBlocks
                         Category = 0,
                         Edibility = -300,
                     };
+                });
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo("Data/CraftingRecipes"))
+            {
+                e.Edit(asset =>
+                {
+                    var dict = asset.AsDictionary<string, string>();
+                    dict.Data[stoneBlockKey] = $"390 10 80 1/Home/{stoneBlockKey}/false/default/";
+                    dict.Data[woodBlockKey] = $"388 10 382 1/Home/{woodBlockKey}/false/default/";
+                    dict.Data[deluxeStoneBlockKey] = $"335 10 769 1/Home/{deluxeStoneBlockKey}/false/default/";
+                    dict.Data[deluxeWoodBlockKey] = $"709 10 768 1/Home/{deluxeWoodBlockKey}/false/default/";
                 });
             }
             else if (e.NameWithoutLocale.IsEquivalentTo(blockPath))
