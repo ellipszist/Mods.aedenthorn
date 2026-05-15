@@ -11,8 +11,9 @@ namespace LetterBlocks
                 "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
                 "1234567890"
             };
-        public string FontPath { get; set; } = "Fonts\\SpriteFont1";
+        public string FontPath { get; set; }
         public int DefaultColor {  get; set; }
         public float FontScale { get; set; } = 1f;
+        public bool SpriteText { get; set; }
     }
 }

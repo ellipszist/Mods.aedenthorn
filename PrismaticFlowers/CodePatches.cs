@@ -107,6 +107,17 @@ namespace PrismaticFlowers
             }
         }
 
+        [HarmonyPatch(typeof(Object), nameof(Object.sellToStorePrice))]
+        public static class Object_sellToStorePrice_Patch
+        {
+            public static void Postfix(Object __instance, ref int __result)
+            {
+                if (!Config.ModEnabled || !__instance.modData.ContainsKey(prismaticKey))
+                    return;
+                __result = (int)Math.Round(__result * Config.PriceMultiplier);
+            }
+        }
+
         public static IEnumerable<CodeInstruction> ColoredObject_Draw_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             SMonitor.Log($"Transpiling ColoredObject.draw");

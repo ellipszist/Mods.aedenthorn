@@ -22,6 +22,7 @@ namespace PrismaticFlowers
 		public List<string> Ignore { get; set; } = new();
 		public float ObjectSpeed { get; set; } = 1;
 		public float CropSpeed { get; set; } = 1;
+		public float PriceMultiplier { get; set; } = 2f;
 		public PrismaticPattern CropPattern { get; set; } = PrismaticPattern.None;
 		public PrismaticPattern ObjectPattern { get; set; } = PrismaticPattern.None;
     }

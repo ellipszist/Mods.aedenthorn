@@ -3,7 +3,10 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.TerrainFeatures;
+using System;
 using System.Globalization;
+using System.Linq;
+using System.Reflection;
 
 namespace MusicalPaths
 {
@@ -61,34 +64,74 @@ namespace MusicalPaths
 
             configMenu.AddBoolOption(
                 mod: ModManifest,
-                name: () => "Mod Enabled",
+                name: () => SHelper.Translation.Get("ModEnabled"),
                 getValue: () => Config.ModEnabled,
                 setValue: value => Config.ModEnabled = value
             );
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Consume Block",
-                getValue: () => Config.ConsumeBlock,
-                setValue: value => Config.ConsumeBlock = value
-            );
-            configMenu.AddKeybind(
-                mod: ModManifest,
-                name: () => "Mod Key",
-                getValue: () => Config.ModKey,
-                setValue: value => Config.ModKey = value
-            );
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Show Block Outline",
-                getValue: () => Config.ShowBlockOutLine,
-                setValue: value => Config.ShowBlockOutLine = value
-            );
-            configMenu.AddTextOption(
-                mod: ModManifest,
-                name: () => "Block Outline Opacity",
-                getValue: () => Config.BlockOutLineOpacity +"",
-                setValue: delegate(string value) { try { Config.BlockOutLineOpacity = float.Parse(value, NumberStyles.Any, CultureInfo.InvariantCulture); } catch { } } 
-            );
+            var props = typeof(ModConfig).GetProperties().ToArray();
+            Array.Sort(props, (PropertyInfo a, PropertyInfo b) =>
+            {
+                return a.Name.CompareTo(b.Name);
+            });
+            foreach (var p in props)
+            {
+                if (p.Name == nameof(Config.ModEnabled))
+                    continue;
+                if (p.PropertyType == typeof(bool))
+                {
+                    configMenu.AddBoolOption(
+                        mod: ModManifest,
+                        name: () => SHelper.Translation.Get(p.Name),
+                        getValue: () => (bool)p.GetValue(Config),
+                        setValue: value => p.SetValue(Config, value)
+                    );
+                }
+                else if (p.PropertyType == typeof(int))
+                {
+                    configMenu.AddNumberOption(
+                        mod: ModManifest,
+                        name: () => SHelper.Translation.Get(p.Name),
+                        getValue: () => (int)p.GetValue(Config),
+                        setValue: value => p.SetValue(Config, value)
+                    );
+                }
+                else if (p.PropertyType == typeof(float))
+                {
+                    configMenu.AddTextOption(
+                        mod: ModManifest,
+                        name: () => SHelper.Translation.Get(p.Name),
+                        getValue: () => p.GetValue(Config).ToString(),
+                        setValue: value => { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var f)) { p.SetValue(Config, f); } }
+                    );
+                }
+                else if (p.PropertyType == typeof(double))
+                {
+                    configMenu.AddTextOption(
+                        mod: ModManifest,
+                        name: () => SHelper.Translation.Get(p.Name),
+                        getValue: () => p.GetValue(Config).ToString(),
+                        setValue: value => { if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var d)) { p.SetValue(Config, d); } }
+                    );
+                }
+                else if (p.PropertyType == typeof(string))
+                {
+                    configMenu.AddTextOption(
+                        mod: ModManifest,
+                        name: () => SHelper.Translation.Get(p.Name),
+                        getValue: () => (string)p.GetValue(Config),
+                        setValue: value => p.SetValue(Config, value)
+                    );
+                }
+                else if (p.PropertyType == typeof(SButton))
+                {
+                    configMenu.AddKeybind(
+                        mod: ModManifest,
+                        name: () => SHelper.Translation.Get(p.Name),
+                        getValue: () => (SButton)p.GetValue(Config),
+                        setValue: value => p.SetValue(Config, value)
+                    );
+                }
+            }
         }
 
     }

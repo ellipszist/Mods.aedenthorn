@@ -1,13 +1,8 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using StardewValley;
-using StardewValley.BellsAndWhistles;
-using StardewValley.Menus;
 using StardewValley.TerrainFeatures;
-using System;
-using System.Collections.Generic;
 using xTile.Dimensions;
 using Object = StardewValley.Object;
 
@@ -28,7 +23,7 @@ namespace MusicalPaths
 
                 foreach (Farmer farmer in __instance.farmers)
                 {
-                    Vector2 playerPos = farmer.getTileLocation();
+                    Vector2 playerPos = farmer.Tile;
                     if (__instance.terrainFeatures.TryGetValue(playerPos, out TerrainFeature f) && f is Flooring && f.modData.TryGetValue(typeKey, out string soundType))
                     {
                         int.TryParse(f.modData[lastTimeKey], out int lastTime);
@@ -57,7 +52,6 @@ namespace MusicalPaths
                 if (!Config.ModEnabled || who.ActiveObject is not null || __result || checking)
                     return;
                 checking = true;
-                var x = Environment.StackTrace;
                 if (__instance.terrainFeatures.TryGetValue(new Vector2(tileLocation.X, tileLocation.Y), out TerrainFeature f) && f is Flooring && f.modData.TryGetValue(typeKey, out string soundType))
                 {
                     if (soundType.Equals("Flute Block"))
@@ -85,7 +79,7 @@ namespace MusicalPaths
             {
                 if (!Config.ModEnabled || !SHelper.Input.IsDown(Config.ModKey))
                     return true;
-                Vector2 placementTile = new Vector2((float)(x / 64), (float)(y / 64));
+                Vector2 placementTile = new((float)(x / 64), (float)(y / 64));
                 if (location.terrainFeatures.TryGetValue(placementTile, out TerrainFeature f) && f is Flooring)
                 {
                     string soundName;
@@ -104,7 +98,6 @@ namespace MusicalPaths
                     Game1.soundBank.GetCue(soundName).Play();
                     if (Config.ConsumeBlock)
                         Game1.player.reduceActiveItemByOne();
-                    __result = true;
                     return false;
                 }
                 return true;
@@ -113,11 +106,11 @@ namespace MusicalPaths
         [HarmonyPatch(typeof(Flooring), nameof(Flooring.draw))]
         public class Flooring_draw_Patch
         {
-            public static void Postfix(Flooring __instance, SpriteBatch spriteBatch, Vector2 tileLocation)
+            public static void Postfix(Flooring __instance, SpriteBatch spriteBatch)
             {
                 if (!Config.ModEnabled || !Config.ShowBlockOutLine || !__instance.modData.TryGetValue(typeKey, out string blockType))
                     return;
-                spriteBatch.Draw(Game1.objectSpriteSheet, Game1.GlobalToLocal(Game1.viewport, tileLocation * 64f), Game1.getSourceRectForStandardTileSheet(Game1.objectSpriteSheet, blockType == "Flute Block" ? 464 : 463, 16, 16), Color.White * Config.BlockOutLineOpacity, 0, Vector2.Zero, 4f, SpriteEffects.None, 1E-09f + 0.000001f);
+                spriteBatch.Draw(Game1.objectSpriteSheet, Game1.GlobalToLocal(Game1.viewport, __instance.Tile * 64f), Game1.getSourceRectForStandardTileSheet(Game1.objectSpriteSheet, blockType == "Flute Block" ? 464 : 463, 16, 16), Color.White * Config.BlockOutLineOpacity, 0, Vector2.Zero, 4f, SpriteEffects.None, 1E-09f + 0.000001f);
             }
         }
     }

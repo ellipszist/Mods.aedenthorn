@@ -147,13 +147,15 @@ namespace LetterBlocks
 					{ 
 						stoneBlockKey, new BlockData()
 						{
-                            DefaultColor = 20
+                            DefaultColor = 20,
+                            SpriteText = true
                         }
 					},
 					{ 
 						woodBlockKey, new BlockData()
 						{
-                            DefaultColor = 0
+                            DefaultColor = 0,
+                            SpriteText = true
                         }
 					}
 				}, StardewModdingAPI.Events.AssetLoadPriority.Exclusive);

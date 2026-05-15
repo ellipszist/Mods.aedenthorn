@@ -689,6 +689,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FertilizerFramework", "Fert
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LetterBlocks", "LetterBlocks\LetterBlocks.csproj", "{E64DF87D-3F0B-C43C-8EB8-5115D533BFF1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocationMap", "LocationMap\LocationMap.csproj", "{D92BACFC-5905-D5AF-3F2F-A8FD6A2910B8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3409,6 +3411,14 @@ Global
 		{E64DF87D-3F0B-C43C-8EB8-5115D533BFF1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E64DF87D-3F0B-C43C-8EB8-5115D533BFF1}.Release|x64.ActiveCfg = Release|Any CPU
 		{E64DF87D-3F0B-C43C-8EB8-5115D533BFF1}.Release|x64.Build.0 = Release|Any CPU
+		{D92BACFC-5905-D5AF-3F2F-A8FD6A2910B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D92BACFC-5905-D5AF-3F2F-A8FD6A2910B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D92BACFC-5905-D5AF-3F2F-A8FD6A2910B8}.Debug|x64.ActiveCfg = Debug|x64
+		{D92BACFC-5905-D5AF-3F2F-A8FD6A2910B8}.Debug|x64.Build.0 = Debug|x64
+		{D92BACFC-5905-D5AF-3F2F-A8FD6A2910B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D92BACFC-5905-D5AF-3F2F-A8FD6A2910B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D92BACFC-5905-D5AF-3F2F-A8FD6A2910B8}.Release|x64.ActiveCfg = Release|x64
+		{D92BACFC-5905-D5AF-3F2F-A8FD6A2910B8}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

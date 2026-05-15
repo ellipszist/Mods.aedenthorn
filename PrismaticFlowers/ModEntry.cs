@@ -104,6 +104,12 @@ namespace PrismaticFlowers
                 gmcm.AddTextOption(
 					mod: ModManifest,
 					name: () => SHelper.Translation.Get("GMCM.ObjectSpeed.Name"),
+					getValue: () => Config.PriceMultiplier +"",
+					setValue: value => { if (float.TryParse(value, System.Globalization.NumberStyles.Any, null, out float f)) Config.PriceMultiplier = f; }
+				);
+                gmcm.AddTextOption(
+					mod: ModManifest,
+					name: () => SHelper.Translation.Get("GMCM.ObjectSpeed.Name"),
 					getValue: () => Config.ObjectSpeed +"",
 					setValue: value => { if (float.TryParse(value, System.Globalization.NumberStyles.Any, null, out float f)) Config.ObjectSpeed = f; }
 				);
