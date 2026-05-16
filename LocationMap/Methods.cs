@@ -161,10 +161,11 @@ namespace LocationMap
             if (!showingMap || renderTarget is null)
                 return;
             var l = Game1.currentLocation;
+            var scale = Game1.options.uiScale;
             int tileSize = 16;
             var menu = Game1.activeClickableMenu;
             int vpHeight = menu.yPositionOnScreen * 2 + menu.height;
-            int vpWidth = menu.xPositionOnScreen * 2 + menu.width - (int)(128 / Game1.options.uiScale);
+            int vpWidth = menu.xPositionOnScreen * 2 + menu.width - (int)(128 / scale);
 
             int width = Math.Min((Game1.viewport.Width - tileSize) / tileSize, l.map.Layers[0].LayerWidth);
             int height = Math.Min((Game1.viewport.Height - tileSize) / tileSize, l.map.Layers[0].LayerHeight);
@@ -172,7 +173,6 @@ namespace LocationMap
             Point vpCenter = new(vpWidth / 2, vpHeight / 2);
             Point topLeft = new(vpCenter.X - width / 2 * tileSize, vpCenter.Y - height / 2 * tileSize);
             
-            var scale = Game1.options.uiScale;
 
             //Point playerChunk = GetPlayerChunk(Game1.player);
             //Rectangle playerBox = new Rectangle(Game1.player.TilePoint.X - mapSize / 2, Game1.player.TilePoint.Y - mapSize / 2, mapSize, mapSize);

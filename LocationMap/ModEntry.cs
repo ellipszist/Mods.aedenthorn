@@ -106,24 +106,26 @@ namespace LocationMap
 
             if (showingMap && e.Button == SButton.MouseLeft && renderTarget != null)
             {
+                var mp = Game1.getMousePosition(true);
                 if (upperRightCloseButton.containsPoint(Game1.getMouseX(true), Game1.getMouseY(true)))
                 {
                     Game1.playSound("bigDeSelect");
                     showingMap = false;
                 }
-                else if (Config.AllowTeleport && mapRect.Contains(Game1.getMousePosition()))
+                else if (Config.AllowTeleport && mapRect.Contains(mp))
                 {
                     var l = Game1.currentLocation;
                     int tileSize = 16;
+                    var scale = Game1.options.uiScale;
 
 
-                    int width = Math.Min((Game1.viewport.Width - tileSize) / tileSize, l.map.Layers[0].LayerWidth) * 64;
-                    int height = Math.Min((Game1.viewport.Height - tileSize) / tileSize, l.map.Layers[0].LayerHeight) * 64;
+                    int width = Math.Min((Game1.uiViewport.Width - tileSize) / tileSize, l.map.Layers[0].LayerWidth) * 64;
+                    int height = Math.Min((Game1.uiViewport.Height - tileSize) / tileSize, l.map.Layers[0].LayerHeight) * 64;
 
                     int start_x = Math.Clamp((int)Game1.player.Position.X - width / 2, 0, l.map.Layers[0].LayerWidth * 64 - width);
                     int start_y = Math.Clamp((int)Game1.player.Position.Y - height / 2, 0, l.map.Layers[0].LayerHeight * 64 - height);
-                    float x = (Game1.getMousePosition().X - mapRect.X) * 64f / tileSize + start_x;
-                    float y = (Game1.getMousePosition().Y - mapRect.Y) * 64f / tileSize + start_y;
+                    float x = (mp.X - mapRect.X) * 64f / tileSize + start_x;
+                    float y = (mp.Y - mapRect.Y) * 64f / tileSize + start_y;
                     Game1.player.Position = new Vector2(x, y);
                     Game1.activeClickableMenu.exitThisMenu(true);
                 }

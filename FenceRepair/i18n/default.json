@@ -1,0 +1,11 @@
+{
+	"ModEnabled": "Mod Enabled",
+	"RequireMats": "Require Mats",
+	"TakeMatsFromChests": "Mats From Chests",
+	"HealthString1": "Line One",
+	"HealthString2": "Line Two",
+	"ShowHealthKey": "Show Health",
+	"ColorHigh": "Color (High)",
+	"ColorMid": "Color (Mid)",
+	"ColorLow": "Color (Low)"
+}
