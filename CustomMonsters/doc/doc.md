@@ -219,17 +219,23 @@ List of entries for causing this monster type to spawn in specific locations. Ea
 
 Example:
 
-	"LocationSpawns":[
-		{
-			"Location":"Forest",
-			"MinSpawn":1,
-			"MaxSpawn":3,
-			"MaxAmount":10,
-			"MinTile":{"X":0,"Y":0},
-			"MaxTile":{"X":100,"Y":100},
-			"Respawn":"Daily"
-		}
-	]
+    "LocationSpawns": [
+        {
+            "Location": "Forest",
+            "MinSpawn": 1,
+            "MaxSpawn": 3,
+            "MaxAmount": 10,
+            "MinTile": {
+                "X": 0,
+                "Y": 0
+            },
+            "MaxTile": {
+                "X": 100,
+                "Y": 100
+            },
+            "Respawn": "Daily"
+        }
+    ]
 
 ## AngryRoger specific
 
