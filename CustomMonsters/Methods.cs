@@ -176,7 +176,7 @@ namespace CustomMonsters
             );
         }
 
-        public static Monster GetSpawnMonster(Monster old, string newId, List<MonsterSpawnData> list, int level, int difficulty, Vector2 position)
+        public static Monster GetSpawnMonster(Monster old, string newId, List<DungeonReplaceData> list, int level, int difficulty, Vector2 position)
         {
             if (old == null)
                 return null;
@@ -188,6 +188,43 @@ namespace CustomMonsters
             }
             return null;
         }
-    }
+        public static void TrySpawnMonsters(string key, MonsterSpawnData spawn, int spawns)
+        {
+            for(int i = 0; i < spawns; i++)
+            {
 
+                var loc = Game1.getLocationFromName(spawn.Location);
+                if (loc == null)
+                {
+                    return;
+                }
+                int present = loc.characters.Where(c => c is Monster m && m.modData.TryGetValue(monsterKey, out var type) && type == key).Count();
+                if (spawn.MaxAmount >= 0 && present >= spawn.MaxAmount)
+                {
+                    return;
+                }
+                int toSpawn = Game1.random.Next(spawn.MinSpawn, spawn.MaxSpawn + 1);
+                if (spawn.MaxAmount >= 0 && toSpawn > spawn.MaxAmount - present)
+                {
+                    toSpawn = spawn.MaxAmount - present;
+                }
+                List<Vector2> spawned = new();
+                for (int j = 0; j < toSpawn; j++)
+                {
+                    Vector2 pos = new Vector2(Game1.random.Next(spawn.MinTile.X, spawn.MaxTile.X + 1), Game1.random.Next(spawn.MinTile.Y, spawn.MaxTile.Y + 1)) * 64;
+                    if (spawned.Contains(pos))
+                    {
+                        continue;
+                    }
+                    spawned.Add(pos);
+                    var m = CreateMonster(key, pos);
+                    if (m != null)
+                    {
+                        loc.characters.Add(m);
+                    }
+                }
+            }
+        }
+
+    }
 }

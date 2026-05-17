@@ -54,8 +54,9 @@ namespace CustomMonsters
         public int? ProjectileDamage { get; set; }
         public int? ProjectileRange { get; set; }
 
-        public List<MonsterSpawnData> MineSpawns { get; set; }
-        public List<MonsterSpawnData> VolcanoSpawns { get; set; }
+        public List<DungeonReplaceData> MineSpawns { get; set; }
+        public List<DungeonReplaceData> VolcanoSpawns { get; set; }
+        public List<MonsterSpawnData> LocationSpawns { get; set; }
 
         //Angry Roger specific
         public string SprinkleColor { get; set; }
@@ -116,6 +117,7 @@ namespace CustomMonsters
 
     }
 
+
     public class StackData
     {
         public int Chance { get; set; }
@@ -123,7 +125,7 @@ namespace CustomMonsters
         public int MaxStacks { get; set; }
     }
 
-    public class MonsterSpawnData
+    public class DungeonReplaceData
     {
         public int MinLevel { get; set; }
         public int MaxLevel { get; set; }
@@ -131,6 +133,22 @@ namespace CustomMonsters
         public int MaxDifficulty { get; set; } = -1;
         public int Chance { get; set; }
         public List<string> Types { get; set; }
+    }
+    public enum RespawnPeriod
+    {
+        Daily,
+        Hourly,
+        TenMinutes
+    }
+    public class MonsterSpawnData
+    {
+        public string Location { get; set; }
+        public int MinSpawn { get; set; }
+        public int MaxSpawn { get; set; }
+        public int MaxAmount { get; set; } = -1;
+        public Point MinTile { get; set; }
+        public Point MaxTile { get; set; }
+        public RespawnPeriod Respawn { get; set; } = RespawnPeriod.Daily;
     }
 
     public class CustomDropData

@@ -206,7 +206,30 @@ List of entries for causing this monster type to spawn on specific mine floors. 
 - Chance - percent chance for the monster to spawn instead of a given vanilla monster.
 - Types - optional list of vanilla monster types to replace with this custom monster type (see [Type](https://github.com/aedenthorn/StardewValleyMods/blob/master/CustomMonsters/doc/doc.md#type) above). If omitted, can spawn instead of any vanilla monster. 
 
+### LocationSpawns
+List of entries for causing this monster type to spawn in specific locations. Each entry takes the following fields:
 
+- Location - the name of the location for the monster to spawn in (e.g. "Forest" or "Mountain").
+- MinSpawn - the minimum number of this monster type to spawn at once.
+- MaxSpawn - the maximum number of this monster type to spawn at once.
+- MaxAmount - the max number of this monster type that can be present in the location at once (if omitted, no limit).
+- MinTile - the minimum x,y tile coordinates for the monster to spawn at.
+- MaxTile - the maximum x,y tile coordinates for the monster to spawn at.
+- Respawn - the period after which to trigger a respawn. Can be one of "Daily", "Hourly", or "TenMinutes".
+
+Example:
+
+	"LocationSpawns":[
+		{
+			"Location":"Forest",
+			"MinSpawn":1,
+			"MaxSpawn":3,
+			"MaxAmount":10,
+			"MinTile":{"X":0,"Y":0},
+			"MaxTile":{"X":100,"Y":100},
+			"Respawn":"Daily"
+		}
+	]
 
 ## AngryRoger specific
 

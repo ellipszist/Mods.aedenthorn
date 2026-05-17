@@ -273,7 +273,7 @@ namespace DMT
             }
             GameLocation l = e.NewLocation;
             LoadLocation(l);
-            TriggerActions([.. l.Map.Layers], e.Player, e.NewLocation, e.Player.TilePoint, ["Enter"]);
+            TriggerActions([.. l.Map.Layers], e.Player, e.NewLocation, e.Player.TilePoint, [Triggers.EnterLocation]);
         }
 
         private void onGameLaunched(object? sender, GameLaunchedEventArgs e)

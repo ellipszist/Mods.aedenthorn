@@ -43,6 +43,7 @@ namespace CustomMonsters
             helper.Events.GameLoop.ReturnedToTitle += GameLoop_ReturnedToTitle;
             helper.Events.GameLoop.TimeChanged += GameLoop_TimeChanged;
             helper.Events.GameLoop.DayEnding += GameLoop_DayEnding;
+            helper.Events.GameLoop.DayStarted += GameLoop_DayStarted;
             helper.Events.Content.AssetRequested += Content_AssetRequested;
 
             Harmony harmony = new Harmony(ModManifest.UniqueID);
@@ -92,6 +93,24 @@ namespace CustomMonsters
             }
         }
 
+        private void GameLoop_DayStarted(object sender, StardewModdingAPI.Events.DayStartedEventArgs e)
+        {
+
+            foreach (var kvp in Monsters)
+            {
+                if (kvp.Value.LocationSpawns != null)
+                {
+                    foreach (var spawn in kvp.Value.LocationSpawns)
+                    {
+                        if (spawn.Respawn == RespawnPeriod.Daily)
+                        {
+                            TrySpawnMonsters(kvp.Key, spawn, 1);
+                        }
+                    }
+                }
+            }
+        }
+
         private void GameLoop_ReturnedToTitle(object sender, StardewModdingAPI.Events.ReturnedToTitleEventArgs e)
         {
             despawnDict.Clear();
@@ -114,6 +133,26 @@ namespace CustomMonsters
 					}
 					despawnDict.Remove(k);
 				}
+            }
+			foreach(var kvp in Monsters)
+			{
+				if(kvp.Value.LocationSpawns != null)
+                {
+                    foreach (var spawn in kvp.Value.LocationSpawns)
+                    {
+						if (spawn.Respawn == RespawnPeriod.Hourly && e.NewTime / 100 > e.OldTime / 100)
+						{
+							int spawns = e.NewTime / 100 - e.OldTime / 100;
+                            TrySpawnMonsters(kvp.Key, spawn, spawns);
+                        }
+						else if (spawn.Respawn == RespawnPeriod.TenMinutes && e.NewTime > e.OldTime)
+						{
+							int hours = e.NewTime / 100 - e.OldTime / 100;
+							int tenMinutes = (e.NewTime % 100 - e.OldTime % 100) / 10;
+                            TrySpawnMonsters(kvp.Key, spawn, hours * 6 + tenMinutes);
+                        }
+                    }
+                }
             }
         }
 
