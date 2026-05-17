@@ -1,6 +1,8 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
+using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Characters;
 using StardewValley.Objects;
@@ -18,6 +20,8 @@ namespace PetBed
         public static ModConfig Config;
 
         public static ModEntry context;
+        public const string dictPath = "aedenthorn.PetBed/dict";
+        public const string sleepingKey = "aedenthorn.PedBed/sleeping";
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
@@ -25,7 +29,7 @@ namespace PetBed
         {
             Config = Helper.ReadConfig<ModConfig>();
 
-            if (!Config.EnableMod)
+            if (!Config.ModEnabled)
                 return;
 
             context = this;
@@ -34,16 +38,31 @@ namespace PetBed
             SHelper = helper;
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
             helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
+            helper.Events.Content.AssetRequested += Content_AssetRequested;
 
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
         }
 
-        private void GameLoop_SaveLoaded(object sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)
+        private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
         {
-            if (!Config.EnableMod)
+            if(!Config.ModEnabled)
                 return;
+            if(e.NameWithoutLocale.IsEquivalentTo(dictPath))
+            {
+                e.LoadFrom(() => new Dictionary<string, PetBedData>(), AssetLoadPriority.Exclusive);
+            }
+        }
+
+        private void GameLoop_SaveLoaded(object sender, SaveLoadedEventArgs e)
+        {
+            if (!Config.ModEnabled)
+                return;
+            if (Config.Debug)
+            {
+                Game1.player.whichPetType = "Cat";
+            }
             foreach(Pet pet in Utility.getHomeOfFarmer(Game1.player).characters.ToList().Where(c => c.GetType().IsAssignableTo(typeof(Pet))))
             {
                 Monitor.Log($"Checking pet bed for {pet.Name}");
@@ -73,14 +92,20 @@ namespace PetBed
             configMenu.AddBoolOption(
                 mod: ModManifest,
                 name: () => "Mod Enabled?",
-                getValue: () => Config.EnableMod,
-                setValue: value => Config.EnableMod = value
+                getValue: () => Config.ModEnabled,
+                setValue: value => Config.ModEnabled = value
             );
             configMenu.AddBoolOption(
                 mod: ModManifest,
-                name: () => "Is Bed?",
-                getValue: () => Config.IsBed,
-                setValue: value => Config.IsBed = value
+                name: () => "Outdoor Bed?",
+                getValue: () => Config.OutdoorIsBed,
+                setValue: value => Config.OutdoorIsBed = value
+            );
+            configMenu.AddBoolOption(
+                mod: ModManifest,
+                name: () => "Indoor Bed?",
+                getValue: () => Config.IndoorIsBed,
+                setValue: value => Config.IndoorIsBed = value
             );
             configMenu.AddNumberOption(
                 mod: ModManifest,
@@ -119,109 +144,6 @@ namespace PetBed
                 getValue: () => Config.OutdoorBedOffset,
                 setValue: value => Config.OutdoorBedOffset = value
             );
-        }
-        private static bool WarpPetToBed(Pet pet, GameLocation location, bool outdoor)
-        {
-
-            string which = outdoor ? Config.OutdoorBedName : Config.IndoorBedName;
-            List<string> names = new List<string>();
-            if (which.Contains(";"))
-            {
-                string[] parts = which.Split(';');
-                foreach (string s in parts)
-                {
-                    if (s.StartsWith(pet.Name + ":"))
-                    {
-                        names.Add(s.Substring((pet.Name + ":").Length));
-                    }
-                    else if (!s.Contains(":"))
-                        names.Add(s);
-                }
-            }
-            else
-            {
-                names.Add(which);
-            }
-            SMonitor.Log($"{names.Count} possible beds for {pet.Name}");
-            if (names.Count > 0)
-            {
-                Vector2 sleeping_tile = new Vector2(-1, -1);
-                names = ShuffleList(names);
-                foreach (string name in names)
-                {
-                    SMonitor.Log($"Checking bed {name}");
-                    if (name.Contains(","))
-                    {
-                        string[] parts = name.Split(',');
-                        if (parts.Length == 2 && int.TryParse(parts[0], out int X) && int.TryParse(parts[1], out int Y))
-                        {
-                            if (location.isCharacterAtTile(sleeping_tile) != null)
-                                continue;
-                            sleeping_tile = new Vector2(X, Y);
-                            SMonitor.Log($"Setting sleeping tile manually to {sleeping_tile}");
-                        }
-                    }
-                    if (sleeping_tile.X == -1)
-                    {
-                        List<Furniture> flist = new List<Furniture>();
-                        foreach (Furniture furniture in location.furniture)
-                        {
-                            //SMonitor.Log($"Checking furniture {furniture.Name} is {name}");
-
-                            if ((furniture.Name == name || furniture.Name.EndsWith($"_{name}")) && location.isCharacterAtTile(furniture.TileLocation) == null)
-                                flist.Add(furniture);
-                        }
-                        if (flist.Count > 0)
-                        {
-                            sleeping_tile = flist[Game1.random.Next(0, flist.Count)].TileLocation;
-                            SMonitor.Log($"Found ped bed {name} at {sleeping_tile}");
-                        }
-                    }
-                    if (sleeping_tile.X > -1)
-                    {
-                        Vector2 offset = Vector2.Zero;
-                        string offsetString = outdoor ? Config.OutdoorBedOffset : Config.IndoorBedOffset;
-                        var offsetParts = offsetString.Split(',');
-                        if (offsetParts.Length == 2 && int.TryParse(offsetParts[0].Trim(), out int oX) && int.TryParse(offsetParts[1].Trim(), out int oY))
-                        {
-                            offset = new Vector2(oX, oY);
-                        }
-                        SMonitor.Log($"Moving pet to {sleeping_tile}, pixel offset {offset}");
-
-                        pet.isSleepingOnFarmerBed.Value = Config.IsBed;
-                        pet.faceDirection(2);
-                        Game1.warpCharacter(pet, location, sleeping_tile);
-                        pet.position.Value += offset;
-
-                        pet.UpdateSleepingOnBed();
-                        AccessTools.FieldRefAccess<Pet, string>(pet, "_currentBehavior") = pet.CurrentBehavior;
-
-                        pet.Halt();
-                        pet.Sprite.CurrentAnimation = null;
-                        pet.OnNewBehavior();
-                        pet.Sprite.UpdateSourceRect();
-                        pet.isSleeping.Value = true;
-                        return true;
-                    }
-                }
-            }
-
-            SMonitor.Log($"No bed found for '{pet.Name}'");
-            return false;
-        }
-        public static List<T> ShuffleList<T>(List<T> _list)
-        {
-            List<T> list = new List<T>(_list);
-            int n = list.Count;
-            while (n > 1)
-            {
-                n--;
-                int k = Game1.random.Next(n + 1);
-                var value = list[k];
-                list[k] = list[n];
-                list[n] = value;
-            }
-            return list;
         }
     }
 

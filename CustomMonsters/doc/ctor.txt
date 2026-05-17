@@ -1,4 +1,6 @@
-This is a list of all the constructors for the vanilla monsters. The parameters are what you pass to the "Parameters" field in your content.json file to tell the mod which C# constructor to use. e.g.: 
+Vanilla monster types each have multiple constructors for creating monster instances under different conditions. This complicates the process of creating custom monsters based on vanilla types.
+
+Below is a list of all possible C# constructors for the vanilla monsters. The parameters are what you pass to the "Parameters" field in your content.json file to tell the mod which constructor to use. e.g.: 
 
 {
   "Format": "2.9.0",
@@ -18,11 +20,11 @@ This is a list of all the constructors for the vanilla monsters. The parameters 
 
 This will call the constructor for Serpent that has two parameters (position and name). The position parameter will be passed by whatever mod is spawning the monster. Here I supply the name parameter with "Name": "Royal Serpent", which tells the game to make a royal serpent type monster.
 
-For "name" I have included in parentheses names used by the game to create specific monster types. Unless you are intent on basing your monster off of one of these special types, you probably shouldn't use constructors that have the "name" parameter.
+For "name" fields, below I have included in parentheses names used by the game to create specific monster types. Unless you are intent on basing your monster off of one of these special types, you probably shouldn't use constructors that have the "name" parameter.
 
-For switch, I have included in parenthesis the name of the switch that will toggle if you set "Switch": true for that monster type.
+For "switch" fields, below I have included in parenthesis the name of the switch that will toggle if you set "Switch": true for that monster type.
 
-See doc.md for more info.
+See https://github.com/aedenthorn/StardewValleyMods/blob/master/CustomMonsters/doc/doc.md for more info.
 
 
 AngryRoger:

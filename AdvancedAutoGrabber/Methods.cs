@@ -36,9 +36,11 @@ namespace AdvancedAutoGrabber
 
         public static void Animals_OnValueAdded(long key, FarmAnimal a)
         {
-            if (a.currentProduce.Value == null || !a.isAdult() || a.GetHarvestType().GetValueOrDefault() == FarmAnimalHarvestType.DigUp)
+            if ( a?.currentProduce.Value == null || !a.isAdult() || a.GetHarvestType() is null || a.GetHarvestType().GetValueOrDefault() == FarmAnimalHarvestType.DigUp)
                 return;
-            foreach (var kvp in a.currentLocation?.Objects.Pairs)
+            if (a?.currentLocation?.Objects?.Pairs is null)
+                return;
+            foreach (var kvp in a.currentLocation.Objects.Pairs)
             {
                 if (kvp.Value?.QualifiedItemId == "(BC)165")
                 {

@@ -1,7 +1,7 @@
 ﻿{
   "Name": "Pet Bed",
   "Author": "aedenthorn",
-  "Version": "0.5.0",
+  "Version": "0.6.1",
   "Description": "Pet Bed.",
   "UniqueID": "aedenthorn.PetBed",
   "EntryDll": "PetBed.dll",
