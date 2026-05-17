@@ -1,4 +1,4 @@
-﻿using Harmony;
+﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Netcode;
@@ -22,11 +22,11 @@ namespace FlowingMineRocks
         public static Dictionary<string, object> outdoorAreas = new Dictionary<string, object>();
         public static IMonitor SMonitor;
         public static IModHelper SHelper;
-        private static Texture2D tilesheet;
+        public const string tilesheetPath = "aedenthorn.FlowingMineRocks/tilesheet";
         private static int sheetWidth = 8;
         private static Dictionary<Vector2, bool> flippedObjects = new Dictionary<Vector2, bool>();
-        public static List<int> rocks = new List<int>() { 32, 34, 36, 38, 40, 42, 44, 48, 50, 52, 54, 56, 58, 668, 670, 760, 762 };
-        public static List<int> treasures = new List<int>() { 751, 290, 764, 765, 2, 4, 6, 8, 10, 12, 14, 25, 46, 75, 76, 77, 95, 843, 844, 849, 850 };
+        public static List<string> rocks = new List<string>() { "32", "34", "36", "38", "40", "42", "44", "48", "50", "52", "54", "56", "58", "668", "670", "760", "762" };
+        public static List<string> treasures = new List<string>() { "751", "290", "764", "765", "2", "4", "6", "8", "10", "12", "14", "25", "46", "75", "76", "77", "95", "843", "844", "849", "850" };
 
 
         /*********
@@ -42,17 +42,26 @@ namespace FlowingMineRocks
             SMonitor = Monitor;
             SHelper = Helper;
 
-            tilesheet = Helper.Content.Load<Texture2D>("assets/tilesheet.png");
-
             helper.Events.Player.Warped += Player_Warped;
+            helper.Events.Content.AssetRequested += Content_AssetRequested;
 
-            var harmony = HarmonyInstance.Create(this.ModManifest.UniqueID);
+            var harmony = new Harmony(ModManifest.UniqueID);
 
             harmony.Patch(
                original: AccessTools.Method(typeof(Object), nameof(Object.draw), new Type[] {typeof(SpriteBatch),typeof(int),typeof(int),typeof(float) }),
                prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.Object_draw_Prefix))
             );
 
+        }
+
+        private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
+        {
+            if (!Config.EnableMod)
+                return;
+            if (e.NameWithoutLocale.IsEquivalentTo(tilesheetPath))
+            {
+                e.LoadFromModFile<Texture2D>("assets/tilesheet.png", AssetLoadPriority.Exclusive);
+            }
         }
 
         private void Player_Warped(object sender, WarpedEventArgs e)
@@ -62,11 +71,11 @@ namespace FlowingMineRocks
 
         private static bool Object_draw_Prefix(Object __instance, SpriteBatch spriteBatch, int x, int y, float alpha)
         {
-            if (!(Game1.currentLocation is MineShaft))
+            if (Game1.currentLocation is not MineShaft)
                 return true;
 
 
-            if (rocks.Contains(__instance.parentSheetIndex) || treasures.Contains(__instance.parentSheetIndex))
+            if (rocks.Contains(__instance.ItemId) || treasures.Contains(__instance.ItemId))
             {
 
                 if (!flippedObjects.ContainsKey(new Vector2(x, y)))
@@ -77,24 +86,24 @@ namespace FlowingMineRocks
                 bool flip = flippedObjects[new Vector2(x, y)];
 
                 Vector2 origin = new Vector2(8f, 8f);
-                GetTileInfo(Game1.currentLocation.objects, x, y, __instance.parentSheetIndex, flip, out int tileIndex);
+                GetTileInfo(Game1.currentLocation.objects, x, y, flip, out int tileIndex);
                 if (tileIndex == -1)
                     return true;
-
+                var tilesheet = SHelper.GameContent.Load<Texture2D>(tilesheetPath);
                 Rectangle sourceRect = new Rectangle(tileIndex * 16 % (sheetWidth* 16), tileIndex * 16 / (sheetWidth * 16) * 16, 16, 16);
                 Vector2 position = Game1.GlobalToLocal(Game1.viewport, new Vector2(x * 64 + 32 + ((__instance.shakeTimer > 0) ? Game1.random.Next(-1, 2) : 0), y * 64 + 32 + ((__instance.shakeTimer > 0) ? Game1.random.Next(-1, 2) : 0)));
-                spriteBatch.Draw(tilesheet, position, sourceRect, Color.White, 0, origin, (__instance.scale.Y > 1f) ? __instance.getScale().Y : 4f, flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, (__instance.isPassable() ? __instance.getBoundingBox(new Vector2(x, y)).Top : __instance.getBoundingBox(new Vector2(x, y)).Bottom) / 10000f);
-                if (treasures.Contains(__instance.parentSheetIndex))
+                spriteBatch.Draw(tilesheet, position, sourceRect, Color.White, 0, origin, (__instance.scale.Y > 1f) ? __instance.getScale().Y : 4f, flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, (__instance.isPassable() ? __instance.boundingBox.Top : __instance.boundingBox.Bottom) / 10000f);
+                if (treasures.Contains(__instance.ItemId))
                 {
-                    Rectangle treasureRect = new Rectangle((treasures.IndexOf(__instance.parentSheetIndex) % sheetWidth) * 16, (10 + treasures.IndexOf(__instance.parentSheetIndex) / sheetWidth) * 16, 16, 16);
-                    spriteBatch.Draw(tilesheet, position, treasureRect, Color.White, 0, origin, (__instance.scale.Y > 1f) ? __instance.getScale().Y : 4f, flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, (__instance.isPassable() ? __instance.getBoundingBox(new Vector2(x, y)).Top : __instance.getBoundingBox(new Vector2(x, y)).Bottom) / 10000f + 0.001f);
+                    Rectangle treasureRect = new Rectangle((treasures.IndexOf(__instance.ItemId) % sheetWidth) * 16, (10 + treasures.IndexOf(__instance.ItemId) / sheetWidth) * 16, 16, 16);
+                    spriteBatch.Draw(tilesheet, position, treasureRect, Color.White, 0, origin, (__instance.scale.Y > 1f) ? __instance.getScale().Y : 4f, flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, (__instance.isPassable() ? __instance.boundingBox.Top : __instance.boundingBox.Bottom) / 10000f + 0.001f);
                 }
 
                 return false;
             }
             return true;
         }
-        private static void GetTileInfo(OverlaidDictionary objects, int x, int y, NetInt parentSheetIndex, bool flip, out int tileIndex)
+        private static void GetTileInfo(OverlaidDictionary objects, int x, int y, bool flip, out int tileIndex)
         {
             int setOffset = GetGroupSetOffset(objects, x, y);
             if (IsRock(objects, x - 1, y)) // rock to left
@@ -280,7 +289,7 @@ namespace FlowingMineRocks
         {
             if (!tiles.Contains(tile))
                 tiles.Add(tile);
-            int offset = GetSetOffset(objects[tile].parentSheetIndex);
+            int offset = GetSetOffset(objects[tile].ItemId);
             if (!offsets.ContainsKey(offset))
                 offsets.Add(offset, new List<Vector2>() { tile });
             else
@@ -296,22 +305,22 @@ namespace FlowingMineRocks
                 GetSurroundingOffsets(objects, tiles, offsets, tile + new Vector2(0, 1));
         }
 
-        private static int GetSetOffset(NetInt parentSheetIndex)
+        private static int GetSetOffset(string id)
         {
-            if (new int[] { 48, 50, 52, 54, 76, 290, 850 }.Contains(parentSheetIndex))
+            if (new string[] { "48", "50", "52", "54", "76", "290", "850" }.Contains(id))
                 return 1; // blue
-            if (new int[] { 56, 58}.Contains(parentSheetIndex))
+            if (new string[] { "56", "58"}.Contains(id))
                 return 2; // red
-            if (new int[] { 10, 44, 46, 765, 843, 844, 849 }.Contains(parentSheetIndex))
+            if (new string[] { "10", "44", "46", "765", "843", "844", "849" }.Contains(id))
                 return 3; // purple
-            if (new int[] { 2, 34, 36, 75, 668, 670,760, 762, 764 }.Contains(parentSheetIndex))
+            if (new string[] { "2", "34", "36", "75", "668", "670,760", "762", "764" }.Contains(id))
                 return 4; // grey
             return 0;
         }
 
         private static bool IsRock(OverlaidDictionary objects, int x, int y)
         {
-            return objects.ContainsKey(new Vector2(x, y)) && (rocks.Contains(objects[new Vector2(x, y)].parentSheetIndex) || treasures.Contains(objects[new Vector2(x, y)].parentSheetIndex));
+            return objects.TryGetValue(new Vector2(x, y), out var obj) && (rocks.Contains(obj.ItemId) || treasures.Contains(obj.ItemId));
         }
     }
 }

@@ -8,7 +8,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
-namespace FenceRepair
+namespace FenceDecorations
 {
     /// <summary>The mod entry point.</summary>
     public partial class ModEntry : Mod
@@ -31,22 +31,11 @@ namespace FenceRepair
             context = this;
 
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
-            helper.Events.Input.ButtonPressed += Input_ButtonPressed;
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
         }
 
-        private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
-        {
-            if (!Config.ModEnabled || !Context.IsPlayerFree)
-                return;
-            if(Config.ToggleShow && e.Button == Config.ShowHealthKey)
-            {
-                showToggled = !showToggled;
-                Game1.playSound("shiny4");
-            }
-        }
 
         private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
         {   

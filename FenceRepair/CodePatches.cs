@@ -22,13 +22,11 @@ namespace FenceRepair
         {
             public static void Postfix(Fence __instance, SpriteBatch b, int x, int y, float alpha)
             {
-                if (!Config.ModEnabled)
-                    return;
-                if (!Context.IsPlayerFree || !SHelper.Input.IsDown(Config.ShowHealthKey))
+                if (!Config.ModEnabled || __instance.isGate.Value || !Context.IsPlayerFree || !IsShowing())
                     return;
                 //if(Config.Debug && __instance.maxHealth.Value > 100)
                 //    __instance.health.Value = __instance.maxHealth.Value * 0.5f;
-                //if(Config.Debug && __instance.maxHealth.Value > 200)
+                //if (Config.Debug && __instance.maxHealth.Value > 200)
                 //    __instance.health.Value = __instance.maxHealth.Value * 0.2f;
                 var fraction = __instance.health.Value / __instance.maxHealth.Value;
                 var color = fraction > 0.66 ? Config.ColorHigh : (fraction > 0.33 ? Config.ColorMid : Config.ColorLow);
@@ -39,6 +37,14 @@ namespace FenceRepair
                 var layer2 = (y * 64 + 32 + 3) / 10000f;
                 b.Draw(Game1.staminaRect, rect, null, Color.Black * alpha, 0, Vector2.Zero, SpriteEffects.None, layer);
                 b.Draw(Game1.staminaRect, rect2, null, color * alpha, 0, Vector2.Zero, SpriteEffects.None, layer2);
+                if (Config.ShowNumber)
+                {
+                    var str = Math.Round(__instance.health.Value, __instance.health.Value >=1 ? 0 : 1).ToString();
+                    var layer3 = (y * 64 + 32 + 4) / 10000f;
+                    var m = Game1.tinyFont.MeasureString(str);
+                    var pos = Game1.GlobalToLocal(new Vector2(x, y) * 64 + new Vector2(32 - m.X / 2, -40 - m.Y));
+                    b.DrawString(Game1.tinyFont, str, pos, Color.White * alpha, 0, Vector2.Zero, 1f, SpriteEffects.None, layer3);
+                }
             }
         }
 
@@ -61,25 +67,13 @@ namespace FenceRepair
 
         }
 
-        public static Vector2 lastMouseTile = new(-1, -1);
-        public static bool lastCheck;
         [HarmonyPatch(typeof(Fence), nameof(Fence.performObjectDropInAction))]
         public static class Fence_performObjectDropInAction_Patch
         {
             public static void Postfix(Fence __instance, Item dropInItem, bool probe, Farmer who, bool returnFalseIfItemConsumed, ref bool __result)
             {
-                if (!Config.ModEnabled || __result || !probe || __instance.Location is not GameLocation location || __instance.health.Value >= __instance.maxHealth.Value || __instance.repairQueued.Value)
-                {
-                    lastMouseTile = Game1.currentCursorTile;
+                if (!Config.ModEnabled || __result || !probe || __instance.Location is not GameLocation location || __instance.repairQueued.Value)
                     return;
-                }
-                if (probe && lastMouseTile == Game1.currentCursorTile)
-                {
-                    __result = lastCheck;
-                    return;
-                }
-                lastMouseTile = Game1.currentCursorTile;
-
                 __result = TryRepairFence(__instance.Location, __instance, who, true);
             }
         }

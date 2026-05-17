@@ -1,10 +1,12 @@
 {
 	"ModEnabled": "Mod Enabled",
-	"RequireMats": "Require Mats",
-	"TakeMatsFromChests": "Mats From Chests",
-	"HealthString1": "Line One",
-	"HealthString2": "Line Two",
 	"ShowHealthKey": "Show Health",
+	"ToggleShow": "Toggle Show",
+	"ShowNumber": "Show Number",
+	"RequireMats": "Require Mats",
+	"TakeMatsFromInventory": "Mats From Inv",
+	"TakeMatsFromChests": "Mats From Chests",
+	"ColorNumber": "Number Color",
 	"ColorHigh": "Color (High)",
 	"ColorMid": "Color (Mid)",
 	"ColorLow": "Color (Low)"
