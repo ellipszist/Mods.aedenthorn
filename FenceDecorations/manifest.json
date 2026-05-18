@@ -6,5 +6,5 @@
   "UniqueID": "aedenthorn.FenceDecorations",
   "EntryDll": "FenceDecorations.dll",
   "MinimumApiVersion": "4.0.0",
-  "UpdateKeys": [ "Nexus:" ]
+  "UpdateKeys": [ "Nexus:46374" ]
 }

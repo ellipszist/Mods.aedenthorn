@@ -18,7 +18,7 @@ namespace FenceDecorations
         {
             public static void Postfix(Fence __instance, Item dropInItem, bool probe, Farmer who, bool returnFalseIfItemConsumed, ref bool __result)
             {
-                if (!Config.ModEnabled || __result || dropInItem is not Object obj || __instance.Location is not GameLocation location || __instance.heldObject.Value != null || __instance.isGate.Value || (!Config.Debug && !Config.AllowedDecorations.Contains(dropInItem.QualifiedItemId)))
+                if (!Config.ModEnabled || __result || dropInItem is not Object obj || __instance.Location is not GameLocation location || __instance.heldObject.Value != null || __instance.isGate.Value || Config.DisallowedDecorations.Contains(dropInItem.QualifiedItemId))
                     return;
                 if (!probe)
                 {
@@ -56,13 +56,22 @@ namespace FenceDecorations
         {
             public static bool Prefix(Object __instance, SpriteBatch spriteBatch, int xNonTile, int yNonTile, float layerDepth, float alpha) 
             {
-                if (!Config.ModEnabled || __instance is not Furniture f)
+                if (!Config.ModEnabled)
                     return true;
-                Vector2 position = Game1.GlobalToLocal(Game1.viewport, new Vector2((float)xNonTile, (float)yNonTile));
 
-                f.drawAtNonTileSpot(spriteBatch, position, layerDepth, alpha);
-                return false;
+                if(__instance is Furniture f)
+                {
+                    Vector2 position = Game1.GlobalToLocal(Game1.viewport, new Vector2(xNonTile, yNonTile));
+                    f.drawAtNonTileSpot(spriteBatch, position, layerDepth, alpha);
+                    return false;
+                }
+                else if (__instance is ColoredObject co)
+                {
+                    DrawColoredObject(co, spriteBatch, xNonTile, yNonTile, alpha);
+                }
+                return true;
             }
+
         }
     }
 }
