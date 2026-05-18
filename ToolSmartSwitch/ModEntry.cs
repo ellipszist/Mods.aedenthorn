@@ -1,6 +1,8 @@
 ﻿using HarmonyLib;
 using StardewModdingAPI;
+using StardewValley;
 using System.Globalization;
+using System.Reflection;
 
 namespace ToolSmartSwitch
 {
@@ -32,13 +34,16 @@ namespace ToolSmartSwitch
 
         }
 
-        private void Input_ButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
+        private void Input_ButtonPressed(object? sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
         {
+            if (!Config.ModEnabled)
+                return;
             if(Context.CanPlayerMove && Config.ToggleButton != SButton.None && e.Button == Config.ToggleButton)
             {
-                Config.EnableMod = !Config.EnableMod;
+                Config.SwitchEnabled = !Config.SwitchEnabled;
                 Helper.WriteConfig(Config);
-                SMonitor.Log("Mod enabled: " + Config.EnableMod);
+                Game1.addHUDMessage(new HUDMessage(SHelper.Translation.Get("enabled-" + Config.SwitchEnabled), 1));
+                SMonitor.Log("Mod enabled: " + Config.SwitchEnabled);
             }
         }
 
@@ -48,7 +53,7 @@ namespace ToolSmartSwitch
         }
 
 
-        private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
+        private void GameLoop_GameLaunched(object? sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
         {
             // get Generic Mod Config Menu's API (if it's installed)
             var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
@@ -65,116 +70,70 @@ namespace ToolSmartSwitch
             configMenu.AddBoolOption(
                 mod: ModManifest,
                 name: () => "Mod Enabled",
-                getValue: () => Config.EnableMod,
-                setValue: value => Config.EnableMod = value
+                getValue: () => Config.ModEnabled,
+                setValue: value => Config.ModEnabled = value
             );
-            
-            configMenu.AddKeybind(
-                mod: ModManifest,
-                name: () => "Toggle Button",
-                getValue: () => Config.ToggleButton,
-                setValue: value => Config.ToggleButton = value
-            );
+            PropertyInfo[] props = [.. typeof(ModConfig).GetProperties()];
 
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Only When Holding Tool",
-                getValue: () => Config.HoldingTool,
-                setValue: value => Config.HoldingTool = value
-            );
-            
-
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Switch From Weapon",
-                getValue: () => Config.FromWeapon,
-                setValue: value => Config.FromWeapon = value
-            );
-
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Switch For Animals",
-                getValue: () => Config.SwitchForAnimals,
-                setValue: value => Config.SwitchForAnimals = value
-            );
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Switch For Monsters",
-                getValue: () => Config.SwitchForMonsters,
-                setValue: value => Config.SwitchForMonsters = value
-            ); 
-            configMenu.AddTextOption(
-                mod: ModManifest,
-                name: () => "Max Monster Distance",
-                getValue: () => Config.MonsterMaxDistance + "",
-                setValue: delegate (string value) { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out float f)) { Config.MonsterMaxDistance = f; } }
-            );
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Switch For Trees",
-                getValue: () => Config.SwitchForTrees,
-                setValue: value => Config.SwitchForTrees = value
-            );
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Switch For Grass",
-                getValue: () => Config.SwitchForGrass,
-                setValue: value => Config.SwitchForGrass = value
-            );
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Switch For Crops",
-                getValue: () => Config.SwitchForCrops,
-                setValue: value => Config.SwitchForCrops = value
-            );
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Harvest With Scythe (Mod)",
-                getValue: () => Config.HarvestWithScythe,
-                setValue: value => Config.HarvestWithScythe = value
-            );
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Switch For Resource Clumps",
-                getValue: () => Config.SwitchForResourceClumps,
-                setValue: value => Config.SwitchForResourceClumps = value
-            );
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Switch For Pan",
-                getValue: () => Config.SwitchForPan,
-                setValue: value => Config.SwitchForPan = value
-            );
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Switch For Watering Can",
-                getValue: () => Config.SwitchForWateringCan,
-                setValue: value => Config.SwitchForWateringCan = value
-            );
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Switch For Tilling",
-                getValue: () => Config.SwitchForTilling,
-                setValue: value => Config.SwitchForTilling = value
-            );
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Switch For Watering",
-                getValue: () => Config.SwitchForWatering,
-                setValue: value => Config.SwitchForWatering = value
-            );
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Switch For Fishing",
-                getValue: () => Config.SwitchForFishing,
-                setValue: value => Config.SwitchForFishing = value
-            );
-            configMenu.AddBoolOption(
-                mod: ModManifest,
-                name: () => "Switch For Objects",
-                getValue: () => Config.SwitchForObjects,
-                setValue: value => Config.SwitchForObjects = value
-            );
+            foreach (PropertyInfo p in props)
+            {
+                if (p.Name == nameof(Config.ModEnabled) || p.Name == nameof(Config.Debug))
+                    continue;
+                if (p.PropertyType == typeof(bool))
+                {
+                    configMenu.AddBoolOption(
+                        mod: ModManifest,
+                        name: () => SHelper.Translation.Get(p.Name),
+                        getValue: () => (bool)p.GetValue(Config),
+                        setValue: value => p.SetValue(Config, value)
+                    );
+                }
+                else if (p.PropertyType == typeof(int))
+                {
+                    configMenu.AddNumberOption(
+                        mod: ModManifest,
+                        name: () => SHelper.Translation.Get(p.Name),
+                        getValue: () => (int)p.GetValue(Config),
+                        setValue: value => p.SetValue(Config, value)
+                    );
+                }
+                else if (p.PropertyType == typeof(float))
+                {
+                    configMenu.AddTextOption(
+                        mod: ModManifest,
+                        name: () => SHelper.Translation.Get(p.Name),
+                        getValue: () => p.GetValue(Config).ToString(),
+                        setValue: value => { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var f)) { p.SetValue(Config, f); } }
+                    );
+                }
+                else if (p.PropertyType == typeof(double))
+                {
+                    configMenu.AddTextOption(
+                        mod: ModManifest,
+                        name: () => SHelper.Translation.Get(p.Name),
+                        getValue: () => p.GetValue(Config).ToString(),
+                        setValue: value => { if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var d)) { p.SetValue(Config, d); } }
+                    );
+                }
+                else if (p.PropertyType == typeof(string))
+                {
+                    configMenu.AddTextOption(
+                        mod: ModManifest,
+                        name: () => SHelper.Translation.Get(p.Name),
+                        getValue: () => (string)p.GetValue(Config),
+                        setValue: value => p.SetValue(Config, value)
+                    );
+                }
+                else if (p.PropertyType == typeof(SButton))
+                {
+                    configMenu.AddKeybind(
+                        mod: ModManifest,
+                        name: () => SHelper.Translation.Get(p.Name),
+                        getValue: () => (SButton)p.GetValue(Config),
+                        setValue: value => p.SetValue(Config, value)
+                    );
+                }
+            }
         }
 
     }

@@ -278,7 +278,7 @@ namespace ImmersiveSprinklersAndScarecrows
 
         }
         [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.draw))]
-        public class HoeDirt_DrawOptimized_Patch
+        public class GameLocation_draw_Patch
         {
             public static void Postfix(GameLocation __instance, SpriteBatch b)
             {
@@ -470,6 +470,33 @@ namespace ImmersiveSprinklersAndScarecrows
                 }
                 return true;
             }
+        }
+        [HarmonyPatch(typeof(Game1), nameof(Game1.pressUseToolButton))]
+        public class Game1_pressUseToolButton_Patch
+        {
+            public static bool Prefix()
+            {
+                if (!Config.EnableMod || !Context.IsPlayerFree || Game1.player.ActiveItem is not Tool tool || tool.ItemId != "PeacefulEnd.AlternativeTextures_PaintBucket" || atApi is null)
+                    return true;
+                var tile = GetMouseCornerTile();
+                if (Vector2.Distance(tile.ToVector2(), Game1.player.Position / 64) >= 3)
+                    return true;
+
+                var sc = GetScarecrowAtMouse();
+                if(sc != null)
+                {
+                    OpenPaintMenu(tool, sc);
+                    return false;
+                }
+                var sp = GetSprinklerAtMouse();
+                if(sp != null)
+                {
+                    OpenPaintMenu(tool, sp);
+                    return false;
+                }
+                return true;
+            }
+
         }
 
         [HarmonyPatch(typeof(Farm), nameof(Farm.addCrows))]

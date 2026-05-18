@@ -1,14 +1,14 @@
 ﻿// ModConfig.cs
 
-using Microsoft.Xna.Framework;
 using StardewModdingAPI;
-using StardewModdingAPI.Utilities;
 
 namespace ToolSmartSwitch
 {
     public class ModConfig
     {
-        public bool EnableMod { get; set; } = true;
+        public bool ModEnabled { get; set; } = true;
+        public bool Debug { get; set; } = true;
+        public bool SwitchEnabled { get; set; } = true;
         public SButton ToggleButton { get; set; } = SButton.None;
         public bool HoldingTool { get; set; } = true;
         public bool FromWeapon { get; set; } = true;

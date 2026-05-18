@@ -13,7 +13,7 @@ namespace ToolSmartSwitch
         {
             public static void Prefix()
             {
-                if (!Config.EnableMod || Game1.fadeToBlack || !Context.CanPlayerMove || (Game1.player.CurrentTool is null && Config.HoldingTool))
+                if (!Config.ModEnabled ||!Config.SwitchEnabled || Game1.fadeToBlack || !Context.CanPlayerMove || (Game1.player.CurrentTool is null && Config.HoldingTool))
                     return;
                 SmartSwitch(Game1.player);
             }
@@ -24,7 +24,7 @@ namespace ToolSmartSwitch
         {
             public static void Prefix(HoeDirt __instance)
             {
-                if (!Config.EnableMod || !Config.SwitchForCrops || (Game1.player.CurrentTool is not Tool && Config.HoldingTool))
+                if (!Config.ModEnabled || !Config.SwitchEnabled || !Config.SwitchForCrops || (Game1.player.CurrentTool is not Tool && Config.HoldingTool))
                     return;
                 SwitchForTerrainFeature(Game1.player, __instance, GetTools(Game1.player));
             }

@@ -25,22 +25,24 @@ namespace ImmersiveSprinklersAndScarecrows
 
         public static ModEntry context;
 
-        public static string sprinklerPrefix = "aedenthorn.ImmersiveSprinklers/";
-        public static string scarecrowPrefix = "aedenthorn.ImmersiveScarecrows/";
-        public static string sprinklerKey = "aedenthorn.ImmersiveSprinklers/sprinkler";
-        public static string scarecrowKey = "aedenthorn.ImmersiveScarecrows/scarecrow";
-        public static string sprinklerBigCraftableKey = "aedenthorn.ImmersiveSprinklers/bigCraftable";
-        public static string scarecrowBigCraftableKey = "aedenthorn.ImmersiveScarecrows/bigCraftable";
-        public static string sprinklerGuidKey = "aedenthorn.ImmersiveSprinklers/guid";
-        public static string scarecrowGuidKey = "aedenthorn.ImmersiveScarecrows/guid";
-        public static string enricherKey = "aedenthorn.ImmersiveSprinklers/enricher";
-        public static string fertilizerKey = "aedenthorn.ImmersiveSprinklers/fertilizer";
-        public static string nozzleKey = "aedenthorn.ImmersiveSprinklers/nozzle";
-        public static string altTextureSprinklerPrefix = "aedenthorn.ImmersiveSprinklers/AlternativeTexture";
-        public static string altTextureScarecrowPrefix = "aedenthorn.ImmersiveScarecrows/AlternativeTexture";
-        public static string altTextureKey = "AlternativeTexture";
-        public static string scaredKey = "aedenthorn.ImmersiveScarecrows/scared";
-        public static string hatKey = "aedenthorn.ImmersiveScarecrows/hat";
+        public const string sprinklerPrefix = "aedenthorn.ImmersiveSprinklers/";
+        public const string scarecrowPrefix = "aedenthorn.ImmersiveScarecrows/";
+        public const string sprinklerKey = "aedenthorn.ImmersiveSprinklers/sprinkler";
+        public const string scarecrowKey = "aedenthorn.ImmersiveScarecrows/scarecrow";
+        public const string sprinklerBigCraftableKey = "aedenthorn.ImmersiveSprinklers/bigCraftable";
+        public const string scarecrowBigCraftableKey = "aedenthorn.ImmersiveScarecrows/bigCraftable";
+        public const string sprinklerGuidKey = "aedenthorn.ImmersiveSprinklers/guid";
+        public const string scarecrowGuidKey = "aedenthorn.ImmersiveScarecrows/guid";
+        public const string enricherKey = "aedenthorn.ImmersiveSprinklers/enricher";
+        public const string fertilizerKey = "aedenthorn.ImmersiveSprinklers/fertilizer";
+        public const string nozzleKey = "aedenthorn.ImmersiveSprinklers/nozzle";
+        public const string altTextureSprinklerPrefix = "aedenthorn.ImmersiveSprinklers/AlternativeTexture";
+        public const string altTextureScarecrowPrefix = "aedenthorn.ImmersiveScarecrows/AlternativeTexture";
+        public const string altTextureKey = "AlternativeTexture";
+        public const string scaredKey = "aedenthorn.ImmersiveScarecrows/scared";
+        public const string hatKey = "aedenthorn.ImmersiveScarecrows/hat";
+
+        public const int ridiculous = 10000;
 
         public static Dictionary<string, Object> sprinklerDict = new();
         public static Dictionary<string, Object> scarecrowDict = new();
@@ -61,6 +63,7 @@ namespace ImmersiveSprinklersAndScarecrows
             Helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
             Helper.Events.Input.ButtonPressed += Input_ButtonPressed;
             Helper.Events.Display.RenderedWorld += Display_RenderedWorld;
+            Helper.Events.Display.MenuChanged += Display_MenuChanged;
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
@@ -88,6 +91,17 @@ namespace ImmersiveSprinklersAndScarecrows
                 }
             }
         }
+
+        private void Display_MenuChanged(object sender, StardewModdingAPI.Events.MenuChangedEventArgs e)
+        {
+            if (!Config.EnableMod || !Context.IsWorldReady)
+                return;
+            if(e.NewMenu == null)
+            {
+                Game1.currentLocation.Objects.Remove(new Vector2(ridiculous, ridiculous));
+            }
+        }
+
         public override object GetApi()
         {
             return new ImmersiveApi();

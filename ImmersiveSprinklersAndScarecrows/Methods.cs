@@ -515,5 +515,11 @@ namespace ImmersiveSprinklersAndScarecrows
                 l.modData[$"{key},{x},{y}"] = value;
             }
         }
+
+        public static void OpenPaintMenu(Tool tool, Object obj)
+        {
+            Game1.currentLocation.Objects[new Vector2(ridiculous, ridiculous)] = obj;
+            tool.beginUsing(Game1.currentLocation, ridiculous * 64, ridiculous * 64, Game1.player);
+        }
     }
 }
