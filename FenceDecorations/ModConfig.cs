@@ -5,7 +5,7 @@ namespace FenceDecorations
     public class ModConfig
     {
         public bool ModEnabled { get; set; } = true;
-        public bool Debug { get; set; }
+        public bool RemoveEndDrawOffsets { get; set; } = true;
         public List<string> DisallowedDecorations { get; set; } = new List<string>();
         
     }

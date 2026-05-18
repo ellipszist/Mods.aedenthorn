@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
+using StardewValley.GameData.Fences;
 using System;
 using System.Globalization;
 using System.Linq;
@@ -31,11 +32,28 @@ namespace FenceDecorations
             context = this;
 
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
+            helper.Events.Content.AssetRequested += Content_AssetRequested;
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
         }
 
+        private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
+        {
+            if(!Config.ModEnabled) return;
+            if(Config.RemoveEndDrawOffsets && e.NameWithoutLocale.IsEquivalentTo("Data/Fences"))
+            {
+                e.Edit((IAssetData data) =>
+                {
+                    var dict = data.AsDictionary<string, FenceData>().Data;
+                    foreach(var kvp in dict) 
+                    {
+                        kvp.Value.LeftEndHeldObjectDrawX = 0;
+                        kvp.Value.RightEndHeldObjectDrawX = 0;
+                    }
+                });
+            }
+        }
 
         private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
         {   

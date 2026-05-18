@@ -51,7 +51,7 @@ namespace FenceDecorations
             }
         }
 
-        [HarmonyPatch(typeof(Object), nameof(Object.draw), new Type[] { typeof(SpriteBatch),typeof(int),typeof(int),typeof(float),typeof(float), })]
+        [HarmonyPatch(typeof(Object), nameof(Object.draw), new Type[] { typeof(SpriteBatch),typeof(int),typeof(int),typeof(float),typeof(float) })]
         public static class Object_draw_Patch
         {
             public static bool Prefix(Object __instance, SpriteBatch spriteBatch, int xNonTile, int yNonTile, float layerDepth, float alpha) 
