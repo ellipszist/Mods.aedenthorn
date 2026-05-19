@@ -1,9 +1,12 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Graphics.PackedVector;
 using Netcode;
+using Newtonsoft.Json;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Inventories;
 using StardewValley.ItemTypeDefinitions;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
@@ -14,7 +17,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using xTile.Dimensions;
-using Color = Microsoft.Xna.Framework.Color;
+using xTile.Tiles;
 using Object = StardewValley.Object;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
@@ -40,85 +43,106 @@ namespace ImmersiveSprinklersAndScarecrows
                 var obj = GetSprinklerAtMouse();
                 if (obj is not null && who.CurrentItem is not null)
                 {
-
-                    if (who.CurrentItem.ItemId == "913" && !HasData(__instance, enricherKey, x, y))
+                    if (obj.heldObject.Value == null)
                     {
-                        __instance.modData[$"{enricherKey},{x},{y}"] = "true";
-                        who.reduceActiveItemByOne();
-                        __instance.playSound("axe");
+                        if (who.CurrentItem.ItemId == "913")
+                        {
+                            obj.heldObject.Value = new Object("913", 1);
+                            obj.heldObject.Value.heldObject.Value = new Chest
+                            {
+                                SpecialChestType = Chest.SpecialChestTypes.Enricher
+                            };
+                            who.reduceActiveItemByOne();
+                            __instance.playSound("axe");
+                            __result = true;
+                            return false;
+                        }
+                        else if (who.CurrentItem.ItemId == "915")
+                        {
+                            obj.heldObject.Value = new Object("915", 1);
+                            who.reduceActiveItemByOne();
+                            __instance.playSound("axe");
+                            __result = true;
+                            return false;
+                        }
+                        else
+                        {
+                            return true;
+                        }
                     }
-                    else if (who.CurrentItem.ItemId == "915" && !HasData(__instance, nozzleKey, x, y))
-                    {
-                        __instance.modData[$"{nozzleKey},{x},{y}"] = "true";
-                        who.reduceActiveItemByOne();
-                        __instance.playSound("axe");
-                    }
-                    else if (who.CurrentItem.Category == -19 && HasData(__instance, enricherKey, x, y))
+                    else if (who.CurrentItem.Category == -19 && obj.heldObject.Value.ItemId == "913")
                     {
                         int stack = who.CurrentItem.Stack;
                         int addStack = stack;
                         int index = who.CurrentItem.ParentSheetIndex;
-                        if (TryGetData(__instance, fertilizerKey, x, y, out var fertString))
+
+                        Object value = obj.heldObject.Value.heldObject.Value;
+                        Chest chest = value as Chest;
+                        if (chest != null)
                         {
-                            Object f = GetFertilizer(fertString);
-                            if (f.ParentSheetIndex == who.CurrentItem.ParentSheetIndex)
+                            IInventory items = chest.Items;
+                            if (items.Count > 0 && items[0] != null && !chest.GetMutex().IsLocked())
                             {
-                                int add = Math.Min(f.maximumStackSize() - f.Stack, stack);
-                                addStack = f.Stack + add;
-                                stack -= add;
-                                who.CurrentItem.Stack = stack;
-                                if (stack == 0)
+                                chest.GetMutex().RequestLock(delegate
                                 {
-                                    who.removeItemFromInventory(who.CurrentItem);
-                                    who.showNotCarrying();
-                                }
-                            }
-                            else
-                            {
-                                var slot = who.CurrentToolIndex;
-                                who.removeItemFromInventory(who.CurrentItem);
-                                who.showNotCarrying();
-                                who.Items[slot] = f;
-                            }
-                        }
-                        else
-                        {
-                            who.removeItemFromInventory(who.CurrentItem);
-                            who.showNotCarrying();
-                        }
-                        __instance.modData[$"{fertilizerKey},{x},{y}"] = index + "," + addStack;
+                                    Item f;
+                                    if (items.Count > 0 && items[0] != null)
+                                    {
+                                        f = items[0];
 
+                                    }
+                                    else
+                                    {
+                                        f = who.CurrentItem;
+                                        who.removeItemFromInventory(who.CurrentItem);
+                                        who.showNotCarrying();
+                                    }
+                                    chest.GetMutex().ReleaseLock();
+                                }, null);
+                            }
+                        }
                         __instance.playSound("dirtyHit");
-                    }
-                    __result = true;
+                        __result = true;
+                        return false;
 
-                    return false;
+                    }
+
+                    return true;
                 }
                 obj = GetScarecrowAtMouse();
                 if (obj != null)
                 {
-                    if (obj.ParentSheetIndex == 126 && who.CurrentItem is not null && who.CurrentItem is Hat hat)
+                    if (obj.ParentSheetIndex == 126)
                     {
-                        if (TryGetData(__instance, hatKey, x, y, out var hatString))
+                        if (who.CurrentItem is Hat hat)
                         {
-                            Game1.createItemDebris(new Hat(hatString), Game1.currentCursorTile * 64f, (who.FacingDirection + 2) % 4, null, -1);
-                            __instance.modData.Remove($"{hatKey},{x},{y}");
-
+                            if (obj.preservedParentSheetIndex.Value != null)
+                            {
+                                Game1.createItemDebris(new Hat(obj.preservedParentSheetIndex.Value), Game1.currentCursorTile * 64f, (who.FacingDirection + 2) % 4, null, -1);
+                                obj.preservedParentSheetIndex.Value = null;
+                            }
+                            obj.preservedParentSheetIndex.Value = hat.ItemId;
+                            who.Items[who.CurrentToolIndex] = null;
+                            who.currentLocation.playSound("dirtyHit");
+                            __result = true;
+                            return false;
                         }
-                        __instance.modData[$"{hatKey},{x},{y}"] = hat.ItemId;
-                        who.Items[who.CurrentToolIndex] = null;
-                        who.currentLocation.playSound("dirtyHit");
-                        __result = true;
-                        return false;
+                        else if (who.CurrentItem is null && obj.preservedParentSheetIndex.Value != null)
+                        {
+                            who.Items[who.CurrentToolIndex] = new Hat(obj.preservedParentSheetIndex.Value);
+                            obj.preservedParentSheetIndex.Value = null;
+                            who.currentLocation.playSound("dirtyHit");
+                            __result = true;
+                            return false;
+                        }
+                        else
+                        {
+                            return true;
+                        }
                     }
                     if (Game1.didPlayerJustRightClick(true))
                     {
-                        int scared = 0;
-                        
-                        if (!TryGetData(__instance, scaredKey, x, y, out var scaredString) || !int.TryParse(scaredString, out scared))
-                        {
-                            SetData(__instance, scaredKey,x,y, "0");
-                        }
+                        var scared = obj.SpecialVariable;
                         if (scared == 0)
                         {
                             Game1.drawObjectDialogue(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12926"));
@@ -145,108 +169,82 @@ namespace ImmersiveSprinklersAndScarecrows
             {
                 if (!Config.EnableMod)
                     return true;
-                Vector2 placementTile = new Vector2(x / 64, y / 64);
+                Point placementTile = GetMouseCornerTile();
+                Vector2 tileVector = placementTile.ToVector2();
 
-                var tile = GetMouseCornerTile();
-                int tileX = (int)tile.X;
-                int tileY = (int)tile.Y;
-                if (!location.terrainFeatures.TryGetValue(placementTile, out var tf) || tf is not HoeDirt dirt)
-                    return true;
-                if (__instance.IsSprinkler())
+                int tileX = placementTile.X;
+                int tileY = placementTile.Y;
+                for(int i = 0; i < 2; i++)
                 {
-                    SMonitor.Log($"Placing {__instance.Name} at {tileX},{tileY}");
+                    for (int j = 0; j < 2; j++)
+                    {
+                        if (!location.terrainFeatures.TryGetValue(tileVector + new Vector2(i, j), out var tf) || tf is not HoeDirt)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                var one = (Object)__instance.getOne();
+                one.TileLocation = tileVector;
+                if (one.IsSprinkler())
+                {
+
+                    SMonitor.Log($"Placing {one.Name} at {tileX},{tileY}");
+
                     location.playSound("woodyStep");
+
                     ReturnOrDropSprinkler(location, tileX, tileY, who, false);
-                    if (__instance.bigCraftable.Value)
-                    {
-                        location.modData[$"{sprinklerBigCraftableKey},{tileX},{tileY}"] = "true";
-                        location.modData[$"{sprinklerKey},{tileX},{tileY}"] = (string)AccessTools.Method(typeof(Item), "ValidateUnqualifiedItemId").Invoke(__instance, new object[] { __instance.ItemId });
-                    }
-                    else
-                    {
-                        location.modData[$"{sprinklerKey},{tileX},{tileY}"] = __instance.ItemId;
-                    }
-                    var guid = Guid.NewGuid().ToString();
-                    location.modData[$"{sprinklerGuidKey},{tileX},{tileY}"] = guid;
-                    sprinklerDict[guid] = __instance;
-                    if (atApi is not null)
-                    {
-                        Object obj = (Object)__instance.getOne();
-                        SetAltTextureForObject(obj);
-                        foreach (var kvp in obj.modData.Pairs)
-                        {
-                            if (kvp.Key.StartsWith(altTextureKey))
-                            {
-                                location.modData[$"{sprinklerPrefix}{kvp.Key},{tileX},{tileY}"] = kvp.Value;
-                            }
-                        }
-                    }
-                    __result = true;
-                    return false;
-                }
-                else if (__instance.IsScarecrow())
-                {
-                    SMonitor.Log($"Placing {__instance.Name} at {tileX},{tileY}");
-                    location.playSound("woodyStep");
                     ReturnOrDropScarecrow(location, tileX, tileY, who, false);
-                    if (__instance.bigCraftable.Value)
+
+                    ImmersiveData data = GetImmersiveData(one, true);
+
+                    location.modData[$"{dataKey},{tileX},{tileY}"] = JsonConvert.SerializeObject(data);
+                    if (!sprinklerDict.TryGetValue(location, out var dict))
                     {
-                        location.modData[$"{scarecrowBigCraftableKey},{tileX},{tileY}"] = "true";
-                        location.modData[$"{scarecrowKey},{tileX},{tileY}"] = (string)AccessTools.Method(typeof(Item), "ValidateUnqualifiedItemId").Invoke(__instance, new object[] { __instance.ItemId });
+                        dict = new Dictionary<Vector2, Object>();
+                        sprinklerDict[location] = dict;
                     }
-                    else
-                    {
-                        location.modData[$"{scarecrowKey},{tileX},{tileY}"] = __instance.ItemId;
-                    }
-                    var guid = Guid.NewGuid().ToString();
-                    location.modData[$"{scarecrowGuidKey},{tileX},{tileY}"] = guid;
-                    scarecrowDict[guid] = __instance;
-                    if (atApi is not null)
-                    {
-                        Object obj = (Object)__instance.getOne();
-                        SetAltTextureForObject(obj);
-                        foreach (var kvp in obj.modData.Pairs)
-                        {
-                            if (kvp.Key.StartsWith(altTextureKey))
-                            {
-                                location.modData[$"{scarecrowPrefix}{kvp.Key},{tileX},{tileY}"] = kvp.Value;
-                            }
-                        }
-                    }
+                    dict[tileVector] = one;
                     __result = true;
                     return false;
-
                 }
-                else if (__instance.Category == -74)
+                else if (one.IsScarecrow())
                 {
-                    foreach (var point in GetSprinklerPoints(location))
+                    SMonitor.Log($"Placing {one.Name} at {tileX},{tileY}");
+
+                    location.playSound("woodyStep");
+
+                    ReturnOrDropSprinkler(location, tileX, tileY, who, false);
+                    ReturnOrDropScarecrow(location, tileX, tileY, who, false);
+
+                    one.TileLocation = new Vector2(tileX, tileY);
+
+                    ImmersiveData data = GetImmersiveData(one, false);
+
+                    location.modData[$"{dataKey},{tileX},{tileY}"] = JsonConvert.SerializeObject(data);
+                    if (!scarecrowDict.TryGetValue(location, out var dict))
                     {
-                        int sprX = point.X;
-                        int sprY = point.Y;
-                        if (HasData(location,enricherKey, sprX, sprY))
+                        dict = new Dictionary<Vector2, Object>();
+                        scarecrowDict[location] = dict;
+                    }
+                    dict[tileVector] = one;
+                    __result = true;
+                    return false;
+                }
+                else if (one.Category == -74 && location.terrainFeatures.TryGetValue(new Vector2(x/64, y/64), out var tf) && tf is HoeDirt dirt)
+                {
+                    foreach (var s in GetSprinklers(location))
+                    {
+
+                        if (s.heldObject.Value is Object obj && obj.ItemId == "913" && obj.heldObject.Value is Chest chest && chest.Items.Count > 0 && chest.Items[0] is Item f)
                         {
-                            if (TryGetData(location,fertilizerKey, sprX, sprY, out var fertString))
+                            var radius = s.GetModifiedRadiusForSprinkler();
+                            if (GetSprinklerTiles(s.TileLocation, radius).Contains(tileVector) && dirt.plant(Crop.ResolveSeedId(f.ItemId, location), who, true))
                             {
-                                var obj = GetSprinkler(location, sprX, sprY);
-                                if (obj is not null)
+                                f.Stack--;
+                                if (f.Stack <= 0)
                                 {
-                                    var radius = obj.GetModifiedRadiusForSprinkler();
-                                    if (GetSprinklerTiles(tile.ToVector2(), radius).Contains(placementTile))
-                                    {
-                                        Object f = GetFertilizer(fertString);
-                                        if (dirt.plant(Crop.ResolveSeedId(f.ItemId, location), who, true))
-                                        {
-                                            f.Stack--;
-                                            if (f.Stack > 0)
-                                            {
-                                                SetData(location, fertilizerKey, sprX, sprY, f.ParentSheetIndex + "," + f.Stack);
-                                            }
-                                            else
-                                            {
-                                                SetData(location, fertilizerKey, sprX, sprY, null);
-                                            }
-                                        }
-                                    }
+                                    chest.Items.RemoveAt(0);
                                 }
                             }
                         }
@@ -284,25 +282,29 @@ namespace ImmersiveSprinklersAndScarecrows
             {
                 if (!Config.EnableMod)
                     return;
-                foreach (var p in GetSprinklerPoints(__instance))
+                if(sprinklerDict.TryGetValue(__instance, out var dict))
                 {
-                    var obj = GetSprinklerCached(__instance, p.X, p.Y);
-
-                    if (obj is not null)
+                    foreach (var obj in dict.Values)
                     {
-                        Vector2 globalPosition = p.ToVector2() * 64 + new Vector2(32, 16);
+                        if (obj is null)
+                            continue;
+                        Vector2 globalPosition = obj.TileLocation * 64 + new Vector2(32, 16);
                         if (obj.bigCraftable.Value)
                             globalPosition -= new Vector2(0, 64);
                         var layerDepth = (globalPosition.Y + (obj.bigCraftable.Value ? 81 : 33) + Config.DrawOffsetZ) / 10000f;
                         var position = Game1.GlobalToLocal(globalPosition);
-
+                        b.Draw(Game1.shadowTexture, position + new Vector2(32, 55), Game1.shadowTexture.Bounds, Color.White * Config.Alpha, 0f, new Vector2(Game1.shadowTexture.Bounds.Center.X, Game1.shadowTexture.Bounds.Center.Y), 4f, SpriteEffects.None, obj.GetBoundingBoxAt((int)obj.TileLocation.X, (int)obj.TileLocation.Y).Bottom / 15000f);
                         Texture2D texture = null;
                         ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem(obj.QualifiedItemId);
                         Rectangle sourceRect = itemData.GetSourceRect(obj is Mannequin ? 2 : 0, new int?(obj.ParentSheetIndex));
-                        texture = itemData.GetTexture();
+                        
                         if (atApi is not null && obj.modData.ContainsKey("AlternativeTextureName"))
                         {
                             texture = GetAltTextureForObject(obj, out sourceRect);
+                        }
+                        else
+                        {
+                            texture = itemData.GetTexture();
                         }
                         if (texture is null)
                         {
@@ -311,50 +313,70 @@ namespace ImmersiveSprinklersAndScarecrows
                         }
                         b.Draw(texture, position, sourceRect, Color.White * Config.Alpha, 0, Vector2.Zero, Config.Scale, obj.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth);
 
-                        if (HasData(__instance, enricherKey, p.X, p.Y))
+                        if (obj.heldObject.Value is Object held)
                         {
-                            b.Draw(Game1.objectSpriteSheet, position + new Vector2(0f, -20f), GameLocation.getSourceRectForObject(914), Color.White * Config.Alpha, 0, Vector2.Zero, Config.Scale, obj.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + 2E-05f);
-                        }
-                        if (HasData(__instance, nozzleKey, p.X, p.Y))
-                        {
-                            b.Draw(Game1.objectSpriteSheet, position, GameLocation.getSourceRectForObject(916), Color.White * Config.Alpha, 0, Vector2.Zero, Config.Scale, obj.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + 1E-05f);
+                            if (held.ItemId == "913")
+                            {
+                                b.Draw(Game1.objectSpriteSheet, position + new Vector2(0f, -20f), GameLocation.getSourceRectForObject(914), Color.White * Config.Alpha, 0, Vector2.Zero, Config.Scale, obj.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + 2E-05f);
+                            }
+                            else if (held.ItemId == "915")
+                            {
+                                b.Draw(Game1.objectSpriteSheet, position, GameLocation.getSourceRectForObject(916), Color.White * Config.Alpha, 0, Vector2.Zero, Config.Scale, obj.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + 1E-05f);
+                            }
                         }
                     }
                 }
-                foreach (var p in GetScarecrowPoints(__instance))
-                {
-                    var obj = GetScarecrowCached(__instance, p.X, p.Y);
 
-                    if (obj is not null)
+                if (scarecrowDict.TryGetValue(__instance, out var dict2))
+                {
+                    foreach (var obj in dict2.Values)
                     {
+                        if (obj is null)
+                            continue;
                         Vector2 scaleFactor = obj.getScale();
 
-
-                        ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem(obj.QualifiedItemId);
-                        Rectangle sourceRect = itemData.GetSourceRect(obj is Mannequin ? 2 : 0, new int?(obj.ParentSheetIndex));
-                        Texture2D texture = itemData.GetTexture();
-                        if (atApi is not null && obj.modData.ContainsKey("AlternativeTextureName"))
-                        {
-                            texture = GetAltTextureForObject(obj, out sourceRect);
-                        }
-                        if (texture is null)
-                        {
-                            texture = Game1.bigCraftableSpriteSheet;
-                            sourceRect = Object.getSourceRectForBigCraftable(obj.ParentSheetIndex);
-                        }
-                        Vector2 globalPosition = p.ToVector2() * 64 + new Vector2(32f, 16);
+                        Vector2 globalPosition = obj.TileLocation * 64 + new Vector2(32f, 16);
                         if (obj.bigCraftable.Value)
                             globalPosition -= new Vector2(0, 64);
                         var layerDepth = (globalPosition.Y + (obj.bigCraftable.Value ? 81 : 33) + 24 + Config.DrawOffsetZ) / 10000f;
                         var position = Game1.GlobalToLocal(globalPosition);
-                        b.Draw(texture, position, sourceRect, Color.White * Config.Alpha, 0, Vector2.Zero, Config.Scale, SpriteEffects.None, layerDepth);
-                        if (TryGetData(__instance, hatKey, p.X, p.Y, out var hatString) && int.TryParse(hatString, out var hat))
+                        if(!obj.bigCraftable.Value)
+                            b.Draw(Game1.shadowTexture, position + new Vector2(32, 55), Game1.shadowTexture.Bounds, Color.White * Config.Alpha, 0f, new Vector2(Game1.shadowTexture.Bounds.Center.X, Game1.shadowTexture.Bounds.Center.Y), 4f, SpriteEffects.None, obj.GetBoundingBoxAt((int)obj.TileLocation.X, (int)obj.TileLocation.Y).Bottom / 15000f);
+
+
+                        Texture2D texture = null;
+                        ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem(obj.QualifiedItemId);
+                        Rectangle sourceRect;
+
+                        if (atApi is not null && obj.modData.ContainsKey("AlternativeTextureName"))
                         {
-                            b.Draw(FarmerRenderer.hatsTexture, position + new Vector2(-3f, -6f) * 4f, new Rectangle(hat * 20 % FarmerRenderer.hatsTexture.Width, hat * 20 / FarmerRenderer.hatsTexture.Width * 20 * 4, 20, 20), Color.White * Config.Alpha, 0f, Vector2.Zero, 4f, SpriteEffects.None, layerDepth + 1E-05f);
+                            texture = GetAltTextureForObject(obj, out sourceRect);
+                        }
+                        else
+                        {
+                            texture = itemData.GetTexture();
+                            sourceRect = itemData.GetSourceRect(obj is Mannequin ? 2 : 0, new int?(obj.ParentSheetIndex));
+                        }
+                        if (texture is null)
+                        {
+                            texture = obj.bigCraftable.Value ? Game1.bigCraftableSpriteSheet : Game1.objectSpriteSheet;
+                            sourceRect = obj.bigCraftable.Value ? Object.getSourceRectForBigCraftable(obj.ParentSheetIndex) : GameLocation.getSourceRectForObject(obj.ParentSheetIndex);
+                        }
+
+                        b.Draw(texture, position, sourceRect, Color.White * Config.Alpha, 0, Vector2.Zero, Config.Scale, SpriteEffects.None, layerDepth);
+
+                        string hatId = obj.preservedParentSheetIndex.Value;
+                        if(hatId != null)
+                        {
+                            ParsedItemData dataOrErrorItem = ItemRegistry.GetDataOrErrorItem("(H)" + hatId);
+                            Texture2D texture2 = dataOrErrorItem.GetTexture();
+                            int spriteIndex = dataOrErrorItem.SpriteIndex;
+                            bool isPrismatic = ItemContextTagManager.HasBaseTag("(H)" + hatId, "Prismatic");
+
+                            b.Draw(texture2, position + new Vector2(-3f, -6f) * 4f, new Rectangle(spriteIndex * 20 % texture2.Width, spriteIndex * 20 / texture2.Width * 20 * 4, 20, 20), (isPrismatic ? Utility.GetPrismaticColor(0, 1f) : Color.White) * Config.Alpha, 0f, Vector2.Zero, 4f, SpriteEffects.None, layerDepth + 1E-05f);
                         }
                     }
                 }
-
             }
 
         }
@@ -363,8 +385,18 @@ namespace ImmersiveSprinklersAndScarecrows
         {
             public static bool Prefix(Object __instance, GameLocation l, Vector2 tile, ref bool __result)
             {
-                if (!Config.EnableMod || (!__instance.IsSprinkler() && !__instance.IsScarecrow()) || !l.terrainFeatures.TryGetValue(tile, out var tf) || tf is not HoeDirt)
+                if (!Config.EnableMod || (!__instance.IsSprinkler() && !__instance.IsScarecrow()))
                     return true;
+                for (int i = 0; i < 2; i++)
+                {
+                    for (int j = 0; j < 2; j++)
+                    {
+                        if (!l.terrainFeatures.TryGetValue(tile + new Vector2(i, j), out var tf) || tf is not HoeDirt)
+                        {
+                            return true;
+                        }
+                    }
+                }
                 __result = true;
                 return false;
             }
@@ -375,8 +407,19 @@ namespace ImmersiveSprinklersAndScarecrows
         {
             public static bool Prefix(GameLocation location, Item item, int x, int y, Farmer f, ref bool __result)
             {
-                if (!Config.EnableMod || item is not Object obj || (!obj.IsSprinkler() && obj.IsScarecrow()) || !location.terrainFeatures.TryGetValue(new Vector2(x, y), out var tf) || tf is not HoeDirt)
+                if (!Config.EnableMod || item is not Object obj || (!obj.IsSprinkler() && !obj.IsScarecrow()))
                     return true;
+                var tile = new Vector2(x / 64, y / 64);
+                for (int i = 0; i < 2; i++)
+                {
+                    for (int j = 0; j < 2; j++)
+                    {
+                        if (!location.terrainFeatures.TryGetValue(tile + new Vector2(i, j), out var tf) || tf is not HoeDirt)
+                        {
+                            return true;
+                        }
+                    }
+                }
                 __result = Utility.withinRadiusOfPlayer(x, y, 1, Game1.player);
                 return false;
             }
@@ -387,18 +430,26 @@ namespace ImmersiveSprinklersAndScarecrows
         {
             public static bool Prefix(Object __instance, SpriteBatch spriteBatch, GameLocation location)
             {
-                if (!Config.EnableMod || !Context.IsPlayerFree || (!__instance.IsSprinkler() && !__instance.IsScarecrow()) || Game1.currentLocation?.terrainFeatures?.TryGetValue(Game1.currentCursorTile, out var tf) != true || tf is not HoeDirt)
+                if (!Config.EnableMod || !Context.IsPlayerFree || (!__instance.IsSprinkler() && !__instance.IsScarecrow()))
                     return true;
-                var which = GetMouseCornerTile();
-                var mouseTile = GetMouseCornerTile();
-
-                Vector2 pos = Game1.GlobalToLocal(mouseTile.ToVector2() * 64 + new Vector2(32, 16));
+                var mouseTile = GetMouseCornerTile().ToVector2();
+                for (int i = 0; i < 2; i++)
+                {
+                    for (int j = 0; j < 2; j++)
+                    {
+                        if (!location.terrainFeatures.TryGetValue(mouseTile + new Vector2(i, j), out var tf) || tf is not HoeDirt)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                Vector2 pos = Game1.GlobalToLocal(mouseTile * 64 + new Vector2(32, 16));
 
                 spriteBatch.Draw(Game1.mouseCursors, pos, new Rectangle(Utility.withinRadiusOfPlayer((int)Game1.currentCursorTile.X * 64, (int)Game1.currentCursorTile.Y * 64, 1, Game1.player) ? 194 : 210, 388, 16, 16), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.01f);
 
                 if (Config.ShowRangeWhenPlacing)
                 {
-                    foreach(var tile in __instance.IsSprinkler() ? GetSprinklerTiles(mouseTile.ToVector2(), GetSprinklerRadius(__instance)) : GetScarecrowTiles(mouseTile.ToVector2(), __instance.GetRadiusForScarecrow()))
+                    foreach(var tile in __instance.IsSprinkler() ? GetSprinklerTiles(mouseTile, GetSprinklerRadius(__instance)) : GetScarecrowTiles(mouseTile, __instance.GetRadiusForScarecrow()))
                     {
                         spriteBatch.Draw(Game1.mouseCursors, Game1.GlobalToLocal(tile * 64), new Rectangle(194, 388, 16, 16), Color.White * 0.5f, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.01f);
                     }
@@ -465,7 +516,7 @@ namespace ImmersiveSprinklersAndScarecrows
                 var tile = GetMouseCornerTile();
                 if (Vector2.Distance(tile.ToVector2(), new Vector2(x, y) / 64) < 3 && (ReturnOrDropSprinkler(location, tile.X, tile.Y, who, true) || ReturnOrDropScarecrow(location, tile.X, tile.Y, who, true)))
                 {
-                    location.playSound("woodyHit");
+                    location.playSound("hammer");
                     return false;
                 }
                 return true;
@@ -536,21 +587,17 @@ namespace ImmersiveSprinklersAndScarecrows
             {
                 if (!Config.EnableMod || !Context.IsWorldReady || __result || (!new string[] { "(BC)136", "(BC)137", "(BC)138", "(BC)139", "(BC)140", "(BC)126", "(BC)110", "(BC)113" }.Contains(itemId)))
                     return;
-                foreach(var l in Game1.locations)
+                foreach (var kvp in scarecrowDict)
                 {
-                    foreach(var p in GetScarecrowPoints(l))
+                    foreach(var kvp2 in kvp.Value)
                     {
-                        var id = GetScarecrow(l, p.X, p.Y)?.QualifiedItemId;
-                        if (id is null)
-                            continue;
-                        if (id == itemId)
+                        if (kvp2.Value?.ItemId == itemId)
                         {
                             __result = true;
                             return;
                         }
                     }
                 }
-
             }
         }
     }

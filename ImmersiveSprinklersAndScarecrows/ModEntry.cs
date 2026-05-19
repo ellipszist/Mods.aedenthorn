@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Newtonsoft.Json;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.TerrainFeatures;
@@ -25,28 +26,16 @@ namespace ImmersiveSprinklersAndScarecrows
 
         public static ModEntry context;
 
-        public const string sprinklerPrefix = "aedenthorn.ImmersiveSprinklers/";
-        public const string scarecrowPrefix = "aedenthorn.ImmersiveScarecrows/";
-        public const string sprinklerKey = "aedenthorn.ImmersiveSprinklers/sprinkler";
-        public const string scarecrowKey = "aedenthorn.ImmersiveScarecrows/scarecrow";
-        public const string sprinklerBigCraftableKey = "aedenthorn.ImmersiveSprinklers/bigCraftable";
-        public const string scarecrowBigCraftableKey = "aedenthorn.ImmersiveScarecrows/bigCraftable";
-        public const string sprinklerGuidKey = "aedenthorn.ImmersiveSprinklers/guid";
-        public const string scarecrowGuidKey = "aedenthorn.ImmersiveScarecrows/guid";
-        public const string enricherKey = "aedenthorn.ImmersiveSprinklers/enricher";
-        public const string fertilizerKey = "aedenthorn.ImmersiveSprinklers/fertilizer";
-        public const string nozzleKey = "aedenthorn.ImmersiveSprinklers/nozzle";
-        public const string altTextureSprinklerPrefix = "aedenthorn.ImmersiveSprinklers/AlternativeTexture";
-        public const string altTextureScarecrowPrefix = "aedenthorn.ImmersiveScarecrows/AlternativeTexture";
+        public const string dataKey = "aedenthorn.ImmersiveSprinklersAndScarecrows/data";
         public const string altTextureKey = "AlternativeTexture";
-        public const string scaredKey = "aedenthorn.ImmersiveScarecrows/scared";
-        public const string hatKey = "aedenthorn.ImmersiveScarecrows/hat";
 
         public const int ridiculous = 10000;
 
-        public static Dictionary<string, Object> sprinklerDict = new();
-        public static Dictionary<string, Object> scarecrowDict = new();
+        public static Dictionary<GameLocation, Dictionary<Vector2, Object>> sprinklerDict = new();
+        public static Dictionary<GameLocation, Dictionary<Vector2, Object>> scarecrowDict = new();
+        
         public static object atApi;
+        public static Vector2 atPosition;
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
@@ -61,6 +50,7 @@ namespace ImmersiveSprinklersAndScarecrows
 
             Helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
             Helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
+            Helper.Events.GameLoop.Saving += GameLoop_Saving;
             Helper.Events.Input.ButtonPressed += Input_ButtonPressed;
             Helper.Events.Display.RenderedWorld += Display_RenderedWorld;
             Helper.Events.Display.MenuChanged += Display_MenuChanged;
@@ -92,15 +82,42 @@ namespace ImmersiveSprinklersAndScarecrows
             }
         }
 
+        private void GameLoop_Saving(object sender, StardewModdingAPI.Events.SavingEventArgs e)
+        {
+            foreach(var kvp in sprinklerDict)
+            {
+                foreach(var kvp2 in kvp.Value)
+                {
+                    if (kvp2.Value is null)
+                        continue;
+                    var data = GetImmersiveData(kvp2.Value, true);
+                    kvp.Key.modData[$"{dataKey},{kvp2.Key.X},{kvp2.Key.Y}"] = JsonConvert.SerializeObject(data);
+                }
+            }
+            foreach(var kvp in scarecrowDict)
+            {
+                foreach(var kvp2 in kvp.Value)
+                {
+                    if (kvp2.Value is null)
+                        continue;
+                    var data = GetImmersiveData(kvp2.Value, false);
+                    kvp.Key.modData[$"{dataKey},{kvp2.Key.X},{kvp2.Key.Y}"] = JsonConvert.SerializeObject(data);
+                }
+            }
+        }
+
         private void Display_MenuChanged(object sender, StardewModdingAPI.Events.MenuChangedEventArgs e)
         {
             if (!Config.EnableMod || !Context.IsWorldReady)
                 return;
-            if(e.NewMenu == null)
+            if(e.NewMenu == null && Game1.currentLocation.Objects.TryGetValue(new Vector2(-ridiculous, -ridiculous), out var obj))
             {
-                Game1.currentLocation.Objects.Remove(new Vector2(ridiculous, ridiculous));
+                obj.TileLocation = atPosition;
+                StoreObj(obj);
+                Game1.currentLocation.Objects.Remove(new Vector2(-ridiculous, -ridiculous));
             }
         }
+
 
         public override object GetApi()
         {
@@ -118,41 +135,40 @@ namespace ImmersiveSprinklersAndScarecrows
 
             HashSet<Vector2> sprinklerTiles = new();
             HashSet<Vector2> scarecrowTiles = new();
-            foreach (var kvp in Game1.currentLocation.modData.Pairs)
+            IEnumerable<Object> sprinklers;
+            IEnumerable<Object> scarecrows;
+            if(sprinklerDict.TryGetValue(Game1.currentLocation, out var dict))
             {
-                if (sp && kvp.Key.StartsWith(sprinklerKey+","))
+                sprinklers = dict.Values;
+            }
+            else
+            {
+                sprinklers = GetSprinklers(Game1.currentLocation);
+            }
+            if(scarecrowDict.TryGetValue(Game1.currentLocation, out var dict2))
+            {
+                scarecrows = dict2.Values;
+            }
+            else
+            {
+                scarecrows = GetScarecrows(Game1.currentLocation);
+            }
+            foreach (var obj in sprinklers)
+            {
+                if (obj is null)
+                    continue;
+                foreach (var t in GetSprinklerTiles(obj.TileLocation, GetSprinklerRadius(obj)))
                 {
-                    try
-                    {
-                        int x = int.Parse(kvp.Key.Split(',')[1]);
-                        int y = int.Parse(kvp.Key.Split(',')[2]);
-                        var obj = GetSprinklerCached(Game1.currentLocation, x, y);
-                        if (obj.IsSprinkler())
-                        {
-                            foreach (var t in GetSprinklerTiles(new Vector2(x, y), GetSprinklerRadius(obj)))
-                            {
-                                sprinklerTiles.Add(t);
-                            }
-                        }
-                    }
-                    catch { }
+                    sprinklerTiles.Add(t);
                 }
-                if (sc && kvp.Key.StartsWith(scarecrowKey + ","))
+            }
+            foreach (var obj in scarecrows)
+            {
+                if (obj is null)
+                    continue;
+                foreach (var t in GetScarecrowTiles(obj.TileLocation, obj.GetRadiusForScarecrow()))
                 {
-                    try
-                    {
-                        int x = int.Parse(kvp.Key.Split(',')[1]);
-                        int y = int.Parse(kvp.Key.Split(',')[2]);
-                        var obj = GetScarecrowCached(Game1.currentLocation, x, y);
-                        if (obj.IsScarecrow())
-                        {
-                            foreach (var t in GetScarecrowTiles(new Vector2(x, y), obj.GetRadiusForScarecrow()))
-                            {
-                                scarecrowTiles.Add(t);
-                            }
-                        }
-                    }
-                    catch { }
+                    sprinklerTiles.Add(t);
                 }
             }
             foreach (var tile in sprinklerTiles)
@@ -195,23 +211,23 @@ namespace ImmersiveSprinklersAndScarecrows
                 }
                 else if (Config.PickupNearby || Constants.TargetPlatform == GamePlatform.Android)
                 {
-                    foreach(var p in GetSprinklerVectors(Game1.currentLocation))
+                    foreach(var obj in GetSprinklers(Game1.currentLocation))
                     {
-                        var distance = Vector2.Distance(new Vector2(p.X + 1, p.Y + 1) * 64, Game1.player.position.Value);
+                        var distance = Vector2.Distance(obj.TileLocation * 64, Game1.player.position.Value);
                         if (distance > Config.PickupNearbyRange * 64)
                             continue;
-                        if (ReturnOrDropSprinkler(Game1.currentLocation, (int)p.X, (int)p.Y, Game1.player, false))
+                        if (ReturnOrDropSprinkler(Game1.currentLocation, (int)obj.TileLocation.X, (int)obj.TileLocation.Y, Game1.player, false))
                         {
                             Helper.Input.Suppress(e.Button);
                             return;
                         }
                     }
-                    foreach(var p in GetScarecrowVectors(Game1.currentLocation))
+                    foreach(var obj in GetScarecrows(Game1.currentLocation))
                     {
-                        var distance = Vector2.Distance(new Vector2(p.X + 1, p.Y + 1) * 64, Game1.player.position.Value);
+                        var distance = Vector2.Distance(obj.TileLocation * 64, Game1.player.position.Value);
                         if (distance > 64)
                             continue;
-                        if (ReturnOrDropScarecrow(Game1.currentLocation, (int)p.X, (int)p.Y, Game1.player, false))
+                        if (ReturnOrDropScarecrow(Game1.currentLocation, (int)obj.TileLocation.X, (int)obj.TileLocation.Y, Game1.player, false))
                         {
                             Helper.Input.Suppress(e.Button);
                             return;
@@ -223,21 +239,17 @@ namespace ImmersiveSprinklersAndScarecrows
             {
                 if (Config.ActivateNearby || Constants.TargetPlatform == GamePlatform.Android)
                 {
-                    foreach (var v in GetSprinklerVectors(Game1.currentLocation))
+                    foreach (var obj in GetSprinklers(Game1.currentLocation))
                     {
                         if (Config.ActivateNearbyRange > 0)
                         {
-                            var distance = Vector2.Distance(v * 64, Game1.player.position.Value);
+                            var distance = Vector2.Distance(obj.TileLocation * 64, Game1.player.position.Value);
                             if (distance > 64 * Config.ActivateNearbyRange)
                                 continue;
                         }
-                        var obj = GetSprinkler(Game1.currentLocation, (int)v.X, (int)v.Y);
-                        if (obj is not null)
-                        {
-                            obj.Location = Game1.currentLocation;
-                            ActivateSprinkler(Game1.currentLocation, v, obj, false);
-                            Helper.Input.Suppress(e.Button);
-                        }
+                        obj.Location = Game1.currentLocation;
+                        ActivateSprinkler(Game1.currentLocation, obj.TileLocation, obj, false);
+                        Helper.Input.Suppress(e.Button);
                     }
                 }
                 else
@@ -260,6 +272,12 @@ namespace ImmersiveSprinklersAndScarecrows
         {
             sprinklerDict.Clear();
             scarecrowDict.Clear();
+            foreach(var l in Game1.locations)
+            {
+                var sp = GetSprinklers(l);
+                var sc = GetScarecrows(l);
+                var c = sp.Count() + sc.Count();
+            }
         }
 
         public void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)

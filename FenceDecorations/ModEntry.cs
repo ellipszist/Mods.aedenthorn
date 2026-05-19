@@ -74,6 +74,20 @@ namespace FenceDecorations
                     getValue: () => Config.ModEnabled,
                     setValue: value => Config.ModEnabled = value
                 );
+
+                configMenu.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("ReturnOnDestroy"),
+                    getValue: () => Config.ReturnOnDestroy,
+                    setValue: value => Config.ReturnOnDestroy = value
+                );
+
+                configMenu.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => SHelper.Translation.Get("RemoveEndDrawOffsets"),
+                    getValue: () => Config.RemoveEndDrawOffsets,
+                    setValue: value => Config.RemoveEndDrawOffsets = value
+                );
             }
         }
     }

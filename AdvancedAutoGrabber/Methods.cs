@@ -20,9 +20,6 @@ namespace AdvancedAutoGrabber
         {
             location.Animals.OnValueAdded -= Animals_OnValueAdded;
             location.Animals.OnValueAdded += Animals_OnValueAdded;
-            var dict = AccessTools.FieldRefAccess<OverlaidDictionary, NetVector2Dictionary<Object, NetRef<Object>>>(location.Objects, "baseDict");
-            dict.OnValueAdded -= Objects_OnValueAdded;
-            dict.OnValueAdded += Objects_OnValueAdded;
         }
 
         public static void Objects_OnValueAdded(Vector2 key, Object value)

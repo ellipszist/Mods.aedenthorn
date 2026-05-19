@@ -1,12 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using StardewValley;
 using StardewValley.Extensions;
-using StardewValley.TerrainFeatures;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.Metrics;
 using System.Linq;
-using xTile.Dimensions;
 
 namespace ImmersiveSprinklersAndScarecrows
 {
@@ -41,11 +37,11 @@ namespace ImmersiveSprinklersAndScarecrows
         public bool IsSprinklerAtMouse()
         {
             var corner = ModEntry.GetMouseCornerTile();
-            return ModEntry.HasData(Game1.currentLocation, ModEntry.sprinklerKey, corner.X, corner.Y);
+            return ModEntry.GetSprinklerCached(Game1.currentLocation, corner.X, corner.Y) != null;
         }
         public bool IsSprinklerAtTileCorner(GameLocation location, Vector2 tile)
         {
-            return ModEntry.HasData(location, ModEntry.sprinklerKey, (int)tile.X, (int)tile.Y);
+            return ModEntry.GetSprinklerCached(Game1.currentLocation, (int)tile.X, (int)tile.Y) != null;
         }
         public Object GetScarecrowAtMouse()
         {
@@ -59,11 +55,11 @@ namespace ImmersiveSprinklersAndScarecrows
         public bool IsScarecrowAtMouse()
         {
             var corner = ModEntry.GetMouseCornerTile();
-            return ModEntry.HasData(Game1.currentLocation, ModEntry.scarecrowKey, corner.X, corner.Y);
+            return ModEntry.GetScarecrowCached(Game1.currentLocation, corner.X, corner.Y) != null;
         }
         public bool IsScarecrowAtTileCorner(GameLocation location, Vector2 tile)
         {
-            return ModEntry.HasData(location, ModEntry.scarecrowKey, (int)tile.X, (int)tile.Y);
+            return ModEntry.GetScarecrowCached(Game1.currentLocation, (int)tile.X, (int)tile.Y) != null;
         }
 
         public int GetSprinklerRadius(Object obj)

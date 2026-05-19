@@ -40,14 +40,26 @@ namespace FenceDecorations
         [HarmonyPatch(typeof(Fence), nameof(Fence.minutesElapsed))]
         public static class Fence_minutesElapsed_Patch
         {
-            public static void Postfix(Fence __instance) 
+            public static void Postfix(Fence __instance, ref bool __result) 
             {
-                if (!Config.ModEnabled || __instance.heldObject.Value is not Furniture f || f.Location is null)
+                if (!Config.ModEnabled || __instance.heldObject.Value == null)
                     return;
-                if(f.timeToTurnOnLights())
-                    f.addLights();
-                else
-                    f.removeLights();
+                if(__result)
+                {
+                    if (Config.ReturnOnDestroy)
+                    {
+                        Game1.createItemDebris(__instance.heldObject.Value, __instance.TileLocation * 64 + new Vector2(32f, 32f), -1, __instance.Location, -1, false);
+
+                    }
+                    return;
+                }
+                if(__instance.heldObject.Value is Furniture f && f.Location is not null)
+                {
+                    if (f.timeToTurnOnLights())
+                        f.addLights();
+                    else
+                        f.removeLights();
+                }
             }
         }
 

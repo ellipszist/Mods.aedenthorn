@@ -1,16 +1,21 @@
-﻿using Microsoft.Xna.Framework;
+﻿using HarmonyLib;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Netcode;
 using StardewValley;
 using StardewValley.Audio;
 using StardewValley.ItemTypeDefinitions;
+using StardewValley.Network;
 using StardewValley.Objects;
 using System;
 using System.Linq;
+using Object = StardewValley.Object;
 
 namespace FenceDecorations
 {
     public partial class ModEntry
     {
+
         public static void DrawColoredObject(ColoredObject obj, SpriteBatch spriteBatch, int xNonTile, int yNonTile, float alpha)
         {
             if (obj.bigCraftable.Value)
