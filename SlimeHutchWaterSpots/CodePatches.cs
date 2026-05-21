@@ -31,11 +31,11 @@ namespace SlimeHutchWaterSpots
                         int tile = __instance.getTileIndexAt(p, "Buildings");
                         if (tile == 2134 && __instance.waterSpots[idx])
                         {
-                            __instance.setMapTileIndex(x, y, 2135, "Buildings", 0);
+                            __instance.setMapTile(x, y, 2135, "Buildings", "untitled tile sheet");
                         }
                         else if (tile == 2135 && !__instance.waterSpots[idx])
                         {
-                            __instance.setMapTileIndex(x, y, 2134, "Buildings", 0);
+                            __instance.setMapTile(x, y, 2134, "Buildings", "untitled tile sheet");
                         }
                     }
                 }

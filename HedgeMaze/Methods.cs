@@ -4,13 +4,18 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Buildings;
+using StardewValley.Extensions;
+using StardewValley.GameData.Locations;
+using StardewValley.Internal;
 using StardewValley.Locations;
+using StardewValley.Logging;
 using StardewValley.Monsters;
 using StardewValley.Objects;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using xTile;
 using xTile.Dimensions;
 using xTile.Layers;
@@ -363,13 +368,29 @@ namespace HedgeMaze
             int treasures = Game1.random.Next(mazeData.TreasureMin, mazeData.TreasureMax + 1);
             int forages = Game1.random.Next(mazeData.ForageMin, mazeData.ForageMax + 1);
 
-            Dictionary<string, string> locationData = Game1.content.Load<Dictionary<string, string>>("Data\\Locations");
-            if (locationData.TryGetValue(gl.Name, out string rawData))
+            var data = gl.GetData();
+            if (data is not null)
             {
-                var data = rawData.Split('/', StringSplitOptions.None)[Utility.getSeasonNumber(gl.GetSeasonForLocation())];
-                if (!data.Equals("-1"))
+                Season season = gl.GetSeason();
+                List<SpawnForageData> possibleForage = new List<SpawnForageData>();
+                foreach (SpawnForageData spawn in GameLocation.GetData("Default").Forage.Concat(data.Forage))
                 {
-                    string[] split = data.Split(' ');
+                    if (spawn.Condition == null || GameStateQuery.CheckConditions(spawn.Condition, gl, null, null, null, Game1.random, null))
+                    {
+                        if (spawn.Season != null)
+                        {
+                            Season? season2 = spawn.Season;
+                            Season season3 = season;
+                            if (!((season2.GetValueOrDefault() == season3) & (season2 != null)))
+                            {
+                                continue;
+                            }
+                        }
+                        possibleForage.Add(spawn);
+                    }
+                }
+                if (possibleForage.Any<SpawnForageData>())
+                {
                     for (int i = 0; i < forages; i++)
                     {
                         if (!inst.vertTiles.Any())
@@ -377,16 +398,21 @@ namespace HedgeMaze
                         int idx = Game1.random.Next(inst.vertTiles.Count);
                         Vector2 v = inst.vertTiles[idx].ToVector2();
                         inst.vertTiles.RemoveAt(idx);
-                        gl.objects.TryGetValue(v, out Object o);
-                        int whichObject = Game1.random.Next(split.Length / 2) * 2;
-                        gl.dropObject(new Object(v, int.Parse(split[whichObject]), null, false, true, false, true), new Vector2((float)(v.X * 64), (float)(v.Y * 64)), Game1.viewport, true, null);
-                        if (Config.Debug)
+
+                        ItemQueryContext itemQueryContext = new(gl, null, Game1.random, "location '" + gl.NameOrUniqueName + "' > forage");
+
+                        SpawnForageData forage = Game1.random.ChooseFrom(possibleForage);
+                        Item forageItem = ItemQueryResolver.TryResolveRandomItem(forage, itemQueryContext, false, null, null, null, delegate (string query, string error) { });
+                        if (forageItem != null)
                         {
-                            SMonitor.Log($"Spawning forage at {v}");
+                            if (Config.Debug)
+                            {
+                                SMonitor.Log($"Spawning forage at {v}");
+                            }
+                            Object forageObj = forageItem as Object;
+                            gl.dropObject(forageObj, new Vector2((float)(v.X * 64), (float)(v.Y * 64)), Game1.viewport, true, null);
                         }
-
                     }
-
                 }
             }
             if (treasuresList is not null)
@@ -401,7 +427,7 @@ namespace HedgeMaze
                     double fraction = Math.Pow(Game1.random.NextDouble(), 1 / mazeData.RarityChance);
                     int level = (int)Math.Ceiling(fraction * mazeData.Mult);
                     //Monitor.Log($"Adding expanded chest of value {level} to {l.name}");
-                    Chest chest = advancedLootFrameworkApi.MakeChest(treasuresList, mazeData.ItemListChances, mazeData.MaxItems, mazeData.MinItemValue, mazeData.MaxItemValue, level, mazeData.IncreaseRate, mazeData.ItemsBaseMaxValue, mazeData.CoinBaseMin, mazeData.CoinBaseMax, v);
+                    Chest chest = advancedLootFrameworkApi.MakeChest(treasuresList, mazeData.ItemListChances, mazeData.MaxItems, mazeData.MinItemValue, mazeData.MaxItemValue, level, mazeData.IncreaseRate, mazeData.ItemsBaseMaxValue, v);
                     chest.playerChoiceColor.Value = MakeTint(fraction);
                     chest.CanBeGrabbed = false;
                     gl.overlayObjects[v] = chest;
@@ -430,7 +456,7 @@ namespace HedgeMaze
                 int idx = Game1.random.Next(inst.endTiles.Count);
                 Vector2 v = inst.endTiles[idx].ToVector2();
                 inst.endTiles.RemoveAt(idx);
-                gl.addCharacter(new NPC(new AnimatedSprite("Characters\\Dwarf", 0, 16, 24), v * 64, "Woods", 2, "Dwarf", false, null, Game1.content.Load<Texture2D>("Portraits\\Dwarf"))
+                gl.addCharacter(new NPC(new AnimatedSprite("Characters\\Dwarf", 0, 16, 24), v * 64, "Woods", 2, "Dwarf", false, Game1.content.Load<Texture2D>("Portraits\\Dwarf"))
                 {
                     Breather = false
                 });
@@ -694,7 +720,7 @@ namespace HedgeMaze
                     MazeData data = mazeDataDict[inst.id];
                     for (int i = gl.characters.Count - 1; i >= 0; i--)
                     {
-                        if (IsTileInMaze(gl.characters[i].getTileLocationPoint(), data.mapSize, data.corner) && (gl.characters[i] is Monster || gl.characters[i].Name.Equals("Dwarf")))
+                        if (IsTileInMaze(gl.characters[i].TilePoint, data.mapSize, data.corner) && (gl.characters[i] is Monster || gl.characters[i].Name.Equals("Dwarf")))
                         {
                             gl.characters.RemoveAt(i);
                         }

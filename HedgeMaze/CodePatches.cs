@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
+using StardewValley.Locations;
 using StardewValley.Menus;
 using System;
 using System.Collections.Generic;
@@ -36,7 +37,7 @@ namespace HedgeMaze
                 if (!Config.ModEnabled || !mazeLocationDict.TryGetValue(__instance.currentLocation.NameOrUniqueName, out var list))
                     return;
 
-                Point tile = __instance.getTileLocationPoint();
+                Point tile = __instance.TilePoint;
                 var front = __instance.currentLocation.Map.GetLayer("Front");
                 foreach(var inst in list)
                 {
@@ -134,9 +135,9 @@ namespace HedgeMaze
         {
             public static bool Prefix(NPC __instance, Farmer who, GameLocation l, ref bool __result)
             {
-                if (!Config.ModEnabled || !__instance.Name.Equals("Dwarf") || l.Name.Equals("Mine") || !who.canUnderstandDwarves)
+                if (!Config.ModEnabled || !__instance.Name.Equals("Dwarf") || l is Mine || !who.canUnderstandDwarves)
                     return true;
-                Game1.activeClickableMenu = new ShopMenu(Utility.getDwarfShopStock(), 0, "Dwarf", null, null, null);
+                Utility.TryOpenShopMenu("Dwarf", __instance.Name, true);
                 __result = true;
                 return false;
             }

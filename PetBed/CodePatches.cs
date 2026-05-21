@@ -140,7 +140,6 @@ namespace PetBed
 
             if (!Config.ModEnabled || character is not Pet || !f.boundingBox.Value.Intersects(character.GetBoundingBox()))
             {
-                var y = f;
                 return result;
             }
             return false;

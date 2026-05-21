@@ -70,17 +70,13 @@ namespace HedgeMaze
                 {
                     foreach(var inst in kvp.Value)
                     {
-                        if (e.NameWithoutLocale.IsEquivalentTo("Maps/Farm"))
-                        {
-                            var x = inst.mapPath;
-                        }
                         if (e.NameWithoutLocale.IsEquivalentTo(inst.mapPath))
                         {
                             e.Edit(delegate (IAssetData data)
                             {
                                 SMonitor.Log($"adding maze to map {e.NameWithoutLocale}");
                                 ModifyMap(data.AsMap().Data, inst);
-                            });
+                            }, AssetEditPriority.Late);
                         }
                     }
                 }
