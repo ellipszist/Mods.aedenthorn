@@ -62,6 +62,10 @@ namespace Pockets
             {
                 return;
             }
+            foreach (var key in data.HotKey.Buttons)
+            {
+                SHelper.Input.Suppress(key);
+            }
             GameMenu menu = Game1.activeClickableMenu as GameMenu;
             if (Game1.activeClickableMenu is null)
             {
@@ -73,7 +77,6 @@ namespace Pockets
                 menu.changeTab(GameMenu.inventoryTab);
             }
             OpenPocket(menu.GetCurrentPage() as InventoryPage, data, inv, true);
-            SHelper.Input.Suppress(e.Button);
         }
 
         private void GameLoop_SaveLoaded(object sender, SaveLoadedEventArgs e)

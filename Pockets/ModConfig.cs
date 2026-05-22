@@ -1,4 +1,5 @@
-﻿using StardewModdingAPI;
+﻿using Microsoft.Xna.Framework;
+using StardewModdingAPI;
 using StardewModdingAPI.Utilities;
 using System.Collections.Generic;
 
@@ -8,7 +9,8 @@ namespace Pockets
     {
         public bool ModEnabled { get; set; } = true;
         public bool HoverForHotkey { get; set; } = true;
-        public float Alpha { get; set; } = 0.25f;
+        public float PocketAlpha { get; set; } = 0.25f;
+        public Color PocketColor { get; set; } = Color.White;
         public Dictionary<string, PocketData> DefaultPockets { get; set; } = new()
         {
             {

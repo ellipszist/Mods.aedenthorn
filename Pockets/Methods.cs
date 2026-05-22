@@ -127,7 +127,7 @@ namespace Pockets
                             }
                             DefaultInventoryDict[who] = list;
                         }
-                        catch(Exception ex)
+                        catch
                         {
                             Game1.GetPlayer(who).modData.Remove(modKey);
                         }

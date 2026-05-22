@@ -107,12 +107,12 @@ namespace Pockets
 
                 if (openPocket!= null)
                 {
-                    b.Draw(Game1.staminaRect, new Rectangle(__instance.portrait.bounds.Location + new Point(openPocket.StartX, openPocket.StartY), new Point(openPocket.Width, openPocket.Height)), Color.White * (Config.Alpha + (1 -Config.Alpha) / 2) );
+                    b.Draw(Game1.staminaRect, new Rectangle(__instance.portrait.bounds.Location + new Point(openPocket.StartX, openPocket.StartY), new Point(openPocket.Width, openPocket.Height)), Config.PocketColor * (Config.PocketAlpha + (1 - Config.PocketAlpha) / 2) );
                 }
                     
                 if (__instance.portrait.containsPoint(mousePos.X, mousePos.Y) && TryGetPocket(Game1.player, out var data, out IList<Item> inventory, mousePos.X - __instance.portrait.bounds.Left, mousePos.Y - __instance.portrait.bounds.Top))
                 {
-                    b.Draw(Game1.staminaRect, new Rectangle(__instance.portrait.bounds.Location + new Point(data.StartX, data.StartY), new Point(data.Width, data.Height)), Color.White * Config.Alpha);
+                    b.Draw(Game1.staminaRect, new Rectangle(__instance.portrait.bounds.Location + new Point(data.StartX, data.StartY), new Point(data.Width, data.Height)), Config.PocketColor * Config.PocketAlpha);
                 }
             }
 
