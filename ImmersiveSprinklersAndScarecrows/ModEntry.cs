@@ -257,7 +257,7 @@ namespace ImmersiveSprinklersAndScarecrows
 
                     Point tile = GetMouseCornerTile();
 
-                    var obj = GetSprinkler(Game1.currentLocation, tile.X, tile.Y);
+                    var obj = GetSprinklerCached(Game1.currentLocation, tile.X, tile.Y);
                     if (obj is not null)
                     {
                         obj.Location = Game1.currentLocation;

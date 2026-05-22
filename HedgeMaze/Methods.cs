@@ -456,7 +456,7 @@ namespace HedgeMaze
                 int idx = Game1.random.Next(inst.endTiles.Count);
                 Vector2 v = inst.endTiles[idx].ToVector2();
                 inst.endTiles.RemoveAt(idx);
-                gl.addCharacter(new NPC(new AnimatedSprite("Characters\\Dwarf", 0, 16, 24), v * 64, "Woods", 2, "Dwarf", false, Game1.content.Load<Texture2D>("Portraits\\Dwarf"))
+                gl.addCharacter(new DwarfNPC(new AnimatedSprite("Characters\\Dwarf", 0, 16, 24), v * 64, "Woods", 2, "Dwarf", false, Game1.content.Load<Texture2D>("Portraits\\Dwarf"))
                 {
                     Breather = false
                 });

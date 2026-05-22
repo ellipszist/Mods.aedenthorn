@@ -8,6 +8,7 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Inventories;
 using StardewValley.ItemTypeDefinitions;
+using StardewValley.Network;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 using StardewValley.Tools;
@@ -41,70 +42,92 @@ namespace ImmersiveSprinklersAndScarecrows
                 var x = tile.X;
                 var y = tile.Y;
                 var obj = GetSprinklerAtMouse();
-                if (obj is not null && who.CurrentItem is not null)
+                if (obj is not null)
                 {
-                    if (obj.heldObject.Value == null)
+                    if (obj.heldObject.Value is not Object held || held.ItemId == "913" || held.ItemId == "915")
                     {
-                        if (who.CurrentItem.ItemId == "913")
+                        if (who.CurrentItem?.ItemId == "913" && obj.heldObject.Value?.ItemId != "913")
                         {
+                            TryReturnObject(obj.heldObject.Value, who);
                             obj.heldObject.Value = new Object("913", 1);
                             obj.heldObject.Value.heldObject.Value = new Chest
                             {
                                 SpecialChestType = Chest.SpecialChestTypes.Enricher
                             };
+
                             who.reduceActiveItemByOne();
                             __instance.playSound("axe");
-                            __result = true;
-                            return false;
                         }
-                        else if (who.CurrentItem.ItemId == "915")
+                        else if (who.CurrentItem?.ItemId == "915" && obj.heldObject.Value?.ItemId != "915")
                         {
+                            if (obj.heldObject.Value?.heldObject.Value is Chest c && c.Items.Count > 0 && c.Items[0] is Object i)
+                            {
+
+                                TryReturnObject(i, who);
+                            }
+                            TryReturnObject(obj.heldObject.Value, who);
+
                             obj.heldObject.Value = new Object("915", 1);
                             who.reduceActiveItemByOne();
                             __instance.playSound("axe");
-                            __result = true;
-                            return false;
+                        }
+                        else if ((who.CurrentItem is null || who.CurrentItem?.Category == -19) && obj.heldObject.Value?.ItemId == "913")
+                        {
+
+                            Object value = obj.heldObject.Value.heldObject.Value;
+                            Chest chest = value as Chest;
+                            if (chest != null)
+                            {
+                                IInventory items = chest.Items;
+                                if(who.CurrentItem is null)
+                                {
+                                    if (items.Count > 0 && items[0] is Item f)
+                                    {
+                                        TryReturnObject(f, who);
+                                        chest.Items.Remove(f);
+                                        __instance.playSound("dirtyHit");
+                                    }
+                                    else
+                                    {
+                                        return true;
+                                    }
+                                }
+                                else
+                                {
+                                    if (items.Count > 0 && items[0] is Item f)
+                                    {
+                                        if (f.canStackWith(who.CurrentItem))
+                                        {
+                                            int back = f.addToStack(who.CurrentItem);
+                                            if (back == 0)
+                                            {
+                                                who.removeItemFromInventory(who.CurrentItem);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            TryReturnObject(f, who);
+                                            items[0] = who.CurrentItem;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        items.Clear();
+                                        items.Add(who.CurrentItem);
+                                        who.removeItemFromInventory(who.CurrentItem);
+                                        who.showNotCarrying();
+                                    }
+                                    __instance.playSound("dirtyHit");
+                                }
+                            }
                         }
                         else
                         {
                             return true;
                         }
-                    }
-                    else if (who.CurrentItem.Category == -19 && obj.heldObject.Value.ItemId == "913")
-                    {
-                        int stack = who.CurrentItem.Stack;
-                        int addStack = stack;
-                        int index = who.CurrentItem.ParentSheetIndex;
-
-                        Object value = obj.heldObject.Value.heldObject.Value;
-                        Chest chest = value as Chest;
-                        if (chest != null)
-                        {
-                            IInventory items = chest.Items;
-                            if (items.Count > 0 && items[0] != null && !chest.GetMutex().IsLocked())
-                            {
-                                chest.GetMutex().RequestLock(delegate
-                                {
-                                    Item f;
-                                    if (items.Count > 0 && items[0] != null)
-                                    {
-                                        f = items[0];
-
-                                    }
-                                    else
-                                    {
-                                        f = who.CurrentItem;
-                                        who.removeItemFromInventory(who.CurrentItem);
-                                        who.showNotCarrying();
-                                    }
-                                    chest.GetMutex().ReleaseLock();
-                                }, null);
-                            }
-                        }
-                        __instance.playSound("dirtyHit");
+                        PlaceObject(obj, __instance, x, y, true);
                         __result = true;
                         return false;
-
                     }
 
                     return true;
@@ -124,21 +147,21 @@ namespace ImmersiveSprinklersAndScarecrows
                             obj.preservedParentSheetIndex.Value = hat.ItemId;
                             who.Items[who.CurrentToolIndex] = null;
                             who.currentLocation.playSound("dirtyHit");
-                            __result = true;
-                            return false;
+
                         }
                         else if (who.CurrentItem is null && obj.preservedParentSheetIndex.Value != null)
                         {
                             who.Items[who.CurrentToolIndex] = new Hat(obj.preservedParentSheetIndex.Value);
                             obj.preservedParentSheetIndex.Value = null;
                             who.currentLocation.playSound("dirtyHit");
-                            __result = true;
-                            return false;
                         }
                         else
                         {
                             return true;
                         }
+                        PlaceObject(obj, __instance, x, y, true);
+                        __result = true;
+                        return false;
                     }
                     if (Game1.didPlayerJustRightClick(true))
                     {
@@ -174,20 +197,13 @@ namespace ImmersiveSprinklersAndScarecrows
 
                 int tileX = placementTile.X;
                 int tileY = placementTile.Y;
-                for(int i = 0; i < 2; i++)
-                {
-                    for (int j = 0; j < 2; j++)
-                    {
-                        if (!location.terrainFeatures.TryGetValue(tileVector + new Vector2(i, j), out var tf) || tf is not HoeDirt)
-                        {
-                            return true;
-                        }
-                    }
-                }
+
                 var one = (Object)__instance.getOne();
                 one.TileLocation = tileVector;
                 if (one.IsSprinkler())
                 {
+                    if (!CheckForHoeDirt(location, tileVector))
+                        return true;
 
                     SMonitor.Log($"Placing {one.Name} at {tileX},{tileY}");
 
@@ -196,20 +212,15 @@ namespace ImmersiveSprinklersAndScarecrows
                     ReturnOrDropSprinkler(location, tileX, tileY, who, false);
                     ReturnOrDropScarecrow(location, tileX, tileY, who, false);
 
-                    ImmersiveData data = GetImmersiveData(one, true);
+                    PlaceObject(one, location, tileX, tileY, true);
 
-                    location.modData[$"{dataKey},{tileX},{tileY}"] = JsonConvert.SerializeObject(data);
-                    if (!sprinklerDict.TryGetValue(location, out var dict))
-                    {
-                        dict = new Dictionary<Vector2, Object>();
-                        sprinklerDict[location] = dict;
-                    }
-                    dict[tileVector] = one;
                     __result = true;
                     return false;
                 }
                 else if (one.IsScarecrow())
                 {
+                    if (!CheckForHoeDirt(location, tileVector))
+                        return true;
                     SMonitor.Log($"Placing {one.Name} at {tileX},{tileY}");
 
                     location.playSound("woodyStep");
@@ -217,17 +228,8 @@ namespace ImmersiveSprinklersAndScarecrows
                     ReturnOrDropSprinkler(location, tileX, tileY, who, false);
                     ReturnOrDropScarecrow(location, tileX, tileY, who, false);
 
-                    one.TileLocation = new Vector2(tileX, tileY);
+                    PlaceObject(one, location, tileX, tileY, false);
 
-                    ImmersiveData data = GetImmersiveData(one, false);
-
-                    location.modData[$"{dataKey},{tileX},{tileY}"] = JsonConvert.SerializeObject(data);
-                    if (!scarecrowDict.TryGetValue(location, out var dict))
-                    {
-                        dict = new Dictionary<Vector2, Object>();
-                        scarecrowDict[location] = dict;
-                    }
-                    dict[tileVector] = one;
                     __result = true;
                     return false;
                 }
@@ -317,7 +319,16 @@ namespace ImmersiveSprinklersAndScarecrows
                         {
                             if (held.ItemId == "913")
                             {
-                                b.Draw(Game1.objectSpriteSheet, position + new Vector2(0f, -20f), GameLocation.getSourceRectForObject(914), Color.White * Config.Alpha, 0, Vector2.Zero, Config.Scale, obj.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + 2E-05f);
+                                var epos = position + new Vector2(0f, -20f);
+                                b.Draw(Game1.objectSpriteSheet, epos, GameLocation.getSourceRectForObject(914), Color.White * Config.Alpha, 0, Vector2.Zero, Config.Scale, obj.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + 2E-05f);
+                                if(held.heldObject.Value is Chest c && c.Items.Count > 0 && c.Items[0] is Item f)
+                                {
+                                    var mousePos = Game1.getMousePosition();
+                                    if (epos.X <= mousePos.X && epos.X + 64 > mousePos.X && epos.Y <= mousePos.Y && epos.Y + 64 > mousePos.Y)
+                                    {
+                                        f.drawInMenu(b, epos + new Vector2(0, -48), 1);
+                                    }
+                                }
                             }
                             else if (held.ItemId == "915")
                             {
@@ -387,20 +398,12 @@ namespace ImmersiveSprinklersAndScarecrows
             {
                 if (!Config.EnableMod || (!__instance.IsSprinkler() && !__instance.IsScarecrow()))
                     return true;
-                for (int i = 0; i < 2; i++)
-                {
-                    for (int j = 0; j < 2; j++)
-                    {
-                        if (!l.terrainFeatures.TryGetValue(tile + new Vector2(i, j), out var tf) || tf is not HoeDirt)
-                        {
-                            return true;
-                        }
-                    }
-                }
+
+                if (!CheckForHoeDirt(l, GetMouseCornerTile().ToVector2()))
+                    return true;
                 __result = true;
                 return false;
             }
-
         }
         [HarmonyPatch(typeof(Utility), nameof(Utility.playerCanPlaceItemHere))]
         public class Utility_playerCanPlaceItemHere_Patch

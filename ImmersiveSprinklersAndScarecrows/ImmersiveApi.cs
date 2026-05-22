@@ -31,7 +31,7 @@ namespace ImmersiveSprinklersAndScarecrows
         }
         public Object GetSprinklerAtTileCorner(GameLocation l, int x, int y)
         {
-            return ModEntry.GetSprinkler(l, x, y);
+            return ModEntry.GetSprinklerCached(l, x, y);
         }
 
         public bool IsSprinklerAtMouse()
@@ -49,7 +49,7 @@ namespace ImmersiveSprinklersAndScarecrows
         }
         public Object GetScarecrowAtTileCorner(GameLocation l, int x, int y)
         {
-            return ModEntry.GetScarecrow(l, x, y);
+            return ModEntry.GetScarecrowCached(l, x, y);
         }
 
         public bool IsScarecrowAtMouse()

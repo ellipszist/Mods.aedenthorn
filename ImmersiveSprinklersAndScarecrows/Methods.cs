@@ -170,7 +170,7 @@ namespace ImmersiveSprinklersAndScarecrows
 
             Point tile = GetMouseCornerTile();
 
-            return GetSprinkler(Game1.currentLocation, tile.X, tile.Y);
+            return GetSprinklerCached(Game1.currentLocation, tile.X, tile.Y);
         }
         public static Object GetScarecrowAtMouse()
         {
@@ -179,13 +179,25 @@ namespace ImmersiveSprinklersAndScarecrows
 
             Point tile = GetMouseCornerTile();
 
-            return GetScarecrow(Game1.currentLocation, tile.X, tile.Y);
+            return GetScarecrowCached(Game1.currentLocation, tile.X, tile.Y);
         }
+        public static void PlaceObject(Object one, GameLocation location, int tileX, int tileY, bool sprinkler)
+        {
+            ImmersiveData data = GetImmersiveData(one, sprinkler);
+            location.modData[$"{dataKey},{tileX},{tileY}"] = JsonConvert.SerializeObject(data);
+            var dict = sprinkler ? sprinklerDict : scarecrowDict;
+            if (!dict.TryGetValue(location, out var dict2))
+            {
+                dict2 = new Dictionary<Vector2, Object>();
+                dict[location] = dict2;
+            }
+            dict2[new Vector2(tileX, tileY)] = one;
 
+        }
         public static bool ReturnOrDropSprinkler(GameLocation l, int x, int y, Farmer who, bool drop)
         {
             var pos = new Vector2(x, y) * 64;
-            Object sprinkler = GetSprinkler(l, x, y);
+            Object sprinkler = GetSprinklerCached(l, x, y);
             if (sprinkler == null)
                 return false;
             if (drop)
@@ -225,7 +237,7 @@ namespace ImmersiveSprinklersAndScarecrows
         {
 
             var pos = new Vector2(x, y) * 64;
-            Object scarecrow = GetScarecrow(l, x, y);
+            Object scarecrow = GetScarecrowCached(l, x, y);
             if (scarecrow == null)
                 return false;
             if (drop)
@@ -544,5 +556,20 @@ namespace ImmersiveSprinklersAndScarecrows
             var data = GetImmersiveData(obj, obj.IsSprinkler());
             obj.Location.modData[$"{dataKey},{obj.TileLocation.X},{obj.TileLocation.Y}"] = JsonConvert.SerializeObject(data);
         }
+        public static bool CheckForHoeDirt(GameLocation l, Vector2 tile)
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                for (int j = 0; j < 2; j++)
+                {
+                    if (!l.terrainFeatures.TryGetValue(tile + new Vector2(i, j), out var tf) || tf is not HoeDirt)
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
     }
 }

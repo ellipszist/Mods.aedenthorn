@@ -125,10 +125,10 @@ namespace MailboxMenu
                 for (int i = mainScrolled * ModEntry.Config.GridColumns; i < Game1.mailbox.Count; i++)
                 {
                     if (mail.TryGetValue(Game1.mailbox[i], out string mailData))
-                        AddMail(Game1.mailbox[i], i, mailData);
+                        AddMail(Game1.mailbox[i], i - mainScrolled * ModEntry.Config.GridColumns, mailData);
                     else
                     {
-                        AddMail(Game1.mailbox[i], i, "");
+                        AddMail(Game1.mailbox[i], i - mainScrolled * ModEntry.Config.GridColumns, "");
                     }
                 }
             }
@@ -138,7 +138,7 @@ namespace MailboxMenu
                 int count = 0;
                 for (int i = 0; i < Game1.player.mailReceived.Count; i++)
                 {
-                    string id = Game1.player.mailReceived[i];
+                    string id = Game1.player.mailReceived.ElementAt(i);
                     if (!mail.TryGetValue(id, out string mailData))
                         continue;
                     if (Game1.mailbox.Contains(id))
@@ -157,7 +157,7 @@ namespace MailboxMenu
                     }
                     if (count >= mainScrolled * ModEntry.Config.GridColumns)
                     {
-                            AddMail(id, count - mainScrolled * ModEntry.Config.GridColumns, mailData);
+                        AddMail(id, count - mainScrolled * ModEntry.Config.GridColumns, mailData);
                     }
                     count++;
                 }
@@ -347,8 +347,8 @@ namespace MailboxMenu
                     lines++;
                 }
             }
-            SpriteText.drawString(b, ModEntry.Config.InboxText, inboxButton.bounds.X, inboxButton.bounds.Y, color: whichTab == 0 ? 0 : 8);
-            SpriteText.drawString(b, ModEntry.Config.ArchiveText, allMailButton.bounds.X, allMailButton.bounds.Y, color: whichTab == 1 ? 0 : 8);
+            SpriteText.drawString(b, ModEntry.Config.InboxText, inboxButton.bounds.X, inboxButton.bounds.Y, color: whichTab == 0 ? Color.Black : Color.DarkSlateGray);
+            SpriteText.drawString(b, ModEntry.Config.ArchiveText, allMailButton.bounds.X, allMailButton.bounds.Y, color: whichTab == 1 ? Color.Black : Color.DarkSlateGray);
             for(int i = 0; i < senders.Count; i++)
             {
                 string str = senders[i].name;

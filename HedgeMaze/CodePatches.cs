@@ -130,17 +130,5 @@ namespace HedgeMaze
                 return true;
             }
         }
-        [HarmonyPatch(typeof(NPC), nameof(NPC.checkAction))]
-        public class NPC_checkAction_Patch
-        {
-            public static bool Prefix(NPC __instance, Farmer who, GameLocation l, ref bool __result)
-            {
-                if (!Config.ModEnabled || !__instance.Name.Equals("Dwarf") || l is Mine || !who.canUnderstandDwarves)
-                    return true;
-                Utility.TryOpenShopMenu("Dwarf", __instance.Name, true);
-                __result = true;
-                return false;
-            }
-        }
     }
 }

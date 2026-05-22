@@ -697,6 +697,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FenceDecorations", "FenceDe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SlimeHutchFertilizer", "SlimeHutchFertilizer\SlimeHutchFertilizer.csproj", "{E3923231-B4A3-70F8-16B5-6DA9C574C303}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tunnels", "Tunnels\Tunnels.csproj", "{276CC383-CE25-C6B3-B3A5-CD0E9F7AABFC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pockets", "Pockets\Pockets.csproj", "{380A5BF4-90A5-119C-8259-C8002B8D8693}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3449,6 +3453,22 @@ Global
 		{E3923231-B4A3-70F8-16B5-6DA9C574C303}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E3923231-B4A3-70F8-16B5-6DA9C574C303}.Release|x64.ActiveCfg = Release|x64
 		{E3923231-B4A3-70F8-16B5-6DA9C574C303}.Release|x64.Build.0 = Release|x64
+		{276CC383-CE25-C6B3-B3A5-CD0E9F7AABFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{276CC383-CE25-C6B3-B3A5-CD0E9F7AABFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{276CC383-CE25-C6B3-B3A5-CD0E9F7AABFC}.Debug|x64.ActiveCfg = Debug|x64
+		{276CC383-CE25-C6B3-B3A5-CD0E9F7AABFC}.Debug|x64.Build.0 = Debug|x64
+		{276CC383-CE25-C6B3-B3A5-CD0E9F7AABFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{276CC383-CE25-C6B3-B3A5-CD0E9F7AABFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{276CC383-CE25-C6B3-B3A5-CD0E9F7AABFC}.Release|x64.ActiveCfg = Release|x64
+		{276CC383-CE25-C6B3-B3A5-CD0E9F7AABFC}.Release|x64.Build.0 = Release|x64
+		{380A5BF4-90A5-119C-8259-C8002B8D8693}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{380A5BF4-90A5-119C-8259-C8002B8D8693}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{380A5BF4-90A5-119C-8259-C8002B8D8693}.Debug|x64.ActiveCfg = Debug|x64
+		{380A5BF4-90A5-119C-8259-C8002B8D8693}.Debug|x64.Build.0 = Debug|x64
+		{380A5BF4-90A5-119C-8259-C8002B8D8693}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{380A5BF4-90A5-119C-8259-C8002B8D8693}.Release|Any CPU.Build.0 = Release|Any CPU
+		{380A5BF4-90A5-119C-8259-C8002B8D8693}.Release|x64.ActiveCfg = Release|x64
+		{380A5BF4-90A5-119C-8259-C8002B8D8693}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
