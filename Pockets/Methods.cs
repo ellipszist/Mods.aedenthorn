@@ -1,8 +1,17 @@
 ﻿using Newtonsoft.Json;
 using StardewValley;
+using StardewValley.BellsAndWhistles;
 using StardewValley.Inventories;
+using StardewValley.ItemTypeDefinitions;
+using StardewValley.Menus;
 using StardewValley.Objects;
+using StardewValley.SaveSerialization;
+using System;
 using System.Collections.Generic;
+using System.Data;
+using System.IO;
+using System.Xml;
+using System.Xml.Serialization;
 
 namespace Pockets
 {
@@ -53,7 +62,7 @@ namespace Pockets
             {
                 foreach(var kvp in clothesPockets)
                 {
-                    if (SHelper.Input.IsDown(kvp.Value.HotKey) || (x > -1 && kvp.Value.StartX <= x && kvp.Value.Width > x && kvp.Value.StartY <= y && kvp.Value.Height > y))
+                    if (kvp.Value.HotKey.GetState() == StardewModdingAPI.SButtonState.Pressed || (x > -1 && kvp.Value.StartX <= x && kvp.Value.Width > x && kvp.Value.StartY <= y && kvp.Value.Height > y))
                     {
                         data = kvp.Value;
                         if (!InventoryDict.TryGetValue(item, out var list))
@@ -62,12 +71,16 @@ namespace Pockets
                             {
                                 try
                                 {
-                                    list = JsonConvert.DeserializeObject<Dictionary<string, Inventory>>(str);
+                                    list = new Dictionary<string, Inventory>();
+                                    foreach(var kvp2 in JsonConvert.DeserializeObject<Dictionary<string, string>>(str))
+                                    {
+                                        list[kvp2.Key] = MakeInventoryFromXML(kvp2.Value, data.PocketSlots);
+                                    }
                                     InventoryDict[item] = list;
                                 }
                                 catch
                                 {
-
+                                    item.modData.Remove(modKey);
                                 }
 
                             }
@@ -82,6 +95,10 @@ namespace Pockets
                             inv = new Inventory();
                             list[kvp.Key] = inv;
                         }
+                        while (inv.Count < data.PocketSlots)
+                        {
+                            inv.Add(null);
+                        }
                         items = inv;
                         return true;
                     }
@@ -95,7 +112,7 @@ namespace Pockets
 
         private static bool TryGetDefaultPocketInventory(long who, string pocketId, PocketData data, out IList<Item> items, int x, int y)
         {
-            if (SHelper.Input.IsDown(data.HotKey) || (x > -1 && data.StartX <= x && data.StartX + data.Width > x && data.StartY <= y && data.StartY + data.Height > y))
+            if (data.HotKey.GetState() == StardewModdingAPI.SButtonState.Pressed || (x > -1 && data.StartX <= x && data.StartX + data.Width > x && data.StartY <= y && data.StartY + data.Height > y))
             {
                 if (!DefaultInventoryDict.TryGetValue(who, out var list))
                 {
@@ -103,12 +120,16 @@ namespace Pockets
                     {
                         try
                         {
-                            list = JsonConvert.DeserializeObject<Dictionary<string, Inventory>>(str);
+                            list = new Dictionary<string, Inventory>();
+                            foreach (var kvp2 in JsonConvert.DeserializeObject<Dictionary<string, string>>(str))
+                            {
+                                list[kvp2.Key] = MakeInventoryFromXML(kvp2.Value, data.PocketSlots);
+                            }
                             DefaultInventoryDict[who] = list;
                         }
-                        catch
+                        catch(Exception ex)
                         {
-
+                            Game1.GetPlayer(who).modData.Remove(modKey);
                         }
 
                     }
@@ -123,11 +144,135 @@ namespace Pockets
                     inv = new Inventory();
                     list[pocketId] = inv;
                 }
+                while (inv.Count < data.PocketSlots)
+                {
+                    inv.Add(null);
+                }
                 items = inv;
                 return true;
             }
+
             items = null;
             return false;
+        }
+        public static void OpenPocket(InventoryPage page, PocketData data, IList<Item> inventory, bool playSound = true)
+        {
+            if (openPocket == data)
+            {
+                openPocket = null;
+                page.inventory = new InventoryMenu(page.xPositionOnScreen + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth, page.yPositionOnScreen + IClickableMenu.spaceToClearTopBorder + IClickableMenu.borderWidth, true, null, null, -1, 3, 0, 0, true);
+                if (playSound)
+                {
+                    Game1.playSound("bigDeSelect");
+                }
+            }
+            else
+            {
+                openPocket = data;
+                page.inventory = new InventoryMenu(page.xPositionOnScreen + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth, page.yPositionOnScreen + IClickableMenu.spaceToClearTopBorder + IClickableMenu.borderWidth, false, inventory, null, data.PocketSlots, data.PocketRows, 0, 0, true);
+                if (playSound)
+                {
+                    Game1.playSound("bigSelect");
+                }
+            }
+        }
+        public static Inventory MakeInventoryFromXML(string xml, int max)
+        {
+            Inventory inv = new();
+            StringReader stringReader;
+            stringReader = new StringReader(xml);
+            XmlTextReader reader;
+            reader = new XmlTextReader(stringReader);
+            //inv.ReadXml(reader);
+            bool isEmptyElement = reader.IsEmptyElement;
+            reader.Read();
+            reader.ReadStartElement();
+            if (isEmptyElement)
+            {
+                return inv;
+            }
+            while (reader.NodeType != XmlNodeType.EndElement && inv.Count < max)
+            {
+                Item item = SaveSerializer.Deserialize<Item>(reader);
+                inv.Add(item);
+            }
+            reader.Close();
+            stringReader.Close();
+            return inv;
+        }
+
+        public static string MakeXMLFromInventories(Dictionary<string, Inventory> value)
+        {
+            Dictionary<string, string> dict = new();
+
+            foreach (var kvp in value) 
+            {
+                using (var sw = new StringWriter())
+                {
+                    using (var writer = XmlWriter.Create(sw))
+                    {
+                        writer.WriteStartDocument();
+                        SaveSerializer.GetSerializer(typeof(Inventory)).SerializeFast(writer, kvp.Value);
+                        writer.WriteEndDocument();
+                        writer.Flush();
+                    }
+                    dict[kvp.Key] = sw.ToString();
+                }
+            }
+            return JsonConvert.SerializeObject(dict);
+        }
+        public static Item AddItemToInventory(IList<Item> inv, Item item)
+        {
+            if (item == null)
+            {
+                return null;
+            }
+            int originalStack = item.Stack;
+            int stackLeft = originalStack;
+            foreach (Item slot in inv)
+            {
+                if (item.canStackWith(slot))
+                {
+                    int stack = item.Stack;
+                    stackLeft = slot.addToStack(item);
+                    int added = stack - stackLeft;
+                    if (added > 0)
+                    {
+                        item.Stack = stackLeft;
+                        if (stackLeft < 1)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+            if (stackLeft > 0)
+            {
+                int i = 0;
+                while (i < inv.Count)
+                {
+                    if (inv[i] == null)
+                    {
+                        item.onDetachedFromParent();
+                        inv[i] = item;
+                        stackLeft = 0;
+                        break;
+                    }
+                    else
+                    {
+                        i++;
+                    }
+                }
+            }
+            if (originalStack > stackLeft)
+            {
+                Game1.player.ShowItemReceivedHudMessageIfNeeded(item, originalStack - stackLeft);
+            }
+            if (stackLeft <= 0)
+            {
+                return null;
+            }
+            return item;
         }
     }
 }

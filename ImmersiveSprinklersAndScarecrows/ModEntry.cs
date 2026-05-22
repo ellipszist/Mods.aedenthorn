@@ -128,47 +128,40 @@ namespace ImmersiveSprinklersAndScarecrows
             if (!Config.EnableMod || !Context.IsPlayerFree || Game1.currentLocation?.terrainFeatures is null)
                 return;
 
-            var sc = Helper.Input.IsDown(Config.ShowScarecrowRangeButton);
             var sp = Helper.Input.IsDown(Config.ShowSprinklerRangeButton);
+            var sc = Helper.Input.IsDown(Config.ShowScarecrowRangeButton);
             if (!sc && !sp)
                 return;
 
             HashSet<Vector2> sprinklerTiles = new();
             HashSet<Vector2> scarecrowTiles = new();
             IEnumerable<Object> sprinklers;
-            IEnumerable<Object> scarecrows;
-            if(sprinklerDict.TryGetValue(Game1.currentLocation, out var dict))
-            {
-                sprinklers = dict.Values;
-            }
-            else
+
+            if (sp)
             {
                 sprinklers = GetSprinklers(Game1.currentLocation);
-            }
-            if(scarecrowDict.TryGetValue(Game1.currentLocation, out var dict2))
-            {
-                scarecrows = dict2.Values;
-            }
-            else
-            {
-                scarecrows = GetScarecrows(Game1.currentLocation);
-            }
-            foreach (var obj in sprinklers)
-            {
-                if (obj is null)
-                    continue;
-                foreach (var t in GetSprinklerTiles(obj.TileLocation, GetSprinklerRadius(obj)))
+                foreach (var obj in sprinklers)
                 {
-                    sprinklerTiles.Add(t);
+                    if (obj is null)
+                        continue;
+                    foreach (var t in GetSprinklerTiles(obj.TileLocation, GetSprinklerRadius(obj)))
+                    {
+                        sprinklerTiles.Add(t);
+                    }
                 }
+
             }
-            foreach (var obj in scarecrows)
+            if (sc)
             {
-                if (obj is null)
-                    continue;
-                foreach (var t in GetScarecrowTiles(obj.TileLocation, obj.GetRadiusForScarecrow()))
+                IEnumerable<Object> scarecrows = GetAsScarecrows(Game1.currentLocation);
+                foreach (var obj in scarecrows)
                 {
-                    sprinklerTiles.Add(t);
+                    if (obj is null)
+                        continue;
+                    foreach (var t in GetScarecrowTiles(obj.TileLocation, obj.GetRadiusForScarecrow()))
+                    {
+                        scarecrowTiles.Add(t);
+                    }
                 }
             }
             foreach (var tile in sprinklerTiles)

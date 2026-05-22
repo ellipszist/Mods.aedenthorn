@@ -31,7 +31,8 @@ namespace ImmersiveSprinklersAndScarecrows
         {
             { "Sprinkler", 0 },
             { "Quality Sprinkler", 1 },
-            { "Iridium Sprinkler", 2 }
+            { "Iridium Sprinkler", 2 },
+            { "PrismaticSprinkler", 3 }
         };
     }
 }

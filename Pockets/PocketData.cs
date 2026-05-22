@@ -7,7 +7,7 @@ namespace Pockets
     public class PocketData
     {
         public Clothing.ClothesType ClothesType { get; set; }
-        public SButton HotKey { get; set; } = SButton.None;
+        public Keybind HotKey { get; set; } = null;
         public int StartX { get; set; }
         public int StartY { get; set; }
         public int Width { get; set; }

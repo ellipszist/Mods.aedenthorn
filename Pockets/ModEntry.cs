@@ -1,17 +1,11 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
-using Newtonsoft.Json;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
-using StardewValley.GameData.Fences;
 using StardewValley.Inventories;
 using StardewValley.Menus;
-using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Reflection;
 
 namespace Pockets
 {
@@ -47,13 +41,51 @@ namespace Pockets
             context = this;
 
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
+            helper.Events.GameLoop.ReturnedToTitle += GameLoop_ReturnedToTitle;
+            helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
             helper.Events.GameLoop.Saving += GameLoop_Saving;
             helper.Events.Display.MenuChanged += Display_MenuChanged;
             helper.Events.Content.AssetRequested += Content_AssetRequested;
+            helper.Events.Input.ButtonPressed += Input_ButtonPressed;
             
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
+        }
+
+        private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
+        {
+            if(!Config.ModEnabled || !Context.IsWorldReady || 
+                (Game1.activeClickableMenu is not null && Game1.activeClickableMenu is not GameMenu) || 
+                (Game1.activeClickableMenu is null && Config.HoverForHotkey && !new Rectangle(Game1.GlobalToLocal(Game1.player.Position).ToPoint() + new Point(0, -64), new Point(64, 128)).Contains(Game1.getMousePosition())) || 
+                !TryGetPocket(Game1.player, out var data, out var inv))
+            {
+                return;
+            }
+            GameMenu menu = Game1.activeClickableMenu as GameMenu;
+            if (Game1.activeClickableMenu is null)
+            {
+                menu = new GameMenu(GameMenu.inventoryTab, -1, true);
+                Game1.activeClickableMenu = menu;
+            }
+            else if(menu.currentTab != GameMenu.inventoryTab) 
+            {
+                menu.changeTab(GameMenu.inventoryTab);
+            }
+            OpenPocket(menu.GetCurrentPage() as InventoryPage, data, inv, true);
+            SHelper.Input.Suppress(e.Button);
+        }
+
+        private void GameLoop_SaveLoaded(object sender, SaveLoadedEventArgs e)
+        {
+            InventoryDict.Clear();
+            DefaultInventoryDict.Clear();
+        }
+
+        private void GameLoop_ReturnedToTitle(object sender, ReturnedToTitleEventArgs e)
+        {
+            InventoryDict.Clear();
+            DefaultInventoryDict.Clear();
         }
 
         private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
@@ -66,18 +98,19 @@ namespace Pockets
 
         private void Display_MenuChanged(object sender, MenuChangedEventArgs e)
         {
-            openPocket = null;
+            if(e.NewMenu is not GameMenu menu || menu.currentTab != GameMenu.inventoryTab)
+                openPocket = null;
         }
 
         private void GameLoop_Saving(object sender, SavingEventArgs e)
         {
             foreach(var kvp in InventoryDict)
             {
-                kvp.Key.modData[modKey] = JsonConvert.SerializeObject(kvp.Value);
+                kvp.Key.modData[modKey] = MakeXMLFromInventories(kvp.Value);
             }
             foreach(var kvp in DefaultInventoryDict)
             {
-                Game1.GetPlayer(kvp.Key).modData[modKey] = JsonConvert.SerializeObject(kvp.Value);
+                Game1.GetPlayer(kvp.Key).modData[modKey] = MakeXMLFromInventories(kvp.Value);
             }
         }
 

@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using StardewModdingAPI;
+using StardewModdingAPI.Utilities;
+using System.Collections.Generic;
 
 namespace Pockets
 {
     public class ModConfig
     {
         public bool ModEnabled { get; set; } = true;
+        public bool HoverForHotkey { get; set; } = true;
         public float Alpha { get; set; } = 0.25f;
         public Dictionary<string, PocketData> DefaultPockets { get; set; } = new()
         {
@@ -13,9 +16,10 @@ namespace Pockets
                 new PocketData()
                 {
                     ClothesType = StardewValley.Objects.Clothing.ClothesType.SHIRT,
-                    StartX = 0,
-                    StartY = 24,
-                    Width = 64,
+                    HotKey = new Keybind(SButton.LeftControl, SButton.S),
+                    StartX = 16,
+                    StartY = 36,
+                    Width = 32,
                     Height = 24,
                     PocketRows = 3,
                     PocketSlots = 9
@@ -26,10 +30,11 @@ namespace Pockets
                 new PocketData()
                 {
                     ClothesType = StardewValley.Objects.Clothing.ClothesType.PANTS,
-                    StartX = 0,
-                    StartY = 48,
-                    Width = 32,
-                    Height = 24,
+                    HotKey = new Keybind(SButton.LeftControl, SButton.L),
+                    StartX = 16,
+                    StartY = 60,
+                    Width = 16,
+                    Height = 20,
                     PocketRows = 3,
                     PocketSlots = 9
                 }
@@ -39,10 +44,11 @@ namespace Pockets
                 new PocketData()
                 {
                     ClothesType = StardewValley.Objects.Clothing.ClothesType.PANTS,
+                    HotKey = new Keybind(SButton.LeftControl, SButton.R),
                     StartX = 32,
-                    StartY = 48,
-                    Width = 32,
-                    Height = 24,
+                    StartY = 60,
+                    Width = 16,
+                    Height = 20,
                     PocketRows = 3,
                     PocketSlots = 9
                 }

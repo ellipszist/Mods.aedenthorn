@@ -107,7 +107,18 @@ namespace OutfitSets
                     Vector2 strSize = Game1.tinyFont.MeasureString(strToDraw);
                     b.DrawString(Game1.tinyFont, strToDraw, toDraw + new Vector2(-strSize.X / 2f, -strSize.Y / 2), which == i + 1 ? Config.CurrentColor : Config.DefaultColor);
                 }
-			}
+                if (!string.IsNullOrEmpty(__instance.hoverText))
+                {
+                    if (__instance.hoverAmount > 0)
+                    {
+                        IClickableMenu.drawToolTip(b, __instance.hoverText, __instance.hoverTitle, null, heldItem: true, -1, 0, null, -1, null, __instance.hoverAmount);
+                    }
+                    else
+                    {
+                        IClickableMenu.drawToolTip(b, __instance.hoverText, __instance.hoverTitle, __instance.hoveredItem, Game1.player.CursorSlotItem != null);
+                    }
+                }
+            }
         }
     }
 }

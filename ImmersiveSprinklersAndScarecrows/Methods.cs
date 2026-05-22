@@ -314,7 +314,8 @@ namespace ImmersiveSprinklersAndScarecrows
                 for (int y = 0; y < diameter; y++)
                 {
                     Vector2 tile = start + new Vector2(x, y);
-                    if ((int)Math.Ceiling(Vector2.Distance(position, tile)) <= radius)
+                    var distance = (int)Math.Ceiling(Vector2.Distance(position, tile));
+                    if (distance <= radius)
                         list.Add(tile);
                 }
             }
@@ -446,6 +447,10 @@ namespace ImmersiveSprinklersAndScarecrows
         public static IEnumerable<Object> GetScarecrows(GameLocation l)
         {
             return l.modData.FieldDict.Where(p => p.Key.StartsWith(dataKey + ",")).Select(p => GetScarecrowCached(l, int.Parse(p.Key.Split(',')[1]), int.Parse(p.Key.Split(',')[2]))).Where(o => o is not null);
+        }
+        public static IEnumerable<Object> GetAsScarecrows(GameLocation l)
+        {
+            return GetScarecrows(l).Concat(GetSprinklers(l).Where(s => s.IsScarecrow()));
         }
 
         public static void SetAltTextureForObject(Object obj)

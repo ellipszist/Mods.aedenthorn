@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Graphics.PackedVector;
 using Netcode;
+using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Characters;
 using StardewValley.Locations;
@@ -24,6 +25,31 @@ namespace PetBed
             {
                 SMonitor.Log("Warping pet to farmhouse");
                 return !Config.ModEnabled || Game1.random.NextDouble() > Config.BedChance / 100f || !WarpPetToBed(__instance, Utility.getHomeOfFarmer(who), false);
+            }
+        }
+        
+        [HarmonyPatch(typeof(Pet), nameof(Pet.CurrentBehavior))]
+        [HarmonyPatch(MethodType.Setter)]
+        public static class Pet_CurrentBehavior_Patch
+        {
+            public static void Prefix(Pet __instance, string value)
+            {
+                if(!Config.ModEnabled || !Context.IsWorldReady || __instance.CurrentBehavior == value || __instance.CurrentBehavior != "Sleep" || !__instance.modData.TryGetValue(sleepingKey, out var tile))
+                    return;
+
+                SMonitor.Log("Waking up");
+                foreach (var f in __instance.currentLocation.furniture)
+                {
+                    if (f.TileLocation.ToString() == tile)
+                    {
+                        __instance.isSleepingOnFarmerBed.Value = false;
+                        if (SHelper.GameContent.Load<Dictionary<string, PetBedData>>(dictPath).TryGetValue(f.ItemId, out var data))
+                        {
+                            __instance.Position = new Vector2((f.TileLocation.X + data.WakeX) * Game1.tileSize, (f.TileLocation.Y + data.WakeY) * Game1.tileSize);
+                        }
+                        return;
+                    }
+                }
             }
         }
 
