@@ -9,6 +9,21 @@ namespace PrismaticFlowers
 {
     public partial class ModEntry : Mod
     {
+        public static bool MakePrismatic(object obj)
+        {
+            if(obj is Crop crop)
+            {
+                crop.modData[prismaticKey] = Game1.random.Next(Utility.PRISMATIC_COLORS.Length) + (SHelper.GameContent.Load<Dictionary<string, PrismaticData>>(dictPath).TryGetValue(crop.indexOfHarvest.Value, out var pData) && Game1.random.Next(100) < pData.Chance ? "," + crop.indexOfHarvest.Value : "");
+                return true;
+            }
+            if(obj is ColoredObject co)
+            {
+                co.modData[prismaticKey] = Game1.random.Next(Utility.PRISMATIC_COLORS.Length) + "";
+                return true;
+            }
+            return false;
+        }
+
         public static Color GetPrismaticColorForObject(Color fallback, object obj)
         {
             if (!Config.ModEnabled)

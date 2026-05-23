@@ -1,17 +1,13 @@
 ﻿using Newtonsoft.Json;
 using StardewValley;
-using StardewValley.BellsAndWhistles;
 using StardewValley.Inventories;
-using StardewValley.ItemTypeDefinitions;
 using StardewValley.Menus;
 using StardewValley.Objects;
 using StardewValley.SaveSerialization;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
 using System.Xml;
-using System.Xml.Serialization;
 
 namespace Pockets
 {
@@ -20,34 +16,40 @@ namespace Pockets
 
         public static bool TryGetPocket(Farmer who, out PocketData data, out IList<Item> items, int x = -1, int y = -1)
         {
-            if (who.pantsItem.Value is Clothing s)
+            if (who.pantsItem.Value is Clothing p)
             {
-                if (TryGetPocketInventory(s, out data, out items, x, y))
+                if (TryGetPocketInventory(p, out data, out items, x, y))
                     return true;
-                foreach (var kvp in Config.DefaultPockets)
+                if (Config.GlobalDefaultPockets) 
                 {
-                    if (kvp.Value.ClothesType == Clothing.ClothesType.PANTS)
+                    foreach (var kvp in Config.DefaultPockets)
                     {
-                        if (TryGetDefaultPocketInventory(who.UniqueMultiplayerID, kvp.Key, kvp.Value, out items, x, y))
+                        if (kvp.Value.ClothesType == Clothing.ClothesType.PANTS)
                         {
-                            data = kvp.Value;
-                            return true;
+                            if (TryGetDefaultPocketInventory(who.UniqueMultiplayerID, kvp.Key, kvp.Value, out items, x, y))
+                            {
+                                data = kvp.Value;
+                                return true;
+                            }
                         }
                     }
                 }
             }
-            if (who.shirtItem.Value is Clothing p)
+            if (who.shirtItem.Value is Clothing s)
             {
-                if (TryGetPocketInventory(p, out data, out items, x, y))
+                if (TryGetPocketInventory(s, out data, out items, x, y))
                     return true;
-                foreach (var kvp in Config.DefaultPockets)
+                if (Config.GlobalDefaultPockets)
                 {
-                    if (kvp.Value.ClothesType == Clothing.ClothesType.SHIRT)
+                    foreach (var kvp in Config.DefaultPockets)
                     {
-                        if (TryGetDefaultPocketInventory(who.UniqueMultiplayerID, kvp.Key, kvp.Value, out items, x, y))
+                        if (kvp.Value.ClothesType == Clothing.ClothesType.SHIRT)
                         {
-                            data = kvp.Value;
-                            return true;
+                            if (TryGetDefaultPocketInventory(who.UniqueMultiplayerID, kvp.Key, kvp.Value, out items, x, y))
+                            {
+                                data = kvp.Value;
+                                return true;
+                            }
                         }
                     }
                 }
@@ -58,11 +60,11 @@ namespace Pockets
         }
         private static bool TryGetPocketInventory(Item item, out PocketData data, out IList<Item> items, int x, int y)
         {
-            if (PocketDict.TryGetValue(item.ItemId, out var clothesPockets))
+            if (TryGetPocketData(item, out var clothesPockets))
             {
                 foreach(var kvp in clothesPockets)
                 {
-                    if (kvp.Value.HotKey.GetState() == StardewModdingAPI.SButtonState.Pressed || (x > -1 && kvp.Value.StartX <= x && kvp.Value.Width > x && kvp.Value.StartY <= y && kvp.Value.Height > y))
+                    if (kvp.Value.HotKey.GetState() == StardewModdingAPI.SButtonState.Pressed || (x > -1 && kvp.Value.StartX <= x && kvp.Value.StartX + kvp.Value.Width > x && kvp.Value.StartY <= y && kvp.Value.StartY + kvp.Value.Height > y))
                     {
                         data = kvp.Value;
                         if (!InventoryDict.TryGetValue(item, out var list))
@@ -109,6 +111,24 @@ namespace Pockets
             return false;
         }
 
+        public static bool TryGetPocketData(Item item, out Dictionary<string, PocketData> clothesPockets)
+        {
+            if (PocketDict.TryGetValue(item.ItemId, out clothesPockets))
+                return true;
+            if (!Config.GlobalDefaultPockets && item is Clothing c)
+            {
+                clothesPockets = new();
+                foreach(var kvp in Config.DefaultPockets)
+                {
+                    if (kvp.Value.ClothesType == c.clothesType.Value)
+                    {
+                        clothesPockets[kvp.Key] = kvp.Value;
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
 
         private static bool TryGetDefaultPocketInventory(long who, string pocketId, PocketData data, out IList<Item> items, int x, int y)
         {
@@ -159,23 +179,29 @@ namespace Pockets
         {
             if (openPocket == data)
             {
-                openPocket = null;
-                page.inventory = new InventoryMenu(page.xPositionOnScreen + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth, page.yPositionOnScreen + IClickableMenu.spaceToClearTopBorder + IClickableMenu.borderWidth, true, null, null, -1, 3, 0, 0, true);
-                if (playSound)
-                {
-                    Game1.playSound("bigDeSelect");
-                }
+                ClosePocket(page, playSound);
             }
             else
             {
                 openPocket = data;
-                page.inventory = new InventoryMenu(page.xPositionOnScreen + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth, page.yPositionOnScreen + IClickableMenu.spaceToClearTopBorder + IClickableMenu.borderWidth, false, inventory, null, data.PocketSlots, data.PocketRows, 0, 0, true);
+                page.inventory = new InventoryMenu(page.xPositionOnScreen + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth, page.yPositionOnScreen + IClickableMenu.spaceToClearTopBorder + IClickableMenu.borderWidth, false, inventory, null, data.PocketSlots, Math.Clamp(data.PocketRows, 1, 3), 0, 0, true);
                 if (playSound)
                 {
                     Game1.playSound("bigSelect");
                 }
             }
         }
+
+        public static void ClosePocket(InventoryPage page, bool playSound)
+        {
+            openPocket = null;
+            page.inventory = new InventoryMenu(page.xPositionOnScreen + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth, page.yPositionOnScreen + IClickableMenu.spaceToClearTopBorder + IClickableMenu.borderWidth, true, null, null, -1, 3, 0, 0, true);
+            if (playSound)
+            {
+                Game1.playSound("bigDeSelect");
+            }
+        }
+
         public static Inventory MakeInventoryFromXML(string xml, int max)
         {
             Inventory inv = new();
@@ -273,6 +299,36 @@ namespace Pockets
                 return null;
             }
             return item;
+        }
+
+
+        private void PantsItem_fieldChangeEvent(Netcode.NetRef<Clothing> field, Clothing oldValue, Clothing newValue)
+        {
+            if (openPocket?.ClothesType == Clothing.ClothesType.PANTS)
+            {
+                ForceClosePocket();
+            }
+        }
+
+
+        private void ShirtItem_fieldChangeEvent(Netcode.NetRef<Clothing> field, Clothing oldValue, Clothing newValue)
+        {
+            if (openPocket?.ClothesType == Clothing.ClothesType.SHIRT)
+            {
+                ForceClosePocket();
+            }
+        }
+        public static void ForceClosePocket()
+        {
+            if (Game1.activeClickableMenu is GameMenu menu && menu.GetCurrentPage() is InventoryPage page)
+            {
+                ClosePocket(page, false);
+            }
+            else
+            {
+                openPocket = null;
+            }
+
         }
     }
 }

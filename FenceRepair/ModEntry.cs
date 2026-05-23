@@ -68,40 +68,6 @@ namespace FenceRepair
                     setValue: value => Config.ModEnabled = value
                 );
                 var props = typeof(ModConfig).GetProperties().ToArray();
-                Array.Sort(props, (PropertyInfo a, PropertyInfo b) =>
-                {
-                    if(a.PropertyType == b.PropertyType)
-                        return a.Name.CompareTo(b.Name);
-                    if(a.PropertyType == typeof(bool))
-                        return -1;
-                    if(b.PropertyType == typeof(bool))
-                        return 1;
-                    if(a.PropertyType == typeof(int))
-                        return -1;
-                    if(b.PropertyType == typeof(int))
-                        return 1;
-                    if(a.PropertyType == typeof(float))
-                        return -1;
-                    if (b.PropertyType == typeof(float))
-                        return 1;
-                    if (a.PropertyType == typeof(double))
-                        return -1;
-                    if (b.PropertyType == typeof(double))
-                        return 1;
-                    if (a.PropertyType == typeof(string))
-                        return -1;
-                    if (b.PropertyType == typeof(string))
-                        return 1;
-                    if (a.PropertyType == typeof(SButton))
-                        return -1;
-                    if (b.PropertyType == typeof(SButton))
-                        return 1;
-                    if (a.PropertyType == typeof(Color))
-                        return -1;
-                    if (b.PropertyType == typeof(Color))
-                        return 1;
-                    return 0;
-                });
                 var configMenuExt = Helper.ModRegistry.GetApi<IGMCMOptionsAPI>("jltaylor-us.GMCMOptions");
 
                 foreach (var p in props)

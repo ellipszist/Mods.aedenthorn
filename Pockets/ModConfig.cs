@@ -8,7 +8,9 @@ namespace Pockets
     public class ModConfig
     {
         public bool ModEnabled { get; set; } = true;
+        public bool Debug { get; set; } = false;
         public bool HoverForHotkey { get; set; } = true;
+        public bool GlobalDefaultPockets { get; set; } = false;
         public float PocketAlpha { get; set; } = 0.25f;
         public Color PocketColor { get; set; } = Color.White;
         public Dictionary<string, PocketData> DefaultPockets { get; set; } = new()

@@ -30,7 +30,7 @@ namespace PrismaticFlowers
 
                 if (Game1.random.Next(100) < Config.PrismaticChance)
                 {
-                    __instance.modData[prismaticKey] = Game1.random.Next(Utility.PRISMATIC_COLORS.Length) + (SHelper.GameContent.Load<Dictionary<string, PrismaticData>>(dictPath).TryGetValue(__instance.indexOfHarvest.Value, out var pData) && Game1.random.Next(100) < pData.Chance ? "," + __instance.indexOfHarvest.Value : "");
+                    MakePrismatic(__instance);
                 }
             }
         }

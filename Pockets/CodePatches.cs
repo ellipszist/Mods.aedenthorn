@@ -20,24 +20,7 @@ namespace Pockets
                     return true;
                 if (TryGetPocket(Game1.player, out var data, out IList<Item> inventory, x - __instance.portrait.bounds.Left, y - __instance.portrait.bounds.Top))
                 {
-                    if (openPocket == data)
-                    {
-                        openPocket = null;
-                        __instance.inventory = new InventoryMenu(__instance.xPositionOnScreen + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth, __instance.yPositionOnScreen + IClickableMenu.spaceToClearTopBorder + IClickableMenu.borderWidth, true, null, null, -1, 3, 0, 0, true);
-                        if (playSound)
-                        {
-                            Game1.playSound("bigDeSelect");
-                        }
-                    }
-                    else
-                    {
-                        openPocket = data;
-                        __instance.inventory = new InventoryMenu(__instance.xPositionOnScreen + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth, __instance.yPositionOnScreen + IClickableMenu.spaceToClearTopBorder + IClickableMenu.borderWidth, false, inventory, null, data.PocketSlots, data.PocketRows, 0, 0, true);
-                        if (playSound)
-                        {
-                            Game1.playSound("bigSelect");
-                        }
-                    }
+                    OpenPocket(__instance, data, inventory, playSound);
                     return false;
                 }
                 else if(openPocket != null)
