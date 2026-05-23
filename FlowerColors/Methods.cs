@@ -1,12 +1,19 @@
 ﻿using Microsoft.Xna.Framework;
 using StardewValley;
+using StardewValley.TerrainFeatures;
 using System;
 using System.Collections.Generic;
 
-namespace FlowerColorPicker
+namespace FlowerColors
 {
     public partial class ModEntry
     {
+        private bool TryGetColoredCrop(out Crop crop)
+        {
+            crop = Game1.currentLocation.terrainFeatures.TryGetValue(Game1.currentCursorTile, out var tf) && tf is HoeDirt dirt && dirt.crop is Crop acrop && acrop.programColored.Value ? acrop : null;
+            return crop != null;
+        }
+
         public static Color? GetNewColor(List<string> tintColors, Color oldColor, int delta)
         {
             if (tintColors == null)
@@ -14,7 +21,7 @@ namespace FlowerColorPicker
             var color = ColorToHexString(oldColor);
             int which = tintColors.IndexOf(color);
             if (which == -1)
-                return null;
+                which = 0;
             which += Math.Sign(delta);
             if (which < 0)
                 which = tintColors.Count - 1;

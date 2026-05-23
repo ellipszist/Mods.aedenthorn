@@ -701,7 +701,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tunnels", "Tunnels\Tunnels.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pockets", "Pockets\Pockets.csproj", "{380A5BF4-90A5-119C-8259-C8002B8D8693}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowerColorPicker", "FlowerColorPicker\FlowerColorPicker.csproj", "{1B586B30-C216-5998-409B-AC386C878EF2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowerColors", "FlowerColors\FlowerColors.csproj", "{DBB1D921-0089-3019-5E36-33579F140C83}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -3471,14 +3471,14 @@ Global
 		{380A5BF4-90A5-119C-8259-C8002B8D8693}.Release|Any CPU.Build.0 = Release|Any CPU
 		{380A5BF4-90A5-119C-8259-C8002B8D8693}.Release|x64.ActiveCfg = Release|x64
 		{380A5BF4-90A5-119C-8259-C8002B8D8693}.Release|x64.Build.0 = Release|x64
-		{1B586B30-C216-5998-409B-AC386C878EF2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1B586B30-C216-5998-409B-AC386C878EF2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1B586B30-C216-5998-409B-AC386C878EF2}.Debug|x64.ActiveCfg = Debug|x64
-		{1B586B30-C216-5998-409B-AC386C878EF2}.Debug|x64.Build.0 = Debug|x64
-		{1B586B30-C216-5998-409B-AC386C878EF2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1B586B30-C216-5998-409B-AC386C878EF2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1B586B30-C216-5998-409B-AC386C878EF2}.Release|x64.ActiveCfg = Release|x64
-		{1B586B30-C216-5998-409B-AC386C878EF2}.Release|x64.Build.0 = Release|x64
+		{DBB1D921-0089-3019-5E36-33579F140C83}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBB1D921-0089-3019-5E36-33579F140C83}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBB1D921-0089-3019-5E36-33579F140C83}.Debug|x64.ActiveCfg = Debug|x64
+		{DBB1D921-0089-3019-5E36-33579F140C83}.Debug|x64.Build.0 = Debug|x64
+		{DBB1D921-0089-3019-5E36-33579F140C83}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBB1D921-0089-3019-5E36-33579F140C83}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBB1D921-0089-3019-5E36-33579F140C83}.Release|x64.ActiveCfg = Release|x64
+		{DBB1D921-0089-3019-5E36-33579F140C83}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

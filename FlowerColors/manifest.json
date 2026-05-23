@@ -1,0 +1,10 @@
+﻿{
+  "Name": "FlowerColors",
+  "Author": "aedenthorn",
+  "Version": "0.1.0",
+  "Description": "FlowerColors.",
+  "UniqueID": "aedenthorn.FlowerColors",
+  "EntryDll": "FlowerColors.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [ "Nexus:" ]
+}

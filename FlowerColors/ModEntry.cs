@@ -1,13 +1,18 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
+using StardewModdingAPI.Utilities;
 using StardewValley;
+using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
+using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 
-namespace FlowerColorPicker
+namespace FlowerColors
 {
     /// <summary>The mod entry point.</summary>
     public partial class ModEntry : Mod
@@ -20,7 +25,10 @@ namespace FlowerColorPicker
         public static IPrismaticFlowersAPI prismaticFlowersAPI;
         public const string prismaticKey = "aedenthorn.PrismaticFlowers/prismatic";
         public const string prismaticKeyDisabled = "aedenthorn.PrismaticFlowers/prismatic_";
-
+        public static PerScreen<Color> pasteColor = new(() => Color.White);
+        public static PerScreen<string> pastePrismatic = new();
+        public static PerScreen<Vector2> lastCursorTile = new(() => new Vector2(-1,-1));
+        public static PerScreen<int> lastScrollDelta = new();
         public override void Entry(IModHelper helper)
         {
             Config = Helper.ReadConfig<ModConfig>();
@@ -30,16 +38,122 @@ namespace FlowerColorPicker
             context = this;
 
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
+            helper.Events.GameLoop.UpdateTicked += GameLoop_UpdateTicked;
             helper.Events.Input.MouseWheelScrolled += Input_MouseWheelScrolled;
             helper.Events.Input.ButtonPressed += Input_ButtonPressed;
+            helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
             
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
         }
 
+        private void GameLoop_UpdateTicked(object sender, UpdateTickedEventArgs e)
+        {
+            if (!Config.ModEnabled || !Context.IsPlayerFree)
+            {
+                return;
+            }
+            if (lastCursorTile.Value.X < 0 || lastCursorTile.Value == Game1.currentCursorTile || pasteColor.Value == Color.White)
+                return;
+            foreach (var k in Config.PasteButton.Keybinds)
+            {
+                foreach (var b in k.Buttons)
+                {
+                    if (!SHelper.Input.IsSuppressed(b) && !SHelper.Input.IsDown(b))
+                        return;
+                }
+            }
+            if (Game1.currentLocation.terrainFeatures.TryGetValue(Game1.currentCursorTile, out TerrainFeature tf) && tf is HoeDirt dirt && dirt.crop != null && dirt.crop.programColored.Value && TryGetColoredCrop(out Crop crop))
+            {
+                if(pastePrismatic.Value != null)
+                {
+                    crop.modData[prismaticKey] = pastePrismatic.Value;
+                }
+                else
+                {
+                    crop.modData.Remove(prismaticKey);
+                    crop.tintColor.Value = pasteColor.Value;
+                }
+                Game1.playSound("shiny4");
+            }
+            lastCursorTile.Value = Game1.currentCursorTile;
+        }
+
+        private void Input_ButtonsChanged(object sender, ButtonsChangedEventArgs e)
+        {
+            if (!Config.ModEnabled || !Context.IsPlayerFree)
+                return;
+            if (Config.CopyButton.JustPressed())
+            {
+                if (!TryGetColoredCrop(out Crop crop))
+                    return;
+                var co = new ColoredObject(crop.indexOfHarvest.Value, 1, crop.tintColor.Value);
+                if (crop.modData.TryGetValue(prismaticKey, out var str))
+                {
+                    pastePrismatic.Value = str;
+                    co.modData[prismaticKey] = str;
+                }
+                else
+                {
+                    pastePrismatic.Value = null;
+                }
+                pasteColor.Value = crop.tintColor.Value;
+                Game1.hudMessages.Clear();
+                Game1.player.ShowItemReceivedHudMessage(co, 1);
+                foreach (var k in Config.CopyButton.Keybinds)
+                {
+                    foreach (var b in k.Buttons)
+                    {
+                        if (!new SButton[] { SButton.LeftControl, SButton.LeftShift, SButton.LeftAlt, SButton.RightShift, SButton.RightControl, SButton.RightAlt, }.Contains(b))
+                            SHelper.Input.Suppress(b);
+                    }
+                }
+            }
+            else if(Config.PasteButton.JustPressed())
+            {
+                if (pasteColor.Value == Color.White || !TryGetColoredCrop(out Crop crop))
+                    return;
+                if (pastePrismatic.Value != null)
+                {
+                    crop.modData[prismaticKey] = pastePrismatic.Value;
+                }
+                else
+                {
+                    crop.modData.Remove(prismaticKey);
+                    crop.tintColor.Value = pasteColor.Value;
+                }
+
+                Game1.playSound("shiny4");
+                lastCursorTile.Value = Game1.currentCursorTile;
+                foreach (var k in Config.PasteButton.Keybinds)
+                {
+                    foreach (var b in k.Buttons)
+                    {
+                        if (!new SButton[] { SButton.LeftControl, SButton.LeftShift, SButton.LeftAlt, SButton.RightShift, SButton.RightControl, SButton.RightAlt, }.Contains(b))
+                            SHelper.Input.Suppress(b);
+                    }
+                }
+            }
+            else if(Config.PickButton.JustPressed())
+            {
+                if (!TryGetColoredCrop(out Crop crop))
+                    return;
+                Game1.activeClickableMenu = new ColorPickMenu(crop);
+                foreach (var k in Config.PickButton.Keybinds)
+                {
+                    foreach (var b in k.Buttons)
+                    {
+                        SHelper.Input.Suppress(b);
+                    }
+                }
+            }
+        }
+
         private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
         {
+            if (!Config.ModEnabled)
+                return;
             if (Config.Debug && e.Button == SButton.OemPeriod)
             {
                 foreach (var kvp in Game1.getFarm().terrainFeatures.Pairs.Where(kvp => kvp.Value is HoeDirt))
@@ -54,7 +168,8 @@ namespace FlowerColorPicker
 
         private void Input_MouseWheelScrolled(object sender, MouseWheelScrolledEventArgs e)
         {
-            if (!Config.ModEnabled || !Context.IsPlayerFree || !Game1.currentLocation.terrainFeatures.TryGetValue(Game1.currentCursorTile, out var tf) || tf is not HoeDirt dirt || dirt.crop is not Crop crop || !crop.programColored.Value)
+            lastScrollDelta.Value = e.Delta;
+            if (!Config.ModEnabled || !Context.IsPlayerFree || !TryGetColoredCrop(out Crop crop))
                 return;
             if (SHelper.Input.IsDown(Config.PrismaticModKey))
             {
@@ -89,8 +204,6 @@ namespace FlowerColorPicker
                 SHelper.Input.SuppressScrollWheel();
             }
         }
-
-        
 
         private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
         {

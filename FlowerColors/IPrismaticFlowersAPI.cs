@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 
-namespace FlowerColorPicker
+namespace FlowerColors
 {
     public interface IPrismaticFlowersAPI
     {
