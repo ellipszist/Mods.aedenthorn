@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using HarmonyLib;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.Menus;
@@ -39,7 +40,8 @@ namespace FlowerColors
         private void RecreatePicker()
         {
             upperRightCloseButton = new ClickableTextureComponent(new Rectangle(Game1.uiViewport.Width / 2 + width / 2, Game1.uiViewport.Height / 2 - 64, 48, 48), Game1.mouseCursors, new Rectangle(337, 494, 12, 12), 4f, false);
-            picker = new ColorPicker("Flower", Game1.uiViewport.Width / 2 + width / 2 - SliderBar.defaultWidth - 64, Game1.uiViewport.Height / 2 - 114);
+            picker = new ColorPicker("Flower", Game1.uiViewport.Width / 2 + width / 2 - SliderBar.defaultWidth - 72, Game1.uiViewport.Height / 2 - 114);
+
             picker.setColor(obj.color.Value);
         }
 
@@ -47,20 +49,18 @@ namespace FlowerColors
         {
             picker.releaseClick();
             held = false;
-            base.releaseLeftClick(x, y);
         }
         public override void receiveLeftClick(int x, int y, bool playSound = true)
         {
-            if(picker.containsPoint(x, y))
+            if(upperRightCloseButton.containsPoint(x, y))
+            {
+                base.receiveLeftClick(x, y, playSound);
+            }
+            else
             {
                 ChangeColor(picker.click(x, y));
                 held = true;
             }
-            else
-            {
-                held = false;
-            }
-            base.receiveLeftClick(x, y, playSound);
         }
         public override void leftClickHeld(int x, int y)
         {
@@ -73,7 +73,6 @@ namespace FlowerColors
             {
                 held = false;
             }
-            base.leftClickHeld(x, y);
         }
         private void ChangeColor(Color color)
         {
@@ -85,6 +84,10 @@ namespace FlowerColors
         }
         public override void draw(SpriteBatch b)
         {
+            if(activeClickableMenu != null)
+            {
+                activeClickableMenu.draw(b);
+            }
             upperRightCloseButton.bounds = new Rectangle(Game1.uiViewport.Width / 2 + width / 2, Game1.uiViewport.Height / 2 - 144, 48, 48);
             base.draw(b);
             drawTextureBox(b, Game1.uiViewport.Width / 2 - width / 2, Game1.uiViewport.Height / 2 - width / 2, width, height - 24, Color.White);
@@ -98,6 +101,7 @@ namespace FlowerColors
             if(activeClickableMenu != null)
             {
                 Game1.activeClickableMenu = activeClickableMenu;
+                Game1.playSound("bigDeSelect");
                 return false;
             }
             return base.readyToClose();

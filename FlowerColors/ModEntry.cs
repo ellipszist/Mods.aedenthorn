@@ -5,6 +5,7 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
+using StardewValley.Extensions;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 using System;
@@ -23,9 +24,10 @@ namespace FlowerColors
         public static ModConfig Config;
         public static ModEntry context;
         public static IPrismaticFlowersAPI prismaticFlowersAPI;
+        public const string colorsKey = "aedenthorn.PrismaticFlowers/colors";
         public const string prismaticKey = "aedenthorn.PrismaticFlowers/prismatic";
         public const string prismaticKeyDisabled = "aedenthorn.PrismaticFlowers/prismatic_";
-        public static PerScreen<Color> pasteColor = new(() => Color.White);
+        public static PerScreen<Color> pasteColor = new(() => Color.Transparent);
         public static PerScreen<string> pastePrismatic = new();
         public static PerScreen<Vector2> lastCursorTile = new(() => new Vector2(-1,-1));
         public static PerScreen<int> lastScrollDelta = new();
@@ -54,7 +56,7 @@ namespace FlowerColors
             {
                 return;
             }
-            if (lastCursorTile.Value.X < 0 || lastCursorTile.Value == Game1.currentCursorTile || pasteColor.Value == Color.White)
+            if (lastCursorTile.Value.X < 0 || lastCursorTile.Value == Game1.currentCursorTile || pasteColor.Value == Color.Transparent)
                 return;
             foreach (var k in Config.PasteButton.Keybinds)
             {
@@ -75,7 +77,7 @@ namespace FlowerColors
                     crop.modData.Remove(prismaticKey);
                     crop.tintColor.Value = pasteColor.Value;
                 }
-                Game1.playSound("shiny4");
+                Game1.playSound("grassyStep");
             }
             lastCursorTile.Value = Game1.currentCursorTile;
         }
@@ -101,6 +103,7 @@ namespace FlowerColors
                 pasteColor.Value = crop.tintColor.Value;
                 Game1.hudMessages.Clear();
                 Game1.player.ShowItemReceivedHudMessage(co, 1);
+                Game1.playSound("bigSelect");
                 foreach (var k in Config.CopyButton.Keybinds)
                 {
                     foreach (var b in k.Buttons)
@@ -112,7 +115,7 @@ namespace FlowerColors
             }
             else if(Config.PasteButton.JustPressed())
             {
-                if (pasteColor.Value == Color.White || !TryGetColoredCrop(out Crop crop))
+                if (pasteColor.Value == Color.Transparent || !TryGetColoredCrop(out Crop crop))
                     return;
                 if (pastePrismatic.Value != null)
                 {
@@ -124,7 +127,7 @@ namespace FlowerColors
                     crop.tintColor.Value = pasteColor.Value;
                 }
 
-                Game1.playSound("shiny4");
+                Game1.playSound("grassyStep");
                 lastCursorTile.Value = Game1.currentCursorTile;
                 foreach (var k in Config.PasteButton.Keybinds)
                 {
@@ -139,7 +142,10 @@ namespace FlowerColors
             {
                 if (!TryGetColoredCrop(out Crop crop))
                     return;
-                Game1.activeClickableMenu = new ColorPickMenu(crop);
+                if (!crop.modData.ContainsKey(prismaticKey))
+                {
+                    Game1.activeClickableMenu = new ColorPickMenu(crop);
+                }
                 foreach (var k in Config.PickButton.Keybinds)
                 {
                     foreach (var b in k.Buttons)
@@ -156,12 +162,26 @@ namespace FlowerColors
                 return;
             if (Config.Debug && e.Button == SButton.OemPeriod)
             {
+                var crops = new string[] { "455", "453", "429", "427", "425" };
+                foreach (var kvp in Game1.getFarm().terrainFeatures.Pairs.Where(kvp => kvp.Value is HoeDirt))
+                {
+                    //var crop = new Crop(Game1.random.Choose(crops), (int)kvp.Key.X, (int)kvp.Key.Y, Game1.getFarm());
+                    //var crop = (kvp.Value as HoeDirt).crop ?? new Crop(crops[(int)kvp.Key.Y % crops.Length], (int)kvp.Key.X, (int)kvp.Key.Y, Game1.getFarm());
+
+                    var crop = new Crop("455", (int)kvp.Key.X, (int)kvp.Key.Y, Game1.getFarm());
+                    //var crop = (kvp.Value as HoeDirt).crop ?? new Crop("455", (int)kvp.Key.X, (int)kvp.Key.Y, Game1.getFarm());
+                    crop.growCompletely();
+                    (kvp.Value as HoeDirt).crop = crop;
+                }
+            }
+            if (Config.Debug && e.Button == SButton.OemComma)
+            {
                 foreach (var kvp in Game1.getFarm().terrainFeatures.Pairs.Where(kvp => kvp.Value is HoeDirt))
                 {
                     //var crop = new Crop(Game1.random.Choose("455", "453", "429", "427", "425", "431"), (int)kvp.Key.X, (int)kvp.Key.Y, Game1.getFarm());
-                    var crop = new Crop("455", (int)kvp.Key.X, (int)kvp.Key.Y, Game1.getFarm());
-                    crop.growCompletely();
-                    (kvp.Value as HoeDirt).crop = crop;
+
+                    (kvp.Value as HoeDirt).crop?.harvest((int)kvp.Value.Tile.X, (int)kvp.Value.Tile.Y, (kvp.Value as HoeDirt));
+                    (kvp.Value as HoeDirt).crop = null;
                 }
             }
         }
@@ -193,7 +213,7 @@ namespace FlowerColors
                     SHelper.Input.SuppressScrollWheel();
                 }
             }
-            else
+            else if(!crop.modData.ContainsKey(prismaticKey))
             {
                 var tintColors = crop.GetData()?.TintColors;
                 var newColor = GetNewColor(tintColors, crop.tintColor.Value, e.Delta);
@@ -278,6 +298,16 @@ namespace FlowerColors
                             name: () => SHelper.Translation.Get(p.Name),
                             tooltip: () => { var t = SHelper.Translation.Get(p.Name + ".Desc"); return t.HasValue() ? t : null; },
                             getValue: () => (string)p.GetValue(Config),
+                            setValue: value => p.SetValue(Config, value)
+                        );
+                    }
+                    else if (p.PropertyType == typeof(KeybindList))
+                    {
+                        configMenu.AddKeybindList(
+                            mod: ModManifest,
+                            name: () => SHelper.Translation.Get(p.Name),
+                            tooltip: () => { var t = SHelper.Translation.Get(p.Name + ".Desc"); return t.HasValue() ? t : null; },
+                            getValue: () => (KeybindList)p.GetValue(Config),
                             setValue: value => p.SetValue(Config, value)
                         );
                     }
