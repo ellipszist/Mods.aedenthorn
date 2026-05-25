@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
@@ -25,7 +26,12 @@ namespace DoorFurniture
         public static ModConfig Config;
         public static ModEntry context;
         public const string dictPath = "aedenthorn.DoorFurniture/dict";
+        public const string doorKey = "aedenthorn.DoorFurniture_door";
+        public const string door2Key = "aedenthorn.DoorFurniture_door2";
+        //public const string door3Key = "aedenthorn.DoorFurniture_door3";
         public const string openKey = "aedenthorn.DoorFurniture/open";
+        public const string closeKey = "aedenthorn.DoorFurniture/close";
+        public const string flipKey = "aedenthorn.DoorFurniture/flip";
         public override void Entry(IModHelper helper)
         {
             Config = Helper.ReadConfig<ModConfig>();
@@ -36,10 +42,36 @@ namespace DoorFurniture
 
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
             helper.Events.Content.AssetRequested += Content_AssetRequested;
+            helper.Events.Input.ButtonPressed += Input_ButtonPressed;
             
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
+        }
+
+        private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
+        {
+            if(!Config.ModEnabled) 
+                return;
+            if(Context.IsPlayerFree && e.Button == Config.FlipButton)
+            {
+                Furniture f = Game1.currentLocation.GetFurnitureAt(Game1.currentCursorTile);
+                if (IsDoor(f))
+                {
+                    bool b = false;
+                    if(f.modData.TryGetValue(flipKey, out var str))
+                    {
+                        _ = bool.TryParse(str, out b);
+                    }
+                    b = !b;
+                    f.modData[flipKey] = b.ToString();
+                    if (!f.modData.TryGetValue(openKey, out str))
+                    {
+                        f.modData[openKey] = "closed";
+                    }
+                    SHelper.Input.Suppress(e.Button);
+                }
+            }
         }
 
         private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
@@ -48,12 +80,27 @@ namespace DoorFurniture
                 return;
             if(e.NameWithoutLocale.IsEquivalentTo(dictPath))
             {
-                e.LoadFrom(() => new Dictionary<string, DoorData>(), AssetLoadPriority.Medium);
+                e.LoadFrom(() => new Dictionary<string, DoorData>()
+                {
+                    { doorKey, new DoorData() },
+                    { door2Key, new DoorData() }
+                }, AssetLoadPriority.Medium);
+            }
+            else if(e.NameWithoutLocale.IsEquivalentTo(doorKey))
+            {
+                e.LoadFromModFile<Texture2D>("assets/door.png", AssetLoadPriority.Exclusive);
             }
             else if(e.NameWithoutLocale.IsEquivalentTo("Data/Furniture"))
             {
-
+                e.Edit((IAssetData asset) =>
+                {
+                    var dict = asset.AsDictionary<string, string>().Data;
+                    dict[doorKey] = $"{doorKey}/decor/1 3/1 1/4/100/2/{SHelper.Translation.Get(doorKey)}/0/{doorKey}/true";
+                    dict[door2Key] = $"{door2Key}/decor/1 3/1 1/4/100/2/{SHelper.Translation.Get(door2Key)}/24/{doorKey}/true";
+                    //dict[door3Key] = $"{door3Key}/decor/1 3/1 1/2/100/2/{SHelper.Translation.Get(door3Key)}/10/{doorKey}/true";
+                });
             }
+
         }
 
 

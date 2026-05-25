@@ -7,16 +7,9 @@ namespace DoorFurniture
     {
         public bool ModEnabled { get; set; } = true;
         public bool Debug { get; set; } = true;
-        public bool HoverToShowCombined { get; set; } = false;
-        public bool CombineOnOrganize { get; set; } = true;
-        public bool AppendCombinedNumberToName { get; set; } = true;
-        public bool FixSliderBar { get; set; } = true;
-        public bool FixWhiteFlowerDrawing { get; set; } = true;
-        public KeybindList CombineButton { get; set; } = new (new Keybind(SButton.MouseMiddle));
-        public KeybindList CopyButton { get; set; } = new (new Keybind(SButton.LeftControl, SButton.C));
-        public KeybindList PasteButton { get; set; } = new (new Keybind(SButton.LeftControl, SButton.V));
-        public KeybindList PickButton { get; set; } = new (new Keybind(SButton.LeftControl, SButton.X));
-        public SButton PrismaticModKey { get; set; } = SButton.LeftShift;
-        public SButton ScrollModKey { get; set; } = SButton.None;
+        public bool AutoOpen { get; set; } = true;
+        public int AutoCloseDelay { get; set; } = 10;
+        public int PreventCloseBuffer { get; set; } = 64;
+        public SButton FlipButton { get; set; } = SButton.F;
     }
 }
