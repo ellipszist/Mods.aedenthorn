@@ -1,12 +1,7 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
-using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.Network;
-using StardewValley.Projectiles;
-using System;
 using System.Collections.Generic;
 
 namespace CloseDoors
@@ -22,6 +17,7 @@ namespace CloseDoors
         public static ModEntry context;
 
         public static string CloseDoorsKey = "aedenthorn.CloseDoors";
+        public static Dictionary<GameLocation, Dictionary<Character, Point>> doorDict = new();
 
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
@@ -36,10 +32,16 @@ namespace CloseDoors
             SHelper = helper;
 
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
+            helper.Events.GameLoop.DayStarted += GameLoop_DayStarted;
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
 
+        }
+
+        private void GameLoop_DayStarted(object sender, StardewModdingAPI.Events.DayStartedEventArgs e)
+        {
+            doorDict.Clear();
         }
 
         private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)

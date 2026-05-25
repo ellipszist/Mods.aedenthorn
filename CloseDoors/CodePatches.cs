@@ -18,11 +18,10 @@ namespace CloseDoors
 {
     public partial class ModEntry
     {
-        public static Dictionary<GameLocation, Dictionary<Character, Point>> doorDict = new();
-        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.isCollidingPosition), new Type[] { typeof(Rectangle), typeof(xTile.Dimensions.Rectangle), typeof(bool), typeof(int), typeof(bool), typeof(Character), typeof(bool), typeof(bool), typeof(bool) })]
+        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.isCollidingPosition), new Type[] { typeof(Rectangle), typeof(xTile.Dimensions.Rectangle), typeof(bool), typeof(int), typeof(bool), typeof(Character), typeof(bool), typeof(bool), typeof(bool), typeof(bool) })]
         public class GameLocation_isCollidingPosition_Patch
         {
-            public static void Postfix(GameLocation __instance, Rectangle position, xTile.Dimensions.Rectangle viewport, bool isFarmer, int damagesFarmer, bool glider, Character character, bool pathfinding, bool projectile, bool ignoreCharacterRequirement)
+            public static void Postfix(GameLocation __instance, Rectangle position, bool isFarmer, Character character)
             {
                 if (!Config.ModEnabled)
                     return;
@@ -69,41 +68,6 @@ namespace CloseDoors
                 }
             }
         }
-        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.performAction), new Type[] { typeof(string[]), typeof(Farmer), typeof(Location) })]
-        public class GameLocation_performAction_Patch
-        {
-            public static void Prefix(string[] action, Farmer who, Location tileLocation)
-            {
-                if (!Config.ModEnabled)
-                    return;
-            }
-        }
-        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.openDoor))]
-        public class GameLocation_openDoor_Patch
-        {
-            public static void Postfix(Location tileLocation, bool playSound)
-            {
-                if (!Config.ModEnabled)
-                    return;
-            }
-        }
-        [HarmonyPatch(typeof(InteriorDoor), "openDoorTiles")]
-        public class InteriorDoor_openDoorTiles_Patch
-        {
-            public static bool Prefix(InteriorDoor __instance)
-            {
-
-                if (!Config.ModEnabled)
-                    return true;
-                return true;
-            }
-            public static void Postfix(InteriorDoor __instance)
-            {
-
-                if (!Config.ModEnabled)
-                    return;
-            }
-        }
         [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.checkAction))]
         public class GameLocation_checkAction_Patch
         {
@@ -117,6 +81,25 @@ namespace CloseDoors
                 if (TryCloseDoor(__instance, tilePoint))
                 {
                     return false;
+                }
+                return true;
+            }
+
+        }
+        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.isActionableTile))]
+        public class GameLocation_isActionableTile_Patch
+        {
+            public static bool Prefix(GameLocation __instance, int xTile, int yTile, Farmer who, ref bool __result)
+            {
+                if (!Config.ModEnabled)
+                    return true;
+                foreach (var d in __instance.interiorDoors.Doors)
+                {
+                    if (d.Position.X == xTile && d.Position.Y == yTile && d.Value)
+                    {
+                        __result = true;
+                        return false;
+                    }
                 }
                 return true;
             }

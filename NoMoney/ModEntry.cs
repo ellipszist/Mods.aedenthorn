@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.GameData.Shops;
 using StardewValley.Menus;
 
 namespace NoMoney
@@ -68,14 +69,28 @@ namespace NoMoney
 
         private void Content_AssetRequested(object sender, StardewModdingAPI.Events.AssetRequestedEventArgs e)
 		{
+            if (!IsEnabled)
+                return;
 			if (e.NameWithoutLocale.IsEquivalentTo("LooseSprites/Cursors"))
 			{
-                if (!IsEnabled)
-                    return;
                 e.Edit((IAssetData data) =>
 				{
 					var tex = SHelper.ModContent.Load<Texture2D>("assets/nomoney.png");
 					data.AsImage().PatchImage(tex, null, new Rectangle(340, 471, 65, 18), PatchMode.Replace);
+				});
+			}
+			else if (e.NameWithoutLocale.IsEquivalentTo("Data/Shops"))
+			{
+                e.Edit((IAssetData data) =>
+				{
+					foreach(var kvp in data.AsDictionary<string, ShopData>().Data)
+					{
+						foreach(var item in kvp.Value.Items)
+						{
+							item.Id = item.Id?.Replace(" @requirePrice", "").Replace("@requirePrice ", "").Replace("@requirePrice", "");
+							item.ItemId = item.ItemId?.Replace(" @requirePrice", "").Replace("@requirePrice ", "").Replace("@requirePrice", "");
+						}
+					}
 				});
 			}
         }
