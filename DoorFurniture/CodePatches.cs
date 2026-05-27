@@ -415,7 +415,7 @@ namespace DoorFurniture
                 if (!Config.ModEnabled || !TryGetDoorData(__instance, out var data))
                     return;
                 __instance.modData[openKey] = "closed";
-                if(data.Colorable)
+                if(data.Colorable && !__instance.modData.ContainsKey(colorKey))
                     __instance.modData[colorKey] = ColorToHexString(data.DefaultColor);
             }
         }
