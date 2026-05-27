@@ -2,9 +2,10 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Netcode;
-using StardewModdingAPI;
 using StardewValley;
+using StardewValley.ItemTypeDefinitions;
 using StardewValley.Menus;
+using StardewValley.Monsters;
 using StardewValley.Objects;
 using System;
 using System.Collections.Generic;
@@ -17,10 +18,25 @@ namespace DoorFurniture
 {
     public partial class ModEntry
     {
-
         [HarmonyPatch(typeof(Furniture), nameof(Furniture.draw), new Type[] { typeof(SpriteBatch),typeof(int),typeof(int),typeof(float) })]
         public static class Furniture_draw_Patch
         {
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling Furniture.draw");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Callvirt && codes[i].operand is MethodInfo mi && mi == AccessTools.Method(typeof(Furniture), nameof(Furniture.HasSittingFarmers)))
+                    {
+                        SMonitor.Log($"adding check for rotated doors");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(CheckRotatedDoor))));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
             public static void Prefix(Furniture __instance, int x, int y, NetInt ___sourceIndexOffset)
             {
                 if (!Config.ModEnabled || !__instance.modData.TryGetValue(openKey, out var str))
@@ -41,16 +57,16 @@ namespace DoorFurniture
                             __instance.Flipped = flipped;
                             break;
                         case 1:
-                            ___sourceIndexOffset.Value = 0;
-                            __instance.Flipped = flipped;
+                            ___sourceIndexOffset.Value = flipped ? 6 : 0;
+                            __instance.Flipped = false;
                             break;
                         case 2:
                             ___sourceIndexOffset.Value = 0;
                             __instance.Flipped = flipped;
                             break;
                         case 3:
-                            ___sourceIndexOffset.Value = 0;
-                            __instance.Flipped = !flipped;
+                            ___sourceIndexOffset.Value = flipped ? 6 : 0;
+                            __instance.Flipped = true;
                             break;
                     }
                     return;
@@ -65,24 +81,23 @@ namespace DoorFurniture
                             __instance.Flipped = !flipped;
                             break;
                         case 1:
-                            ___sourceIndexOffset.Value = -1;
-                            __instance.Flipped = !flipped;
+                            ___sourceIndexOffset.Value = flipped ? 1 : -1;
+                            __instance.Flipped = flipped ? false : true;
                             break;
                         case 2:
                             ___sourceIndexOffset.Value = 5;
                             __instance.Flipped = flipped;
                             break;
                         case 3:
-                            ___sourceIndexOffset.Value = -1;
-                            __instance.Flipped = flipped;
+                            ___sourceIndexOffset.Value = flipped ? 1 : -1;
+                            __instance.Flipped = flipped ? true : false;
                             break;
                     }
-                    DoorData data = null;
-                    if (__instance.modData.TryGetValue(closeKey, out var cs) || Config.AutoCloseDelay > -1 || (TryGetDoorData(__instance, out data) && data.AutoCloseDelay > -1))
+                    if (__instance.modData.TryGetValue(closeKey, out var cs))
                     {
                         bool can = true;
                         var box = __instance.GetBoundingBox();
-                        box.Inflate(Config.PreventCloseBuffer, Config.PreventCloseBuffer);
+                        box.Inflate(Config.PreventAutoCloseBuffer, Config.PreventAutoCloseBuffer);
                         foreach (var f in __instance.Location.farmers)
                         {
                             if (box.Intersects(f.GetBoundingBox()))
@@ -91,15 +106,20 @@ namespace DoorFurniture
                                 break;
                             }
                         }
+                        foreach (var c in __instance.Location.characters)
+                        {
+                            if (box.Intersects(c.GetBoundingBox()))
+                            {
+                                can = false;
+                                break;
+                            }
+                        }
                         if (can)
                         {
-                            if(cs == null)
-                            {
-                                __instance.modData[closeKey] = (data != null && data.AutoCloseDelay > -1 ? data.AutoCloseDelay : Config.AutoCloseDelay).ToString();
-                            }
-                            else if (cs == "0")
+                            if (cs == "0")
                             {
                                 __instance.modData.Remove(closeKey);
+                                CloseDoor(__instance, null);
                                 str = "-1";
                             }
                             else
@@ -112,46 +132,47 @@ namespace DoorFurniture
                 if(str != "open")
                 {
                     int open = int.Parse(str);
+                    int mult = 2;
                     switch (__instance.currentRotation.Value)
                     {
                         case 0:
                             __instance.Flipped = flipped;
                             if (open > 0)
-                                ___sourceIndexOffset.Value = open < 3 ? 3 : 4;
+                                ___sourceIndexOffset.Value = open < 3 * mult ? 3 : 4;
                             else
-                                ___sourceIndexOffset.Value = open > -3 ? 4 : 3;
+                                ___sourceIndexOffset.Value = open > -3 * mult ? 4 : 3;
                             break;
                         case 1:
-                            __instance.Flipped = !flipped;
+                            __instance.Flipped = flipped ? false : true;
                             if (open > 0)
-                                ___sourceIndexOffset.Value = open < 3 ? 3 : 2;
+                                ___sourceIndexOffset.Value = open < 3 * mult ? (flipped ? 5 : 3) : (flipped ? 4 : 2);
                             else
-                                ___sourceIndexOffset.Value = open > -3 ? 2 : 3;
+                                ___sourceIndexOffset.Value = open > -3 * mult ? (flipped ? 4 :2) : (flipped ? 5 : 3);
                             break;
                         case 2:
                             __instance.Flipped = flipped;
                             if (open > 0)
-                                ___sourceIndexOffset.Value = open < 3 ? 3 : 4;
+                                ___sourceIndexOffset.Value = open < 3 * mult ? 3 : 4;
                             else
-                                ___sourceIndexOffset.Value = open > -3 ? 4 : 3;
+                                ___sourceIndexOffset.Value = open > -3 * mult ? 4 : 3;
                             break;
                         case 3:
-                            __instance.Flipped = flipped;
+                            __instance.Flipped = flipped ? true : false;
                             if (open > 0)
-                                ___sourceIndexOffset.Value = open < 3 ? 3 : 2;
+                                ___sourceIndexOffset.Value = open < 3 * mult ? (flipped ? 5 : 3) : (flipped ? 4 : 2);
                             else
-                                ___sourceIndexOffset.Value = open > -3 ? 2 : 3;
+                                ___sourceIndexOffset.Value = open > -3 * mult ? (flipped ? 4 : 2) : (flipped ? 5 : 3);
                             break;
                     }
                     if (open < 0)
                         open--;
                     else
                         open++;
-                    if (open < -4)
+                    if (open < -4 * mult)
                     {
                         __instance.modData[openKey] = "closed";
                     }
-                    else if (open > 4)
+                    else if (open > 4 * mult)
                     {
                         __instance.modData[openKey] = "open";
                     }
@@ -161,6 +182,46 @@ namespace DoorFurniture
                     }
                 }
             }
+            public static void Postfix(Furniture __instance, SpriteBatch spriteBatch, int x, int y, float alpha, NetInt ___sourceIndexOffset, NetVector2 ___drawPosition)
+            {
+                if (!Config.ModEnabled || __instance.isTemporarilyInvisible || !__instance.modData.TryGetValue(colorKey, out var str) || !TryGetDoorData(__instance, out var data) || !data.Colorable)
+                    return;
+                Color color = Utility.StringToColor(str) ?? data.DefaultColor;
+                if(data.DefaultUncolored && color == data.DefaultColor)
+                {
+                    return;
+                }
+                color *= alpha;
+                Rectangle drawn_source_rect = __instance.sourceRect.Value;
+                drawn_source_rect.X += drawn_source_rect.Width * ___sourceIndexOffset.Value;
+                drawn_source_rect.Offset(data.ColorSpriteOffset);
+                ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem(__instance.QualifiedItemId);
+                Texture2D texture = itemData.GetTexture();
+                string textureName = itemData.TextureName;
+                if (itemData.IsErrorItem)
+                {
+                    return;
+                }
+
+                if (Furniture.isDrawingLocationFurniture)
+                {
+
+                    Vector2 actualDrawPosition = Game1.GlobalToLocal(Game1.viewport, ___drawPosition.Value + ((__instance.shakeTimer > 0) ? new Vector2((float)Game1.random.Next(-1, 2), (float)Game1.random.Next(-1, 2)) : Vector2.Zero));
+                    SpriteEffects spriteEffects = (__instance.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+                    if (__instance.currentRotation.Value == 2 && __instance.modData.TryGetValue(openKey, out var open) && open == "closed")
+                    {
+                        spriteBatch.Draw(texture, actualDrawPosition, new Rectangle?(drawn_source_rect), color, 0f, Vector2.Zero, 4f, spriteEffects, (float)(__instance.boundingBox.Value.Top + 16 + 1) / 10000f);
+                    }
+                    else
+                    {
+                        spriteBatch.Draw(texture, actualDrawPosition, new Rectangle?(drawn_source_rect), color, 0f, Vector2.Zero, 4f, spriteEffects, (__instance.boundingBox.Value.Bottom - 8 + 1) / 10000f);
+                    }
+                }
+                else
+                {
+                    spriteBatch.Draw(texture, Game1.GlobalToLocal(Game1.viewport, new Vector2((float)(x * 64 + ((__instance.shakeTimer > 0) ? Game1.random.Next(-1, 2) : 0)), (float)(y * 64 - (drawn_source_rect.Height * 4 - __instance.boundingBox.Height) + ((__instance.shakeTimer > 0) ? Game1.random.Next(-1, 2) : 0)))), new Rectangle?(drawn_source_rect), color, 0f, Vector2.Zero, 4f, __instance.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, (__instance.boundingBox.Value.Bottom - 8 + 1) / 10000f);
+                }
+            }
         }
 
         [HarmonyPatch(typeof(Furniture), nameof(Furniture.checkForAction))]
@@ -168,7 +229,7 @@ namespace DoorFurniture
         {
             public static bool Prefix(Furniture __instance, bool justCheckingForActivity, ref bool __result)
             {
-                if (!Config.ModEnabled || !IsDoor(__instance))
+                if (!Config.ModEnabled || !TryGetDoorData(__instance, out var data))
                 {
                     return true;
                 }
@@ -186,15 +247,14 @@ namespace DoorFurniture
                 }
                 if(open == "closed")
                 {
-                    __instance.Location.playSound("doorOpen");
-                    open = "1";
+                    __result = OpenDoor(__instance, data);
                 }
                 else
                 {
-                    __instance.Location.playSound("doorClose");
-                    open = "-1";
+                    __result = true;
+                    CloseDoor(__instance, data);
+
                 }
-                __instance.modData[openKey] = open;
                 return false;
             }
 
@@ -205,7 +265,7 @@ namespace DoorFurniture
         {
             public static bool Prefix(Furniture __instance, Rectangle rect, ref bool __result)
             {
-                if (!Config.ModEnabled || !TryGetDoorData(__instance, out var data) || data.Bounds?.Length < 4)
+                if (!Config.ModEnabled || !TryGetDoorData(__instance, out var data))
                     return true;
                 if (!__instance.modData.TryGetValue(openKey, out var open))
                 {
@@ -216,16 +276,79 @@ namespace DoorFurniture
                 {
                     return false;
                 }
+
                 var rot = __instance.currentRotation.Value;
                 var loc = __instance.GetBoundingBox().Location + data.Bounds[rot].Location;
                 var bounds = new Rectangle(loc, data.Bounds[rot].Size);
                 __result = bounds.Intersects(rect);
-                if(__result && (data.AutoOpen || Config.AutoOpen))
+                if(__result)
                 {
-                    __instance.modData[openKey] = "1";
-                    __instance.Location.playSound("doorOpen");
+                    if(data.AutoOpen || Config.AutoOpen)
+                    {
+                        __result = OpenDoor(__instance, data);
+                    }
+                    else
+                    {
+                        rect.Inflate(8, 8);
+                        foreach (var c in __instance.Location.characters)
+                        {
+                            if (c is not Monster && c?.GetBoundingBox().Intersects(rect) == true)
+                            {
+                                
+                                __result = OpenDoor(__instance, data, true);
+                                return false;
+                            }
+                        }
+                    }
                 }
                 return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(Object), nameof(Object.getCategoryName))]
+        public static class Object_getCategoryName_Patch
+        {
+            public static bool Prefix(Object __instance, ref string __result)
+            {
+                if (!Config.ModEnabled)
+                    return true;
+                if(__instance.Type == "DoorKey")
+                {
+                    __result = SHelper.Translation.Get("aedenthorn.DoorFurniture_key");
+                    return false;
+                }
+                if(__instance.Type == "KeyRing")
+                {
+                    __result = SHelper.Translation.Get("aedenthorn.DoorFurniture_keyring");
+                    return false;
+                }
+                if (__instance is Furniture f && TryGetDoorData(f, out var data))
+                {
+                    __result = data.Type;
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        [HarmonyPatch(typeof(Object), nameof(Object.getCategoryColor))]
+        public static class Object_getCategoryColor_Patch
+        {
+            public static bool Prefix(Object __instance, ref Color __result)
+            {
+                if (!Config.ModEnabled)
+                    return true;
+                if(__instance.Type == "DoorKey")
+                {
+                    __result = Config.KeyCategoryColor;
+                    return false;
+                }
+                if(__instance.Type == "KeyRing")
+                {
+                    __result = Config.KeyRingCategoryColor;
+                    return false;
+                }
+                return true;
             }
         }
 
@@ -239,5 +362,198 @@ namespace DoorFurniture
                 __instance.modData[openKey] = "closed";
             }
         }
+
+        [HarmonyPatch(typeof(Furniture), nameof(Furniture.getCategoryColor))]
+        public static class Furniture_getCategoryColor_Patch
+        {
+            public static bool Prefix(Furniture __instance, ref Color __result)
+            {
+                if (!Config.ModEnabled || !IsDoor(__instance))
+                    return true;
+                __result = Config.DoorCategoryColor;
+                return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(Furniture), "loadDescription")]
+        public static class Furniture_loadDescription_Patch
+        {
+            public static bool Prefix(Furniture __instance, ref string __result)
+            {
+                if (!Config.ModEnabled || !TryGetDoorData(__instance, out var data))
+                    return true;
+                __result = data.Description;
+                return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(Furniture), nameof(Furniture.HasSittingFarmers))]
+        public static class Furniture_HasSittingFarmers_Patch
+        {
+            public static bool Prefix(Furniture __instance, ref bool __result)
+            {
+                if (!Config.ModEnabled || !__instance.modData.TryGetValue(lockKey, out var str2) || str2 != "True")
+                    return true;
+                __result = true;
+                return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(GameLocation), "removeQueuedFurniture")]
+        public static class GameLocation_removeQueuedFurniture_Patch
+        {
+            public static void Prefix(GameLocation __instance, Guid guid)
+            {
+                if (!Config.ModEnabled || !__instance.furniture.TryGetValue(guid, out var f) || !IsDoor(f))
+                    return;
+                f.modData[openKey] = "closed";
+                f.modData.Remove(closeKey);
+            }
+        }
+
+        [HarmonyPatch(typeof(Object), "loadDisplayName")]
+        public static class Object_loadDisplayName_Patch
+        {
+            public static bool Prefix(Object __instance, ref string __result)
+            {
+                return !Config.ModEnabled || !__instance.modData.TryGetValue(nameKey, out __result);
+            }
+        }
+
+        [HarmonyPatch(typeof(Object), nameof(Object.maximumStackSize))]
+        public static class Object_maximumStackSize_Patch
+        {
+            public static bool Prefix(Object __instance, ref int __result)
+            {
+                if (!Config.ModEnabled || !__instance.modData.ContainsKey(guidKey))
+                    return true;
+                __result = 1;
+                return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(InventoryMenu), nameof(InventoryMenu.draw), new Type[] { typeof(SpriteBatch), typeof(int), typeof(int), typeof(int) })]
+        public static class InventoryMenu_draw_Patch
+        {
+            public static void Prefix(InventoryMenu __instance)
+            {
+                if (!Config.ModEnabled)
+                {
+                    return;
+                }
+                var mousePos = Game1.getMousePosition(true);
+                for (int i = 0; i < __instance.inventory.Count; i++)
+                {
+                    var cc = __instance.inventory[i];
+                    if (cc.containsPoint(mousePos.X, mousePos.Y))
+                    {
+                        if (__instance.actualInventory.Count > i && __instance.actualInventory[i] is Object obj)
+                        {
+                            string key = null;
+                            string ring = null;
+                            foreach (var data in DoorData.Values)
+                            {
+                                if (data.KeyItem == obj.ItemId || data.KeyRingItem == obj.ItemId)
+                                {
+                                    key = data.KeyItem;
+                                    ring = data.KeyRingItem;
+                                }
+                            }
+                            if (key == null || ring == null)
+                                return;
+                            if (!obj.modData.TryGetValue(guidKey, out var guid))
+                            {
+                                return;
+                            }
+                            var split = guid.Split('|');
+                            if (Config.CopyButton.JustPressed() && key == obj.ItemId)
+                            {
+                                var split2 = split[0].Split("=");
+
+                                Object newItem = new Object(key, 1);
+                                newItem.modData[guidKey] = guid;
+                                newItem.modData[nameKey] = split2[1];
+                                Item returned = Utility.addItemToThisInventoryList(newItem, __instance.actualInventory);
+                                if (returned != null)
+                                {
+                                    TryReturnObject(returned, Game1.player);
+                                }
+                                Game1.playSound("bigSelect");
+                                foreach (var k in Config.CopyButton.Keybinds)
+                                {
+                                    foreach (var b in k.Buttons)
+                                    {
+                                        SHelper.Input.Suppress(b);
+                                    }
+                                }
+                            }
+                            else if (Config.RenameButton.JustPressed())
+                            {
+                                var split2 = split[0].Split("=");
+
+                                Game1.activeClickableMenu = new KeyNamingMenu(obj, split2[0], split2[1]);
+
+                                foreach (var k in Config.RenameButton.Keybinds)
+                                {
+                                    foreach (var b in k.Buttons)
+                                    {
+                                        SHelper.Input.Suppress(b);
+                                    }
+                                }
+                            }
+                            else if (Config.CombineButton.JustPressed())
+                            {
+
+                                if (Game1.player.CursorSlotItem is null && ring == obj.ItemId)
+                                {
+                                    foreach (var item in split)
+                                    {
+                                        var split2 = item.Split("=");
+                                        Object newItem = new Object(key, 1);
+                                        newItem.modData[guidKey] = $"{split2[0]}={split2[1]}";
+                                        newItem.modData[nameKey] = split2[1];
+                                        Item returned = Utility.addItemToThisInventoryList(newItem, __instance.actualInventory);
+                                        if (returned != null)
+                                        {
+                                            TryReturnObject(returned, Game1.player);
+                                        }
+                                    }
+                                    __instance.actualInventory[i] = null;
+                                }
+                                else if (Game1.player.CursorSlotItem is Object obj2 && (obj2.ItemId == key || obj2.ItemId == ring))
+                                {
+                                    var newObj = CombineKeys(obj, obj2, key, ring);
+                                    if (newObj is not null)
+                                    {
+                                        __instance.actualInventory[i] = newObj;
+                                        Game1.player.CursorSlotItem = null;
+                                    }
+                                    else
+                                    {
+                                        return;
+                                    }
+                                }
+                                else
+                                {
+                                    return;
+                                }
+                                Game1.playSound("grassyStep");
+                                foreach (var k in Config.CombineButton.Keybinds)
+                                {
+                                    foreach (var b in k.Buttons)
+                                    {
+                                        SHelper.Input.Suppress(b);
+                                    }
+                                }
+                            }
+                        }
+                        return;
+                    }
+                }
+
+            }
+
+        }
+
     }
 }

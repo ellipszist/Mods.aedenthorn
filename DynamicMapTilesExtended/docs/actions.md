@@ -62,6 +62,8 @@ DMT currently recognizes the following action keys:
 - [DMT/event](#DMTevent)
 - [DMT/explode](#DMTexplode)
 - [DMT/explosion](#DMTexplosion)
+- [DMT/object](#DMTobject)
+- [DMT/modData](#DMTmodData)
 - [DMT/monster](#DMTmonster)
 
 ## Crop Actions
@@ -537,6 +539,42 @@ Each monster to spawn should be a comma-separated list of values. Multiple moste
 ### Example
 "DMT/monster_On": "GreenSlime,640,1280,#00FF00|GreenSlime,704,1280,#0000FF"  
 "DMT/monster_Enter": "MyCustomMonster,640,1280" 
+
+
+## DMT/modData
+Change mod data for object or furniture at given tiles.
+
+### Accepted Values
+Each mod data to set should be a comma-separated list of fields. Multiple mod data keys can be set using a pipe ('|').
+
+Fields are:
+
+- X coordinate of the tile to set mod data on
+- Y coordinate of the tile to set mod data on
+- key to set
+- value to set the key to
+
+### Example
+"DMT/modData_Load": "5,6,AlternativeTexture,MyTextureName"  
+
+
+
+## DMT/object
+Spawn objects or furniture at given tiles.
+
+### Accepted Values
+Each object to be spawned should be a comma-separated list of fields. Multiple objects can be spawn using a pipe ('|').
+
+Fields are:
+
+- X coordinate of the tile to spawn the object on
+- Y coordinate of the tile to spawn the object on
+- Qualified item id of the object to spawn (e.g. "(BC)55" or "(F)UprightPiano")
+- (optional) true or false value of whether the object or furniture can be moved by players
+- (optional) integer 0-4 for furniture rotation, only applicable if spawning furniture
+
+### Example
+"DMT/object_Load": "5,6,(F)UprightPiano,false,1|10,6,(BC)55,false"
 
 
 

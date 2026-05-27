@@ -13,6 +13,8 @@ using xTile.Dimensions;
 using xTile.Layers;
 using xTile.Tiles;
 using static HarmonyLib.Code;
+using static System.Net.WebRequestMethods;
+using Object = StardewValley.Object;
 
 namespace DMT
 {
@@ -152,6 +154,7 @@ namespace DMT
             }
         }
 
+
         public static void DoChangeMultipleProperties(GameLocation location, string value, Tile tile)
         {
             var tiles = value.Split('|');
@@ -171,6 +174,19 @@ namespace DMT
                         l.Tiles[int.Parse(tileInfo[1]), int.Parse(tileInfo[2])].Properties[tileInfo[3]] = pair[1];
                     }
                 }
+            }
+        }
+        public static void DoSetModData(GameLocation l, string value)
+        {
+
+            var split = value.Split('|');
+            foreach(var str in split)
+            {
+                Vector2 tile = new(int.Parse(split[0]), int.Parse(split[1]));
+                Object obj = l.getObjectAtTile((int)tile.X, (int)tile.Y);
+                if (obj == null)
+                    return;
+                obj.modData[split[2]] = split[3];
             }
         }
 
@@ -659,6 +675,54 @@ namespace DMT
             if (coins > 0)
                 chest.GetItemsForPlayer(who.UniqueMultiplayerID).Add(ItemRegistry.Create("(O)GoldCoin", coins));*/
             location.overlayObjects[tilePos] = chest;
+        }
+
+        public static void DoSpawnObject(GameLocation location, string value)
+        {
+
+            var split = value.Split('|');
+            foreach(var str in split)
+            {
+                var split2 = split[1].Split(',');
+                Vector2 tilePos = new(int.Parse(split2[0]), int.Parse(split2[1]));
+                var id = split2[2];
+                if (!ItemRegistry.IsQualifiedItemId(id))
+                    return;
+                bool move = split2.Length > 3 && bool.TryParse(split2[3], out var m) ? m : true;
+                Item item = ItemRegistry.Create(id);
+                if(item is Furniture f)
+                {
+                    f.InitializeAtTile(tilePos);
+                    f.IsOn = true;
+                    int rot = split2.Length > 4 && int.TryParse(split2[4], out var r) ? r : 0;
+                    for (int rotation = 0; rotation < rot; rotation++)
+                    {
+                        f.rotate();
+                    }
+                    if (!move)
+                    {
+                        f.modData[moveKey] = "false";
+                    }
+                    Furniture targetFurniture = location.GetFurnitureAt(tilePos);
+                    if (targetFurniture != null)
+                    {
+                        targetFurniture.heldObject.Value = f;
+                    }
+                    else
+                    {
+                        location.furniture.Add(f);
+                    }
+                }
+                else if(item is Object obj)
+                {
+                    if (!move)
+                    {
+                        obj.modData[moveKey] = "false";
+                    }
+                    obj.TileLocation = tilePos;
+                    location.Objects[tilePos] = obj;
+                }
+            }
         }
 
         public static void DoUpdateHealth(Farmer? who, string value)

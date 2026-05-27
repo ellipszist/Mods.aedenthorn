@@ -40,12 +40,14 @@ namespace DMT.Data
         public const string MonsterKey = "DMT/monster";
         public const string MoveKey = "DMT/move";
         public const string MusicKey = "DMT/music";
+        public const string ObjectKey = "DMT/object";
         public const string PushKey = "DMT/push";
         public const string PushableKey = "DMT/pushable";
         public const string PushAlsoKey = "DMT/pushAlso";
         public const string PushOthersKey = "DMT/pushOthers";
         public const string RemoveQuestKey = "DMT/removeQuest";
         public const string SetCropKey = "DMT/setCrop";
+        public const string SetModDataKey = "DMT/modData";
         public const string SoundKey = "DMT/sound";
         public const string SlipperyKey = "DMT/slippery";
         public const string SpeedKey = "DMT/speed";

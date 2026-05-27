@@ -6,6 +6,7 @@ using StardewValley;
 using StardewValley.Characters;
 using StardewValley.Extensions;
 using StardewValley.Monsters;
+using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 using System.Globalization;
 using System.Reflection;
@@ -119,12 +120,37 @@ namespace DMT
                 original: AccessTools.Method(typeof(Object), nameof(Object.checkForAction)),
                 postfix: new(typeof(Patches), nameof(Object_checkForAction_Postfix))
             );
+            
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Object), nameof(Object.performToolAction)),
+                postfix: new(typeof(Patches), nameof(Object_performToolAction_Prefix))
+            );
+            
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Furniture), nameof(Furniture.canBeRemoved)),
+                postfix: new(typeof(Patches), nameof(Furniture_canBeRemoved_Prefix))
+            );
 
             //Lags the game for some clients or just doesn't fire the attached actions
             //harmony.Patch(
             //    original: AccessTools.Method(typeof(Farmer), "setMount"),
             //    prefix: new(typeof(Patches), nameof(Farmer_SetMount_Prefix))
             //);
+        }
+        public static bool Furniture_canBeRemoved_Prefix(Furniture __instance, ref bool __result)
+        {
+            if (!Enabled || !__instance.modData.ContainsKey(moveKey))
+                return true;
+            __result = false;
+            return false;
+        }
+        
+        public static bool Object_performToolAction_Prefix(Object __instance, ref bool __result)
+        {
+            if (!Enabled || !__instance.modData.ContainsKey(moveKey))
+                return true;
+            __result = false;
+            return false;
         }
 
         internal static void GameLocation_Explode_Prefix(Farmer who)

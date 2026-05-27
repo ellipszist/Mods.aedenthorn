@@ -362,7 +362,7 @@ namespace DMT
             s.Start();
             if (!context.Config.Enabled)
                 return;
-            var dict = context.Helper.GameContent.Load<Dictionary<string, DynamicTile>>(context.TileDataDictPath);
+            var dict = context.Helper.GameContent.Load<Dictionary<string, DynamicTile>>(TileDataDictPath);
             var keys = dict.Keys.ToList();
             for(int i = keys.Count - 1; i >= 0 ; i--)
             {

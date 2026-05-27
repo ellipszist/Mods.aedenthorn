@@ -130,6 +130,9 @@ namespace DMT
                         case Actions.MusicKey:
                             DoPlayMusic(value);
                             break;
+                        case Actions.ObjectKey:
+                            DoSpawnObject(location, value);
+                            break;
                         case Actions.PushKey:
                             DoPushTiles(who, tile, tilePosition);
                             break;
@@ -141,6 +144,9 @@ namespace DMT
                             break;
                         case Actions.SetCropKey:
                             DoSetCrop(location, value);
+                            break;
+                        case Actions.SetModDataKey:
+                            DoSetModData(location, value);
                             break;
                         case Actions.StaminaKey:
                             DoUpdateStamina(who, value);

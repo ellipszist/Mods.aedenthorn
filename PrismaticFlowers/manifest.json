@@ -1,7 +1,7 @@
 ﻿{
 	"Name": "Prismatic Flowers",
 	"Author": "aedenthorn",
-	"Version": "0.2.0",
+	"Version": "0.2.1",
 	"Description": "Prismatic Flowers.",
 	"UniqueID": "aedenthorn.PrismaticFlowers",
 	"EntryDll": "PrismaticFlowers.dll",

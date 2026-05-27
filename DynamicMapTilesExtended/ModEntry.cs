@@ -18,9 +18,10 @@ namespace DMT
 {
     public class ModEntry : Mod
     {
-        public static string ModPrefix => "DMT/";
-        public string TileDataDictPath => "DMT/Tiles";
-        public string AnimationDataDictPath => "DMT/Animations";
+        public const string ModPrefix = "DMT/";
+        public const string TileDataDictPath = "DMT/Tiles";
+        public const string AnimationDataDictPath = "DMT/Animations";
+        public const string moveKey = "aedenthorn.DMT/CanMove";
 
         public enum Invalidate
         {
