@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Graphics.PackedVector;
 using Netcode;
 using StardewValley;
 using StardewValley.ItemTypeDefinitions;
@@ -18,7 +19,7 @@ namespace DoorFurniture
 {
     public partial class ModEntry
     {
-        [HarmonyPatch(typeof(Furniture), nameof(Furniture.draw), new Type[] { typeof(SpriteBatch),typeof(int),typeof(int),typeof(float) })]
+        [HarmonyPatch(typeof(Furniture), nameof(Furniture.draw), new Type[] { typeof(SpriteBatch), typeof(int), typeof(int), typeof(float) })]
         public static class Furniture_draw_Patch
         {
             public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -129,7 +130,7 @@ namespace DoorFurniture
                         }
                     }
                 }
-                if(str != "open")
+                if (str != "open")
                 {
                     int open = int.Parse(str);
                     int mult = 2;
@@ -147,7 +148,7 @@ namespace DoorFurniture
                             if (open > 0)
                                 ___sourceIndexOffset.Value = open < 3 * mult ? (flipped ? 5 : 3) : (flipped ? 4 : 2);
                             else
-                                ___sourceIndexOffset.Value = open > -3 * mult ? (flipped ? 4 :2) : (flipped ? 5 : 3);
+                                ___sourceIndexOffset.Value = open > -3 * mult ? (flipped ? 4 : 2) : (flipped ? 5 : 3);
                             break;
                         case 2:
                             __instance.Flipped = flipped;
@@ -187,7 +188,7 @@ namespace DoorFurniture
                 if (!Config.ModEnabled || __instance.isTemporarilyInvisible || !__instance.modData.TryGetValue(colorKey, out var str) || !TryGetDoorData(__instance, out var data) || !data.Colorable)
                     return;
                 Color color = Utility.StringToColor(str) ?? data.DefaultColor;
-                if(data.DefaultUncolored && color == data.DefaultColor)
+                if (data.DefaultUncolored && color == data.DefaultColor)
                 {
                     return;
                 }
@@ -224,6 +225,26 @@ namespace DoorFurniture
             }
         }
 
+        [HarmonyPatch(typeof(Furniture), nameof(Furniture.drawInMenu), new Type[] { typeof(SpriteBatch), typeof(Vector2), typeof(float), typeof(float), typeof(float), typeof(StackDrawType), typeof(Color), typeof(bool), })]
+        public static class Furniture_drawInMenu_Patch
+        {
+            public static void Postfix(Furniture __instance, SpriteBatch spriteBatch, Vector2 location, float scaleSize, float transparency, float layerDepth)
+            {
+                if (!Config.ModEnabled || !__instance.modData.TryGetValue(colorKey, out var str) || !TryGetDoorData(__instance, out var data) || !data.Colorable)
+                    return;
+                Color color = Utility.StringToColor(str) ?? data.DefaultColor;
+                if (data.DefaultUncolored && color == data.DefaultColor)
+                {
+                    return;
+                }
+                color *= transparency;
+                ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem(__instance.QualifiedItemId);
+                Rectangle sourceRect = itemData.GetSourceRect(0, null);
+                sourceRect.Offset(data.ColorSpriteOffset);
+                spriteBatch.Draw(itemData.GetTexture(), location + new Vector2(32f, 32f), new Rectangle?(itemData.GetSourceRect(0, null)), color * transparency, 0f, new Vector2((float)(sourceRect.Width / 2), (float)(sourceRect.Height / 2)), scaleSize, SpriteEffects.None, layerDepth);
+            }
+        }
+
         [HarmonyPatch(typeof(Furniture), nameof(Furniture.checkForAction))]
         public static class Furniture_checkForAction_Patch
         {
@@ -245,7 +266,7 @@ namespace DoorFurniture
                     __result = true;
                     return false;
                 }
-                if(open == "closed")
+                if (open == "closed")
                 {
                     __result = OpenDoor(__instance, data);
                 }
@@ -281,9 +302,9 @@ namespace DoorFurniture
                 var loc = __instance.GetBoundingBox().Location + data.Bounds[rot].Location;
                 var bounds = new Rectangle(loc, data.Bounds[rot].Size);
                 __result = bounds.Intersects(rect);
-                if(__result)
+                if (__result)
                 {
-                    if(data.AutoOpen || Config.AutoOpen)
+                    if (data.AutoOpen || Config.AutoOpen)
                     {
                         __result = OpenDoor(__instance, data);
                     }
@@ -294,7 +315,7 @@ namespace DoorFurniture
                         {
                             if (c is not Monster && c?.GetBoundingBox().Intersects(rect) == true)
                             {
-                                
+
                                 __result = OpenDoor(__instance, data, true);
                                 return false;
                             }
@@ -312,12 +333,12 @@ namespace DoorFurniture
             {
                 if (!Config.ModEnabled)
                     return true;
-                if(__instance.Type == "DoorKey")
+                if (__instance.Type == "DoorKey")
                 {
                     __result = SHelper.Translation.Get("aedenthorn.DoorFurniture_key");
                     return false;
                 }
-                if(__instance.Type == "KeyRing")
+                if (__instance.Type == "KeyRing")
                 {
                     __result = SHelper.Translation.Get("aedenthorn.DoorFurniture_keyring");
                     return false;
@@ -338,12 +359,12 @@ namespace DoorFurniture
             {
                 if (!Config.ModEnabled)
                     return true;
-                if(__instance.Type == "DoorKey")
+                if (__instance.Type == "DoorKey")
                 {
                     __result = Config.KeyCategoryColor;
                     return false;
                 }
-                if(__instance.Type == "KeyRing")
+                if (__instance.Type == "KeyRing")
                 {
                     __result = Config.KeyRingCategoryColor;
                     return false;
@@ -352,14 +373,17 @@ namespace DoorFurniture
             }
         }
 
+
         [HarmonyPatch(typeof(Furniture), nameof(Furniture.placementAction))]
         public static class Furniture_placementAction_Patch
         {
             public static void Postfix(Furniture __instance)
             {
-                if (!Config.ModEnabled || !IsDoor(__instance))
+                if (!Config.ModEnabled || !TryGetDoorData(__instance, out var data))
                     return;
                 __instance.modData[openKey] = "closed";
+                if(data.Colorable)
+                    __instance.modData[colorKey] = ColorToHexString(data.DefaultColor);
             }
         }
 

@@ -11,6 +11,7 @@
 	"LockButton": "Lock Button",
 	"CombineButton": "Combine Button",
 	"CopyButton": "Copy Button",
+	"ColorButton": "Color Button",
 
 	"door-type": "Door",
 	"door-description": "Can be opened and closed.",

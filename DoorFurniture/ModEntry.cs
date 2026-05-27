@@ -162,6 +162,27 @@ namespace DoorFurniture
                     }
                 }
             }
+            else if(Context.IsPlayerFree && Config.ColorButton.JustPressed())
+            {
+                var tile = Game1.currentCursorTile + new Vector2(0, 1);
+                Furniture f = Game1.currentLocation.GetFurnitureAt(tile);
+                if (!TryGetDoorData(f, out var data) || !f.modData.TryGetValue(openKey, out var open) || open != "closed")
+                {
+                    f = Game1.currentLocation.GetFurnitureAt(Game1.currentCursorTile);
+                    if (!TryGetDoorData(f, out data))
+                        return;
+                }
+                if (!data.Colorable)
+                    return;
+                Game1.activeClickableMenu = new ColorPickMenu(f);
+                foreach (var bind in Config.ColorButton.Keybinds)
+                {
+                    foreach (var key in bind.Buttons)
+                    {
+                        SHelper.Input.Suppress(key);
+                    }
+                }
+            }
             else if(Context.IsPlayerFree && Config.LockButton.JustPressed())
             {
                 var tile = Game1.player.GetGrabTile();

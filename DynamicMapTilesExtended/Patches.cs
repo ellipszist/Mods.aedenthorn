@@ -123,12 +123,12 @@ namespace DMT
             
             harmony.Patch(
                 original: AccessTools.Method(typeof(Object), nameof(Object.performToolAction)),
-                postfix: new(typeof(Patches), nameof(Object_performToolAction_Prefix))
+                prefix: new(typeof(Patches), nameof(Object_performToolAction_Prefix))
             );
             
             harmony.Patch(
                 original: AccessTools.Method(typeof(Furniture), nameof(Furniture.canBeRemoved)),
-                postfix: new(typeof(Patches), nameof(Furniture_canBeRemoved_Prefix))
+                prefix: new(typeof(Patches), nameof(Furniture_canBeRemoved_Prefix))
             );
 
             //Lags the game for some clients or just doesn't fire the attached actions

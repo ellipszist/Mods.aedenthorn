@@ -20,6 +20,7 @@ namespace DoorFurniture
         public KeybindList LockButton { get; set; } = new KeybindList(SButton.L);
         public KeybindList CombineButton { get; set; } = new KeybindList(SButton.MouseMiddle);
         public KeybindList CopyButton { get; set; } = new KeybindList(SButton.C);
+        public KeybindList ColorButton { get; set; } = new KeybindList(SButton.C);
         public KeybindList RenameButton { get; set; } = new KeybindList(SButton.R);
         public Color KeyCategoryColor { get; set; } = Color.DarkGray;
         public Color DoorCategoryColor { get; set; } = Color.SaddleBrown;
