@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
 
@@ -87,9 +88,11 @@ namespace FurnitureAdjustment
         {
             int mod = (Helper.Input.IsDown(Config.ModKey) ? Config.ModSpeed : 1);
             Point shift = new Point(x * mod, y * mod);
+            var mx = Game1.viewport.X + Game1.getOldMouseX();
+            var my = Game1.viewport.Y + Game1.getOldMouseY();
             foreach (var f in Game1.currentLocation.furniture)
             {
-                if (f.boundingBox.Value.Contains(Game1.viewport.X + Game1.getOldMouseX(), Game1.viewport.Y + Game1.getOldMouseY()))
+                if (!f.isPassable() && f.boundingBox.Value.Contains(mx, my))
                 {
                     f.RemoveLightGlow();
                     f.boundingBox.Value = new Rectangle(f.boundingBox.Value.Location + shift, f.boundingBox.Value.Size);
@@ -99,15 +102,26 @@ namespace FurnitureAdjustment
                     f.removeLights();
 
                     Helper.Input.Suppress(button);
-                    /*
-                    var ptr = typeof(Object).GetMethod("placementAction", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance).MethodHandle.GetFunctionPointer();
-                    var basePlacementAction = (Func<GameLocation, int, int, Farmer, bool>)Activator.CreateInstance(typeof(Func<GameLocation, int, int, Farmer, bool>), f, ptr);
-                    basePlacementAction(Game1.currentLocation, (int)f.TileLocation.X + shift.X, (int)f.TileLocation.Y + shift.Y, Game1.player);
-                    */
+
                     return;
                 }
             }
-            //Monitor.Log($"no wall furniture at {Game1.viewport.X + Game1.getOldMouseX()},{Game1.viewport.Y + Game1.getOldMouseY()}");
+            foreach (var f in Game1.currentLocation.furniture)
+            {
+                if (f.isPassable() && f.boundingBox.Value.Contains(mx, my))
+                {
+                    f.RemoveLightGlow();
+                    f.boundingBox.Value = new Rectangle(f.boundingBox.Value.Location + shift, f.boundingBox.Value.Size);
+                    f.updateDrawPosition();
+                    if(Config.MoveCursor)
+                        Game1.setMousePosition(Game1.getOldMouseX() + shift.X, Game1.getOldMouseY() + shift.Y);
+                    f.removeLights();
+
+                    Helper.Input.Suppress(button);
+
+                    return;
+                }
+            }
         }
 
         private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)

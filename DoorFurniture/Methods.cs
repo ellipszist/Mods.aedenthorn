@@ -13,8 +13,15 @@ namespace DoorFurniture
         public static bool CheckRotatedDoor(bool value, Furniture f)
         {
             if (!Config.ModEnabled || !IsDoor(f))
-                return false;
-            return f.currentRotation.Value == 2;
+                return value;
+            if (f.currentRotation.Value == 2)
+                return true;
+            if (f.currentRotation.Value == 3 && f.Flipped)
+                return true;
+            if (f.currentRotation.Value == 1 && !f.Flipped)
+                return true;
+            return false;
+
         }
         public static bool IsDoor(Furniture f)
         {

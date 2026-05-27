@@ -149,10 +149,11 @@ namespace DoorFurniture
                     }
                     b = !b;
                     f.modData[flipKey] = b.ToString();
-                    if (!f.modData.TryGetValue(openKey, out str))
+                    if (!f.modData.ContainsKey(openKey))
                     {
                         f.modData[openKey] = "closed";
                     }
+                    Game1.playSound("grassyStep");
                     foreach(var bind in Config.FlipButton.Keybinds)
                     {
                         foreach(var key in bind.Buttons)

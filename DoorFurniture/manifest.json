@@ -1,7 +1,7 @@
 ﻿{
   "Name": "Door Furniture",
   "Author": "aedenthorn",
-  "Version": "0.2.4",
+  "Version": "0.2.6",
   "Description": "Door Furniture.",
   "UniqueID": "aedenthorn.DoorFurniture",
   "EntryDll": "DoorFurniture.dll",

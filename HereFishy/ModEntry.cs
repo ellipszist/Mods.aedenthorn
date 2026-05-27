@@ -92,7 +92,7 @@ namespace HereFishy
 								SMonitor.Log($"here fishy fishy {mousePosition.X},{mousePosition.Y}");
 								if (Game1.player.Stamina > 0f || Config.StaminaCost <= 0f)
 								{
-									beginnersRod = Game1.player.CurrentTool.UpgradeLevel == 1;
+									beginnersRod = Game1.player.CurrentTool?.UpgradeLevel == 1;
 									HereFishyFishy(Game1.player, (int)mousePosition.X * 64, (int)mousePosition.Y * 64);
 								}
 								else

@@ -544,7 +544,7 @@ namespace DoorFurniture
                                     }
                                 }
                             }
-                            else if (Config.RenameButton.JustPressed())
+                            else if (Config.RenameButton.JustPressed() && key == obj.ItemId)
                             {
                                 var split2 = split[0].Split("=");
 
@@ -594,7 +594,7 @@ namespace DoorFurniture
                                 {
                                     return;
                                 }
-                                Game1.playSound("grassyStep");
+                                Game1.playSound("purchase");
                                 foreach (var k in Config.CombineButton.Keybinds)
                                 {
                                     foreach (var b in k.Buttons)

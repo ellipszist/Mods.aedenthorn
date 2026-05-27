@@ -705,6 +705,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlowerColors", "FlowerColor
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DoorFurniture", "DoorFurniture\DoorFurniture.csproj", "{85A4F4D7-3F6C-F7C2-6B84-6C7E9792032A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FishingChestTweaks", "FishingChestTweaks\FishingChestTweaks.csproj", "{F31EEDC8-E7B6-0788-62AC-3F17507D2322}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3489,6 +3491,14 @@ Global
 		{85A4F4D7-3F6C-F7C2-6B84-6C7E9792032A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{85A4F4D7-3F6C-F7C2-6B84-6C7E9792032A}.Release|x64.ActiveCfg = Release|x64
 		{85A4F4D7-3F6C-F7C2-6B84-6C7E9792032A}.Release|x64.Build.0 = Release|x64
+		{F31EEDC8-E7B6-0788-62AC-3F17507D2322}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F31EEDC8-E7B6-0788-62AC-3F17507D2322}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F31EEDC8-E7B6-0788-62AC-3F17507D2322}.Debug|x64.ActiveCfg = Debug|x64
+		{F31EEDC8-E7B6-0788-62AC-3F17507D2322}.Debug|x64.Build.0 = Debug|x64
+		{F31EEDC8-E7B6-0788-62AC-3F17507D2322}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F31EEDC8-E7B6-0788-62AC-3F17507D2322}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F31EEDC8-E7B6-0788-62AC-3F17507D2322}.Release|x64.ActiveCfg = Release|x64
+		{F31EEDC8-E7B6-0788-62AC-3F17507D2322}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
