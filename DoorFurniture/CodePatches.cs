@@ -19,6 +19,39 @@ namespace DoorFurniture
 {
     public partial class ModEntry
     {
+        [HarmonyPatch(typeof(SliderBar), nameof(SliderBar.click))]
+        public static class SliderBar_click_Patch
+        {
+            public static bool Prefix(SliderBar __instance, int x, int y, ref int __result)
+            {
+                if (!Config.ModEnabled || !Config.FixSliderBar)
+                {
+                    return true;
+                }
+                if (__instance.bounds.Contains(x, y))
+                {
+                    float fx = x - __instance.bounds.X;
+                    __instance.value = (int)Math.Ceiling(fx / __instance.bounds.Width * 100f);
+                }
+                __result = __instance.value;
+                return false;
+            }
+        }
+        [HarmonyPatch(typeof(ColorPicker), nameof(ColorPicker.click))]
+        public static class ColorPicker_click_Patch
+        {
+            public static void Prefix(ColorPicker __instance, Rectangle ___bounds, ref int x)
+            {
+                if (!Config.ModEnabled || !Config.FixSliderBar)
+                {
+                    return;
+                }
+                if(x < ___bounds.X && ___bounds.X - x < 8)
+                {
+                    x = ___bounds.X;
+                }
+            }
+        }
         [HarmonyPatch(typeof(Furniture), nameof(Furniture.draw), new Type[] { typeof(SpriteBatch), typeof(int), typeof(int), typeof(float) })]
         public static class Furniture_draw_Patch
         {
@@ -241,7 +274,7 @@ namespace DoorFurniture
                 ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem(__instance.QualifiedItemId);
                 Rectangle sourceRect = itemData.GetSourceRect(0, null);
                 sourceRect.Offset(data.ColorSpriteOffset);
-                spriteBatch.Draw(itemData.GetTexture(), location + new Vector2(32f, 32f), new Rectangle?(itemData.GetSourceRect(0, null)), color * transparency, 0f, new Vector2((float)(sourceRect.Width / 2), (float)(sourceRect.Height / 2)), scaleSize, SpriteEffects.None, layerDepth);
+                spriteBatch.Draw(itemData.GetTexture(), location + new Vector2(32f, 32f), sourceRect, color * transparency, 0f, new Vector2((float)(sourceRect.Width / 2), (float)(sourceRect.Height / 2)), scaleSize, SpriteEffects.None, layerDepth);
             }
         }
 

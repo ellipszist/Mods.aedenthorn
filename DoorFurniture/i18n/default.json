@@ -13,9 +13,6 @@
 	"CopyButton": "Copy Button",
 	"ColorButton": "Color Button",
 
-	"door-type": "Door",
-	"door-description": "Can be opened and closed.",
-
 	"WoodenDoorPrice": "Wood Door Price",
 	"WoodenDoorIngredients": "Wood Door Ing.",
 	"MetalDoorPrice": "Metal Door Price",
@@ -24,6 +21,12 @@
 	"DoorCategoryColor": "Door Category",
 	"KeyCategoryColor": "Key Category",
 	"KeyRingCategoryColor": "Keyring Category",
+
+	"FixSliderBar": "Fix Color Slider",
+	"FixSliderBar.Desc": "Fixes a bug with color sliders making it impossible to slide to 100",
+
+	"door-type": "Door",
+	"door-description": "Can be opened and closed.",
 
 	"aedenthorn.DoorFurniture_key": "Door Key",
 	"aedenthorn.DoorFurniture_key.Desc": "Unlocks a locked door.",

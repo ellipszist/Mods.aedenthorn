@@ -25,5 +25,6 @@ namespace DoorFurniture
         public Color KeyCategoryColor { get; set; } = Color.DarkGray;
         public Color DoorCategoryColor { get; set; } = Color.SaddleBrown;
         public Color KeyRingCategoryColor { get; set; } = Color.Brown;
+        public bool FixSliderBar { get; set; } = true;
     }
 }

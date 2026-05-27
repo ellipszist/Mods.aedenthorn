@@ -160,7 +160,7 @@ namespace FlowerColors
         {
             if (!Config.ModEnabled)
                 return;
-            if (Config.Debug && e.Button == SButton.OemPeriod)
+            if (Context.IsPlayerFree && Config.Debug && e.Button == SButton.OemPeriod)
             {
                 var crops = new string[] { "455", "453", "429", "427", "425" };
                 foreach (var kvp in Game1.getFarm().terrainFeatures.Pairs.Where(kvp => kvp.Value is HoeDirt))

@@ -14,6 +14,7 @@ namespace DoorFurniture
         private ColorPicker picker;
         private bool held;
         private IClickableMenu activeClickableMenu;
+        private int holdOffset;
         public ColorPickMenu(Furniture obj, IClickableMenu oldMenu = null)
         {
             f = obj;
@@ -39,6 +40,7 @@ namespace DoorFurniture
 
         public override void releaseLeftClick(int x, int y)
         {
+            holdOffset = 0;
             picker.releaseClick();
             held = false;
         }
@@ -50,7 +52,18 @@ namespace DoorFurniture
             }
             else
             {
-                ChangeColor(picker.click(x, y));
+                var bounds = AccessTools.FieldRefAccess<ColorPicker, Rectangle>(picker, "bounds");
+                int left = bounds.Left;
+                int right = bounds.Right - 1;
+                if (x < left && left - x < 8)
+                {
+                    holdOffset = left - x;
+                }
+                else if (x > right && x - right < 9)
+                {
+                    holdOffset = right - x;
+                }
+                ChangeColor(picker.click(x + holdOffset, y));
                 held = true;
             }
         }
@@ -58,7 +71,7 @@ namespace DoorFurniture
         {
             if (held)
             {
-                ChangeColor(picker.clickHeld(x, y));
+                ChangeColor(picker.clickHeld(x + holdOffset, y));
                 held = true;
             }
             else
@@ -78,9 +91,9 @@ namespace DoorFurniture
             }
             upperRightCloseButton.bounds = new Rectangle(Game1.uiViewport.Width / 2 + width / 2, Game1.uiViewport.Height / 2 - 144, 48, 48);
             base.draw(b);
-            drawTextureBox(b, Game1.uiViewport.Width / 2 - width / 2, Game1.uiViewport.Height / 2 - width / 2, width, height - 24, Color.White);
+            drawTextureBox(b, Game1.uiViewport.Width / 2 - width / 2, Game1.uiViewport.Height / 2 - height / 2 - 72, width, height - 24, Color.White);
             //drawTextureBox(b, Game1.uiViewport.Width / 2 - width / 2 + 16, Game1.uiViewport.Height / 2 - width / 2 + 16, 64, 64, Color.White);
-            f.drawInMenu(b, new Vector2(Game1.uiViewport.Width / 2 - width / 2 + 16, Game1.uiViewport.Height / 2 - width / 2 + 28), 1);
+            f.drawInMenu(b, new Vector2(Game1.uiViewport.Width / 2 - width / 2 + 16, Game1.uiViewport.Height / 2 - height / 2 - 72 + 16), 2);
             picker.draw(b);
             drawMouse(b);
         }
