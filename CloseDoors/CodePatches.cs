@@ -71,20 +71,18 @@ namespace CloseDoors
         [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.checkAction))]
         public class GameLocation_checkAction_Patch
         {
-            public static bool Prefix(GameLocation __instance, Location tileLocation, xTile.Dimensions.Rectangle viewport, Farmer who)
+            public static void Postfix(GameLocation __instance, Location tileLocation, xTile.Dimensions.Rectangle viewport, Farmer who, ref bool __result)
             {
-                if (!Config.ModEnabled)
-                    return true;
+                if (!Config.ModEnabled || __result)
+                    return;
                 if (!string.IsNullOrEmpty(__instance.doesTileHaveProperty(tileLocation.X, tileLocation.Y, "Action", "Buildings")))
-                    return true;
+                    return;
                 var tilePoint = new Point(tileLocation.X, tileLocation.Y);
                 if (TryCloseDoor(__instance, tilePoint))
                 {
-                    return false;
+                    __result = true;
                 }
-                return true;
             }
-
         }
         [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.isActionableTile))]
         public class GameLocation_isActionableTile_Patch

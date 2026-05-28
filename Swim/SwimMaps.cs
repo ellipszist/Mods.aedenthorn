@@ -509,10 +509,10 @@ namespace Swim
                                             switch (Game1.random.Next(3))
                                             {
                                                 case 0:
-                                                    treasures.Add(new Ring("516" + ((Game1.random.NextDouble() < (double)((float)Game1.player.LuckLevel / 11f)) ? 1 : 0)));
+                                                    treasures.Add(new Ring((516 + ((Game1.random.NextDouble() < (double)((float)Game1.player.LuckLevel / 11f)) ? 1 : 0)) +""));
                                                     break;
                                                 case 1:
-                                                    treasures.Add(new Ring("518" + ((Game1.random.NextDouble() < (double)((float)Game1.player.LuckLevel / 11f)) ? 1 : 0)));
+                                                    treasures.Add(new Ring((518 + ((Game1.random.NextDouble() < (double)((float)Game1.player.LuckLevel / 11f)) ? 1 : 0)) + ""));
                                                     break;
                                                 case 2:
                                                     treasures.Add(new Ring(""+Game1.random.Next(529, 535)));

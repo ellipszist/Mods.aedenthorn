@@ -707,6 +707,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DoorFurniture", "DoorFurnit
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FishingChestTweaks", "FishingChestTweaks\FishingChestTweaks.csproj", "{F31EEDC8-E7B6-0788-62AC-3F17507D2322}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SebastianDoor", "SebastianDoor\SebastianDoor.csproj", "{062E7DAD-1908-2F68-0943-4A76F76FC82A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DoorKnock", "DoorKnock\DoorKnock.csproj", "{43482A30-48ED-001B-0D60-90B572252D27}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3499,6 +3503,22 @@ Global
 		{F31EEDC8-E7B6-0788-62AC-3F17507D2322}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F31EEDC8-E7B6-0788-62AC-3F17507D2322}.Release|x64.ActiveCfg = Release|x64
 		{F31EEDC8-E7B6-0788-62AC-3F17507D2322}.Release|x64.Build.0 = Release|x64
+		{062E7DAD-1908-2F68-0943-4A76F76FC82A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{062E7DAD-1908-2F68-0943-4A76F76FC82A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{062E7DAD-1908-2F68-0943-4A76F76FC82A}.Debug|x64.ActiveCfg = Debug|x64
+		{062E7DAD-1908-2F68-0943-4A76F76FC82A}.Debug|x64.Build.0 = Debug|x64
+		{062E7DAD-1908-2F68-0943-4A76F76FC82A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{062E7DAD-1908-2F68-0943-4A76F76FC82A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{062E7DAD-1908-2F68-0943-4A76F76FC82A}.Release|x64.ActiveCfg = Release|x64
+		{062E7DAD-1908-2F68-0943-4A76F76FC82A}.Release|x64.Build.0 = Release|x64
+		{43482A30-48ED-001B-0D60-90B572252D27}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43482A30-48ED-001B-0D60-90B572252D27}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43482A30-48ED-001B-0D60-90B572252D27}.Debug|x64.ActiveCfg = Debug|x64
+		{43482A30-48ED-001B-0D60-90B572252D27}.Debug|x64.Build.0 = Debug|x64
+		{43482A30-48ED-001B-0D60-90B572252D27}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43482A30-48ED-001B-0D60-90B572252D27}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43482A30-48ED-001B-0D60-90B572252D27}.Release|x64.ActiveCfg = Release|x64
+		{43482A30-48ED-001B-0D60-90B572252D27}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

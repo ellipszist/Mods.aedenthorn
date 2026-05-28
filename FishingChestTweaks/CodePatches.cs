@@ -16,7 +16,10 @@ namespace FishingChestTweaks
         {
             public static void Prefix(BobberBar __instance, ref bool treasure, ref bool goldenTreasure)
             {
-                treasure = true;
+                if (Config.Debug)
+                {
+                    treasure = true;
+                }
                 ChestPosition.Value = -1;
                 ChestTargetPosition.Value = -1;
                 CatchLevel.Value = -1;
@@ -94,10 +97,6 @@ namespace FishingChestTweaks
                     {
                         if (!Game1.player.addItemToInventoryBool(item) || (item.Stack < ostack && item.Stack > 0))
                         {
-                            if((item.Stack < ostack && item.Stack > 0))
-                            {
-                                var x = 1;
-                            }
                             items.Add(item);
                         }
                     }
