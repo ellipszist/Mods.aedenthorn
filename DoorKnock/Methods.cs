@@ -13,8 +13,22 @@ namespace DoorKnock
 {
     public partial class ModEntry
     {
+        public static void PlayKnockSound(Vector2 doorTile)
+        {
+            int delay = 1;
+            for (int i = 0; i < Config.KnockNumber; i++)
+            {
+                DelayedAction.playSoundAfterDelay(Config.KnockSound, delay, Game1.currentLocation, doorTile);
+                delay += Config.KnockInterval;
+            }
+        }
         public static void DoneDelaying(NPC npc)
         {
+            if (npc.controller != null)
+            {
+                SMonitor.Log($"Not answering door: {npc.Name} is busy");
+                return;
+            }
             var ps = npc.modData[answerPointKey].Split(',');
             npc.modData.Remove(answerPointKey);
             var schedule = npc.pathfindToNextScheduleLocation("knock", Game1.currentLocation.Name, npc.TilePoint.X, npc.TilePoint.Y, Game1.currentLocation.Name, int.Parse(ps[0]), int.Parse(ps[1]), int.Parse(ps[2]), null, null);
@@ -38,6 +52,11 @@ namespace DoorKnock
         } 
         public static void DoneWaiting(NPC npc)
         {
+            if (npc.controller != null)
+            {
+                SMonitor.Log($"Not returning after answer: {npc.Name} is busy");
+                return;
+            }
             //TryCloseDoor(npc.currentLocation, npc.TilePoint);
             var ps = npc.modData[returnPointKey].Split(',');
             npc.modData.Remove(returnPointKey);
@@ -94,5 +113,24 @@ namespace DoorKnock
             }
             return false;
         }
+        public bool IsInRoom(NPC npc, Vector2 tile, List<Vector2> tiles)
+        {
+            if (npc.Tile == tile)
+                return true;
+            if (Game1.currentLocation.getTileIndexAt((int)tile.X, (int)tile.Y, "Buildings") >= 0)
+                return false;
+            tiles.Add(tile);
+            foreach (var t in Utility.getAdjacentTileLocationsArray(tile))
+            {
+                if (tiles.Contains(t))
+                    continue;
+                if (IsInRoom(npc, t, tiles))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
     }
 }

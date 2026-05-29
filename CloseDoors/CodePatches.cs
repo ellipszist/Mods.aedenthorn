@@ -77,6 +77,8 @@ namespace CloseDoors
                     return;
                 if (!string.IsNullOrEmpty(__instance.doesTileHaveProperty(tileLocation.X, tileLocation.Y, "Action", "Buildings")))
                     return;
+                if (__instance.isCharacterAtTile(new Vector2(tileLocation.X, tileLocation.Y))?.IsVillager == true)
+                    return;
                 var tilePoint = new Point(tileLocation.X, tileLocation.Y);
                 if (TryCloseDoor(__instance, tilePoint))
                 {

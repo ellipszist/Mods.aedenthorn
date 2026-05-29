@@ -5,6 +5,7 @@ using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Extensions;
+using StardewValley.Objects;
 using StardewValley.Pathfinding;
 using System;
 using System.Collections.Generic;
@@ -26,6 +27,7 @@ namespace DoorKnock
         public static ModEntry context;
         public const string answerPointKey = "aedenthorn.DoorKnock/answer";
         public const string returnPointKey = "aedenthorn.DoorKnock/return";
+        public const string openKey = "aedenthorn.DoorFurniture/open";
         public static Dictionary<string, int> delayDict = new Dictionary<string, int>();
         public static Dictionary<string, int> returnDict = new Dictionary<string, int>();
         public override void Entry(IModHelper helper)
@@ -49,10 +51,13 @@ namespace DoorKnock
         private void GameLoop_DayStarted(object sender, DayStartedEventArgs e)
         {
             returnDict.Clear();
+            delayDict.Clear();
         }
 
         private void GameLoop_UpdateTicked(object sender, UpdateTickedEventArgs e)
         {
+            if (!Config.ModEnabled || !Context.IsPlayerFree)
+                return;
             foreach(var key in delayDict.Keys.ToArray())
             {
                 delayDict[key]--;
@@ -83,24 +88,45 @@ namespace DoorKnock
                 return;
             if (Config.Debug)
             {
-                Game1.playSound("axe");
+                //Game1.playSound("axchop");
             }
             var doorTile = Game1.player.GetGrabTile();
             var action = Game1.currentLocation.GetTilePropertySplitBySpaces("Action", "Buildings", (int)doorTile.X, (int)doorTile.Y);
             if (action?.Length < 2 || action[0] != "Door")
-                return;
-            var up = Game1.player.FacingDirection == 0;
-            Vector2 answerTile = (doorTile + (up ? new Vector2(0, -1) : new Vector2(0, 1)));
-            var npc = Game1.currentLocation.getCharacterFromName(action[1]);
-            if (npc == null || !IsInRoom(npc, answerTile, new List<Vector2>()))
-                return;
-            int delay = 1;
-            for(int i = 0; i < Config.KnockNumber; i++)
             {
-                DelayedAction.playSoundAfterDelay(Config.KnockSound, delay, Game1.currentLocation, doorTile);
-                delay += Config.KnockInterval;
+                Furniture f = Game1.currentLocation.GetFurnitureAt(doorTile);
+                if(f?.modData.TryGetValue(openKey, out var open) == true && open == "closed")
+                {
+                    PlayKnockSound(doorTile);
+                }
+                return;
             }
+            PlayKnockSound(doorTile);
 
+            var up = Game1.player.FacingDirection == 0;
+            Vector2 answerTile = doorTile + (up ? new Vector2(0, -1) : new Vector2(0, 1));
+            NPC npc;
+            if(action.Length > 2)
+            {
+                List<NPC> inRoom = new();
+                foreach(var name in action.Skip(1))
+                {
+                    var n = Game1.currentLocation.getCharacterFromName(name);
+                    if(n != null && n.controller == null && IsInRoom(n, answerTile, new List<Vector2>()))
+                    {
+                        inRoom.Add(n);
+                    }
+                }
+                if (!inRoom.Any())
+                    return;
+                npc = Game1.random.ChooseFrom(inRoom);
+            }
+            else
+            {
+                npc = Game1.currentLocation.getCharacterFromName(action[1]);
+                if (npc == null || npc.controller != null || !IsInRoom(npc, answerTile, new List<Vector2>()))
+                    return;
+            }
             npc.modData[answerPointKey] = $"{doorTile.X},{doorTile.Y},{(up ? 2 : 0)}";
             delayDict[npc.Name] = Config.AnswerDelay;
 
@@ -111,25 +137,6 @@ namespace DoorKnock
                     SHelper.Input.Suppress(b);
                 }
             }
-        }
-
-        public bool IsInRoom(NPC npc, Vector2 tile, List<Vector2> tiles)
-        {
-            if(npc.Tile == tile)
-                return true;
-            if (Game1.currentLocation.getTileIndexAt((int)tile.X, (int)tile.Y, "Buildings") >= 0)
-                return false;
-            tiles.Add(tile);
-            foreach (var t in Utility.getAdjacentTileLocationsArray(tile))
-            {
-                if (tiles.Contains(t))
-                    continue;
-                if(IsInRoom(npc, t, tiles))
-                {
-                    return true;
-                }
-            }
-            return false;
         }
 
 
