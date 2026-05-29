@@ -2,9 +2,12 @@
 using Microsoft.Xna.Framework;
 using StardewValley;
 using StardewValley.Audio;
+using StardewValley.Buildings;
+using StardewValley.Extensions;
 using StardewValley.Pathfinding;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using xTile;
 using xTile.Dimensions;
 using xTile.Tiles;
@@ -13,6 +16,74 @@ namespace DoorKnock
 {
     public partial class ModEntry
     {
+        private void KnockInteriorDoor(Vector2 doorTile, string[] action)
+        {
+            PlayKnockSound(doorTile);
+
+            var up = Game1.player.FacingDirection == 0;
+            Vector2 answerTile = doorTile + (up ? new Vector2(0, -1) : new Vector2(0, 1));
+            NPC npc;
+            if (action.Length > 2)
+            {
+                List<NPC> inRoom = new();
+                foreach (var name in action.Skip(1))
+                {
+                    var n = Game1.currentLocation.getCharacterFromName(name);
+                    if (n != null && n.controller == null && IsInRoom(n, answerTile, new List<Vector2>()))
+                    {
+                        inRoom.Add(n);
+                    }
+                }
+                if (!inRoom.Any())
+                    return;
+                npc = Game1.random.ChooseFrom(inRoom);
+            }
+            else
+            {
+                npc = Game1.currentLocation.getCharacterFromName(action[1]);
+                if (npc == null || npc.controller != null || !IsInRoom(npc, answerTile, new List<Vector2>()))
+                    return;
+            }
+            npc.modData[answerPointKey] = $"{doorTile.X},{doorTile.Y},{(up ? 2 : 0)}";
+            delayDict[npc.Name] = Config.AnswerDelay;
+
+        }
+
+        private void KnockExteriorDoor(Vector2 doorTile, GameLocation interior)
+        {
+            PlayKnockSound(doorTile);
+
+            string[] action = Game1.currentLocation.GetTilePropertySplitBySpaces("Action", "Buildings", (int)doorTile.X, (int)doorTile.Y);
+
+            if (action.Length < 8 || action[0] != "LockedDoorWarp")
+                return;
+            
+            NPC npc;
+            if (action.Length > 8)
+            {
+                List<NPC> inRoom = new();
+                for(int i = 6; i < action.Length; i += 2)
+                {
+                    var n = interior.getCharacterFromName(action[i]);
+                    if (n != null && n.controller == null)
+                    {
+                        inRoom.Add(n);
+                    }
+                }
+                if (!inRoom.Any())
+                    return;
+                npc = Game1.random.ChooseFrom(inRoom);
+            }
+            else
+            {
+                npc = interior.getCharacterFromName(action[6]);
+                if (npc == null || npc.controller != null)
+                    return;
+            }
+            npc.modData[answerPointKey] = $"{doorTile.X},{doorTile.Y},2,{true}";
+            delayDict[npc.Name] = Config.AnswerDelay;
+
+        }
         public static void PlayKnockSound(Vector2 doorTile)
         {
             int delay = 1;
@@ -21,6 +92,14 @@ namespace DoorKnock
                 DelayedAction.playSoundAfterDelay(Config.KnockSound, delay, Game1.currentLocation, doorTile);
                 delay += Config.KnockInterval;
             }
+            foreach (var k in Config.KnockButton.Keybinds)
+            {
+                foreach (var b in k.Buttons)
+                {
+                    SHelper.Input.Suppress(b);
+                }
+            }
+
         }
         public static void DoneDelaying(NPC npc)
         {
@@ -29,19 +108,25 @@ namespace DoorKnock
                 SMonitor.Log($"Not answering door: {npc.Name} is busy");
                 return;
             }
+            if(npc.isSleeping.Value && !Config.WakeWhenSleeping)
+            {
+                SMonitor.Log($"Not answering door: {npc.Name} is sleeping");
+                return;
+            }
             var ps = npc.modData[answerPointKey].Split(',');
             npc.modData.Remove(answerPointKey);
-            var schedule = npc.pathfindToNextScheduleLocation("knock", Game1.currentLocation.Name, npc.TilePoint.X, npc.TilePoint.Y, Game1.currentLocation.Name, int.Parse(ps[0]), int.Parse(ps[1]), int.Parse(ps[2]), null, null);
-            npc.queuedSchedulePaths.Clear();
-            npc.queuedSchedulePaths.Add(schedule);
+            var schedule = npc.pathfindToNextScheduleLocation("knock", npc.currentLocation.Name, npc.TilePoint.X, npc.TilePoint.Y, ps.Length == 4 ? Game1.currentLocation.Name : npc.currentLocation.Name, int.Parse(ps[0]), int.Parse(ps[1]) + 1, int.Parse(ps[2]), null, null);
             AccessTools.Method(typeof(NPC), "prepareToDisembarkOnNewSchedulePath").Invoke(npc, Array.Empty<object>());
-            npc.modData[returnPointKey] = $"{npc.TilePoint.X},{npc.TilePoint.Y},{npc.FacingDirection}";
+            npc.modData[returnPointKey] = $"{npc.TilePoint.X},{npc.TilePoint.Y},{npc.FacingDirection}{(ps.Length == 4 ? $",{npc.currentLocation.Name}":"")}";
             npc.controller = new PathFindController(schedule.route, npc, Utility.getGameLocationOfCharacter(npc))
             {
                 finalFacingDirection = schedule.facingDirection,
                 endBehaviorFunction = new PathFindController.endBehavior(WaitBehaviour),
             };
-
+            if (ps.Length == 4)
+            {
+                farmerController.Value = Game1.player.Position;
+            }
         }
        public static void WaitBehaviour(Character c, GameLocation l)
         {
@@ -57,12 +142,9 @@ namespace DoorKnock
                 SMonitor.Log($"Not returning after answer: {npc.Name} is busy");
                 return;
             }
-            //TryCloseDoor(npc.currentLocation, npc.TilePoint);
             var ps = npc.modData[returnPointKey].Split(',');
             npc.modData.Remove(returnPointKey);
-            var schedule = npc.pathfindToNextScheduleLocation("knock", Game1.currentLocation.Name, npc.TilePoint.X, npc.TilePoint.Y, Game1.currentLocation.Name, int.Parse(ps[0]), int.Parse(ps[1]), int.Parse(ps[2]), null, null);
-            npc.queuedSchedulePaths.Clear();
-            npc.queuedSchedulePaths.Add(schedule);
+            var schedule = npc.pathfindToNextScheduleLocation("knock", Game1.currentLocation.Name, npc.TilePoint.X, npc.TilePoint.Y, ps.Length == 4 ? ps[3] : Game1.currentLocation.Name, int.Parse(ps[0]), int.Parse(ps[1]), int.Parse(ps[2]), null, null);
             npc.controller = new PathFindController(schedule.route, npc, Utility.getGameLocationOfCharacter(npc))
             {
                 finalFacingDirection = int.Parse(ps[2]),
@@ -70,11 +152,13 @@ namespace DoorKnock
             };
 
         }
+
+
         public static void ReturnedBehaviour(Character c, GameLocation l)
         {
             
             NPC npc = c as NPC;
-            npc.faceTowardFarmerForPeriod(3000, 100, false, Game1.player);
+            //npc.faceTowardFarmerForPeriod(3000, 100, false, Game1.player);
         }
 
 

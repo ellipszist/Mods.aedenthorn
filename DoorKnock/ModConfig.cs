@@ -7,6 +7,7 @@ namespace DoorKnock
     {
         public bool ModEnabled { get; set; } = true;
         public bool Debug { get; set; } = false;
+        public bool WakeWhenSleeping { get; set; } = false;
         public KeybindList KnockButton { get; set; } = new KeybindList(SButton.Enter);
         public string KnockSound { get; set; } = "axchop";
         public int KnockNumber { get; set; } = 3;

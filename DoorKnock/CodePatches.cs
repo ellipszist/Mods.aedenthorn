@@ -1,6 +1,9 @@
 ﻿using HarmonyLib;
+using Microsoft.Xna.Framework;
 using StardewValley;
 using StardewValley.Extensions;
+using StardewValley.Menus;
+using System;
 using System.Linq;
 using xTile;
 using xTile.Tiles;
@@ -9,20 +12,49 @@ namespace DoorKnock
 {
     public partial class ModEntry
     {
-        //[HarmonyPatch(typeof(GameLocation), nameof(GameLocation.performTouchAction), new Type[] {typeof(string[]), typeof(Vector2) })]
-        //public static class GameLocation_performTouchAction_Patch
-        //{
-        //    public static bool Prefix(GameLocation __instance, string[] action, Vector2 playerStandingPosition)
-        //    {
-        //        return true;
-        //        if (!Config.ModEnabled || !ArgUtility.TryGet(action, 0, out var actionType, out var error, true, "string actionType") || actionType != "Door" || !__instance.interiorDoors.TryGetValue(playerStandingPosition.ToPoint(), out var open) || !open)
-        //        {
-        //            return true;
-        //        }
+        [HarmonyPatch(typeof(Farmer), nameof(Farmer.Halt))]
+        public static class Farmer_Halt_Patch
+        {
+            public static bool Prefix(Farmer __instance)
+            {
+                return farmerController.Value == null;
+                     
+            }
+        }
+            
+        [HarmonyPatch(typeof(Farmer), nameof(Farmer.Update))]
+        public static class Farmer_Update_Patch
+        {
+            public static void Prefix(Farmer __instance, GameTime time)
+            {
+                if (__instance == Game1.player && farmerController.Value != null)
+                {
+                    Farmer player = __instance;
+                    player.facingDirection.Value = 2;
+                    player.setRunning(false, true);
+                    player.ignoreCollisions = true;
+                    if(!player.movementDirections.Contains(2))
+                        player.movementDirections.Add(2);
+                }
+            }
+            public static void Postfix(Farmer __instance, GameTime time)
+            {
 
-        //        return false;
-        //    }
-        //}
+                if (__instance == Game1.player && farmerController.Value != null)
+                {
+
+                    Vector2 start = farmerController.Value.Value;
+                    Farmer player = __instance;
+                    if (Math.Abs(Vector2.Distance(player.Position, start)) + player.Speed > 64)
+                    {
+                        farmerController.Value = null;
+                        player.ignoreCollisions = false;
+                        player.Halt();
+                        player.faceDirection(0);
+                    }
+                }
+            }
+        }
         [HarmonyPatch(typeof(InteriorDoorDictionary), nameof(InteriorDoorDictionary.ResetLocalState))]
         public static class InteriorDoorDictionary_ResetLocalState_Patch
         {
