@@ -160,7 +160,7 @@ namespace FlowerColors
         {
             if (!Config.ModEnabled)
                 return;
-            if (Context.IsPlayerFree && Config.Debug && e.Button == SButton.OemPeriod)
+            if (false && Context.IsPlayerFree && Config.Debug && e.Button == SButton.OemPeriod)
             {
                 var crops = new string[] { "455", "453", "429", "427", "425" };
                 foreach (var kvp in Game1.getFarm().terrainFeatures.Pairs.Where(kvp => kvp.Value is HoeDirt))
@@ -174,7 +174,7 @@ namespace FlowerColors
                     (kvp.Value as HoeDirt).crop = crop;
                 }
             }
-            if (Config.Debug && e.Button == SButton.OemComma)
+            if (false && Config.Debug && e.Button == SButton.OemComma)
             {
                 foreach (var kvp in Game1.getFarm().terrainFeatures.Pairs.Where(kvp => kvp.Value is HoeDirt))
                 {

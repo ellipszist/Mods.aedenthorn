@@ -1,7 +1,7 @@
 ﻿{
   "Name": "Flower Colors",
   "Author": "aedenthorn",
-  "Version": "0.1.0",
+  "Version": "0.1.1",
   "Description": "Flower Colors.",
   "UniqueID": "aedenthorn.FlowerColors",
   "EntryDll": "FlowerColors.dll",

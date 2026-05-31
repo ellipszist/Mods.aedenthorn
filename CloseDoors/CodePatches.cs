@@ -1,17 +1,11 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
-using StardewValley.Audio;
 using StardewValley.Extensions;
-using StardewValley.Network;
-using StardewValley.Projectiles;
 using System;
-using System.Collections.Generic;
 using xTile.Dimensions;
 using xTile.Layers;
 using xTile.Tiles;
-using Object = StardewValley.Object;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace CloseDoors

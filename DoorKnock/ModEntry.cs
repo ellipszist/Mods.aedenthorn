@@ -281,9 +281,7 @@ namespace DoorKnock
             var door = doorTile.ToPoint();
             if (Game1.currentLocation.doors.TryGetValue(door, out var target))
             {
-                GameLocation interior = Game1.getLocationFromName(action[3]);
-                if (interior != null)
-                    KnockExteriorDoor(doorTile, interior);
+                KnockExteriorDoor(doorTile, action);
             }
         }
 

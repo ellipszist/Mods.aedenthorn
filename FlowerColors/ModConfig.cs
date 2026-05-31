@@ -6,7 +6,7 @@ namespace FlowerColors
     public class ModConfig
     {
         public bool ModEnabled { get; set; } = true;
-        public bool Debug { get; set; } = true;
+        public bool Debug { get; set; } = false;
         public bool HoverToShowCombined { get; set; } = false;
         public bool CombineOnOrganize { get; set; } = true;
         public bool AppendCombinedNumberToName { get; set; } = true;

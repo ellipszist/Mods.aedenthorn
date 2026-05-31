@@ -294,8 +294,8 @@ namespace ImmersiveSprinklersAndScarecrows
                         if (obj.bigCraftable.Value)
                             globalPosition -= new Vector2(0, 64);
                         var layerDepth = (globalPosition.Y + (obj.bigCraftable.Value ? 81 : 33) + Config.DrawOffsetZ) / 10000f;
-                        var position = Game1.GlobalToLocal(globalPosition);
-                        b.Draw(Game1.shadowTexture, position + new Vector2(32, 55), Game1.shadowTexture.Bounds, Color.White * Config.Alpha, 0f, new Vector2(Game1.shadowTexture.Bounds.Center.X, Game1.shadowTexture.Bounds.Center.Y), 4f, SpriteEffects.None, obj.GetBoundingBoxAt((int)obj.TileLocation.X, (int)obj.TileLocation.Y).Bottom / 15000f);
+                        var position = Game1.GlobalToLocal(globalPosition) + new Vector2(Config.DrawOffsetX, Config.DrawOffsetY);
+                        b.Draw(Game1.shadowTexture, position + new Vector2(32, 55), Game1.shadowTexture.Bounds, Color.White * Config.Alpha, 0f, new Vector2(Game1.shadowTexture.Bounds.Center.X, Game1.shadowTexture.Bounds.Center.Y), Config.Scale, SpriteEffects.None, obj.GetBoundingBoxAt((int)obj.TileLocation.X, (int)obj.TileLocation.Y).Bottom / 15000f);
                         Texture2D texture = null;
                         ParsedItemData itemData = ItemRegistry.GetDataOrErrorItem(obj.QualifiedItemId);
                         Rectangle sourceRect = itemData.GetSourceRect(obj is Mannequin ? 2 : 0, new int?(obj.ParentSheetIndex));
@@ -350,9 +350,9 @@ namespace ImmersiveSprinklersAndScarecrows
                         if (obj.bigCraftable.Value)
                             globalPosition -= new Vector2(0, 64);
                         var layerDepth = (globalPosition.Y + (obj.bigCraftable.Value ? 81 : 33) + 24 + Config.DrawOffsetZ) / 10000f;
-                        var position = Game1.GlobalToLocal(globalPosition);
-                        if(!obj.bigCraftable.Value)
-                            b.Draw(Game1.shadowTexture, position + new Vector2(32, 55), Game1.shadowTexture.Bounds, Color.White * Config.Alpha, 0f, new Vector2(Game1.shadowTexture.Bounds.Center.X, Game1.shadowTexture.Bounds.Center.Y), 4f, SpriteEffects.None, obj.GetBoundingBoxAt((int)obj.TileLocation.X, (int)obj.TileLocation.Y).Bottom / 15000f);
+                        var position = Game1.GlobalToLocal(globalPosition) + new Vector2(Config.DrawOffsetX, Config.DrawOffsetY);
+                        if (!obj.bigCraftable.Value)
+                            b.Draw(Game1.shadowTexture, position + new Vector2(32, 55), Game1.shadowTexture.Bounds, Color.White * Config.Alpha, 0f, new Vector2(Game1.shadowTexture.Bounds.Center.X, Game1.shadowTexture.Bounds.Center.Y), Config.Scale, SpriteEffects.None, obj.GetBoundingBoxAt((int)obj.TileLocation.X, (int)obj.TileLocation.Y).Bottom / 15000f);
 
 
                         Texture2D texture = null;

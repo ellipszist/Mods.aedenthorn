@@ -711,6 +711,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SebastianDoor", "SebastianD
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DoorKnock", "DoorKnock\DoorKnock.csproj", "{43482A30-48ED-001B-0D60-90B572252D27}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FurnitureRecolor2", "FurnitureRecolor2\FurnitureRecolor2.csproj", "{05D8A73B-A446-9D96-5541-259C2B6EC31D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3519,6 +3521,14 @@ Global
 		{43482A30-48ED-001B-0D60-90B572252D27}.Release|Any CPU.Build.0 = Release|Any CPU
 		{43482A30-48ED-001B-0D60-90B572252D27}.Release|x64.ActiveCfg = Release|x64
 		{43482A30-48ED-001B-0D60-90B572252D27}.Release|x64.Build.0 = Release|x64
+		{05D8A73B-A446-9D96-5541-259C2B6EC31D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05D8A73B-A446-9D96-5541-259C2B6EC31D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05D8A73B-A446-9D96-5541-259C2B6EC31D}.Debug|x64.ActiveCfg = Debug|x64
+		{05D8A73B-A446-9D96-5541-259C2B6EC31D}.Debug|x64.Build.0 = Debug|x64
+		{05D8A73B-A446-9D96-5541-259C2B6EC31D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05D8A73B-A446-9D96-5541-259C2B6EC31D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05D8A73B-A446-9D96-5541-259C2B6EC31D}.Release|x64.ActiveCfg = Release|x64
+		{05D8A73B-A446-9D96-5541-259C2B6EC31D}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

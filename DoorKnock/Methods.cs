@@ -16,7 +16,7 @@ namespace DoorKnock
 {
     public partial class ModEntry
     {
-        private void KnockInteriorDoor(Vector2 doorTile, string[] action)
+        public static void KnockInteriorDoor(Vector2 doorTile, string[] action)
         {
             PlayKnockSound(doorTile);
 
@@ -49,38 +49,21 @@ namespace DoorKnock
 
         }
 
-        private void KnockExteriorDoor(Vector2 doorTile, GameLocation interior)
+        public static void KnockExteriorDoor(Vector2 doorTile, string[] action)
         {
             PlayKnockSound(doorTile);
 
-            string[] action = Game1.currentLocation.GetTilePropertySplitBySpaces("Action", "Buildings", (int)doorTile.X, (int)doorTile.Y);
-
             if (action.Length < 8 || action[0] != "LockedDoorWarp")
                 return;
-            
-            NPC npc;
-            if (action.Length > 8)
-            {
-                List<NPC> inRoom = new();
-                for(int i = 6; i < action.Length; i += 2)
-                {
-                    var n = interior.getCharacterFromName(action[i]);
-                    if (n != null && n.controller == null)
-                    {
-                        inRoom.Add(n);
-                    }
-                }
-                if (!inRoom.Any())
-                    return;
-                npc = Game1.random.ChooseFrom(inRoom);
-            }
-            else
-            {
-                npc = interior.getCharacterFromName(action[6]);
-                if (npc == null || npc.controller != null)
-                    return;
-            }
-            npc.modData[answerPointKey] = $"{doorTile.X},{doorTile.Y},2,{true}";
+
+            var interior = Game1.getLocationFromName(action[3]);
+            if(interior == null) 
+                return;
+
+            NPC npc = interior.getCharacterFromName(action[6]);
+            if (npc == null || npc.controller != null)
+                return;
+            npc.modData[answerPointKey] = $"{doorTile.X},{doorTile.Y},2,{npc.currentLocation}";
             delayDict[npc.Name] = Config.AnswerDelay;
 
         }
@@ -114,16 +97,17 @@ namespace DoorKnock
                 return;
             }
             var ps = npc.modData[answerPointKey].Split(',');
+            var exterior = ps.Length == 4;
             npc.modData.Remove(answerPointKey);
-            var schedule = npc.pathfindToNextScheduleLocation("knock", npc.currentLocation.Name, npc.TilePoint.X, npc.TilePoint.Y, ps.Length == 4 ? Game1.currentLocation.Name : npc.currentLocation.Name, int.Parse(ps[0]), int.Parse(ps[1]) + 1, int.Parse(ps[2]), null, null);
+            var schedule = npc.pathfindToNextScheduleLocation("knock", npc.currentLocation.Name, npc.TilePoint.X, npc.TilePoint.Y, exterior ? ps[3] : npc.currentLocation.Name, int.Parse(ps[0]), int.Parse(ps[1]) + (exterior ? 1 : 0), int.Parse(ps[2]), null, null);
             AccessTools.Method(typeof(NPC), "prepareToDisembarkOnNewSchedulePath").Invoke(npc, Array.Empty<object>());
-            npc.modData[returnPointKey] = $"{npc.TilePoint.X},{npc.TilePoint.Y},{npc.FacingDirection}{(ps.Length == 4 ? $",{npc.currentLocation.Name}":"")}";
+            npc.modData[returnPointKey] = $"{npc.TilePoint.X},{npc.TilePoint.Y},{npc.FacingDirection}{(exterior ? $",{npc.currentLocation.Name}":"")}";
             npc.controller = new PathFindController(schedule.route, npc, Utility.getGameLocationOfCharacter(npc))
             {
                 finalFacingDirection = schedule.facingDirection,
                 endBehaviorFunction = new PathFindController.endBehavior(WaitBehaviour),
             };
-            if (ps.Length == 4)
+            if (exterior)
             {
                 farmerController.Value = Game1.player.Position;
             }
@@ -143,8 +127,9 @@ namespace DoorKnock
                 return;
             }
             var ps = npc.modData[returnPointKey].Split(',');
+            var exterior = ps.Length == 4;
             npc.modData.Remove(returnPointKey);
-            var schedule = npc.pathfindToNextScheduleLocation("knock", Game1.currentLocation.Name, npc.TilePoint.X, npc.TilePoint.Y, ps.Length == 4 ? ps[3] : Game1.currentLocation.Name, int.Parse(ps[0]), int.Parse(ps[1]), int.Parse(ps[2]), null, null);
+            var schedule = npc.pathfindToNextScheduleLocation("knock", npc.currentLocation.Name, npc.TilePoint.X, npc.TilePoint.Y, exterior ? ps[3] : npc.currentLocation.Name, int.Parse(ps[0]), int.Parse(ps[1]), int.Parse(ps[2]), null, null);
             npc.controller = new PathFindController(schedule.route, npc, Utility.getGameLocationOfCharacter(npc))
             {
                 finalFacingDirection = int.Parse(ps[2]),
@@ -197,7 +182,7 @@ namespace DoorKnock
             }
             return false;
         }
-        public bool IsInRoom(NPC npc, Vector2 tile, List<Vector2> tiles)
+        public static bool IsInRoom(NPC npc, Vector2 tile, List<Vector2> tiles)
         {
             if (npc.Tile == tile)
                 return true;
