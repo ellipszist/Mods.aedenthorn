@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using xTile.Dimensions;
 using Color = Microsoft.Xna.Framework.Color;
 using Object = StardewValley.Object;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
@@ -49,11 +50,12 @@ namespace ImmersiveSprinklersAndScarecrows
             SHelper = helper;
 
             Helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
-            Helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
+            Helper.Events.GameLoop.DayStarted += GameLoop_DayStarted;
             Helper.Events.GameLoop.Saving += GameLoop_Saving;
             Helper.Events.Input.ButtonPressed += Input_ButtonPressed;
             Helper.Events.Display.RenderedWorld += Display_RenderedWorld;
             Helper.Events.Display.MenuChanged += Display_MenuChanged;
+            helper.Events.Multiplayer.ModMessageReceived += Multiplayer_ModMessageReceived;
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
@@ -82,6 +84,52 @@ namespace ImmersiveSprinklersAndScarecrows
             }
         }
 
+        private void Multiplayer_ModMessageReceived(object sender, StardewModdingAPI.Events.ModMessageReceivedEventArgs e)
+        {
+            if (!Config.EnableMod)
+                return;
+            if (e.FromModID == ModManifest.UniqueID && e.Type == "UpdateImmersiveObjects")
+            {
+                IEnumerable<Object> sp = new List<Object>();
+                IEnumerable<Object> sc = new List<Object>();
+
+                MyMessage m = e.ReadAs<MyMessage>();
+                var loc = Game1.getLocationFromName(m.Location);
+                if (loc == null)
+                {
+                    foreach (var l in Game1.locations)
+                    {
+                        ReloadSprinklers(l);
+                        ReloadScarecrows(l);
+                    }
+                    return;
+                }
+                switch (m.Which)
+                {
+                    case "sprinklers":
+                        ReloadSprinklers(loc);
+                        break;
+                    case "scarecrows":
+                        ReloadScarecrows(loc);
+                        break;
+                    default:
+                        ReloadSprinklers(loc);
+                        ReloadScarecrows(loc);
+                        break;
+                }
+            }
+        }
+
+        private void GameLoop_DayStarted(object sender, StardewModdingAPI.Events.DayStartedEventArgs e)
+        {
+            foreach (var l in Game1.locations)
+            {
+                ReloadSprinklers(l);
+                ReloadScarecrows(l);
+                
+            }
+        }
+
         private void GameLoop_Saving(object sender, StardewModdingAPI.Events.SavingEventArgs e)
         {
             foreach(var kvp in sprinklerDict)
@@ -91,7 +139,7 @@ namespace ImmersiveSprinklersAndScarecrows
                     if (kvp2.Value is null)
                         continue;
                     var data = GetImmersiveData(kvp2.Value, true);
-                    kvp.Key.modData[$"{dataKey},{kvp2.Key.X},{kvp2.Key.Y}"] = JsonConvert.SerializeObject(data);
+                    SetData(kvp.Key, (int)kvp2.Key.X, (int)kvp2.Key.Y, data);
                 }
             }
             foreach(var kvp in scarecrowDict)
@@ -101,7 +149,7 @@ namespace ImmersiveSprinklersAndScarecrows
                     if (kvp2.Value is null)
                         continue;
                     var data = GetImmersiveData(kvp2.Value, false);
-                    kvp.Key.modData[$"{dataKey},{kvp2.Key.X},{kvp2.Key.Y}"] = JsonConvert.SerializeObject(data);
+                    SetData(kvp.Key, (int)kvp2.Key.X, (int)kvp2.Key.Y, data);
                 }
             }
         }
@@ -115,6 +163,7 @@ namespace ImmersiveSprinklersAndScarecrows
                 obj.TileLocation = atPosition;
                 StoreObj(obj);
                 Game1.currentLocation.Objects.Remove(new Vector2(-ridiculous, -ridiculous));
+                SendMessage(Game1.currentLocation.NameOrUniqueName, "both");
             }
         }
 
@@ -258,18 +307,6 @@ namespace ImmersiveSprinklersAndScarecrows
                         Helper.Input.Suppress(e.Button);
                     }
                 }
-            }
-        }
-
-        public void GameLoop_SaveLoaded(object sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)
-        {
-            sprinklerDict.Clear();
-            scarecrowDict.Clear();
-            foreach(var l in Game1.locations)
-            {
-                var sp = GetSprinklers(l);
-                var sc = GetScarecrows(l);
-                var c = sp.Count() + sc.Count();
             }
         }
 

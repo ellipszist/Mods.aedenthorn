@@ -4,33 +4,48 @@ using StardewValley;
 using StardewValley.Locations;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CustomDecorationAreas
 {
     public class ModEntry : Mod
     {
 
-        public static IMonitor PMonitor;
-        public static IModHelper PHelper;
+        public static IMonitor SMonitor;
+        public static IModHelper SHelper;
         public static ModEntry context;
-        public static ModConfig config;
-        public static Dictionary<string, FloorWallData> floorsWallsDataDict = new Dictionary<string, FloorWallData>();
+        public static ModConfig Config;
+        public static Dictionary<string, FloorWallData> floorsWallsDataDictOld = new Dictionary<string, FloorWallData>();
+        public static Dictionary<string, FloorWallData> FloorsWallsDataDict
+        {
+            get
+            {
+                var dict = SHelper.GameContent.Load<Dictionary<string, FloorWallData>>(dictPath);
+                if (floorsWallsDataDictOld.Any())
+                {
+                    foreach(var kvp in floorsWallsDataDictOld)
+                    {
+                        dict.Add(kvp.Key, kvp.Value);
+                    }
+                }
+                return dict;
+            }
+        } 
         public static List<string> convertedLocations = new List<string>();
+        public const string dictPath = "aedenthorn.CustomDecorationAreas/dict";
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
         public override void Entry(IModHelper helper)
         {
             context = this;
-            config = Helper.ReadConfig<ModConfig>();
+            Config = Helper.ReadConfig<ModConfig>();
 
-            if (!config.EnableMod)
-                return;
-
-            PMonitor = Monitor;
-            PHelper = helper;
+            SMonitor = Monitor;
+            SHelper = helper;
 
             Helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
+            Helper.Events.Content.AssetRequested += Content_AssetRequested;
 
             var harmony = new Harmony(ModManifest.UniqueID);
 
@@ -78,6 +93,16 @@ namespace CustomDecorationAreas
             );
         }
 
+        private void Content_AssetRequested(object sender, StardewModdingAPI.Events.AssetRequestedEventArgs e)
+        {
+            if (!Config.EnableMod)
+                return;
+            if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
+            {
+                e.LoadFrom(() => new Dictionary<string, FloorWallData>(), StardewModdingAPI.Events.AssetLoadPriority.Exclusive);
+            }
+        }
+
         private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
         {
             foreach (IContentPack contentPack in Helper.ContentPacks.GetOwned())
@@ -89,7 +114,7 @@ namespace CustomDecorationAreas
                     try
                     {
                         Monitor.Log($"Adding custom walls and floors for {data.name}");
-                        floorsWallsDataDict.Add(data.name, data);
+                        floorsWallsDataDictOld.Add(data.name, data);
                     }
                     catch(Exception ex)
                     {
@@ -97,7 +122,7 @@ namespace CustomDecorationAreas
                     }
                 }
             }
-            Monitor.Log($"Loaded floors and walls for {floorsWallsDataDict.Count} locations.");
+            Monitor.Log($"Loaded floors and walls for {floorsWallsDataDictOld.Count} locations.");
         }
     }
 }

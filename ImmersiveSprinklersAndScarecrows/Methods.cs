@@ -16,7 +16,11 @@ namespace ImmersiveSprinklersAndScarecrows
 {
     public partial class ModEntry
     {
-
+        public static void SendMessage(string location, string which)
+        {
+            MyMessage message = new MyMessage(location, which);
+            SHelper.Multiplayer.SendMessage(message, "UpdateImmersiveObjects", modIDs: new[] { context.ModManifest.UniqueID });
+        }
         public static Object GetSprinklerCached(GameLocation l, int x, int y)
         {
             if (!sprinklerDict.TryGetValue(l, out var dict))
@@ -184,7 +188,7 @@ namespace ImmersiveSprinklersAndScarecrows
         public static void PlaceObject(Object one, GameLocation location, int tileX, int tileY, bool sprinkler)
         {
             ImmersiveData data = GetImmersiveData(one, sprinkler);
-            location.modData[$"{dataKey},{tileX},{tileY}"] = JsonConvert.SerializeObject(data);
+            SetData(location, tileX, tileY, data);
             var dict = sprinkler ? sprinklerDict : scarecrowDict;
             if (!dict.TryGetValue(location, out var dict2))
             {
@@ -192,7 +196,7 @@ namespace ImmersiveSprinklersAndScarecrows
                 dict[location] = dict2;
             }
             dict2[new Vector2(tileX, tileY)] = one;
-
+            SendMessage(location.NameOrUniqueName, sprinkler ? "sprinklers" : "scarecrows");
         }
         public static bool ReturnOrDropSprinkler(GameLocation l, int x, int y, Farmer who, bool drop)
         {
@@ -225,11 +229,12 @@ namespace ImmersiveSprinklersAndScarecrows
                 }
             }
             SetData(l, x, y, null);
-            if(sprinklerDict.TryGetValue(l, out var dict))
+            if (sprinklerDict.TryGetValue(l, out var dict))
             {
                 dict.Remove(new Vector2(x, y));
             }
             SMonitor.Log($"{(drop ? "Dropped" : "Returned")} {sprinkler?.Name}");
+            SendMessage(l.NameOrUniqueName, "sprinklers");
             return true;
         }
 
@@ -262,6 +267,7 @@ namespace ImmersiveSprinklersAndScarecrows
                 dict.Remove(new Vector2(x, y));
             }
             SMonitor.Log($"{(drop ? "Dropped" : "Returned")} {scarecrow?.Name}");
+            SendMessage(l.NameOrUniqueName, "scarecrows");
             return true;
         }
 
@@ -575,6 +581,34 @@ namespace ImmersiveSprinklersAndScarecrows
             }
             return true;
         }
+        public static void ReloadSprinklers(GameLocation location)
+        {
+            if (sprinklerDict.TryGetValue(location, out var dict))
+            {
+                dict.Clear();
+            }
+            else
+            {
+                dict = new();
+                sprinklerDict[location] = dict;
+            }
+            var sp = GetSprinklers(location);
+            var count = sp.Count();
 
+        }
+        public static void ReloadScarecrows(GameLocation location)
+        {
+            if (scarecrowDict.TryGetValue(location, out var dict))
+            {
+                dict.Clear();
+            }
+            else
+            {
+                dict = new();
+                scarecrowDict[location] = dict;
+            }
+            var sp = GetScarecrows(location);
+            var count = sp.Count();
+        }
     }
 }

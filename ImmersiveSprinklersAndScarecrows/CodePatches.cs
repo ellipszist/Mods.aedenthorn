@@ -1,14 +1,10 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Graphics.PackedVector;
-using Netcode;
-using Newtonsoft.Json;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Inventories;
 using StardewValley.ItemTypeDefinitions;
-using StardewValley.Network;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 using StardewValley.Tools;
@@ -18,7 +14,6 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using xTile.Dimensions;
-using xTile.Tiles;
 using Object = StardewValley.Object;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
@@ -54,9 +49,9 @@ namespace ImmersiveSprinklersAndScarecrows
                             {
                                 SpecialChestType = Chest.SpecialChestTypes.Enricher
                             };
-
                             who.reduceActiveItemByOne();
                             __instance.playSound("axe");
+
                         }
                         else if (who.CurrentItem?.ItemId == "915" && obj.heldObject.Value?.ItemId != "915")
                         {
@@ -235,6 +230,7 @@ namespace ImmersiveSprinklersAndScarecrows
                 }
                 else if (one.Category == -74 && location.terrainFeatures.TryGetValue(new Vector2(x/64, y/64), out var tf) && tf is HoeDirt dirt)
                 {
+                    bool update = false;
                     foreach (var s in GetSprinklers(location))
                     {
 
@@ -248,8 +244,15 @@ namespace ImmersiveSprinklersAndScarecrows
                                 {
                                     chest.Items.RemoveAt(0);
                                 }
+                                SetData(location, x / 64, y / 64, GetImmersiveData(s, true));
+                                update = true;
                             }
                         }
+                    }
+                    if (update)
+                    {
+                        SendMessage(location.NameOrUniqueName, "sprinklers");
+                        ReloadSprinklers(location);
                     }
                 }
                 return true;
