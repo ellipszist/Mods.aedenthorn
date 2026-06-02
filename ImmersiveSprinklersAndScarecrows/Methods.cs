@@ -478,6 +478,10 @@ namespace ImmersiveSprinklersAndScarecrows
             var inputParams = new object[] { obj, sourceRect };
             Texture2D result = (Texture2D)AccessTools.Method(atApi.GetType(), "GetTextureForObject").Invoke(atApi, inputParams);
             sourceRect = (Rectangle)inputParams[1];
+            if (false && Config.Debug)
+            {
+                SMonitor.Log($"Alt Texture: Location: {obj.Location.Name}, {obj.TileLocation}, result:\n\n\tTexture: {result.Name}\n\tData{string.Join('|', obj.modData.Pairs.Select(p => p.Key + ":"+p.Value))}");
+            }
             return result;
         }
 
@@ -486,6 +490,10 @@ namespace ImmersiveSprinklersAndScarecrows
             value = null;
             if (l.modData.TryGetValue($"{dataKey},{x},{y}", out var str) && !string.IsNullOrEmpty(str))
             {
+                if (false && Config.Debug)
+                {
+                    SMonitor.Log($"Location: {l.Name}, {x},{y}:\n\n\t{str}");
+                }
                 value = JsonConvert.DeserializeObject<ImmersiveData>(str) ?? new ImmersiveData();
                 return true;
             }

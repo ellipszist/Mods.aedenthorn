@@ -16,10 +16,15 @@ namespace CloserCrops
         }
         public static float CheckScale(float value, Crop crop)
         {
-            return value;
             if(!Config.ModEnabled || !IsMiniCrop(crop) || crop.currentPhase.Value == 0)
                 return value;
-            return 1f;
+            return value * Config.Scale;
+        }
+        public static double CheckRandom(double value, Crop crop)
+        {
+            if(!Config.ModEnabled || !IsMiniCrop(crop))
+                return value;
+            return value + (randomTick++);
         }
     }
 }

@@ -1,4 +1,7 @@
 {
 	"ModEnabled": "Mod Enabled",
-	"MultiplyPlantAndHarvest": "Multiply Harvest"
+	"MultiplyPlantAndHarvest": "Multiply Harvest",
+	"ModKeyForCloser": "Mod Key Closer",
+	"ModKey": "Mod Key",
+	"Scale": "Scale"
 }

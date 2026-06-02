@@ -115,7 +115,8 @@ namespace CloserCrops
                 if (!Config.ModEnabled || skip || !Config.MultiplyPlantAndHarvest || !IsMiniCrop(__instance) || !__instance.modData.TryGetValue(numberKey, out var str) || !int.TryParse(str, out var num))
                     return true;
                 skip = true;
-                for(int i = 0; i < num; i++)
+                randomTick = 1;
+                for (int i = 0; i < num; i++)
                 {
                     __result = __instance.harvest(xTile, yTile, soil, junimoHarvester, isForcedScytheHarvest);
                     if (!__result)
@@ -126,6 +127,25 @@ namespace CloserCrops
                 }
                 skip = false;
                 return false;
+            }
+
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling Crop.harvest");
+
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Call && codes[i].operand is MethodInfo mi && mi == AccessTools.Method(typeof(Utility), nameof(Utility.CreateRandom)))
+                    {
+                        SMonitor.Log("Adding quality randomizer");
+                        codes.Insert(i, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.CheckRandom))));
+                        codes.Insert(i, new CodeInstruction(OpCodes.Ldarg_0));
+                        i += 2;
+                    }
+                }
+
+                return codes.AsEnumerable();
             }
         }
         [HarmonyPatch(typeof(Crop), nameof(Crop.draw))]
@@ -182,14 +202,14 @@ namespace CloserCrops
 
             }
 
-            public static IEnumerable<CodeInstruction> XTranspiler(IEnumerable<CodeInstruction> instructions)
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
             {
                 SMonitor.Log($"Transpiling Crop.draw");
 
                 var codes = new List<CodeInstruction>(instructions);
                 for (int i = 0; i < codes.Count; i++)
                 {
-                    if (i < codes.Count - 4 && codes[i].opcode == OpCodes.Ldc_R4 && codes[i].operand is float f && f == 4)
+                    if (codes[i].opcode == OpCodes.Ldc_R4 && codes[i].operand is float f && f == 4)
                     {
                         SMonitor.Log("Adding scale");
                         codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.CheckScale))));

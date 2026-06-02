@@ -19,6 +19,8 @@ namespace CloserCrops
         public static ModConfig Config;
         public static ModEntry context;
         public const string numberKey = "aedenthorn.CloserCrops/number";
+        public static int randomTick;
+
         public override void Entry(IModHelper helper)
         {
             Config = Helper.ReadConfig<ModConfig>();

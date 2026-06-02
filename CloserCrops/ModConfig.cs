@@ -10,6 +10,7 @@ namespace CloserCrops
         public bool Debug { get; set; } = false;
         public bool MultiplyPlantAndHarvest { get; set; } = true;
         public bool ModKeyForCloser { get; set; } = false;
+        public float Scale { get; set; } = 0.8f;
         public SButton ModKey { get; set; } = SButton.LeftControl;
         public List<string> CloserCrops { get; set; } = new()
         {
