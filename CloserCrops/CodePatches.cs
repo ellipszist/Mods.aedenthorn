@@ -150,7 +150,7 @@ namespace CloserCrops
                 var coloredLayerDepth = __instance.coloredLayerDepth;
                 var drawPosition = __instance.drawPosition;
                 skip = true;
-                var tempDrawPosition = drawPosition - new Vector2(16, 16);
+                var tempDrawPosition = drawPosition - new Vector2(16, 24);
                 __instance.drawPosition = tempDrawPosition;
                 __instance.draw(b, tileLocation, toTint, rotation);
                 if(num > 1)
