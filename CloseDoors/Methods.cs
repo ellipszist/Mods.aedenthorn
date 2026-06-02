@@ -4,12 +4,13 @@ using StardewValley.Audio;
 using xTile;
 using xTile.Dimensions;
 using xTile.Tiles;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace CloseDoors
 {
     public partial class ModEntry
     {
-        private static bool TryCloseDoor(GameLocation location, Point tilePoint)
+        public static bool TryCloseDoor(GameLocation location, Point tilePoint)
         {
             foreach (var d in location.interiorDoors.Doors)
             {
@@ -55,6 +56,37 @@ namespace CloseDoors
                 }
             }
             return false;
+        }
+
+        public static bool IsRecentDoorPoint(Character character, Point tileLocation, Point point)
+        {
+            switch (character.FacingDirection)
+            {
+                case 0:
+                    return point == tileLocation + new Point(0, 2);
+                case 2:
+                    return point == tileLocation + new Point(0, -2);
+                case 1:
+                    return point == tileLocation + new Point(-1, -1);
+                case 3:
+                    return point == tileLocation + new Point(1, -1);
+            }
+            return false;
+        }
+        public static Point GetMovingTile(int facing, Rectangle tile)
+        {
+            switch (facing)
+            {
+                case 0:
+                    return new Point(tile.Center.X / 64, tile.Top / 64);
+                case 2:
+                    return new Point(tile.Center.X / 64, tile.Bottom / 64);
+                case 1:
+                    return new Point(tile.Right / 64, tile.Center.Y / 64);
+                case 3:
+                    return new Point(tile.Left / 64, tile.Center.Y / 64);
+            }
+            return Point.Zero;
         }
     }
 }

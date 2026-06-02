@@ -2,12 +2,12 @@
 using Microsoft.Xna.Framework;
 using StardewValley;
 using StardewValley.Audio;
-using StardewValley.Buildings;
 using StardewValley.Extensions;
 using StardewValley.Pathfinding;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 using xTile;
 using xTile.Dimensions;
 using xTile.Tiles;
@@ -29,7 +29,7 @@ namespace DoorKnock
                 foreach (var name in action.Skip(1))
                 {
                     var n = Game1.currentLocation.getCharacterFromName(name);
-                    if (n != null && n.controller == null && IsInRoom(n, answerTile, new List<Vector2>()))
+                    if (n != null && (n.controller == null || n.doingEndOfRouteAnimation.Value) && IsInRoom(n, answerTile, new List<Vector2>()))
                     {
                         inRoom.Add(n);
                     }
@@ -41,7 +41,7 @@ namespace DoorKnock
             else
             {
                 npc = Game1.currentLocation.getCharacterFromName(action[1]);
-                if (npc == null || npc.controller != null || !IsInRoom(npc, answerTile, new List<Vector2>()))
+                if (npc == null || (npc.controller != null && !npc.doingEndOfRouteAnimation.Value) || !IsInRoom(npc, answerTile, new List<Vector2>()))
                     return;
             }
             npc.modData[answerPointKey] = $"{doorTile.X},{doorTile.Y},{(up ? 2 : 0)}";
@@ -88,8 +88,15 @@ namespace DoorKnock
         {
             if (npc.controller != null)
             {
-                SMonitor.Log($"Not answering door: {npc.Name} is busy");
-                return;
+                if (npc.doingEndOfRouteAnimation.Value)
+                {
+                    npc.modData[animationKey] = npc.endOfRouteBehaviorName.Value;
+                }
+                else
+                {
+                    SMonitor.Log($"Not answering door: {npc.Name} is busy");
+                    return;
+                }
             }
             if(npc.isSleeping.Value && !Config.WakeWhenSleeping)
             {
@@ -141,8 +148,13 @@ namespace DoorKnock
 
         public static void ReturnedBehaviour(Character c, GameLocation l)
         {
-            
             NPC npc = c as NPC;
+            if (npc.modData.TryGetValue(animationKey, out var str))
+            {
+                AccessTools.FieldRefAccess<NPC, string>(npc, "loadedEndOfRouteBehavior") = npc.endOfRouteBehaviorName.Value;
+                PathFindController.endBehavior behavior = (PathFindController.endBehavior)AccessTools.Method(typeof(NPC), "getRouteEndBehaviorFunction").Invoke(npc, new object[] { npc.endOfRouteBehaviorName.Value, null });
+                behavior.Invoke(c, l);
+            }
             //npc.faceTowardFarmerForPeriod(3000, 100, false, Game1.player);
         }
 

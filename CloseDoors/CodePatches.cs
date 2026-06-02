@@ -21,10 +21,10 @@ namespace CloseDoors
                     return;
                 if (!isFarmer)
                 {
-                    if (((character != null) ? character.controller : null) != null && character.FacingDirection % 2 == 0)
+                    if (((character != null) ? character.controller : null) != null)
                     {
                         Layer buildings_layer = __instance.map.RequireLayer("Buildings");
-                        Point tileLocation = character.FacingDirection == 2 ? new Point(position.Center.X / 64, position.Bottom / 64) : new Point(position.Center.X / 64, position.Top / 64);
+                        Point tileLocation = GetMovingTile(character.FacingDirection, position);
                         if (IsDoorOpen(__instance, tileLocation))
                         {
                             if(!doorDict.TryGetValue(__instance, out var dict))
@@ -34,7 +34,7 @@ namespace CloseDoors
                             }
                             dict[character] = tileLocation;
                         }
-                        else if(doorDict.TryGetValue(__instance, out var dict) && dict.TryGetValue(character, out var point) && point == (character.FacingDirection == 2 ? tileLocation + new Point(0, -2) : tileLocation + new Point(0, 2)))
+                        else if(doorDict.TryGetValue(__instance, out var dict) && dict.TryGetValue(character, out var point) && IsRecentDoorPoint(character, tileLocation, point))
                         {
                             dict.Remove(character);
                             if(TryCloseDoor(__instance, point))

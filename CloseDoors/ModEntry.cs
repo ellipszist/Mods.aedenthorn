@@ -44,6 +44,11 @@ namespace CloseDoors
             doorDict.Clear();
         }
 
+        public override object GetApi()
+        {
+            return new CloseDoorApi();
+        }
+
         private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
         {
 

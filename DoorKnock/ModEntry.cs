@@ -4,15 +4,10 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.Buildings;
-using StardewValley.Extensions;
 using StardewValley.Objects;
-using StardewValley.Tools;
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using xTile.Dimensions;
 
 namespace DoorKnock
 {
@@ -26,10 +21,12 @@ namespace DoorKnock
         public static ModEntry context;
         public const string answerPointKey = "aedenthorn.DoorKnock/answer";
         public const string returnPointKey = "aedenthorn.DoorKnock/return";
+        public const string animationKey = "aedenthorn.DoorKnock/animation";
         public const string openKey = "aedenthorn.DoorFurniture/open";
         public static Dictionary<string, int> delayDict = new Dictionary<string, int>();
         public static Dictionary<string, int> returnDict = new Dictionary<string, int>();
         public static PerScreen<Vector2?> farmerController = new PerScreen<Vector2?>();
+
         public override void Entry(IModHelper helper)
         {
             Config = Helper.ReadConfig<ModConfig>();
@@ -82,180 +79,6 @@ namespace DoorKnock
             }
         }
 
-        public static void updateMovementAnimation(GameTime time)
-        {
-            bool carrying = Game1.player.IsCarrying();
-            if (!Game1.player.isRidingHorse())
-            {
-                Game1.player.xOffset = 0f;
-            }
-            FishingRod rod = Game1.player.CurrentTool as FishingRod;
-            if (rod != null && (rod.isTimingCast || rod.isCasting))
-            {
-                rod.setTimingCastAnimation(Game1.player);
-                return;
-            }
-            if (Game1.player.FarmerSprite.PauseForSingleAnimation || Game1.player.UsingTool)
-            {
-                if (Game1.player.UsingTool && Game1.player.canStrafeForToolUse() && (Game1.player.movementDirections.Count > 0 || (!Game1.player.IsLocalPlayer && Game1.player.IsRemoteMoving())) && Game1.player.yJumpOffset == 0)
-                {
-                    Game1.player.jumpWithoutSound(2.5f);
-                }
-                return;
-            }
-            if (Game1.player.IsSitting())
-            {
-                Game1.player.ShowSitting();
-                return;
-            }
-            if (Game1.player.IsLocalPlayer && !Game1.player.CanMove && !Game1.eventUp)
-            {
-                if (Game1.player.isRidingHorse() && Game1.player.mount != null && !Game1.player.isAnimatingMount)
-                {
-                    Game1.player.showRiding();
-                    return;
-                }
-                if (carrying)
-                {
-                    Game1.player.showCarrying();
-                }
-                return;
-            }
-            else
-            {
-                if (Game1.player.IsLocalPlayer || Game1.player.isFakeEventActor)
-                {
-                    AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveUp") = Game1.player.movementDirections.Contains(0);
-                    AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveRight") = Game1.player.movementDirections.Contains(1);
-                    AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveDown") = Game1.player.movementDirections.Contains(2);
-                    AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveLeft") = Game1.player.movementDirections.Contains(3);
-                    if (AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveLeft"))
-                    {
-                        Game1.player.FacingDirection = 3;
-                    }
-                    else if (AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveRight"))
-                    {
-                        Game1.player.FacingDirection = 1;
-                    }
-                    else if (AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveUp"))
-                    {
-                        Game1.player.FacingDirection = 0;
-                    }
-                    else if (AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveDown"))
-                    {
-                        Game1.player.FacingDirection = 2;
-                    }
-                    if (Game1.player.isRidingHorse() && !Game1.player.mount.dismounting.Value)
-                    {
-                    }
-                }
-                if (Game1.player.hasBuff("19"))
-                {
-                    Game1.player.running = false;
-                    AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveUp") = false;
-                    AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveDown") = false;
-                    AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveLeft") = false;
-                    AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveRight") = false;
-                }
-                if (Game1.player.FarmerSprite.PauseForSingleAnimation || Game1.player.UsingTool)
-                {
-                    return;
-                }
-                if (Game1.player.isRidingHorse() && !Game1.player.mount.dismounting.Value)
-                {
-                    Game1.player.showRiding();
-                    return;
-                }
-                if (AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveLeft") && Game1.player.running && !carrying)
-                {
-                    Game1.player.FarmerSprite.animate(56, time);
-                    return;
-                }
-                if (AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveRight") && Game1.player.running && !carrying)
-                {
-                    Game1.player.FarmerSprite.animate(40, time);
-                    return;
-                }
-                if (AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveUp") && Game1.player.running && !carrying)
-                {
-                    Game1.player.FarmerSprite.animate(48, time);
-                    return;
-                }
-                if (AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveDown") && Game1.player.running && !carrying)
-                {
-                    Game1.player.FarmerSprite.animate(32, time);
-                    return;
-                }
-                if (AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveLeft") && Game1.player.running)
-                {
-                    Game1.player.FarmerSprite.animate(152, time);
-                    return;
-                }
-                if (AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveRight") && Game1.player.running)
-                {
-                    Game1.player.FarmerSprite.animate(136, time);
-                    return;
-                }
-                if (AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveUp") && Game1.player.running)
-                {
-                    Game1.player.FarmerSprite.animate(144, time);
-                    return;
-                }
-                if (AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveDown") && Game1.player.running)
-                {
-                    Game1.player.FarmerSprite.animate(128, time);
-                    return;
-                }
-                if (AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveLeft") && !carrying)
-                {
-                    Game1.player.FarmerSprite.animate(24, time);
-                    return;
-                }
-                if (AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveRight") && !carrying)
-                {
-                    Game1.player.FarmerSprite.animate(8, time);
-                    return;
-                }
-                if (AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveUp") && !carrying)
-                {
-                    Game1.player.FarmerSprite.animate(16, time);
-                    return;
-                }
-                if (AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveDown") && !carrying)
-                {
-                    Game1.player.FarmerSprite.animate(0, time);
-                    return;
-                }
-                if (AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveLeft"))
-                {
-                    Game1.player.FarmerSprite.animate(120, time);
-                    return;
-                }
-                if (AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveRight"))
-                {
-                    Game1.player.FarmerSprite.animate(104, time);
-                    return;
-                }
-                if (AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveUp"))
-                {
-                    Game1.player.FarmerSprite.animate(112, time);
-                    return;
-                }
-                if (AccessTools.FieldRefAccess<Farmer, bool>(Game1.player, "moveDown"))
-                {
-                    Game1.player.FarmerSprite.animate(96, time);
-                    return;
-                }
-                if (carrying)
-                {
-                    Game1.player.showCarrying();
-                    return;
-                }
-                Game1.player.showNotCarrying();
-                return;
-            }
-        }
-
         private void Input_ButtonsChanged(object sender, ButtonsChangedEventArgs e)
         {
             if (!Config.ModEnabled || !Context.IsPlayerFree || !Config.KnockButton.JustPressed())
@@ -284,11 +107,8 @@ namespace DoorKnock
                 KnockExteriorDoor(doorTile, action);
             }
         }
-
-
         private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
         {
-        
             var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (configMenu is not null)
             {
