@@ -63,7 +63,7 @@ namespace DoorKnock
             NPC npc = interior.getCharacterFromName(action[6]);
             if (npc == null || npc.controller != null)
                 return;
-            npc.modData[answerPointKey] = $"{doorTile.X},{doorTile.Y},2,{npc.currentLocation}";
+            npc.modData[answerPointKey] = $"{doorTile.X},{doorTile.Y},2,{Game1.currentLocation.NameOrUniqueName}";
             delayDict[npc.Name] = Config.AnswerDelay;
 
         }
@@ -106,9 +106,9 @@ namespace DoorKnock
             var ps = npc.modData[answerPointKey].Split(',');
             var exterior = ps.Length == 4;
             npc.modData.Remove(answerPointKey);
-            var schedule = npc.pathfindToNextScheduleLocation("knock", npc.currentLocation.Name, npc.TilePoint.X, npc.TilePoint.Y, exterior ? ps[3] : npc.currentLocation.Name, int.Parse(ps[0]), int.Parse(ps[1]) + (exterior ? 1 : 0), int.Parse(ps[2]), null, null);
+            var schedule = npc.pathfindToNextScheduleLocation("knock", npc.currentLocation.NameOrUniqueName, npc.TilePoint.X, npc.TilePoint.Y, exterior ? ps[3] : npc.currentLocation.NameOrUniqueName, int.Parse(ps[0]), int.Parse(ps[1]) + (exterior ? 1 : 0), int.Parse(ps[2]), null, null);
             AccessTools.Method(typeof(NPC), "prepareToDisembarkOnNewSchedulePath").Invoke(npc, Array.Empty<object>());
-            npc.modData[returnPointKey] = $"{npc.TilePoint.X},{npc.TilePoint.Y},{npc.FacingDirection}{(exterior ? $",{npc.currentLocation.Name}":"")}";
+            npc.modData[returnPointKey] = $"{npc.TilePoint.X},{npc.TilePoint.Y},{npc.FacingDirection}{(exterior ? $",{npc.currentLocation.NameOrUniqueName}":"")}";
             npc.controller = new PathFindController(schedule.route, npc, Utility.getGameLocationOfCharacter(npc))
             {
                 finalFacingDirection = schedule.facingDirection,

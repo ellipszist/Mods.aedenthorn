@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Netcode;
+using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Characters;
 using StardewValley.Extensions;
@@ -33,18 +34,17 @@ namespace CloserCrops
 
                 if (!location.terrainFeatures.TryGetValue(placementTile, out var tf) || tf is not HoeDirt dirt || dirt.crop?.netSeedIndex.Value != __instance.ItemId || dirt.crop.currentPhase.Value > 0)
                     return true;
-                int num = 1;
-                if(dirt.crop.modData.TryGetValue(numberKey, out var str) && int.TryParse(str, out num))
+                if(dirt.crop.modData.TryGetValue(numberKey, out var str) && int.TryParse(str, out var num))
                 {
                     if (num == 4)
                         return true;
                 }
                 else
                 {
-                    dirt.crop.modData[numberKey] = "1";
+                    return true;
                 }
                 var add = Math.Min(__instance.Stack, 4 - num);
-                __instance.Stack -= add - 1;
+                __instance.Stack -= add;
                 location.playSound("dirtyHit", placementTile);
                 dirt.crop.modData[numberKey] = (num + add).ToString();
                 __result = true;
@@ -64,10 +64,6 @@ namespace CloserCrops
                     if (num == 4)
                         return true;
                 }
-                else
-                {
-                    dirt.crop.modData[numberKey] = "1";
-                }
                 __result = true;
                 return false;
             }
@@ -77,16 +73,11 @@ namespace CloserCrops
         {
             public static bool Prefix(HoeDirt __instance, ref bool __result)
             {
-                if (!Config.ModEnabled || !Config.MultiplyPlantAndHarvest || !IsMiniCrop(__instance.crop) || __instance.crop.netSeedIndex.Value != Game1.player?.ActiveObject?.ItemId || __instance.crop.currentPhase.Value > 0)
+                if (!Config.ModEnabled || !Config.MultiplyPlantAndHarvest || !TryGetMiniCropNumber(__instance.crop, out var num) || num == 4 || __instance.crop.netSeedIndex.Value != Game1.player?.ActiveObject?.ItemId || __instance.crop.currentPhase.Value > 0)
                     return true;
-                int num = 1;
-                if (__instance.crop.modData.TryGetValue(numberKey, out var str) && int.TryParse(str, out num))
-                {
-                    if (num == 4)
-                        return true;
-                }
-                var add = Math.Min(Game1.player.ActiveObject.Stack, 4 - num);
+                var add = Config.AutoPlantMax ? Math.Min(Game1.player.ActiveObject.Stack, 4 - num) : 1;
                 Game1.player.ActiveObject.Stack -= add - 1;
+                Game1.player.reduceActiveItemByOne();
                 __instance.Location.playSound("dirtyHit", __instance.Tile);
                 __instance.crop.modData[numberKey] = (num + add).ToString();
                 __result = true; 
@@ -98,10 +89,10 @@ namespace CloserCrops
         {
             public static void Postfix(HoeDirt __instance, string itemId, Farmer who, bool isFertilizer, ref bool __result)
             {
-                if (!Config.ModEnabled || !Config.MultiplyPlantAndHarvest || !__result || who is null || isFertilizer || !IsMiniCrop(__instance.crop) || who.ActiveObject?.ItemId != __instance.crop.netSeedIndex.Value || __instance.crop.modData.ContainsKey(numberKey))
+                if (!Config.ModEnabled || !Config.MultiplyPlantAndHarvest || ((Config.ModKey != SButton.None && SHelper.Input.IsDown(Config.ModKey) != Config.ModKeyForCloser && !DefaultMiniCrop(__instance.crop)) || (Config.ModKey == SButton.None && !DefaultMiniCrop(__instance.crop))) || !__result || who is null || isFertilizer || who.ActiveObject?.ItemId != __instance.crop.netSeedIndex.Value || __instance.crop.modData.ContainsKey(numberKey))
                     return;
 
-                var add = Math.Min(who.ActiveObject.Stack, 4);
+                var add = Config.AutoPlantMax ? Math.Min(Game1.player.ActiveObject.Stack, 4) : 1;
                 who.ActiveObject.Stack -= add - 1;
                 __instance.crop.modData[numberKey] = add.ToString();
             }
@@ -112,13 +103,14 @@ namespace CloserCrops
             private static bool skip = false;
             public static bool Prefix(Crop __instance, int xTile, int yTile, HoeDirt soil, JunimoHarvester junimoHarvester, bool isForcedScytheHarvest, ref bool __result)
             {
-                if (!Config.ModEnabled || skip || !Config.MultiplyPlantAndHarvest || !IsMiniCrop(__instance) || !__instance.modData.TryGetValue(numberKey, out var str) || !int.TryParse(str, out var num))
+                if (!Config.ModEnabled || skip || !Config.MultiplyPlantAndHarvest || !TryGetMiniCropNumber(__instance, out var num))
                     return true;
                 skip = true;
-                randomTick = 1;
                 for (int i = 0; i < num; i++)
                 {
+                    __instance.modData[whichKey] = (i + 1).ToString();
                     __result = __instance.harvest(xTile, yTile, soil, junimoHarvester, isForcedScytheHarvest);
+                    __instance.modData.Remove(whichKey);
                     if (!__result)
                     {
                         skip = false;
@@ -154,18 +146,17 @@ namespace CloserCrops
             private static bool skip = false;
             public static bool Prefix(Crop __instance, SpriteBatch b, Vector2 tileLocation, Color toTint, float rotation)
             {
-                if (!Config.ModEnabled || skip || !IsMiniCrop(__instance))
+                if (!Config.ModEnabled || skip || (!TryGetMiniCropNumber(__instance, out var num) && Config.MultiplyPlantAndHarvest))
                     return true;
-                int num = 1;
+
+                if(__instance.drawPosition.X < 0)
+                    __instance.drawPosition *= -1; // allow drawing of this crop
+
                 if (!Config.MultiplyPlantAndHarvest)
                 {
                     num = 4;
                 }
-                else if (!__instance.modData.TryGetValue(numberKey, out var str) || !int.TryParse(str, out num))
-                {
-                    num = 1;
-                    __instance.modData[numberKey] = "1";
-                }
+
                 var layerDepth = __instance.layerDepth;
                 var coloredLayerDepth = __instance.coloredLayerDepth;
                 var drawPosition = __instance.drawPosition;
@@ -198,6 +189,7 @@ namespace CloserCrops
                 __instance.coloredLayerDepth = coloredLayerDepth;
                 __instance.drawPosition = drawPosition;
                 skip = false;
+                __instance.drawPosition *= -1; // prevent further drawing of this crop
                 return false;
 
             }

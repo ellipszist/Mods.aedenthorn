@@ -6,7 +6,6 @@ using StardewValley.BellsAndWhistles;
 using StardewValley.Characters;
 using StardewValley.Menus;
 using System;
-using System.Diagnostics;
 
 namespace DialogueDisplayFramework
 {
@@ -21,11 +20,15 @@ namespace DialogueDisplayFramework
 		{
             public static void Postfix(DialogueBox __instance, Dialogue dialogue)
 			{
-				if (!Config.EnableMod || dialogue?.speaker is null)
+				if (!Config.EnableMod || dialogue?.speaker is not NPC npc)
 					return;
                 try
                 {
-					npcSpriteMenu = new ProfileMenu(dialogue.speaker);
+                    if (!Game1.player.friendshipData.TryGetValue(npc.Name, out var friendship))
+                    {
+                        friendship = null;
+                    }
+                    npcSpriteMenu = new ProfileMenu(new SocialPage.SocialEntry(npc, friendship, null, npc.displayName), new SocialPage(0,0,0,0).FindSocialCharacters());
                 }
                 catch
                 {
@@ -51,9 +54,9 @@ namespace DialogueDisplayFramework
 		{
             public static bool Prefix(DialogueBox __instance, int x, int y, bool playSound)
 			{
-				if (!Config.EnableMod || __instance.characterDialogue?.speaker is null)
+				if (!Config.EnableMod || __instance.characterDialogue?.speaker is not NPC npc)
 					return true;
-				if (!dataDict.TryGetValue(__instance.characterDialogue.speaker.Name, out DialogueDisplayData data))
+				if (!dataDict.TryGetValue(npc.Name, out DialogueDisplayData data))
 					data = dataDict[defaultKey];
 				if (data == null || data.disabled)
 					return true;
@@ -62,7 +65,11 @@ namespace DialogueDisplayFramework
                 {
 					if(new Rectangle(Utility.Vector2ToPoint(GetDataVector(__instance, sprite)), new Point(128, 192)).Contains(new Point(x, y)))
                     {
-						ProfileMenu menu = new ProfileMenu(__instance.characterDialogue.speaker);
+                        if (!Game1.player.friendshipData.TryGetValue(npc.Name, out var friendship))
+                        {
+                            friendship = null;
+                        }
+                        ProfileMenu menu = new ProfileMenu(new SocialPage.SocialEntry(npc, friendship, null, npc.displayName), new SocialPage(0, 0, 0, 0).FindSocialCharacters());
 						Game1.activeClickableMenu = menu;
 						return false;
 					}
@@ -130,7 +137,7 @@ namespace DialogueDisplayFramework
 
 				// Images
 
-				var images = data.images is null ? dataDict[defaultKey].images : data.images;
+				var images = data.images ?? dataDict[defaultKey].images;
 
 				if (images != null)
                 {
@@ -141,10 +148,9 @@ namespace DialogueDisplayFramework
 				}
 
 
-				// NPC Portrait
+                // NPC Portrait
 
 				var portrait = data.portrait is null ? dataDict[defaultKey].portrait : data.portrait;
-
                 if (portrait is not null && !portrait.disabled)
                 {
 					Texture2D portraitTexture;
@@ -209,7 +215,7 @@ namespace DialogueDisplayFramework
 
 				// NPC Name
 
-				var npcName = data.name != null ? data.name : dataDict[defaultKey].name;
+                var npcName = data.name ?? dataDict[defaultKey].name;
                 if (npcName is not null && !npcName.disabled)
                 {
 					var namePos = GetDataVector(__instance, npcName);
@@ -237,7 +243,7 @@ namespace DialogueDisplayFramework
 						}
 						else
 						{
-							SpriteText.drawString(b, realName, (int)namePos.X, (int)namePos.Y, 999999, npcName.width, 999999, npcName.alpha, npcName.layerDepth, npcName.junimo, npcName.color);
+							SpriteText.drawString(b, realName, (int)namePos.X, (int)namePos.Y, width: npcName.width, alpha: npcName.alpha, layerDepth: npcName.layerDepth, junimoText: npcName.junimo, color: npcName.color);
 						}
 					}
 				}
@@ -278,7 +284,7 @@ namespace DialogueDisplayFramework
 							}
 							else
 							{
-								SpriteText.drawString(b, text.text, (int)pos.X, (int)pos.Y, 999999, text.width, 999999, text.alpha, text.layerDepth, text.junimo, text.color);
+								SpriteText.drawString(b, text.text, (int)pos.X, (int)pos.Y, width: text.width, alpha: text.alpha, layerDepth: text.layerDepth, junimoText: text.junimo, color: text.color);
 							}
 						}
 					}
@@ -297,7 +303,7 @@ namespace DialogueDisplayFramework
 						int heartLevel = Game1.player.getFriendshipHeartLevelForNPC(name);
 						int extraFriendshipPixels = Game1.player.getFriendshipLevelForNPC(name) % 250;
 
-						bool datable = SocialPage.isDatable(name);
+						bool datable = __instance.characterDialogue.speaker.datable.Value;
 						bool spouse = false;
 						if (Game1.player.friendshipData.TryGetValue(name, out Friendship friendship))
 						{

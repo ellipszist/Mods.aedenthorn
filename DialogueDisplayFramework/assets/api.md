@@ -73,7 +73,7 @@ For all of the above entries that are objects (or arrays of objects), the object
 
 Name data has the following additional keys available:
 
-- "color" - integer, the color code of the text (these are built into the game, test yourself), default -1 (default text color)
+- "color" - a Color object, with R, G, and B fields (default null)
 - "scroll" - boolean, whether to draw a scroll behind the text
 - "placeholderText" - if using scroll background, this affects the size of the scroll
 - "centered" - boolean, whether to center the text on the scroll
@@ -85,7 +85,7 @@ Name data has the following additional keys available:
 
 Dialogue data has the following additional keys available:
 
-- "color" - integer, the color code of the text (these are built into the game, test yourself), default -1 (default text color)
+- "color" - a Color object, with R, G, and B fields (default null)
 - "alignment" - enum, text alignment: 0 = left, 1 = center, 2 = right
 
 
@@ -151,7 +151,7 @@ The images field is an array of Image Data objects. Image data has the following
 
 The texts field is an array of Text Data objects. Text data has the following additional keys available:
 
-- "color" - integer, the color code of the text (these are built into the game, test yourself), default -1 (default text color)
+- "color" - a Color object, with R, G, and B fields (default null)
 - "text" - string, the text
 - "scroll" - boolean, whether to draw a scroll behind the text
 - "placeholderText" - if using scroll background, this affects the size of the scroll

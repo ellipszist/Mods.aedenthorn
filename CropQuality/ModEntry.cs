@@ -3,12 +3,10 @@ using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
-using StardewValley;
-using StardewValley.TerrainFeatures;
 using System.Globalization;
 using System.Linq;
 
-namespace CloserCrops
+namespace CropQuality
 {
     /// <summary>The mod entry point.</summary>
     public partial class ModEntry : Mod
@@ -18,8 +16,10 @@ namespace CloserCrops
         public static IModHelper SHelper;
         public static ModConfig Config;
         public static ModEntry context;
+        public static PerScreen<bool> showing = new();
         public const string numberKey = "aedenthorn.CloserCrops/number";
         public const string whichKey = "aedenthorn.CloserCrops/which";
+        public const string plantedKey = "aedenthorn.CropQuality/planted";
 
         public override void Entry(IModHelper helper)
         {
@@ -37,23 +37,19 @@ namespace CloserCrops
             harmony.PatchAll();
         }
 
+        public override object GetApi()
+        {
+            return new CropQualityAPI();
+        }
+
         private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
         {
             if (!Config.ModEnabled)
                 return;
 
-            if(Config.Debug && e.Button == SButton.R && Context.IsPlayerFree)
+            if(e.Button == Config.ShowButton && Config.ToggleShow && Context.IsPlayerFree)
             {
-                foreach (var kvp in Game1.getFarm().terrainFeatures.Pairs.Where(kvp => kvp.Value is HoeDirt dirt && dirt.crop != null))
-                {
-                    HoeDirt dirt = kvp.Value as HoeDirt;
-                    //var crop = (kvp.Value as HoeDirt).crop ?? new Crop(crops[(int)kvp.Key.Y % crops.Length], (int)kvp.Key.X, (int)kvp.Key.Y, Game1.getFarm());
-
-                    //var crop = new Crop("455", (int)kvp.Key.X, (int)kvp.Key.Y, Game1.getFarm());
-                    //var crop = (kvp.Value as HoeDirt).crop ?? new Crop("455", (int)kvp.Key.X, (int)kvp.Key.Y, Game1.getFarm());
-                    dirt.crop.growCompletely();
-                }
-
+                showing.Value = !showing.Value;
             }
         }
 

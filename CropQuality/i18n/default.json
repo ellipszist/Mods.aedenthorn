@@ -1,0 +1,14 @@
+{
+	"ModEnabled": "Mod Enabled",
+	"Scale": "Scale",
+	"ShowButton": "Show Button",
+	"ToggleShow": "Toggle Show",
+	"ConstantQuality": "Constant Quality",
+	"ConstantQuality.Desc": "Make quality depend on day planted rather than current day.",
+	"RandomQuality": "Random Quality",
+	"RandomQuality.Desc": "Make quality depend on a random variable rather than current day. Constant Quality must be selected as well.",
+	"QualityModifier": "Quality Modifier",
+	"QualityModifier.Desc": "Multiple for chance of gold and silver qualities.",
+	"GoldMaxChance": "Gold Max Chance",
+	"SilverMaxChance": "Silver Max Chance"
+}

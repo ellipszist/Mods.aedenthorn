@@ -1,5 +1,7 @@
 {
 	"ModEnabled": "Mod Enabled",
+	"AutoPlantMax": "Auto Plant Max",
+	"AutoPlantMax.Desc": "Try to plant as many as possible at once, up to four.",
 	"MultiplyPlantAndHarvest": "Multiply Harvest",
 	"ModKeyForCloser": "Mod Key Closer",
 	"ModKey": "Mod Key",

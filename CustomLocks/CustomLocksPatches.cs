@@ -155,6 +155,7 @@ namespace CustomLocks
                 }
                 if (GameLocation.AreStoresClosedForFestival() && __instance.InValleyContext())
                 {
+                    var x = 1;
                 }
                 else if (locationName.Equals("SeedShop") && Game1.shortDayNameFromDayOfSeason(Game1.dayOfMonth).Equals("Wed") && !Utility.HasAnyPlayerSeenEvent("191393"))
                 {

@@ -40,7 +40,8 @@ namespace DialogueDisplayFramework
     }
     public class NameData : BaseData
     {
-        public int color = -1;
+        public Color? color;
+
         public string placeholderText;
         public bool centered;
         public int scrollType = 0;
@@ -50,7 +51,7 @@ namespace DialogueDisplayFramework
     }
     public class DialogueData : BaseData
     {
-        public int color = -1;
+        public Color? color;
         public SpriteText.ScrollTextAlignment alignment; // left, center, right
     }
     public class PortraitData : BaseData
@@ -95,7 +96,8 @@ namespace DialogueDisplayFramework
     }
     public class TextData : BaseData
     {
-        public int color = -1;
+        public Color? color;
+
         public string text;
         public bool centered;
         public bool junimo;
