@@ -6,10 +6,11 @@ using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.TerrainFeatures;
+using System;
 using System.Globalization;
 using System.Linq;
 
-namespace CloserCrops
+namespace LawnGrass
 {
     /// <summary>The mod entry point.</summary>
     public partial class ModEntry : Mod
@@ -19,8 +20,11 @@ namespace CloserCrops
         public static IModHelper SHelper;
         public static ModConfig Config;
         public static ModEntry context;
-        public const string numberKey = "aedenthorn.CloserCrops/number";
-        public const string whichKey = "aedenthorn.CloserCrops/which";
+        public const string maskKey = "aedenthorn.LawnGrass/mask";
+        public const string sumsKey = "aedenthorn.LawnGrass/sums";
+        public const string posKey = "aedenthorn.LawnGrass/pos";
+        public const string lawnPath = "aedenthorn.LawnGrass/lawn_";
+        public static PerScreen<int> lastWeedCount = new();
 
         public override void Entry(IModHelper helper)
         {
@@ -31,31 +35,54 @@ namespace CloserCrops
             context = this;
 
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
-            helper.Events.Input.ButtonPressed += Input_ButtonPressed;
-            
+            helper.Events.Content.AssetRequested += Content_AssetRequested;
+            helper.Events.Display.RenderedStep += Display_RenderedStep;
+
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
         }
 
-
-        private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
+        private void Display_RenderedStep(object sender, RenderedStepEventArgs e)
+        {
+            if (!Config.ModEnabled || !Context.IsWorldReady || e.Step != StardewValley.Mods.RenderSteps.World_Background)
+                return;
+            for (int y = Game1.viewport.Y / 64 - 1; y < (Game1.viewport.Y + Game1.viewport.Height) / 64 + 7; y++)
+            {
+                for (int x = Game1.viewport.X / 64 - 1; x < (Game1.viewport.X + Game1.viewport.Width) / 64 + 3; x++)
+                {
+                    Vector2 tile = new(x, y);
+                    if (Game1.currentLocation.terrainFeatures.TryGetValue(tile, out var feat) && feat is Grass grass)
+                    {
+                        if (grass.grassType.Value != 1)
+                            continue;
+                        if (grass.numberOfWeeds.Value < 0)
+                            grass.numberOfWeeds.Value = 0;
+                        if (!grass.modData.TryGetValue(posKey, out var str) || !int.TryParse(str, out var pos))
+                        {
+                            UpdateDrawSums(grass);
+                        }
+                        if (!grass.modData.TryGetValue(posKey, out str) || !int.TryParse(str, out pos))
+                        {
+                            return;
+                        }
+                        var drawPos = Game1.GlobalToLocal(grass.Tile * 64f);
+                        e.SpriteBatch.Draw(SHelper.GameContent.Load<Texture2D>(lawnPath + GetWhichSeason(grass.Location)), drawPos, new Rectangle?(new Rectangle(pos % 4 * 16, pos / 4 * 16, 16, 16)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0);
+                    }
+                }
+            }
+        }
+        private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
         {
             if (!Config.ModEnabled)
                 return;
-
-            if(Config.Debug && e.Button == SButton.R && Context.IsPlayerFree)
+            foreach (Season s in Enum.GetValues(typeof(Season)))
             {
-                foreach (var kvp in Game1.getFarm().terrainFeatures.Pairs.Where(kvp => kvp.Value is HoeDirt dirt && dirt.crop != null))
+                var season = Utility.getSeasonKey(s);
+                if (e.NameWithoutLocale.IsEquivalentTo(lawnPath + season))
                 {
-                    HoeDirt dirt = kvp.Value as HoeDirt;
-                    //var crop = (kvp.Value as HoeDirt).crop ?? new Crop(crops[(int)kvp.Key.Y % crops.Length], (int)kvp.Key.X, (int)kvp.Key.Y, Game1.getFarm());
-
-                    //var crop = new Crop("455", (int)kvp.Key.X, (int)kvp.Key.Y, Game1.getFarm());
-                    //var crop = (kvp.Value as HoeDirt).crop ?? new Crop("455", (int)kvp.Key.X, (int)kvp.Key.Y, Game1.getFarm());
-                    dirt.crop.growCompletely();
+                    e.LoadFromModFile<Texture2D>($"assets/lawn_{season}.png", AssetLoadPriority.Exclusive);
                 }
-
             }
         }
 

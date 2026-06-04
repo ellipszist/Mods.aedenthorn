@@ -27,7 +27,11 @@ namespace CropQuality
                 if (Game1.player.professions.Contains(16))
                     return 4;
                 Random r = Utility.CreateRandom(days, Game1.uniqueIDForThisGame / 2UL, (double)(crop.tilePosition.X * 1000), (double)(crop.tilePosition.Y * 2000), add);
-                if (r.NextDouble() < Game1.player.ForagingLevel / 30f * Config.QualityModifier)
+                if (r.NextDouble() < Game1.player.ForagingLevel / 30f * Config.QualityModifier * Config.IridiumChance)
+                {
+                    return 4;
+                }
+                else if (r.NextDouble() < Game1.player.ForagingLevel / 30f * Config.QualityModifier)
                 {
                     return 2;
                 }
@@ -51,7 +55,7 @@ namespace CropQuality
                 double chanceForSilverQuality = Math.Min(Config.SilverMaxChance, chanceForGoldQuality * 2.0);
 
                 int cropQuality = 0;
-                if (fertilizerQualityLevel >= 3 && r2.NextDouble() < chanceForGoldQuality / 2.0)
+                if (r2.NextDouble() < chanceForGoldQuality * (fertilizerQualityLevel >= 3 ? Config.IridiumChanceFertilized : Config.IridiumChance))
                 {
                     cropQuality = 4;
                 }

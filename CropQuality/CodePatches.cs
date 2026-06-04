@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.TerrainFeatures;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -118,7 +119,8 @@ namespace CropQuality
             {
                 Rectangle qualityRect = ((quality < 4) ? new Rectangle(338 + (quality - 1) * 8, 400, 8, 8) : new Rectangle(346, 392, 8, 8));
                 Texture2D qualitySheet = Game1.mouseCursors;
-                b.Draw(qualitySheet, position + new Vector2(8,8), new Rectangle?(qualityRect), Color.White * alpha, 0f, Vector2.Zero, 4f * Config.Scale, SpriteEffects.None, instance.layerDepth + 11 / 10000f);
+                float yOffset = (quality < 4 || !Config.IridiumPulse) ? 0f : ((float)Math.Cos((double)Game1.currentGameTime.TotalGameTime.Milliseconds * 3.141592653589793 / 512.0) + 1f) * 0.05f;
+                b.Draw(qualitySheet, position + new Vector2(8 + Config.XOffset, 8 + yOffset + Config.YOffset), new Rectangle?(qualityRect), Color.White * alpha, 0f, Vector2.Zero, 4f * Config.Scale * (1 + yOffset), SpriteEffects.None, instance.layerDepth + 11 / 10000f);
             }
         }
     }
