@@ -1,7 +1,7 @@
 ﻿{
   "Name": "Closer Crops",
   "Author": "aedenthorn",
-  "Version": "0.2.4",
+  "Version": "0.2.5",
   "Description": "Closer Crops.",
   "UniqueID": "aedenthorn.CloserCrops",
   "EntryDll": "CloserCrops.dll",

@@ -10,6 +10,7 @@ namespace CropQuality
         public bool Debug { get; set; } = false;
         public bool ConstantQuality { get; set; } = true;
         public bool RandomQuality { get; set; } = true;
+        public bool ResetConstantForRegrow { get; set; } = true;
         public float QualityModifier { get; set; } = 1f;
         public float GoldMaxChance { get; set; } = 0.75f;
         public float SilverMaxChance { get; set; } = 0.75f;

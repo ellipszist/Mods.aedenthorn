@@ -151,14 +151,21 @@ namespace CloserCrops
             private static bool skip = false;
             public static bool Prefix(Crop __instance, SpriteBatch b, Vector2 tileLocation, Color toTint, float rotation)
             {
-                if (!Config.ModEnabled || skip || (!TryGetMiniCropNumber(__instance, out var num) && Config.MultiplyPlantAndHarvest))
+                if (__instance.drawPosition.X < 0)
+                    __instance.drawPosition *= -1; // allow drawing of this crop
+                if (!Config.ModEnabled || skip)
                     return true;
 
-                if(__instance.drawPosition.X < 0)
-                    __instance.drawPosition *= -1; // allow drawing of this crop
-
-                if (!Config.MultiplyPlantAndHarvest)
+                int num;
+                if(Config.MultiplyPlantAndHarvest)
                 {
+                    if(!TryGetMiniCropNumber(__instance, out num))
+                        return true;
+                }
+                else
+                {
+                    if(!DefaultMiniCrop(__instance))
+                            return true;
                     num = 4;
                 }
 

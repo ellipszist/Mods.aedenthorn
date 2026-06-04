@@ -52,11 +52,26 @@ namespace CropQuality
 
                 return codes.AsEnumerable();
             }
+            public static void Prefix(Crop __instance, ref int __state)
+            {
+                __state = 1;
+                if (Config.ConstantQuality && Config.ResetConstantForRegrow && __instance.fullyGrown.Value && __instance.RegrowsAfterHarvest())
+                {
+                    __state = __instance.dayOfCurrentPhase.Value;
+                }
+            }
+            public static void Postfix(Crop __instance, int __state)
+            {
+                if (__state <= 0 && Config.ConstantQuality && Config.ResetConstantForRegrow && __instance.fullyGrown.Value && __instance.RegrowsAfterHarvest() && __instance.dayOfCurrentPhase.Value > 0)
+                {
+                    toReset.Value = __instance;
+                    SHelper.Events.GameLoop.UpdateTicking += GameLoop_UpdateTicking;
+                }
+            }
         }
         [HarmonyPatch(typeof(Crop), nameof(Crop.draw))]
         public static class Crop_draw_Patch
         {
-            private static bool skip = false;
             public static void Postfix(Crop __instance, SpriteBatch b, Vector2 tileLocation, Color toTint, float rotation)
             {
                 if (!Config.ModEnabled || __instance.Dirt == null || (!__instance.forageCrop.Value && (__instance.currentPhase.Value < __instance.phaseDays.Count - 1 || (__instance.fullyGrown.Value && __instance.dayOfCurrentPhase.Value > 0))) || (Config.ShowButton != SButton.None && ((!Config.ToggleShow && !SHelper.Input.IsDown(Config.ShowButton)) ||(Config.ToggleShow && !showing.Value))))
@@ -69,7 +84,18 @@ namespace CropQuality
                     for(int i = 1; i <= num; i++)
                     {
                         Vector2 position = Game1.GlobalToLocal(Game1.viewport, __instance.drawPosition * -1) - new Vector2(24, 32);
-
+                        switch (i)
+                        {
+                            case 2:
+                                position += new Vector2(32, 0);
+                                break;
+                            case 3:
+                                position += new Vector2(0, 32);
+                                break;
+                            case 4:
+                                position += new Vector2(32, 32);
+                                break;
+                        }
                         int quality = GetQuality(__instance, i);
                         if(quality > 0)
                             DrawQuality(b, __instance, quality, position, toTint.A / 255f);

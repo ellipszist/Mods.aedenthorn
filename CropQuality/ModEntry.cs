@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
+using StardewValley;
 using System.Globalization;
 using System.Linq;
 
@@ -17,6 +18,7 @@ namespace CropQuality
         public static ModConfig Config;
         public static ModEntry context;
         public static PerScreen<bool> showing = new();
+        public static PerScreen<Crop> toReset = new();
         public const string numberKey = "aedenthorn.CloserCrops/number";
         public const string whichKey = "aedenthorn.CloserCrops/which";
         public const string plantedKey = "aedenthorn.CropQuality/planted";
@@ -35,6 +37,16 @@ namespace CropQuality
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
+        }
+
+        public static void GameLoop_UpdateTicking(object sender, UpdateTickingEventArgs e)
+        {
+            if (toReset.Value is Crop crop)
+            {
+                crop.modData[plantedKey] = (Config.RandomQuality ? (uint)Game1.random.Next(int.MaxValue) : Game1.stats.DaysPlayed).ToString();
+                toReset.Value = null;
+            }
+            SHelper.Events.GameLoop.UpdateTicking -= GameLoop_UpdateTicking;
         }
 
         public override object GetApi()

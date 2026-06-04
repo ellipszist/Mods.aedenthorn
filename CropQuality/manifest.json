@@ -6,5 +6,5 @@
   "UniqueID": "aedenthorn.CropQuality",
   "EntryDll": "CropQuality.dll",
   "MinimumApiVersion": "4.0.0",
-  "UpdateKeys": [ "Nexus:" ]
+  "UpdateKeys": [ "Nexus:47141" ]
 }

@@ -15,6 +15,7 @@ namespace CropQuality
                 if(!crop.modData.TryGetValue(plantedKey, out var str) || !uint.TryParse(str, out days))
                 {
                     days = Config.RandomQuality ? (uint)Game1.random.Next(int.MaxValue) : Game1.stats.DaysPlayed;
+                    crop.modData[plantedKey] = days.ToString();
                 }
             }
             else
