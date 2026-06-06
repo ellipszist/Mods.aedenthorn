@@ -14,7 +14,7 @@ namespace Gravedigger
 		public static IManifest SModManifest;
 		public static ModConfig Config;
 		public static ModEntry context;
-        public static List<Point> graveTiles = new List<Point>();
+        public static Dictionary<string, List<Point>> graveTiles = new ();
 
         public const string modKey = "aedenthorn.Gravedigger";
 		

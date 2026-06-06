@@ -38,8 +38,6 @@ namespace CoinCollector
 
         private static string dictPath = "aedenthorn.CoinCollector/dictionary";
         private static string texturePath = "aedenthorn.CoinCollector/detector";
-        private static string detectorName = "Metal Detector";
-        private static Texture2D detectorTexture;
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
@@ -102,24 +100,13 @@ namespace CoinCollector
             IDictionary<int, string> dict = obj.AsDictionary<int, string>().Data;
             foreach(var data in coinDataDict.Values)
             {
-                dict.Add(data.index, $"{data.name}/750/-300/Minerals -2/Diamond/A rare and valuable gem.")fasdfasfd;
+                dict.Add(data.index, $"{data.name}/750/-300/Minerals -2/Diamond/A rare and valuable gem.");
             }
         }
 
         private void GameLoop_SaveLoaded(object sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)
         {
-            try
-            {
-                detectorTexture = Game1.content.Load<Texture2D>(texturePath);
-            }
-            catch
-            {
 
-            }
-            if (detectorTexture == null)
-            {
-                detectorTexture = Helper.ModContent.Load<Texture2D>("assets/metaldetector.png");
-            }
             int index = coinFirstIndex;
 
             coinDataDict = Game1.content.Load<Dictionary<string, CoinData>>(dictPath);

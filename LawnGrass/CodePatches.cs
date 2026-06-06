@@ -1,7 +1,9 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using Netcode;
+using Newtonsoft.Json.Linq;
 using StardewValley;
+using StardewValley.Network;
 using StardewValley.TerrainFeatures;
 using StardewValley.Tools;
 using System;
@@ -43,14 +45,42 @@ namespace LawnGrass
                 return codes.AsEnumerable();
             }
         }
+        [HarmonyPatch(typeof(FarmAnimal), nameof(FarmAnimal.behaviors))]
+        public static class FarmAnimal_behaviors_Patch
+        {
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling FarmAnimal.behaviors");
+
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Callvirt && codes[i].operand is MethodInfo mi && mi == AccessTools.Method(typeof(NetDictionary<Vector2, TerrainFeature, NetRef<TerrainFeature>, SerializableDictionary<Vector2, TerrainFeature>, NetVector2Dictionary<TerrainFeature, NetRef<TerrainFeature>>>), "ContainsKey"))
+                    {
+                        SMonitor.Log("Intercepting check for terrain feature");
+                        codes[i].opcode = OpCodes.Call;
+                        codes[i].operand = AccessTools.Method(typeof(ModEntry), nameof(CheckForGrass));
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
         [HarmonyPatch(typeof(Grass), new Type[] { typeof(int), typeof(int) })]
         [HarmonyPatch(MethodType.Constructor)]
         public static class Grass_Patch
         {
             public static void Prefix(int which, ref int numberOfWeeds)
             {
-                if (Config.ModEnabled && which == 1 && SHelper.Input.IsDown(Config.ModKey))
+                if (Config.ModEnabled && which == 1 && SHelper.Input.IsDown(Config.ModKey) != Config.LawnByDefault)
                     numberOfWeeds = 0;
+            }
+            public static void Postfix(Grass __instance, int which)
+            {
+                if (Config.ModEnabled && which == 1 && SHelper.Input.IsDown(Config.ModKey) != Config.LawnByDefault)
+                {
+                    __instance.modData[lawnKey] = "true";
+                }
             }
         }
         [HarmonyPatch(typeof(Grass), nameof(Grass.performToolAction))]
@@ -58,22 +88,24 @@ namespace LawnGrass
         {
             public static void Prefix(Grass __instance)
             {
-                if (!Config.ModEnabled)
+                if (!Config.ModEnabled || __instance.grassType.Value != 1 || (!Config.ProtectNonLawn && !__instance.modData.ContainsKey(lawnKey)))
                     return;
                 lastWeedCount.Value = __instance.numberOfWeeds.Value;
             }
+
             public static void Postfix(Grass __instance, Tool t, Vector2 tileLocation, ref bool __result)
             {
-                if (!Config.ModEnabled || __instance.grassType.Value != 1)
+                if (!Config.ModEnabled || __instance.grassType.Value != 1 || (!Config.ProtectNonLawn && !__instance.modData.ContainsKey(lawnKey)))
                     return;
                 __instance.numberOfWeeds.Value = Math.Max(0, __instance.numberOfWeeds.Value);
                 if (__result && t is not Pickaxe)
                 {
                     __result = false;
                 }
-                else if(!__result && t is Pickaxe)
+                else if(!__result && t is Pickaxe && Config.ReturnGrassStarter)
                 {
-                    Game1.createItemDebris(ItemRegistry.Create("(O)297"), __instance.Tile * 64, 0, __instance.Location);
+                    if(IsLawn(__instance))
+                        Game1.createItemDebris(ItemRegistry.Create("(O)297"), __instance.Tile * 64, 0, __instance.Location);
                     __result = true;
                 }
             }
@@ -83,17 +115,17 @@ namespace LawnGrass
         {
             public static void Prefix(Grass __instance)
             {
-                if (!Config.ModEnabled)
+                if (!Config.ModEnabled || !IsLawn(__instance))
                     return;
                 lastWeedCount.Value = __instance.numberOfWeeds.Value;
             }
             public static void Postfix(Grass __instance)
             {
-                if (!Config.ModEnabled || __instance.grassType.Value != 1)
+                if (!Config.ModEnabled || !IsLawn(__instance))
                     return;
                 if(__instance.numberOfWeeds.Value > lastWeedCount.Value)
                 {
-                    __instance.numberOfWeeds.Value = Math.Clamp(lastWeedCount.Value + (Game1.random.NextDouble() < Config.GrowChance ? 1 : 0), 0, 4);
+                    __instance.numberOfWeeds.Value = Math.Clamp(lastWeedCount.Value + (Game1.random.NextDouble() < Config.GrowChance ? Game1.random.Next(1, Config.MaxDailyGrowth) : 0), 0, 4);
                 }
             }
         }
@@ -102,13 +134,13 @@ namespace LawnGrass
         {
             public static void Prefix(Grass __instance)
             {
-                if (!Config.ModEnabled)
+                if (!Config.ModEnabled || !IsLawn(__instance))
                     return;
                 lastWeedCount.Value = __instance.numberOfWeeds.Value;
             }
             public static void Postfix(Grass __instance, ref bool __result)
             {
-                if (!Config.ModEnabled || !__result)
+                if (!Config.ModEnabled || !__result || !IsLawn(__instance))
                     return;
                 __instance.numberOfWeeds.Value = Math.Max(__instance.numberOfWeeds.Value, 0);
                 __result = false;
@@ -119,7 +151,7 @@ namespace LawnGrass
         {
             public static void Prefix(Grass __instance, ref float shake, ref float rate)
             {
-                if (!Config.ModEnabled || __instance.numberOfWeeds.Value == 4)
+                if (!Config.ModEnabled || !IsLawn(__instance) || __instance.numberOfWeeds.Value == 4)
                     return;
                 shake *= (__instance.numberOfWeeds.Value / 4f);
             }
@@ -150,7 +182,7 @@ namespace LawnGrass
         {
             public static void Postfix(GameLocation __instance, TerrainFeature feature, Vector2 location)
             {
-                if (!Config.ModEnabled || feature is not Grass grass || grass.grassType.Value != 1)
+                if (!Config.ModEnabled || feature is not Grass grass || (!IsLawn(grass) && !Config.ProtectNonLawn))
                     return;
                 OnAdded(grass, __instance, location);
             }
@@ -160,11 +192,10 @@ namespace LawnGrass
         {
             public static void Postfix(GameLocation __instance, TerrainFeature feature)
             {
-                if (!Config.ModEnabled || feature is not Grass grass || grass.grassType.Value != 1)
+                if (!Config.ModEnabled || feature is not Grass grass || (!IsLawn(grass) && !Config.ProtectNonLawn))
                     return;
                 OnRemoved(grass, __instance);
             }
-
         }
     }
 }

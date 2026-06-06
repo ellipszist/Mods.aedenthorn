@@ -7,6 +7,7 @@ namespace FarmerPortraits
     public class ModConfig
     {
         public bool EnableMod { get; set; } = true;
+        public bool Debug { get; set; } = false;
         public float Scale { get; set; } = 1f;
         public bool ShowWithQuestions { get; set; } = true;
         public bool ShowWithEvents { get; set; } = false;

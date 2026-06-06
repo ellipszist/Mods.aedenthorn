@@ -1,10 +1,10 @@
 ﻿{
   "Name": "Lawn Grass",
   "Author": "aedenthorn",
-  "Version": "0.1.0",
-  "Description": "Crop Quality.",
+  "Version": "0.2.1",
+  "Description": "Lawn Grass.",
   "UniqueID": "aedenthorn.LawnGrass",
   "EntryDll": "LawnGrass.dll",
   "MinimumApiVersion": "4.0.0",
-  "UpdateKeys": [ "Nexus:" ]
+  "UpdateKeys": [ "Nexus:47165" ]
 }

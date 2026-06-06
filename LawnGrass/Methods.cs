@@ -10,6 +10,10 @@ namespace LawnGrass
 {
     public partial class ModEntry
     {
+        public static bool IsLawn(Grass grass)
+        {
+            return (Config.AllGrassIsLawn && grass.grassType.Value == 1) || grass.modData.ContainsKey(lawnKey);
+        }
         public static Rectangle? SetSourceRect(Rectangle? sourceRect, Grass grass)
         {
             if (!Config.ModEnabled || grass.numberOfWeeds.Value == 4)
@@ -23,6 +27,12 @@ namespace LawnGrass
                 return pos;
             pos.Y += 20 * (4 - grass.numberOfWeeds.Value);
             return pos;
+        }
+        public static bool CheckForGrass(NetVector2Dictionary<TerrainFeature, NetRef<TerrainFeature>> terrainFeatures, Vector2 vec)
+        {
+            if (!Config.ModEnabled || !Config.TrufflesInGrass)
+                return terrainFeatures.ContainsKey(vec);
+            return terrainFeatures.TryGetValue(vec, out var tf) && tf is not Grass;
         }
         public static string GetWhichSeason(GameLocation location)
         {
@@ -94,7 +104,7 @@ namespace LawnGrass
             {
                 Vector2 tile = tilePos + item.Offset;
                 TerrainFeature feature;
-                if (terrainFeatures.TryGetValue(tile, out feature) && feature is Grass g)
+                if (terrainFeatures.TryGetValue(tile, out feature) && feature is Grass g && (IsLawn(g) || Config.ProtectNonLawn))
                 {
                     Neighbor i = new(g, item.Direction, item.InvDirection);
                     results.Add(i);

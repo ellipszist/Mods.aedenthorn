@@ -9,6 +9,7 @@ using StardewValley.TerrainFeatures;
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace LawnGrass
 {
@@ -20,6 +21,7 @@ namespace LawnGrass
         public static IModHelper SHelper;
         public static ModConfig Config;
         public static ModEntry context;
+        public const string lawnKey = "aedenthorn.LawnGrass/lawn";
         public const string maskKey = "aedenthorn.LawnGrass/mask";
         public const string sumsKey = "aedenthorn.LawnGrass/sums";
         public const string posKey = "aedenthorn.LawnGrass/pos";
@@ -45,26 +47,26 @@ namespace LawnGrass
 
         private void Display_RenderedStep(object sender, RenderedStepEventArgs e)
         {
-            if (!Config.ModEnabled || !Context.IsWorldReady || e.Step != StardewValley.Mods.RenderSteps.World_Background)
+            if (!Config.ModEnabled || !Context.IsWorldReady || Game1.currentLocation?.terrainFeatures is null || e.Step != StardewValley.Mods.RenderSteps.World_Background)
                 return;
             for (int y = Game1.viewport.Y / 64 - 1; y < (Game1.viewport.Y + Game1.viewport.Height) / 64 + 7; y++)
             {
                 for (int x = Game1.viewport.X / 64 - 1; x < (Game1.viewport.X + Game1.viewport.Width) / 64 + 3; x++)
                 {
                     Vector2 tile = new(x, y);
-                    if (Game1.currentLocation.terrainFeatures.TryGetValue(tile, out var feat) && feat is Grass grass)
+                    if (Game1.currentLocation.terrainFeatures.TryGetValue(tile, out var tf) && tf is Grass grass)
                     {
-                        if (grass.grassType.Value != 1)
+                        if (!IsLawn(grass) && (!Config.ProtectNonLawn || grass.grassType.Value != 1))
                             continue;
                         if (grass.numberOfWeeds.Value < 0)
                             grass.numberOfWeeds.Value = 0;
                         if (!grass.modData.TryGetValue(posKey, out var str) || !int.TryParse(str, out var pos))
                         {
                             UpdateDrawSums(grass);
-                        }
-                        if (!grass.modData.TryGetValue(posKey, out str) || !int.TryParse(str, out pos))
-                        {
-                            return;
+                            if (!grass.modData.TryGetValue(posKey, out str) || !int.TryParse(str, out pos))
+                            {
+                                return;
+                            }
                         }
                         var drawPos = Game1.GlobalToLocal(grass.Tile * 64f);
                         e.SpriteBatch.Draw(SHelper.GameContent.Load<Texture2D>(lawnPath + GetWhichSeason(grass.Location)), drawPos, new Rectangle?(new Rectangle(pos % 4 * 16, pos / 4 * 16, 16, 16)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0);
@@ -133,12 +135,12 @@ namespace LawnGrass
                     }
                     else if (p.PropertyType == typeof(float))
                     {
-                        configMenu.AddTextOption(
+                        configMenu.AddNumberOption(
                             mod: ModManifest,
                             name: () => SHelper.Translation.Get(p.Name),
                             tooltip: () => { var t = SHelper.Translation.Get(p.Name + ".Desc"); return t.HasValue() ? t : null; },
-                            getValue: () => p.GetValue(Config).ToString(),
-                            setValue: value => { if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var f)) { p.SetValue(Config, f); } }
+                            getValue: () => (float)p.GetValue(Config),
+                            setValue: value => p.SetValue(Config, value)
                         );
                     }
                     else if (p.PropertyType == typeof(double))

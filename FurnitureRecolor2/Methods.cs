@@ -5,6 +5,7 @@ using StardewValley.ItemTypeDefinitions;
 using StardewValley.Objects;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Object = StardewValley.Object;
 
@@ -40,26 +41,38 @@ namespace FurnitureRecolor
                         return;
                     }
                 }
-                if (tileSheetDict.TryGetValue(textureName.Replace("\\", "/"), out var dict))
+                if (tileSheetDict.TryGetValue(f.ItemId, out var dict))
                 {
-                    List<Color> lista = parsedFurniture[f.ItemId];
                     List<Color> list = new();
+                    List<Color> keys = dict.Keys.ToList();
                     MakeColorList(list, str);
-                    if (list.Any())
+                    if(list.Count == keys.Count)
                     {
-                        for(int i = 0; i < lista.Count; i++) 
+                        var offset = sourceRectangle.Value.Location - Furniture.GetDefaultSourceRect(f.ItemId).Location;
+                        var rect = new Rectangle(offset, sourceRectangle.Value.Size);
+                        for (int i = 0; i < list.Count; i++)
                         {
-                            if (dict.TryGetValue(lista[i], out var t))
-                            {
-                                b.Draw(t, position, sourceRectangle, list[i], rotation, origin, scale, effects, layerDepth);
-                            }
+                            b.Draw(dict[keys[i]], position, rect, list[i], rotation, origin, scale, effects, layerDepth + i / 100000f);
+                        }
+                        if (transparentDict.TryGetValue(f.ItemId, out var trans))
+                        {
+                            b.Draw(trans, position, rect, Color.White, rotation, origin, scale, effects, layerDepth + list.Count / 100000f);
                         }
                         return;
                     }
+                    f.modData.Remove(colorsKey);
                 }
             }
             b.Draw(texture, position, sourceRectangle, color, rotation, origin, scale, effects, layerDepth);
             return;
+        }
+        public static string SanitizeFileName(string itemId)
+        {
+            return string.Join("_", itemId.Split(Path.GetInvalidFileNameChars(), StringSplitOptions.RemoveEmptyEntries)).TrimEnd('.');
+        }
+        public static string ColorToHexString(Color value)
+        {
+            return $"#{value.R:X2}{value.G:X2}{value.B:X2}";
         }
     }
 }
