@@ -24,8 +24,11 @@ namespace FarmerPortraits
 
         private static void AdjustWindow(ref DialogueBox __instance)
         {
-            __instance.width = (int)Math.Min(Game1.uiViewport.Width - 520, 1200);
-            __instance.x = Math.Max(520, (int)Utility.getTopLeftPositionForCenteringOnScreen(__instance.width, __instance.height, 0, 0).X + 260);
+            if(__instance.dialogues?.Any() == true)
+                __instance.width = Math.Min(1200, SpriteText.getWidthOfString(__instance.dialogues[0], 999999) + 64);
+            __instance.width = (int)Math.Min(Game1.uiViewport.Width - 556, 1200);
+            int left = (int)Utility.getTopLeftPositionForCenteringOnScreen(__instance.width, __instance.height, 0, 0).X + 238;
+            __instance.x = Math.Max(516, left);
             __instance.friendshipJewel = new Rectangle(__instance.x + __instance.width - 64, __instance.y + 256, 44, 44);
         }
 
