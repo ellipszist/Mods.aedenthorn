@@ -1,10 +1,13 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Netcode;
 using StardewValley;
+using StardewValley.Extensions;
 using StardewValley.Locations;
 using StardewValley.Menus;
 using StardewValley.Network;
+using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 using StardewValley.Tools;
 using System;
@@ -12,9 +15,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using xTile;
 using xTile.Dimensions;
+using xTile.Tiles;
 
-namespace MineShipping
+namespace MineHelper
 {
     public partial class ModEntry
     {
@@ -23,30 +28,50 @@ namespace MineShipping
         {
             public static bool Prefix(GameLocation __instance, Location tileLocation, xTile.Dimensions.Rectangle viewport, Farmer who, ref bool __result)
             {
-                if (!Config.ModEnabled || __instance is not MineShaft shaft || Game1.getFarm() is not Farm farm)
+                if (!Config.ModEnabled || !SHelper.Input.IsDown(Config.ModKey))
                     return true;
-                Point binTile = shaft.tileBeneathLadder.ToPoint() + new Point(1, -1);
-                if((tileLocation.X == binTile.X || tileLocation.X == binTile.X + 1 )&& tileLocation.Y == binTile.Y)
+                if(__instance.Name == "Mine" || __instance.Name == "SkullCave")
                 {
-                    ItemGrabMenu itemGrabMenu = new ItemGrabMenu(null, true, false, new InventoryMenu.highlightThisItem(Utility.highlightShippableObjects), new ItemGrabMenu.behaviorOnItemSelect(shipItem), "", null, true, true, false, true, false, 0, null, -1, null, ItemExitBehavior.ReturnToPlayer, false);
-                    itemGrabMenu.initializeUpperRightCloseButton();
-                    itemGrabMenu.setBackgroundTransparency(false);
-                    itemGrabMenu.setDestroyItemOnClick(true);
-                    itemGrabMenu.initializeShippingBin();
-                    Game1.activeClickableMenu = itemGrabMenu;
-                    if (who.IsLocalPlayer)
+                    Tile tile = __instance.map.RequireLayer("Buildings").PickTile(new Location(tileLocation.X * 64, tileLocation.Y * 64), viewport.Size);
+                    if(tile.Properties.TryGetValue("Action", out var str) && str == "MineElevator")
                     {
-                        Game1.playSound("shwip", null);
+                        if (OpenChest(__instance))
+                        {
+                            __result = true;
+                            return false;
+                        }
                     }
-                    if (Game1.player.FacingDirection == 1)
-                    {
-                        Game1.player.Halt();
-                    }
-                    Game1.player.showCarrying();
-                    __result = true;
-                    return false;
                 }
                 return true;
+            }
+        }
+        [HarmonyPatch(typeof(MineShaft), nameof(MineShaft.checkAction))]
+        public static class MineShaft_checkAction_Patch
+        {
+            public static bool Prefix(MineShaft __instance, Location tileLocation, xTile.Dimensions.Rectangle viewport, Farmer who, ref bool __result)
+            {
+                if (!Config.ModEnabled || !SHelper.Input.IsDown(Config.ModKey))
+                    return true;
+                int tileIndexAt = __instance.getTileIndexAt(tileLocation, "Buildings", "mine");
+                if (tileIndexAt == 112)
+                {
+                    if (OpenChest(Game1.getLocationFromName(__instance.mineLevel > 120 ? "SkullCave" : "Mine")))
+                    {
+                        __result = true;
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+        [HarmonyPatch(typeof(Chest), nameof(Chest.draw), new Type[] { typeof(SpriteBatch), typeof(int ), typeof(int), typeof(float) })]
+        public static class Chest_draw_Patch
+        {
+            public static bool Prefix(Chest __instance)
+            {
+                if (!Config.ModEnabled || !__instance.modData.ContainsKey(chestKey))
+                    return true;
+                return false;
             }
         }
         //[HarmonyPatch(typeof(FarmAnimal), nameof(FarmAnimal.behaviors))]
