@@ -11,6 +11,6 @@ namespace QualityCondensing
         public int ToSilver { get; set; } = 3;
         public int ToGold { get; set; } = 3;
         public int ToIridium { get; set; } = 3;
-        public string CondenseSound { get; set; } = "slimeHit";
+        public string CondenseSound { get; set; } = "coin";
     }
 }

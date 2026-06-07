@@ -69,7 +69,7 @@ namespace QualityCondensing
                             {
                                 __instance.actualInventory[i] = target;
                             }
-                            Game1.playSound(Config.CondenseSound);
+                            Game1.playSound("coin");
                             foreach (var k in Config.CondenseButton.Keybinds)
                             {
                                 foreach (var b in k.Buttons)

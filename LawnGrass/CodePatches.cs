@@ -19,7 +19,7 @@ namespace LawnGrass
         [HarmonyPatch(typeof(Grass), nameof(Grass.draw))]
         public static class Grass_draw_Patch
         {
-            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions) // reduce height for fewer weeds
             {
                 SMonitor.Log($"Transpiling Grass.draw");
 
@@ -48,7 +48,7 @@ namespace LawnGrass
         [HarmonyPatch(typeof(FarmAnimal), nameof(FarmAnimal.behaviors))]
         public static class FarmAnimal_behaviors_Patch
         {
-            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions) // for truffles
             {
                 SMonitor.Log($"Transpiling FarmAnimal.behaviors");
 
@@ -70,12 +70,12 @@ namespace LawnGrass
         [HarmonyPatch(MethodType.Constructor)]
         public static class Grass_Patch
         {
-            public static void Prefix(int which, ref int numberOfWeeds)
+            public static void Prefix(int which, ref int numberOfWeeds) // if planting lawn, don't add weeds
             {
                 if (Config.ModEnabled && which == 1 && SHelper.Input.IsDown(Config.ModKey) != Config.LawnByDefault)
                     numberOfWeeds = 0;
             }
-            public static void Postfix(Grass __instance, int which)
+            public static void Postfix(Grass __instance, int which) // set mod data
             {
                 if (Config.ModEnabled && which == 1 && SHelper.Input.IsDown(Config.ModKey) != Config.LawnByDefault)
                 {
@@ -83,17 +83,15 @@ namespace LawnGrass
                 }
             }
         }
-        [HarmonyPatch(typeof(Grass), nameof(Grass.performToolAction))]
+        [HarmonyPatch(typeof(Grass), nameof(Grass.performToolAction))] 
         public static class Grass_performToolAction_Patch
         {
-            public static void Prefix(Grass __instance)
+            public static void Prefix(Grass __instance) // leads to createDestroySprites and TryDropItemsOnCut, so tell them last weed count
             {
-                if (!Config.ModEnabled || __instance.grassType.Value != 1 || (!Config.ProtectNonLawn && !__instance.modData.ContainsKey(lawnKey)))
-                    return;
                 lastWeedCount.Value = __instance.numberOfWeeds.Value;
             }
 
-            public static void Postfix(Grass __instance, Tool t, Vector2 tileLocation, ref bool __result)
+            public static void Postfix(Grass __instance, Tool t, Vector2 tileLocation, ref bool __result) // set to 0, return starter
             {
                 if (!Config.ModEnabled || __instance.grassType.Value != 1 || (!Config.ProtectNonLawn && !__instance.modData.ContainsKey(lawnKey)))
                     return;
@@ -110,35 +108,45 @@ namespace LawnGrass
                 }
             }
         }
+        [HarmonyPatch(typeof(Grass), nameof(Grass.TryDropItemsOnCut))]
+        public static class Grass_TryDropItemsOnCut_Patch
+        {
+            public static bool Prefix(Grass __instance)
+            {
+                if (!Config.ModEnabled || lastWeedCount.Value > 0) // don't drop items if it was already 0
+                    return true;
+                return false;
+            }
+        }
         [HarmonyPatch(typeof(Grass), nameof(Grass.dayUpdate))]
         public static class Grass_dayUpdate_Patch
         {
-            public static void Prefix(Grass __instance)
+            public static void Prefix(Grass __instance, ref int __state) // get weeds before update
             {
                 if (!Config.ModEnabled || !IsLawn(__instance))
                     return;
-                lastWeedCount.Value = __instance.numberOfWeeds.Value;
+                __state = __instance.numberOfWeeds.Value;
             }
-            public static void Postfix(Grass __instance)
+            public static void Postfix(Grass __instance, int __state) // override growth for lawns
             {
                 if (!Config.ModEnabled || !IsLawn(__instance))
                     return;
-                if(__instance.numberOfWeeds.Value > lastWeedCount.Value)
+                if(__instance.numberOfWeeds.Value > __state)
                 {
-                    __instance.numberOfWeeds.Value = Math.Clamp(lastWeedCount.Value + (Game1.random.NextDouble() < Config.GrowChance ? Game1.random.Next(1, Config.MaxDailyGrowth) : 0), 0, 4);
+                    __instance.numberOfWeeds.Value = Math.Clamp(__state + (Game1.random.NextDouble() < Config.GrowChance ? Game1.random.Next(1, Config.MaxDailyGrowth) : 0), 0, 4);
                 }
             }
         }
-        [HarmonyPatch(typeof(Grass), nameof(Grass.reduceBy))]
+        [HarmonyPatch(typeof(Grass), nameof(Grass.reduceBy))] 
         public static class Grass_reduceBy_Patch
         {
             public static void Prefix(Grass __instance)
             {
-                if (!Config.ModEnabled || !IsLawn(__instance))
+                if (!Config.ModEnabled || !IsLawn(__instance)) // leads to createDestroySprites, so tell it last weed count
                     return;
                 lastWeedCount.Value = __instance.numberOfWeeds.Value;
             }
-            public static void Postfix(Grass __instance, ref bool __result)
+            public static void Postfix(Grass __instance, ref bool __result) // prevent destroying grass
             {
                 if (!Config.ModEnabled || !__result || !IsLawn(__instance))
                     return;
@@ -146,8 +154,22 @@ namespace LawnGrass
                 __result = false;
             }
         }
+        [HarmonyPatch(typeof(FarmAnimal), nameof(FarmAnimal.eatGrass))]
+        public static class FarmAnimal_eatGrass_Patch
+        {
+            public static bool Prefix(FarmAnimal __instance, GameLocation environment) // prevent eating if 0 weeds
+            {
+                if (!Config.ModEnabled)
+                    return true;
+                if(environment.terrainFeatures.TryGetValue(__instance.Tile, out var tf) && tf is Grass grass && grass.numberOfWeeds.Value <= 0)
+                {
+                    return false;
+                }
+                return true;
+            }
+        }
         [HarmonyPatch(typeof(Grass), "shake")]
-        public static class Grass_shake_Patch
+        public static class Grass_shake_Patch  // reduce shake for fewer weeds
         {
             public static void Prefix(Grass __instance, ref float shake, ref float rate)
             {
@@ -159,18 +181,17 @@ namespace LawnGrass
         [HarmonyPatch(typeof(Grass), "createDestroySprites")]
         public static class Grass_createDestroySprites_Patch
         {
-            public static bool Prefix()
+            public static bool Prefix() // follows from reduceBy and performToolAction which send last weed count - if 0, don't create sprites
             {
                 if (!Config.ModEnabled || lastWeedCount.Value > 0)
                     return true;
-                lastWeedCount.Value = 4;
                 return false;
             }
         }
         [HarmonyPatch(typeof(Grass), nameof(Grass.doCollisionAction))]
         public static class Grass_doCollisionAction_Patch
         {
-            public static void Postfix(Grass __instance, Character who)
+            public static void Postfix(Grass __instance, Character who) // reduce speed buff
             {
                 if (!Config.ModEnabled || __instance.numberOfWeeds.Value == 4 || who is not Farmer f)
                     return;
@@ -180,7 +201,7 @@ namespace LawnGrass
         [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.OnTerrainFeatureAdded))]
         public static class GameLocation_OnTerrainFeatureAdded_Patch
         {
-            public static void Postfix(GameLocation __instance, TerrainFeature feature, Vector2 location)
+            public static void Postfix(GameLocation __instance, TerrainFeature feature, Vector2 location) // trigger to create lawn, add mod data
             {
                 if (!Config.ModEnabled || feature is not Grass grass || (!IsLawn(grass) && !Config.ProtectNonLawn))
                     return;
@@ -190,7 +211,7 @@ namespace LawnGrass
         [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.OnTerrainFeatureRemoved))]
         public static class GameLocation_OnTerrainFeatureRemoved_Patch
         {
-            public static void Postfix(GameLocation __instance, TerrainFeature feature)
+            public static void Postfix(GameLocation __instance, TerrainFeature feature) // trigger to change lawn for neighbors
             {
                 if (!Config.ModEnabled || feature is not Grass grass || (!IsLawn(grass) && !Config.ProtectNonLawn))
                     return;
