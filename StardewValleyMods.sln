@@ -731,6 +731,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartBlocks", "SmartBlocks\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextReplace", "TextReplace\TextReplace.csproj", "{F58DB48E-36D4-3EB3-195F-42AC3D481717}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomCraneGame", "CustomCraneGame\CustomCraneGame.csproj", "{FBA934A6-2760-C816-5EAA-B027BCE5F66E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3619,6 +3621,14 @@ Global
 		{F58DB48E-36D4-3EB3-195F-42AC3D481717}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F58DB48E-36D4-3EB3-195F-42AC3D481717}.Release|x64.ActiveCfg = Release|x64
 		{F58DB48E-36D4-3EB3-195F-42AC3D481717}.Release|x64.Build.0 = Release|x64
+		{FBA934A6-2760-C816-5EAA-B027BCE5F66E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBA934A6-2760-C816-5EAA-B027BCE5F66E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBA934A6-2760-C816-5EAA-B027BCE5F66E}.Debug|x64.ActiveCfg = Debug|x64
+		{FBA934A6-2760-C816-5EAA-B027BCE5F66E}.Debug|x64.Build.0 = Debug|x64
+		{FBA934A6-2760-C816-5EAA-B027BCE5F66E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBA934A6-2760-C816-5EAA-B027BCE5F66E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FBA934A6-2760-C816-5EAA-B027BCE5F66E}.Release|x64.ActiveCfg = Release|x64
+		{FBA934A6-2760-C816-5EAA-B027BCE5F66E}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
