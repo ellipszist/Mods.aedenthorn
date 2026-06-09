@@ -1,7 +1,6 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Netcode;
-using Newtonsoft.Json.Linq;
 using StardewValley;
 using StardewValley.Network;
 using StardewValley.TerrainFeatures;

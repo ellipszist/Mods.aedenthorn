@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using StardewValley;
 using StardewValley.Audio;
 using StardewValley.Extensions;
+using StardewValley.Minigames;
 using StardewValley.Pathfinding;
 using System;
 using System.Collections.Generic;
@@ -44,6 +45,7 @@ namespace DoorKnock
                 if (npc == null || (npc.controller != null && !npc.doingEndOfRouteAnimation.Value) || !IsInRoom(npc, answerTile, new List<Vector2>()))
                     return;
             }
+            SMonitor.Log($"Starting to answer interior door: {npc.Name} at {npc.currentLocation.Name} {npc.Tile} for door at {doorTile}");
             npc.modData[answerPointKey] = $"{doorTile.X},{doorTile.Y},{(up ? 2 : 0)}";
             delayDict[npc.Name] = Config.AnswerDelay;
 
@@ -63,12 +65,17 @@ namespace DoorKnock
             NPC npc = interior.getCharacterFromName(action[6]);
             if (npc == null || npc.controller != null)
                 return;
+
+            SMonitor.Log($"Starting to answer exterior door: {npc.Name} at {npc.currentLocation.Name} {npc.Tile} for door at {Game1.currentLocation.Name} {doorTile}");
+
             npc.modData[answerPointKey] = $"{doorTile.X},{doorTile.Y},2,{Game1.currentLocation.NameOrUniqueName}";
             delayDict[npc.Name] = Config.AnswerDelay;
 
         }
         public static void PlayKnockSound(Vector2 doorTile)
         {
+            SMonitor.Log($"Playing knock sound for door at: {Game1.currentLocation.Name} {doorTile}");
+
             int delay = 1;
             for (int i = 0; i < Config.KnockNumber; i++)
             {
@@ -86,6 +93,14 @@ namespace DoorKnock
         }
         public static void DoneDelaying(NPC npc)
         {
+            var ps = npc.modData[answerPointKey].Split(',');
+            var exterior = ps.Length == 4;
+            npc.modData.Remove(answerPointKey);
+            if (npc.isSleeping.Value && !Config.WakeWhenSleeping)
+            {
+                SMonitor.Log($"Not answering door: {npc.Name} is sleeping");
+                return;
+            }
             if (npc.controller != null)
             {
                 if (npc.doingEndOfRouteAnimation.Value)
@@ -98,14 +113,9 @@ namespace DoorKnock
                     return;
                 }
             }
-            if(npc.isSleeping.Value && !Config.WakeWhenSleeping)
-            {
-                SMonitor.Log($"Not answering door: {npc.Name} is sleeping");
-                return;
-            }
-            var ps = npc.modData[answerPointKey].Split(',');
-            var exterior = ps.Length == 4;
-            npc.modData.Remove(answerPointKey);
+
+            SMonitor.Log($"Answering after delay: {npc.Name} at {npc.currentLocation.Name} {npc.Tile} going to {(exterior ? ps[3] : npc.currentLocation.Name)} {ps[0]},{ps[1]}");
+
             var schedule = npc.pathfindToNextScheduleLocation("knock", npc.currentLocation.NameOrUniqueName, npc.TilePoint.X, npc.TilePoint.Y, exterior ? ps[3] : npc.currentLocation.NameOrUniqueName, int.Parse(ps[0]), int.Parse(ps[1]) + (exterior ? 1 : 0), int.Parse(ps[2]), null, null);
             AccessTools.Method(typeof(NPC), "prepareToDisembarkOnNewSchedulePath").Invoke(npc, Array.Empty<object>());
             npc.modData[returnPointKey] = $"{npc.TilePoint.X},{npc.TilePoint.Y},{npc.FacingDirection}{(exterior ? $",{npc.currentLocation.NameOrUniqueName}":"")}";
@@ -128,15 +138,17 @@ namespace DoorKnock
         } 
         public static void DoneWaiting(NPC npc)
         {
+            var ps = npc.modData[returnPointKey].Split(',');
+            var exterior = ps.Length == 4;
+            npc.modData.Remove(returnPointKey);
             if (npc.controller != null)
             {
                 SMonitor.Log($"Not returning after answer: {npc.Name} is busy");
                 return;
             }
-            var ps = npc.modData[returnPointKey].Split(',');
-            var exterior = ps.Length == 4;
-            npc.modData.Remove(returnPointKey);
-            var schedule = npc.pathfindToNextScheduleLocation("knock", npc.currentLocation.Name, npc.TilePoint.X, npc.TilePoint.Y, exterior ? ps[3] : npc.currentLocation.Name, int.Parse(ps[0]), int.Parse(ps[1]), int.Parse(ps[2]), null, null);
+            var dest = exterior ? ps[3] : npc.currentLocation.Name;
+            SMonitor.Log($"Returning after answer: {npc.Name} going to {dest} {ps[0]},{ps[1]}");
+            var schedule = npc.pathfindToNextScheduleLocation("knock", npc.currentLocation.Name, npc.TilePoint.X, npc.TilePoint.Y, dest, int.Parse(ps[0]), int.Parse(ps[1]), int.Parse(ps[2]), null, null);
             npc.controller = new PathFindController(schedule.route, npc, Utility.getGameLocationOfCharacter(npc))
             {
                 finalFacingDirection = int.Parse(ps[2]),
@@ -149,8 +161,11 @@ namespace DoorKnock
         public static void ReturnedBehaviour(Character c, GameLocation l)
         {
             NPC npc = c as NPC;
+            SMonitor.Log($"Returned to pos: {npc.Name} is at {npc.currentLocation.Name}, {npc.Tile}");
+
             if (npc.modData.TryGetValue(animationKey, out var str))
             {
+                SMonitor.Log($"Playing animation: {npc.Name} is restarting {str}");
                 AccessTools.FieldRefAccess<NPC, string>(npc, "loadedEndOfRouteBehavior") = npc.endOfRouteBehaviorName.Value;
                 PathFindController.endBehavior behavior = (PathFindController.endBehavior)AccessTools.Method(typeof(NPC), "getRouteEndBehaviorFunction").Invoke(npc, new object[] { npc.endOfRouteBehaviorName.Value, null });
                 behavior.Invoke(c, l);
@@ -159,41 +174,6 @@ namespace DoorKnock
         }
 
 
-        private static bool TryCloseDoor(GameLocation location, Point tilePoint)
-        {
-            foreach (var d in location.interiorDoors.Doors)
-            {
-                if (d.Position == tilePoint)
-                {
-                    if (!d.Value)
-                        return false;
-                    location.playSound("doorClose", Utility.PointToVector2(tilePoint), null, SoundContext.Default);
-                    d.Sprite.paused = true;
-                    location.interiorDoors[tilePoint] = false;
-
-                    Location doorLocation = new(d.Position.X, d.Position.Y);
-                    Map map = d.Location.Map;
-                    if (map == null)
-                    {
-                        return false;
-                    }
-                    if (d.Tile == null)
-                    {
-                        return false;
-                    }
-                    map.GetLayer("Buildings").Tiles[doorLocation] = d.Tile;
-                    d.Location.removeTileProperty(d.Position.X, d.Position.Y, "Back", "TemporaryBarrier");
-                    doorLocation.Y--;
-                    map.GetLayer("Front").Tiles[doorLocation] = new StaticTile(map.GetLayer("Front"), d.Tile.TileSheet, BlendMode.Alpha, d.Tile.TileIndex - d.Tile.TileSheet.SheetWidth);
-                    doorLocation.Y--;
-                    map.GetLayer("Front").Tiles[doorLocation] = new StaticTile(map.GetLayer("Front"), d.Tile.TileSheet, BlendMode.Alpha, d.Tile.TileIndex - d.Tile.TileSheet.SheetWidth * 2);
-
-                    d.ResetLocalState();
-                    return true;
-                }
-            }
-            return false;
-        }
         public static bool IsInRoom(NPC npc, Vector2 tile, List<Vector2> tiles)
         {
             if (npc.Tile == tile)
@@ -203,7 +183,7 @@ namespace DoorKnock
             tiles.Add(tile);
             foreach (var t in Utility.getAdjacentTileLocationsArray(tile))
             {
-                if (tiles.Contains(t))
+                if (tiles.Contains(t) || !Game1.currentLocation.isTileOnMap(t))
                     continue;
                 if (IsInRoom(npc, t, tiles))
                 {

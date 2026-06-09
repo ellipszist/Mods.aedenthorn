@@ -9,11 +9,9 @@ using StardewValley.TerrainFeatures;
 using System;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.CompilerServices;
 
 namespace LawnGrass
 {
-    /// <summary>The mod entry point.</summary>
     public partial class ModEntry : Mod
     {
 
