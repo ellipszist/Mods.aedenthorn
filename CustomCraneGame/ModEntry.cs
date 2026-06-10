@@ -47,6 +47,7 @@ namespace CustomCraneGame
             
         }
 
+
         private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
         {
             if (!Config.ModEnabled)

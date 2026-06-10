@@ -1,0 +1,10 @@
+﻿{
+  "Name": "Personal Juke Box",
+  "Author": "aedenthorn",
+  "Version": "0.1.0",
+  "Description": "Personal Juke Box.",
+  "UniqueID": "aedenthorn.PersonalJukeBox",
+  "EntryDll": "PersonalJukeBox.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [ "Nexus:" ]
+}
