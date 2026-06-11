@@ -21,5 +21,8 @@ namespace MobileCatalogues
         public int MarginY { get; set; } = 4;
         public float HeaderTextScale { get; set; } = 0.5f;
         public float TextScale { get; set; } = 0.5f;
+        public List<string> AllCatalogues { get; set; } = new();
+        public List<string> ShownCatalogues { get; set; } = new();
+        public List<string> HiddenCatalogues { get; set; } = new();
     }
 }

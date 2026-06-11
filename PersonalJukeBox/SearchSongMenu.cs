@@ -125,9 +125,10 @@ namespace PersonalJukeBox
                 }
                 else
                 {
-                    foreach(var kvp in allTracksDict)
+                    var lower = text.ToLower();
+                    foreach (var kvp in allTracksDict)
                     {
-                        if (kvp.Key.ToLower().Contains(text) || kvp.Value.ToLower().Contains(text))
+                        if (kvp.Key.ToLower().Contains(lower) || kvp.Value.ToLower().Contains(lower))
                         {
                             options.Add(kvp.Key);
                         }

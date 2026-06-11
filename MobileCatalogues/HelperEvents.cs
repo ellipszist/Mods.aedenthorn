@@ -5,6 +5,7 @@ using StardewModdingAPI.Events;
 using StardewValley;
 using System;
 using System.IO;
+using System.Linq;
 
 namespace MobileCatalogues
 {
@@ -38,6 +39,19 @@ namespace MobileCatalogues
                 Visuals.MakeTextures();
             }
         }
+        public static void GameLoop_SaveLoaded(object sender, SaveLoadedEventArgs e)
+        {
+            var keys = DataLoader.Shops(Game1.content).Keys;
+            if (Config.AllCatalogues.Count != keys.Count)
+            {
+                Config.AllCatalogues.Clear();
+                Config.AllCatalogues.AddRange(keys);
+                Helper.WriteConfig(Config);
+            }
+            CataloguesApp.catalogueList = new();
+            CataloguesApp.catalogueList.AddRange(keys.Where(k => (!Config.ShownCatalogues.Any() || Config.ShownCatalogues.Contains(k)) && (!Config.HiddenCatalogues.Any() || !Config.HiddenCatalogues.Contains(k))));
+        }
+
         public static void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
         {
             if (api.IsCallingNPC() || api.GetRunningApp() != Helper.ModRegistry.ModID)

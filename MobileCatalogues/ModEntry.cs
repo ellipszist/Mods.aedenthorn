@@ -25,7 +25,7 @@ namespace MobileCatalogues
             Visuals.Initialize(Helper, Monitor, Config);
 
             Helper.Events.GameLoop.GameLaunched += HelperEvents.GameLoop_GameLaunched;
+            Helper.Events.GameLoop.SaveLoaded += HelperEvents.GameLoop_SaveLoaded;
         }
-
     }
 }

@@ -10,6 +10,7 @@ namespace PersonalJukeBox
         public bool Debug { get; set; } = false;
         public bool LimitToKnown { get; set; } = false;
         public KeybindList FavoriteKey { get; set; } = new(new Keybind(SButton.LeftControl, SButton.F));
+        public KeybindList ClearFavoriteKey { get; set; } = new(new Keybind(SButton.LeftShift, SButton.LeftControl, SButton.F));
         public KeybindList LastKey { get; set; } = new(SButton.Left);
         public KeybindList NextKey { get; set; } = new(SButton.Right);
         public KeybindList RandomKey { get; set; } = new(SButton.Up);

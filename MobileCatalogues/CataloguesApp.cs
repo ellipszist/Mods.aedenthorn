@@ -3,6 +3,7 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MobileCatalogues
 {
@@ -23,8 +24,6 @@ namespace MobileCatalogues
         }
         internal static void OpenCatalogueApp()
         {
-            catalogueList = new();
-            catalogueList.AddRange(DataLoader.Shops(Game1.content).Keys);
             api = ModEntry.api;
             Helper.Events.Input.ButtonPressed += HelperEvents.Input_ButtonPressed;
             Helper.Events.Input.MouseWheelScrolled += HelperEvents.Input_MouseWheelScrolled; ;

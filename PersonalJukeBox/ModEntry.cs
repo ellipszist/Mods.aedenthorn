@@ -185,6 +185,12 @@ namespace PersonalJukeBox
                 Suppress(Config.FavoriteKey);
 
             }
+            if (Config.ClearFavoriteKey.JustPressed())
+            {
+                PlayerList = null;
+                Suppress(Config.FavoriteKey);
+
+            }
             else if (Config.MenuKey.JustPressed())
             {
                 ToggleMenu();
@@ -304,18 +310,13 @@ namespace PersonalJukeBox
                     reset: () => Config = new ModConfig(),
                     save: () => Helper.WriteConfig(Config)
                 );
-
-                configMenu.AddBoolOption(
-                    mod: ModManifest,
-                    name: () => SHelper.Translation.Get("ModEnabled"),
-                    getValue: () => Config.ModEnabled,
-                    setValue: value => Config.ModEnabled = value
-                );
                 var props = typeof(ModConfig).GetProperties().ToArray();
                 var configMenuExt = Helper.ModRegistry.GetApi<IGMCMOptionsAPI>("jltaylor-us.GMCMOptions");
 
                 foreach (var p in props)
                 {
+                    if (p.Name == nameof(Config.Debug))
+                        continue;
                     if (p.PropertyType == typeof(bool))
                     {
                         configMenu.AddBoolOption(
