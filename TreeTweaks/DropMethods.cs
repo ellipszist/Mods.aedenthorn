@@ -11,9 +11,9 @@ namespace LogSpamFilter
 {
     public partial class ModEntry
     {
-        public static void StumpDropWoodFake(Tree tree, GameLocation location, int debrisType, int x, int y, int numberOfChunks, bool resource, int groundLevel = -1, bool item = false, int color = -1)
+        public static void StumpDropWoodFake(GameLocation location, int debrisType, int x, int y, int numberOfChunks, bool resource, int groundLevel, bool item, Color color, Tree tree)
         {
-            if (!dropDict.ContainsKey(tree.treeType.Value.ToString()))
+            if (!Config.EnableMod || !DropDict.ContainsKey(tree.treeType.Value.ToString()))
             {
                 Game1.createRadialDebris(location, debrisType, x, y, numberOfChunks, resource, groundLevel, item, color);
             }
@@ -22,97 +22,97 @@ namespace LogSpamFilter
                 Game1.createRadialDebris(location, debrisType, x, y, numberOfChunks, resource, groundLevel, item, color);
             }
         }
-        public static void StumpDrop2ExtraNF(Tree tree, int index, int x, int y, int number, GameLocation location)
+        public static void StumpDrop2ExtraNF(string index, int x, int y, int number, GameLocation location, Tree tree)
         {
-            if (!dropDict.ContainsKey(tree.treeType.Value.ToString()))
+            if (!Config.EnableMod || !DropDict.ContainsKey(tree.treeType.Value.ToString()))
             {
                 Game1.createMultipleObjectDebris(index, x, y, number, location);
             }
             else
             {
-                DropItems(tree, dropDict[tree.treeType.Value.ToString()].stumpSap, x, y, location);
+                DropItems(tree, DropDict[tree.treeType.Value.ToString()].stumpSap, x, y, location);
             }
         }
-        public static void StumpDropExtraNF1(Tree tree, Object item, Vector2 origin, int direction, GameLocation location = null, int groundLevel = -1)
+        public static void StumpDropExtraNF1(Object item, Vector2 origin, int direction, GameLocation location, int groundLevel, bool flopFish, Tree tree)
         {
-            if (!dropDict.ContainsKey(tree.treeType.Value.ToString()))
+            if (!Config.EnableMod || !DropDict.ContainsKey(tree.treeType.Value.ToString()))
             {
-                Game1.createItemDebris(item, origin, direction, location, groundLevel);
+                Game1.createItemDebris(item, origin, direction, location, groundLevel, flopFish);
             }
             else
             {
-                DropItems(tree, dropDict[tree.treeType.Value.ToString()].stumpSap, (int)(origin.X / 64f), (int)(origin.Y / 64f), location);
-                DropItems(tree, dropDict[tree.treeType.Value.ToString()].stumpSap, (int)(origin.X / 64f), (int)(origin.Y / 64f), location);
+                DropItems(tree, DropDict[tree.treeType.Value.ToString()].stumpSap, (int)(origin.X / 64f), (int)(origin.Y / 64f), location);
+                DropItems(tree, DropDict[tree.treeType.Value.ToString()].stumpSap, (int)(origin.X / 64f), (int)(origin.Y / 64f), location);
             }
 
         }
         public static void StumpDropExtraNF2(Tree tree, Object item, Vector2 origin, int direction, GameLocation location = null, int groundLevel = -1)
         {
-            if (!dropDict.ContainsKey(tree.treeType.Value.ToString()))
+            if (!Config.EnableMod || !DropDict.ContainsKey(tree.treeType.Value.ToString()))
             {
                 Game1.createItemDebris(item, origin, direction, location, groundLevel);
             }
             else
             {
-                DropItems(tree, dropDict[tree.treeType.Value.ToString()].stumpSap, (int)(origin.X / 64f), (int)(origin.Y / 64f), location);
+                DropItems(tree, DropDict[tree.treeType.Value.ToString()].stumpSap, (int)(origin.X / 64f), (int)(origin.Y / 64f), location);
             }
 
         }
-        public static void StumpDropExtraMP(Tree tree, int index, int x, int y, int number, long who, GameLocation location)
+        public static void StumpDropExtraMP(Tree tree, string index, int x, int y, int number, long who, GameLocation location)
         {
-            if (!dropDict.ContainsKey(tree.treeType.Value.ToString()))
+            if (!Config.EnableMod || !DropDict.ContainsKey(tree.treeType.Value.ToString()))
             {
                 Game1.createMultipleObjectDebris(index, x, y, number, who, location);
             }
             else
             {
-                DropItems(tree, dropDict[tree.treeType.Value.ToString()].stumpSap, x, y, location);
-                DropItems(tree, dropDict[tree.treeType.Value.ToString()].stumpHardwood, x, y, location);
+                DropItems(tree, DropDict[tree.treeType.Value.ToString()].stumpSap, x, y, location);
+                DropItems(tree, DropDict[tree.treeType.Value.ToString()].stumpHardwood, x, y, location);
             }
 
         }
-        public static void StumpDropWood(Tree tree, GameLocation location, int debrisType, int x, int y, int numberOfChunks, bool resource, int groundLevel = -1, bool item = false, int color = -1)
+        public static void StumpDropWood(Tree tree, GameLocation location, int debrisType, int x, int y, int numberOfChunks, bool resource, int groundLevel, bool item, Color color)
         {
-            if (!dropDict.ContainsKey(tree.treeType.Value.ToString()))
+            if (!Config.EnableMod || !DropDict.ContainsKey(tree.treeType.Value.ToString()))
             {
                 Game1.createRadialDebris(location, debrisType, x, y, numberOfChunks, resource, groundLevel, item, color);
             }
             else
             {
-                DropItems(tree, dropDict[tree.treeType.Value.ToString()].stumpWood, x, y, location);
+                DropItems(tree, DropDict[tree.treeType.Value.ToString()].stumpWood, x, y, location);
             }
         }
 
-        public static void StumpDropExtra(Tree tree, int index, int x, int y, int number, GameLocation location)
+        public static void StumpDropExtra(Tree tree, string index, int x, int y, int number, GameLocation location)
         {
-            if (!dropDict.ContainsKey(tree.treeType.Value.ToString()))
+            if (!Config.EnableMod || !DropDict.ContainsKey(tree.treeType.Value.ToString()))
             {
                 Game1.createMultipleObjectDebris(index, x, y, number, location);
             }
             else
             {
-                DropItems(tree, dropDict[tree.treeType.Value.ToString()].stumpSap, x, y, location);
-                DropItems(tree, dropDict[tree.treeType.Value.ToString()].stumpHardwood, x, y, location);
+                DropItems(tree, DropDict[tree.treeType.Value.ToString()].stumpSap, x, y, location);
+                DropItems(tree, DropDict[tree.treeType.Value.ToString()].stumpHardwood, x, y, location);
             }
         }
 
-        public static void DropWood(Tree tree, GameLocation location, int debrisType, int x, int y, int numberOfChunks, bool resource, int groundLevel = -1, bool item = false, int color = -1)
+        public static void DropWood(Tree tree, GameLocation location, int debrisType, int x, int y, int numberOfChunks, bool resource, int groundLevel, bool item, Color color)
         {
-            if (!dropDict.ContainsKey(tree.treeType.Value.ToString()))
+            if (!Config.EnableMod || !DropDict.ContainsKey(tree.treeType.Value.ToString()))
             {
                 Game1.createRadialDebris(location, debrisType, x, y, numberOfChunks, resource, groundLevel, item, color);
             }
             else
             {
-                float woodMult = Game1.getFarmer(AccessTools.FieldRefAccess<Tree, NetLong>(tree, "lastPlayerToHit").Value).professions.Contains(12) ? 1.25f : 1.0f + (int)AccessTools.Method(typeof(Tree), "extraWoodCalculator").Invoke(tree, new object[] { new Vector2(x, y) }) / 12f;
-                DropItems(tree, dropDict[tree.treeType.Value.ToString()].wood, x, y, location, woodMult);
-                DropItems(tree, dropDict[tree.treeType.Value.ToString()].sap, x, y, location);
-                DropItems(tree, dropDict[tree.treeType.Value.ToString()].items, x, y, location);
+                float woodMult = Game1.GetPlayer(AccessTools.FieldRefAccess<Tree, NetLong>(tree, "lastPlayerToHit").Value).professions.Contains(12) ? 1.25f : 1.0f + (int)AccessTools.Method(typeof(Tree), "extraWoodCalculator").Invoke(tree, new object[] { new Vector2(x, y) }) / 12f;
+                DropItems(tree, DropDict[tree.treeType.Value.ToString()].wood, x, y, location, woodMult);
+                DropItems(tree, DropDict[tree.treeType.Value.ToString()].sap, x, y, location);
+                DropItems(tree, DropDict[tree.treeType.Value.ToString()].items, x, y, location);
             }
         }
-        public static void DropWoodFake(Tree tree, GameLocation location, int debrisType, int x, int y, int numberOfChunks, bool resource, int groundLevel = -1, bool item = false, int color = -1)
+        public static void DropWoodFake(Tree tree, GameLocation location, int debrisType, int x, int y, int numberOfChunks, bool resource, int groundLevel, bool item, Color color)
         {
-            if (!dropDict.ContainsKey(tree.treeType.Value.ToString()))
+            if (!Config.EnableMod || !DropDict.ContainsKey(tree.treeType.Value.ToString()))
             {
                 Game1.createRadialDebris(location, debrisType, x, y, numberOfChunks, resource, groundLevel, item, color);
             }
@@ -122,9 +122,9 @@ namespace LogSpamFilter
             }
         }
 
-        public static void DropSapMP(Tree tree, int index, int x, int y, int number, long who, GameLocation location)
+        public static void DropSapMP(Tree tree, string index, int x, int y, int number, long who, GameLocation location)
         {
-            if (!dropDict.ContainsKey(tree.treeType.Value.ToString()))
+            if (!Config.EnableMod || !DropDict.ContainsKey(tree.treeType.Value.ToString()))
             {
                 Game1.createMultipleObjectDebris(index, x, y, number, who, location);
             }
@@ -133,9 +133,9 @@ namespace LogSpamFilter
             }
 
         }
-        public static void DropHardwoodMP(Tree tree, int index, int x, int y, int number, long who, GameLocation location)
+        public static void DropHardwoodMP(Tree tree, string index, int x, int y, int number, long who, GameLocation location)
         {
-            if (!dropDict.ContainsKey(tree.treeType.Value.ToString()))
+            if (!Config.EnableMod || !DropDict.ContainsKey(tree.treeType.Value.ToString()))
             {
                 Game1.createMultipleObjectDebris(index, x, y, number, who, location);
             }
@@ -145,9 +145,9 @@ namespace LogSpamFilter
             }
 
         }
-        public static void DropSeedMP1(Tree tree, int index, int x, int y, int number, long who, GameLocation location)
+        public static void DropSeedMP1(Tree tree, string index, int x, int y, int number, long who, GameLocation location)
         {
-            if (!dropDict.ContainsKey(tree.treeType.Value.ToString()))
+            if (!Config.EnableMod || !DropDict.ContainsKey(tree.treeType.Value.ToString()))
             {
                 Game1.createMultipleObjectDebris(index, x, y, number, who, location);
             }
@@ -157,9 +157,9 @@ namespace LogSpamFilter
             }
 
         }
-        public static void DropSeedMP2(Tree tree, int index, int x, int y, int number, long who, GameLocation location)
+        public static void DropSeedMP2(Tree tree, string index, int x, int y, int number, long who, GameLocation location)
         {
-            if (!dropDict.ContainsKey(tree.treeType.Value.ToString()))
+            if (!Config.EnableMod || !DropDict.ContainsKey(tree.treeType.Value.ToString()))
             {
                 Game1.createMultipleObjectDebris(index, x, y, number, who, location);
             }
@@ -170,9 +170,9 @@ namespace LogSpamFilter
 
         }
 
-        public static void DropSeed1(Tree tree, int index, int x, int y, int number, GameLocation location)
+        public static void DropSeed1(Tree tree, string index, int x, int y, int number, GameLocation location)
         {
-            if (!dropDict.ContainsKey(tree.treeType.Value.ToString()))
+            if (!DropDict.ContainsKey(tree.treeType.Value.ToString()))
             {
                 Game1.createMultipleObjectDebris(index, x, y, number, location);
             }
@@ -182,9 +182,9 @@ namespace LogSpamFilter
             }
 
         }
-        public static void DropSeed2(Tree tree, int index, int x, int y, int number, GameLocation location)
+        public static void DropSeed2(Tree tree, string index, int x, int y, int number, GameLocation location)
         {
-            if (!dropDict.ContainsKey(tree.treeType.Value.ToString()))
+            if (!Config.EnableMod || !DropDict.ContainsKey(tree.treeType.Value.ToString()))
             {
                 Game1.createMultipleObjectDebris(index, x, y, number, location);
             }
@@ -194,9 +194,9 @@ namespace LogSpamFilter
             }
 
         }
-        public static void DropMushroomWood(Tree tree, int index, int x, int y, int number, GameLocation location)
+        public static void DropMushroomWood(Tree tree, string index, int x, int y, int number, GameLocation location)
         {
-            if (!dropDict.ContainsKey(tree.treeType.Value.ToString()))
+            if (!Config.EnableMod || !DropDict.ContainsKey(tree.treeType.Value.ToString()))
             {
                 Game1.createMultipleObjectDebris(index, x, y, number, location);
             }
@@ -206,9 +206,9 @@ namespace LogSpamFilter
             }
 
         }
-        public static void DropHardwood(Tree tree, int index, int x, int y, int number, GameLocation location)
+        public static void DropHardwood(Tree tree, string index, int x, int y, int number, GameLocation location)
         {
-            if (!dropDict.ContainsKey(tree.treeType.Value.ToString()))
+            if (!Config.EnableMod || !DropDict.ContainsKey(tree.treeType.Value.ToString()))
             {
                 Game1.createMultipleObjectDebris(index, x, y, number, location);
             }
@@ -224,10 +224,10 @@ namespace LogSpamFilter
                 {
                     r = new Random((int)Game1.uniqueIDForThisGame + (int)Game1.stats.DaysPlayed + x * 7 + y * 11);
                 }
-                foreach (var item in dropDict[tree.treeType.Value.ToString()].hardwood)
+                foreach (var item in DropDict[tree.treeType.Value.ToString()].hardwood)
                 {
                     int amount = GetDropAmount(item);
-                    if (Game1.getFarmer(AccessTools.FieldRefAccess<Tree, NetLong>(tree, "lastPlayerToHit").Value).professions.Contains(14))
+                    if (Game1.GetPlayer(AccessTools.FieldRefAccess<Tree, NetLong>(tree, "lastPlayerToHit").Value).professions.Contains(14))
                     {
                         if(item.min == 0 && item.max == 0)
                         {
@@ -251,7 +251,7 @@ namespace LogSpamFilter
                         return;
                     for (int i = 0; i < amount; i++)
                     {
-                        Object obj = GetObjectFromID(item.id, 1, GetQuality(item));
+                        Object obj = ItemRegistry.Create(item.id, 1, GetQuality(item)) as Object;
                         if (obj == null)
                         {
                             SMonitor.Log($"error getting object from id {item.id}", StardewModdingAPI.LogLevel.Warn);
@@ -263,9 +263,9 @@ namespace LogSpamFilter
             }
 
         }
-        public static void DropSap(Tree tree, int index, int x, int y, int number, GameLocation location)
+        public static void DropSap(Tree tree, string index, int x, int y, int number, GameLocation location)
         {
-            if (!dropDict.ContainsKey(tree.treeType.Value.ToString()))
+            if (!Config.EnableMod || !DropDict.ContainsKey(tree.treeType.Value.ToString()))
             {
                 Game1.createMultipleObjectDebris(index, x, y, number, location);
             }
@@ -300,7 +300,7 @@ namespace LogSpamFilter
 
                 for (int i = 0; i < amount; i++)
                 {
-                    Object obj = GetObjectFromID(item.id, 1, GetQuality(item));
+                    Object obj = ItemRegistry.Create(item.id, 1, GetQuality(item)) as Object;
                     if (obj == null)
                     {
                         SMonitor.Log($"error getting object from id {item.id}", StardewModdingAPI.LogLevel.Warn);

@@ -13,7 +13,7 @@ using Object = StardewValley.Object;
 namespace LogSpamFilter
 {
     /// <summary>The mod entry point.</summary>
-    public partial class ModEntry : Mod, IAssetLoader
+    public partial class ModEntry : Mod
     {
 
         public static IMonitor SMonitor;
@@ -26,7 +26,12 @@ namespace LogSpamFilter
         private Harmony harmony;
 
         public static readonly string dictPath = "tree_tweaks_dictionary";
-        private static Dictionary<string, DropData> dropDict = new Dictionary<string, DropData>();
+        private static Dictionary<string, DropData> DropDict { 
+            get
+            {
+                return SHelper.GameContent.Load<Dictionary<string, DropData>>(dictPath);
+            }
+        }
 
         /// <summary>The mod entry point, called after the mod is first loaded.</summary>
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
@@ -39,15 +44,11 @@ namespace LogSpamFilter
             SMonitor = Monitor;
             SHelper = helper;
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
+            helper.Events.Content.AssetRequested += Content_AssetRequested;
 
 
             harmony = new Harmony(ModManifest.UniqueID);
 
-            harmony.Patch(
-               original: AccessTools.Method(typeof(Tree), "performTreeFall"),
-               prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.Tree_performTreeFall_Prefix)),
-               transpiler: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.Tree_performTreeFall_Transpiler))
-            );
             harmony.Patch(
                original: AccessTools.Method(typeof(Tree), "tickUpdate"),
                transpiler: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.Tree_tickUpdate_Transpiler))
@@ -62,6 +63,16 @@ namespace LogSpamFilter
                postfix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.Tree_getBoundingBox_Postfix))
             );
 
+        }
+
+        private void Content_AssetRequested(object sender, StardewModdingAPI.Events.AssetRequestedEventArgs e)
+        {
+            if (!Config.EnableMod)
+                return;
+            if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
+            {
+                e.LoadFrom(() => Helper.ModContent.Load<Dictionary<string, DropData>>("assets/default.json") ?? new Dictionary<string, DropData>(), StardewModdingAPI.Events.AssetLoadPriority.Exclusive);
+            }
         }
 
         private void GameLoop_GameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
@@ -182,86 +193,16 @@ namespace LogSpamFilter
             switch (count)
             {
                 case 2: // tree
-                    return (tree.getBoundingBox(tileLocation).Bottom + 2 * (1 + growth)) / 10000f - tileLocation.X / 1000000f;
+                    return (tree.getBoundingBox().Bottom + 2 * (1 + growth)) / 10000f - tileLocation.X / 1000000f;
                 case 4: // broken stump
-                    return (tree.getBoundingBox(tileLocation).Bottom + (1 + growth)) / 10000f;
+                    return (tree.getBoundingBox().Bottom + (1 + growth)) / 10000f;
                 case 5: // leaves
-                    return tree.getBoundingBox(tileLocation).Bottom / 10000f + 0.01f * (1 + growth);
+                    return tree.getBoundingBox().Bottom / 10000f + 0.01f * (1 + growth);
                 default:
                     return layerDepth;
             }
         }
 
-        private static Object GetObjectFromID(string id, int amount, int quality)
-        {
-            //SMonitor.Log($"Trying to get object {id}, DGA {apiDGA != null}, JA {apiJA != null}");
 
-            Object obj = null;
-            try
-            {
-
-                if (int.TryParse(id, out int index))
-                {
-                    //SMonitor.Log($"Spawning object with index {id}");
-                    return new Object(index, amount, false, -1, quality);
-                }
-                else
-                {
-                    var dict = SHelper.Content.Load<Dictionary<int, string>>("Data/ObjectInformation", ContentSource.GameContent);
-                    foreach (var kvp in dict)
-                    {
-                        if (kvp.Value.StartsWith(id + "/"))
-                            return new Object(kvp.Key, amount, false, -1, quality);
-                    }
-                }
-                if (apiDGA != null && id.Contains("/"))
-                {
-                    object o = apiDGA.SpawnDGAItem(id);
-                    if (o is Object)
-                    {
-                        //SMonitor.Log($"Spawning DGA object {id}");
-                        (o as Object).Stack = amount;
-                        (o as Object).Quality = quality;
-                        return (o as Object);
-                    }
-                }
-                if (apiJA != null)
-                {
-                    int idx = apiJA.GetObjectId(id);
-                    if (idx != -1)
-                    {
-                        //SMonitor.Log($"Spawning JA object {id}");
-                        return new Object(idx, amount, false, -1, quality);
-
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                SMonitor.Log($"Exception: {ex}", LogLevel.Error);
-            }
-            SMonitor.Log($"Couldn't find item with id {id}");
-            return obj;
-        }
-
-        /// <summary>Get whether this instance can load the initial version of the given asset.</summary>
-        /// <param name="asset">Basic metadata about the asset being loaded.</param>
-        public bool CanLoad<T>(IAssetInfo asset)
-        {
-            if (!Config.EnableMod)
-                return false;
-
-            return asset.AssetNameEquals(dictPath);
-        }
-
-        /// <summary>Load a matched asset.</summary>
-        /// <param name="asset">Basic metadata about the asset being loaded.</param>
-        public T Load<T>(IAssetInfo asset)
-        {
-            var dict = Helper.Content.Load<Dictionary<string, DropData>>("assets/default.json") ?? new Dictionary<string, DropData>();
-            Monitor.Log($"Loaded dictionary with {dict.Count} entries");
-
-            return (T)(object) dict;
-        }
     }
 }

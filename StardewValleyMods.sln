@@ -735,6 +735,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomCraneGame", "CustomCr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonalJukeBox", "PersonalJukeBox\PersonalJukeBox.csproj", "{CC1053F6-545E-C074-B451-D89A7AFB9BF6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleCooking", "SimpleCooking\SimpleCooking.csproj", "{2ECDD9EB-DB8E-BABA-106B-27C6F8DAB3AF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3639,6 +3641,14 @@ Global
 		{CC1053F6-545E-C074-B451-D89A7AFB9BF6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CC1053F6-545E-C074-B451-D89A7AFB9BF6}.Release|x64.ActiveCfg = Release|x64
 		{CC1053F6-545E-C074-B451-D89A7AFB9BF6}.Release|x64.Build.0 = Release|x64
+		{2ECDD9EB-DB8E-BABA-106B-27C6F8DAB3AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2ECDD9EB-DB8E-BABA-106B-27C6F8DAB3AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2ECDD9EB-DB8E-BABA-106B-27C6F8DAB3AF}.Debug|x64.ActiveCfg = Debug|x64
+		{2ECDD9EB-DB8E-BABA-106B-27C6F8DAB3AF}.Debug|x64.Build.0 = Debug|x64
+		{2ECDD9EB-DB8E-BABA-106B-27C6F8DAB3AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2ECDD9EB-DB8E-BABA-106B-27C6F8DAB3AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2ECDD9EB-DB8E-BABA-106B-27C6F8DAB3AF}.Release|x64.ActiveCfg = Release|x64
+		{2ECDD9EB-DB8E-BABA-106B-27C6F8DAB3AF}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

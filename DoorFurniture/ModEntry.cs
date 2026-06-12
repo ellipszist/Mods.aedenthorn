@@ -8,7 +8,6 @@ using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.GameData.Objects;
 using StardewValley.GameData.Shops;
-using StardewValley.Menus;
 using StardewValley.Objects;
 using System;
 using System.Collections.Generic;

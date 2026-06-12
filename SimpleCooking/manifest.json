@@ -1,0 +1,10 @@
+﻿{
+  "Name": "Simple Cooking",
+  "Author": "aedenthorn",
+  "Version": "0.1.0",
+  "Description": "Simple Cooking.",
+  "UniqueID": "aedenthorn.SimpleCooking",
+  "EntryDll": "SimpleCooking.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [ "Nexus:" ]
+}

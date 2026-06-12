@@ -65,7 +65,7 @@ namespace RoastingMarshmallows
                     int frames = (texture.Width / frameHeight) - 2;
                     if (frame > 1 && roastProgress % (int)(50f * frames / frame) == 0)
                     {
-                        TemporaryAnimatedSprite sprite = TemporaryAnimatedSprite.GetTemporaryAnimatedSprite("LooseSprites\\Cursors", new Microsoft.Xna.Framework.Rectangle(372, 1956, 10, 10), __instance.Position + offset + smokeOffset, false, 0.002f, Color.Gray);
+                        TemporaryAnimatedSprite sprite = TemporaryAnimatedSprite.GetTemporaryAnimatedSprite("LooseSprites\\Cursors", new Rectangle(372, 1956, 10, 10), __instance.Position + offset + smokeOffset, false, 0.002f, Color.Gray);
                         sprite.alpha = 0.5f * frame / frames;
                         sprite.motion = new Vector2(0f, -0.5f);
                         sprite.acceleration = new Vector2(0.002f, 0f);

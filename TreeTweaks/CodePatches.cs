@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.TerrainFeatures;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -46,58 +47,40 @@ namespace LogSpamFilter
             float increase = (__instance.growthStage.Value - 5) * Config.SizeIncreasePerDay / 100f;
             __result = new Rectangle((int)(__result.X - (__result.Width * increase)), (int)(__result.Y - (__result.Height * increase)), (int)(__result.Width * (1 + increase)), (int)(__result.Height * (1 + increase)));
         }
-        public static void Tree_performTreeFall_Prefix(Tree __instance)
-        {
-            if (!Config.EnableMod)
-                return;
-            dropDict = SHelper.Content.Load<Dictionary<string, DropData>>(dictPath, StardewModdingAPI.ContentSource.GameContent);
-        }
+
         public static IEnumerable<CodeInstruction> Tree_performTreeFall_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             SMonitor.Log($"Transpiling Tree_performTreeFall");
 
             var codes = new List<CodeInstruction>(instructions);
-            var newCodes = new List<CodeInstruction>();
             for (int i = 0; i < codes.Count; i++)
             {
-                if (i < codes.Count - 23 && codes[i].opcode == OpCodes.Ldarg_S && codes[i + 12].opcode == OpCodes.Ldc_I4_0 && codes[i + 23].opcode == OpCodes.Call && (MethodInfo)codes[i + 23].operand == AccessTools.Method(typeof(Game1), nameof(Game1.createRadialDebris), new System.Type[] { typeof(GameLocation), typeof(int), typeof(int), typeof(int), typeof(int), typeof(bool), typeof(int), typeof(bool), typeof(int) }))
+                if (false && i < codes.Count - 8 && codes[i].opcode == OpCodes.Callvirt && codes[i].operand is MethodInfo mi && mi == AccessTools.Method(typeof(Random), nameof(Random.Next), new Type[] { typeof(int), typeof(int) }) && codes[i + 7].opcode == OpCodes.Call && codes[i + 7].operand is MethodInfo mi2 && mi2 == AccessTools.Method(typeof(Game1), nameof(Game1.createRadialDebris), new Type[] { typeof(GameLocation), typeof(int), typeof(int), typeof(int), typeof(int), typeof(bool), typeof(int), typeof(bool), typeof(Color) }))
                 {
                     SMonitor.Log($"Switching stump drop wood fake");
+                    codes[i + 7].operand = AccessTools.Method(typeof(ModEntry), nameof(StumpDropWoodFake));
                     var ci = new CodeInstruction(OpCodes.Ldarg_0);
-                    ci.MoveLabelsFrom(codes[i]);
-                    newCodes.Add(ci);
-                    newCodes.Add(codes[i]);
-                    codes[i + 23].operand = AccessTools.Method(typeof(ModEntry), nameof(ModEntry.StumpDropWoodFake));
-
+                    ci.MoveLabelsFrom(codes[i + 7]);
+                    codes.Insert(i + 7, ci);
+                    i += 8;
                 }
-                else if (i < codes.Count - 9 && codes[i].opcode == OpCodes.Ldc_I4_S && codes[i].operand is sbyte && (sbyte)codes[i].operand == 92 && codes[i + 9].opcode == OpCodes.Call && (MethodInfo)codes[i + 9].operand == AccessTools.Method(typeof(Game1), nameof(Game1.createMultipleObjectDebris), new System.Type[] { typeof(int), typeof(int), typeof(int), typeof(int), typeof(GameLocation) }))
+                else if (i < codes.Count - 10 && codes[i].opcode == OpCodes.Ldstr && (codes[i].operand as string) == "(O)92" && codes[i + 9].opcode == OpCodes.Call && (MethodInfo)codes[i + 9].operand == AccessTools.Method(typeof(Game1), nameof(Game1.createMultipleObjectDebris), new Type[] { typeof(string), typeof(int), typeof(int), typeof(int), typeof(GameLocation) }))
                 {
                     SMonitor.Log($"Switching extra drop 2 method non-farmer");
                     var ci = new CodeInstruction(OpCodes.Ldarg_0);
-                    ci.MoveLabelsFrom(codes[i]);
-                    newCodes.Add(ci);
-                    newCodes.Add(codes[i]);
+                    ci.MoveLabelsFrom(codes[i + 9]);
                     codes[i + 9].operand = AccessTools.Method(typeof(ModEntry), nameof(ModEntry.StumpDrop2ExtraNF));
+                    codes.Insert(i + 9, ci);
+                    i += 10;
                 }
-                else if (false && i < codes.Count - 13 && codes[i].opcode == OpCodes.Ldc_I4_S && codes[i].operand is sbyte && (sbyte)codes[i].operand == 92 && codes[i + 12].opcode == OpCodes.Call && (MethodInfo)codes[i + 12].operand == AccessTools.Method(typeof(Game1), nameof(Game1.createItemDebris), new System.Type[] { typeof(Item), typeof(Vector2), typeof(int), typeof(GameLocation), typeof(int) }))
+                else if (i < codes.Count - 13 && codes[i].opcode == OpCodes.Ldstr && (codes[i].operand as string) == "(O)92" && codes[i + 12].opcode == OpCodes.Call && (MethodInfo)codes[i + 12].operand == AccessTools.Method(typeof(Game1), nameof(Game1.createItemDebris), new Type[] { typeof(Item), typeof(Vector2), typeof(int), typeof(GameLocation), typeof(int), typeof(bool) }))
                 {
-                    if (codes[i - 1].opcode != OpCodes.Pop)
-                    {
-                        SMonitor.Log($"Switching extra drop 1 method non-farmer 1");
-                        var ci = new CodeInstruction(OpCodes.Ldarg_0);
-                        ci.MoveLabelsFrom(codes[i]);
-                        newCodes.Add(ci);
-                        newCodes.Add(codes[i]);
-                        codes[i + 12].operand = AccessTools.Method(typeof(ModEntry), nameof(ModEntry.StumpDropExtraNF1));
-                    }
-                    else
-                    {
-                        SMonitor.Log($"Switching extra drop 1 method non-farmer 2");
-                        var ci = new CodeInstruction(OpCodes.Ldarg_0);
-                        newCodes.Add(ci);
-                        newCodes.Add(codes[i]);
-                        codes[i + 12].operand = AccessTools.Method(typeof(ModEntry), nameof(ModEntry.StumpDropExtraNF2));
-                    }
+                    SMonitor.Log($"Switching extra drop 1 method non-farmer 1");
+                    var ci = new CodeInstruction(OpCodes.Ldarg_0);
+                    ci.MoveLabelsFrom(codes[i + 4]);
+                    codes[i + 12].operand = AccessTools.Method(typeof(ModEntry), nameof(ModEntry.StumpDropExtraNF1));
+                    codes.Insert(i + 12, ci);
+                    i += 13;
                 }
                 else if (i < codes.Count - 12 && codes[i].opcode == OpCodes.Ldloc_0 && codes[i + 12].opcode == OpCodes.Call && (MethodInfo)codes[i + 12].operand == AccessTools.Method(typeof(Game1), nameof(Game1.createMultipleObjectDebris), new System.Type[] { typeof(int), typeof(int), typeof(int), typeof(int), typeof(long), typeof(GameLocation) }))
                 {
