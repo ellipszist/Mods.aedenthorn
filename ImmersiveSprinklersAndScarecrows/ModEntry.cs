@@ -23,6 +23,7 @@ namespace ImmersiveSprinklersAndScarecrows
         public static ModEntry context;
 
         public const string dataKey = "aedenthorn.ImmersiveSprinklersAndScarecrows/data";
+        public const string nozzleKey = "aedenthorn.ImmersiveSprinklersAndScarecrows/nozzle";
         public const string altTextureKey = "AlternativeTexture";
 
         public const int ridiculous = 10000;

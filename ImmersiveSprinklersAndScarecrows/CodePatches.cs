@@ -39,11 +39,11 @@ namespace ImmersiveSprinklersAndScarecrows
                 var obj = GetSprinklerAtMouse();
                 if (obj is not null)
                 {
-                    if (obj.heldObject.Value is not Object held || held.ItemId == "913" || held.ItemId == "915")
+                    if (obj.heldObject.Value is not Object held || held.ItemId == "913" || held.ItemId == "915") // 913 enricher 915 nozzle
                     {
-                        if (who.CurrentItem?.ItemId == "913" && obj.heldObject.Value?.ItemId != "913")
+                        if (who.CurrentItem?.ItemId == "913" && obj.heldObject.Value?.ItemId == "915")
                         {
-                            TryReturnObject(obj.heldObject.Value, who);
+                            obj.modData[nozzleKey] = "true";
                             obj.heldObject.Value = new Object("913", 1);
                             obj.heldObject.Value.heldObject.Value = new Chest
                             {
@@ -53,16 +53,31 @@ namespace ImmersiveSprinklersAndScarecrows
                             __instance.playSound("axe");
 
                         }
-                        else if (who.CurrentItem?.ItemId == "915" && obj.heldObject.Value?.ItemId != "915")
+                        else if (who.CurrentItem?.ItemId == "915" && obj.heldObject.Value?.ItemId == "913")
                         {
-                            if (obj.heldObject.Value?.heldObject.Value is Chest c && c.Items.Count > 0 && c.Items[0] is Object i)
+                            if (obj.modData.ContainsKey(nozzleKey))
                             {
-
-                                TryReturnObject(i, who);
+                                return true;
                             }
-                            TryReturnObject(obj.heldObject.Value, who);
-
+                            obj.modData[nozzleKey] = "true";
+                            who.reduceActiveItemByOne();
+                            __instance.playSound("axe");
+                        }
+                        else if (who.CurrentItem?.ItemId == "915" && obj.heldObject.Value is null)
+                        {
                             obj.heldObject.Value = new Object("915", 1);
+                            obj.modData.Remove(nozzleKey);
+                            who.reduceActiveItemByOne();
+                            __instance.playSound("axe");
+                        }
+                        else if (who.CurrentItem?.ItemId == "913" && obj.heldObject.Value is null)
+                        {
+                            obj.modData.Remove(nozzleKey);
+                            obj.heldObject.Value = new Object("913", 1);
+                            obj.heldObject.Value.heldObject.Value = new Chest
+                            {
+                                SpecialChestType = Chest.SpecialChestTypes.Enricher
+                            };
                             who.reduceActiveItemByOne();
                             __instance.playSound("axe");
                         }
@@ -331,6 +346,10 @@ namespace ImmersiveSprinklersAndScarecrows
                                     {
                                         f.drawInMenu(b, epos + new Vector2(0, -48), 1);
                                     }
+                                }
+                                if (obj.modData.ContainsKey(nozzleKey))
+                                {
+                                    b.Draw(Game1.objectSpriteSheet, position, GameLocation.getSourceRectForObject(916), Color.White * Config.Alpha, 0, Vector2.Zero, Config.Scale, obj.Flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + 1E-05f);
                                 }
                             }
                             else if (held.ItemId == "915")

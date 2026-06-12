@@ -70,14 +70,14 @@ namespace SimpleCooking
             {
                 e.LoadFrom(() => new Dictionary<string, CookerData>()
                 {
-                    { "(BC)143", new() { CookOffset = new(8,-48, 75/100000f) } },
-                    { "(BC)144", new() { CookOffset = new(8, -48, 75/100000f) } },
-                    { "(BC)145", new() { CookOffset = new(8, -48, 75/100000f) } },
-                    { "(BC)146", new() { CookOffset = new(8, 0,  95/100000f) } },
-                    { "(BC)147", new() { CookOffset = new(8, -48, 75/100000f) } },
-                    { "(BC)148", new() { CookOffset = new(8, -48, 75/100000f) } },
-                    { "(BC)150", new() { CookOffset = new(8, -48, 75/100000f) } },
-                    { "(BC)151", new() { CookOffset = new(8, -48, 75/100000f) } }
+                    { "(BC)143", new() { CookOffset = new(8,-72, 75/100000f) } },
+                    { "(BC)144", new() { CookOffset = new(8, -72, 75/100000f) } },
+                    { "(BC)145", new() { CookOffset = new(8, -72, 75/100000f) } },
+                    { "(BC)146", new() { CookOffset = new(8, -8,  95/100000f) } },
+                    { "(BC)147", new() { CookOffset = new(8, -72, 75/100000f) } },
+                    { "(BC)148", new() { CookOffset = new(8, -72, 75/100000f) } },
+                    { "(BC)150", new() { CookOffset = new(8, -72, 75/100000f) } },
+                    { "(BC)151", new() { CookOffset = new(8, -72, 75/100000f) } }
                 }, AssetLoadPriority.Exclusive);
             }
             else if (e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))

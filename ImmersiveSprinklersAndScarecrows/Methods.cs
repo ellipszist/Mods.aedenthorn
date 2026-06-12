@@ -69,11 +69,8 @@ namespace ImmersiveSprinklersAndScarecrows
             if (obj != null)
             {
                 obj.TileLocation = new Vector2(x, y);
-                if (data.Nozzle)
-                {
-                    obj.heldObject.Value = new Object("915", 1);
-                }
-                else if (data.Enricher)
+                
+                if (data.Enricher)
                 {
                     obj.heldObject.Value = new Object("913", 1);
                     Chest chest = new Chest
@@ -85,8 +82,16 @@ namespace ImmersiveSprinklersAndScarecrows
                         chest.addItem(new Object(data.Fertilizer, data.FertilizerStack));
                     }
                     obj.heldObject.Value.heldObject.Value = chest;
+                    if (data.Nozzle)
+                    {
+                        obj.modData[nozzleKey] = "true";
+                    }
                 }
-                foreach(var m in data.modData)
+                else if (data.Nozzle)
+                {
+                    obj.heldObject.Value = new Object("915", 1);
+                }
+                foreach (var m in data.modData)
                 {
                     obj.modData[m.Key] = m.Value;
                 }
@@ -218,7 +223,6 @@ namespace ImmersiveSprinklersAndScarecrows
             }
             else
             {
-                TryReturnObject(sprinkler, who);
                 if (sprinkler.heldObject.Value != null)
                 {
                     if (sprinkler.heldObject.Value.heldObject.Value is Chest chest && chest.Items.FirstOrDefault() is Item obj)
@@ -226,7 +230,13 @@ namespace ImmersiveSprinklersAndScarecrows
                         TryReturnObject(obj, who);
                     }
                     TryReturnObject(sprinkler.heldObject.Value, who);
+                    if (sprinkler.modData.ContainsKey(nozzleKey))
+                    {
+                        TryReturnObject(ItemRegistry.Create("(O)315"), who);
+                        sprinkler.modData.Remove(nozzleKey);
+                    }
                 }
+                TryReturnObject(sprinkler, who);
             }
             SetData(l, x, y, null);
             if (sprinklerDict.TryGetValue(l, out var dict))
@@ -286,7 +296,7 @@ namespace ImmersiveSprinklersAndScarecrows
         {
             if (!Config.SprinklerRadii.TryGetValue(obj.ItemId, out int radius) && !Config.SprinklerRadii.TryGetValue(obj.Name, out radius))
                 return obj.GetModifiedRadiusForSprinkler();
-            if (obj.heldObject.Value != null && Utility.IsNormalObjectAtParentSheetIndex(obj.heldObject.Value, "915"))
+            if (obj.modData.ContainsKey(nozzleKey) || (obj.heldObject.Value != null && Utility.IsNormalObjectAtParentSheetIndex(obj.heldObject.Value, "915")))
             {
                 radius++;
             }
