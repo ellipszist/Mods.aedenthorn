@@ -38,6 +38,7 @@ namespace SimpleCooking
         { 
             get
             {
+                //SHelper.GameContent.InvalidateCache(cookerDictPath);
                 return SHelper.GameContent.Load<Dictionary<string, CookerData>>(cookerDictPath);
             } 
         }
@@ -69,16 +70,14 @@ namespace SimpleCooking
             {
                 e.LoadFrom(() => new Dictionary<string, CookerData>()
                 {
-                    { "(BC)278", new() },
-                    { "(BC)74", new() },
-                    { "(BC)143", new() },
-                    { "(BC)144", new() },
-                    { "(BC)145", new() },
-                    { "(BC)146", new() },
-                    { "(BC)147", new() },
-                    { "(BC)148", new() },
-                    { "(BC)150", new() },
-                    { "(BC)151", new() }
+                    { "(BC)143", new() { CookOffset = new(8,-48, 75/100000f) } },
+                    { "(BC)144", new() { CookOffset = new(8, -48, 75/100000f) } },
+                    { "(BC)145", new() { CookOffset = new(8, -48, 75/100000f) } },
+                    { "(BC)146", new() { CookOffset = new(8, 0,  95/100000f) } },
+                    { "(BC)147", new() { CookOffset = new(8, -48, 75/100000f) } },
+                    { "(BC)148", new() { CookOffset = new(8, -48, 75/100000f) } },
+                    { "(BC)150", new() { CookOffset = new(8, -48, 75/100000f) } },
+                    { "(BC)151", new() { CookOffset = new(8, -48, 75/100000f) } }
                 }, AssetLoadPriority.Exclusive);
             }
             else if (e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))

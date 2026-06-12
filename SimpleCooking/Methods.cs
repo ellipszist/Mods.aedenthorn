@@ -29,9 +29,9 @@ namespace SimpleCooking
             {
                 data = new CookingData()
                 {
-                    StartTime = Game1.timeOfDay,
-                    EndTime = AddMinutes(Game1.timeOfDay, cdata.CookTime),
-                    Burned = cdata.Burned,
+                    LastCheckTime = Game1.timeOfDay,
+                    MinutesToCook = cdata.CookTime,
+                    BurnedAt = cdata.Burned,
                     Smoke = cdata.ShowSmoke,
                     InputID = obj.QualifiedItemId,
                     ProductID = cdata.ProductID,
@@ -43,9 +43,9 @@ namespace SimpleCooking
             {
                 data = new CookingData()
                 {
-                    StartTime = Game1.timeOfDay,
-                    EndTime = AddMinutes(Game1.timeOfDay, obj.Category == Object.FishCategory ? Config.FishCookTime : Config.VegetableCookTime),
-                    Burned = obj.Category == Object.FishCategory ? Config.FishBurn : Config.VegetableBurn,
+                    LastCheckTime = Game1.timeOfDay,
+                    MinutesToCook = obj.Category == Object.FishCategory ? Config.FishCookTime : Config.VegetableCookTime,
+                    BurnedAt = obj.Category == Object.FishCategory ? Config.FishBurn : Config.VegetableBurn,
                     Smoke = true,
                     InputID = obj.QualifiedItemId,
                     ProductID = grilledPrefix + obj.ItemId,
@@ -93,18 +93,6 @@ namespace SimpleCooking
             {
                 who.currentLocation.debris.Add(new Debris(obj, who.Position));
             }
-        }
-        public static float CookProgress(CookingData data, int time)
-        {
-            if (time < data.StartTime)
-            {
-                time += 2400;
-            }
-
-            float start = TimeToMinutes(data.StartTime);
-            float end = TimeToMinutes(data.EndTime);
-            float t = TimeToMinutes(time);
-            return (t - start) / (end - start);
         }
         public static int TimeToMinutes(int time)
         {

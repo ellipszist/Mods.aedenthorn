@@ -3,17 +3,13 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using StardewValley;
-using StardewValley.Extensions;
 using StardewValley.ItemTypeDefinitions;
-using StardewValley.Minigames;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using xTile.Dimensions;
 using Object = StardewValley.Object;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace SimpleCooking
 {
@@ -31,25 +27,23 @@ namespace SimpleCooking
                 if (TryGetCookingData(__instance, out var data) && CookerDict.TryGetValue(__instance.QualifiedItemId, out var cdata))
                 {
                     ParsedItemData idata;
-                    var progress = CookProgress(data, Game1.timeOfDay);
                     Color color = Color.White;
-                    if (progress < 1)
+                    if (data.Burned)
                     {
-                        idata = ItemRegistry.GetDataOrErrorItem(data.InputID);
+                        color = Color.DarkSlateGray;
+                        idata = ItemRegistry.GetDataOrErrorItem(data.BurntID);
                     }
-                    else if(progress < data.Burned)
+                    else if(data.Progress >= 1)
                     {
                         color = data.ProductID.StartsWith(grilledPrefix) ? Config.GrilledColor : Color.White;
                         idata = ItemRegistry.GetDataOrErrorItem(data.ProductID);
                     }
                     else
                     {
-                        color = Color.DarkSlateGray;
-                        idata = ItemRegistry.GetDataOrErrorItem(data.BurntID);
+                        idata = ItemRegistry.GetDataOrErrorItem(data.InputID);
                     }
                     float draw_layer = Math.Max(0f, (float)((y + 1) * 64 - 24) / 10000f) + (float)x * 1E-05f;
-                    var offset = new Vector2(8, 4);
-                    spriteBatch.Draw(idata.GetTexture(), Game1.GlobalToLocal(__instance.TileLocation * 64) + offset, idata.GetSourceRect(), color, 0, Vector2.Zero, 3f, SpriteEffects.None, draw_layer + 1/100000f);
+                    spriteBatch.Draw(idata.GetTexture(), Game1.GlobalToLocal(__instance.TileLocation * 64) + new Vector2(cdata.CookOffset.X, cdata.CookOffset.Y), idata.GetSourceRect(), color, 0, Vector2.Zero, 3f, SpriteEffects.None, draw_layer + cdata.CookOffset.Z);
 
                     //TemporaryAnimatedSprite sprite = TemporaryAnimatedSprite.GetTemporaryAnimatedSprite("LooseSprites\\Cursors", new Rectangle(372, 1956, 10, 10), __instance.TileLocation * 64, false, 0.002f, Color.Gray);
                     //sprite.alpha = 0.5f * progress;
@@ -75,7 +69,7 @@ namespace SimpleCooking
                 }
                 if (__instance.ItemId.StartsWith(grilledPrefix))
                 {
-                    color = Color.DarkGoldenrod;
+                    color = Config.GrilledColor;
                 }
             }
         }
@@ -111,66 +105,53 @@ namespace SimpleCooking
                 {
                     if(TryGetCookingData(kvp.Value, out var data))
                     {
-                        if(CookProgress(data, timeOfDay) >= 2 && CookProgress(data, MinutesToTime(TimeToMinutes(timeOfDay) - 10)) < 2)
+                        if(kvp.Value is Torch t && !t.IsOn)
                         {
-                            __instance.playSound(data.BurntSound, kvp.Key);
+                            continue;
                         }
-                        else if(CookProgress(data, timeOfDay) >= 1 && CookProgress(data, MinutesToTime(TimeToMinutes(timeOfDay) - 10)) < 1)
-                        {
-                            __instance.playSound(data.CookedSound, kvp.Key);
-                        }
+                        data.Update(kvp.Value, timeOfDay);
                     }
                 }
             }
         }
-        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.checkAction))]
-        public class GameLocation_checkAction_Patch
+        [HarmonyPatch(typeof(Game1), nameof(Game1.pressUseToolButton))]
+        public class Game1_pressUseToolButton_Patch
         {
-            public static bool Prefix(GameLocation __instance, Location tileLocation, xTile.Dimensions.Rectangle viewport, Farmer who, ref bool __result)
+            public static bool Prefix()
             {
                 if (!Config.ModEnabled)
                     return true;
-                if (!__instance.Objects.TryGetValue(new Vector2(tileLocation.X, tileLocation.Y), out var obj) || !CookerDict.TryGetValue(obj.QualifiedItemId, out var cooker))
+                Farmer f = Game1.player;
+                Vector2 c = f.GetToolLocation(false) / 64f;
+                c.X = (float)((int)c.X);
+                c.Y = (float)((int)c.Y);
+                GameLocation l = Game1.currentLocation;
+                if (!l.Objects.TryGetValue(c, out var obj) || !CookerDict.TryGetValue(obj.QualifiedItemId, out var cooker))
                 {
                     return true;
                 }
-                var cookable = IsCookable(who.ActiveObject, out var data);
+                var cookable = IsCookable(f.ActiveObject, out var data);
                 if (obj.modData.TryGetValue(cookingKey, out var str))
                 {
                     var cdata = GetCookingData(str);
-                    var progress = CookProgress(cdata, Game1.timeOfDay);
-                    if (progress == 1)
+                    var progress = cdata.Progress;
+                    if (progress < 1)
                     {
-                        __instance.playSound("dwoop", obj.TileLocation);
-                        TryReturnObject(ItemRegistry.Create(cdata.ProductID, 1, cdata.Quality), who);
-                        obj.modData.Remove(cookingKey);
-                    }
-                    else if (progress == 2)
-                    {
-                        __instance.playSound("slimehit", obj.TileLocation);
-                        TryReturnObject(ItemRegistry.Create(cdata.BurntID, 1, cdata.Quality), who);
-                        obj.modData.Remove(cookingKey);
-                    }
-                    else
-                    {
-                        who.ignoreItemConsumptionThisFrame = false;
                         Game1.showRedMessage(SHelper.Translation.Get("cooker-busy"));
-                        __result = true;
                         return false;
                     }
+                    l.playSound("coin", obj.TileLocation);
+                    TryReturnObject(cdata.Burned ? ItemRegistry.Create(cdata.BurntID, 1) : ItemRegistry.Create(cdata.ProductID, 1, cdata.Quality), f);
+                    obj.modData.Remove(cookingKey);
                     if (!cookable)
-                    {
-                        __result = true;
                         return false;
-                    }
                 }
                 if (cookable)
                 {
-                    __instance.playSound("grassyStep", obj.TileLocation);
-                    who.ignoreItemConsumptionThisFrame = false;
+                    l.playSound("cut", obj.TileLocation);
+                    f.ignoreItemConsumptionThisFrame = false;
                     obj.modData[cookingKey] = JsonConvert.SerializeObject(data);
-                    who.reduceActiveItemByOne();
-                    __result = true;
+                    f.reduceActiveItemByOne();
                     return false;
                 }
                 return true;
