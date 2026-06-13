@@ -1,10 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using StardewValley;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
 using Object = StardewValley.Object;
 
 namespace SimpleCooking
@@ -36,7 +32,10 @@ namespace SimpleCooking
                     InputID = obj.QualifiedItemId,
                     ProductID = cdata.ProductID,
                     Quality = obj.Quality,
-                    BurntID = cdata.BurntID
+                    PlacedSound = cdata.PlacedSound ?? Config.PlacedSound,
+                    CookedSound = cdata.CookedSound ?? Config.CookedSound,
+                    BurntSound = cdata.BurntSound ?? Config.BurntSound,
+                    BurntID = cdata.BurntID ?? Config.BurntID
                 };
             }
             else if(obj.Edibility > 0 && (obj.Category == Object.FishCategory || obj.Category == Object.VegetableCategory))
@@ -50,7 +49,10 @@ namespace SimpleCooking
                     InputID = obj.QualifiedItemId,
                     ProductID = grilledPrefix + obj.ItemId,
                     Quality = obj.Quality,
-                    BurntID = "(O)382"
+                    PlacedSound = Config.PlacedSound,
+                    CookedSound = Config.CookedSound,
+                    BurntSound = Config.BurntSound,
+                    BurntID = Config.BurntID
                 };
             }
             else

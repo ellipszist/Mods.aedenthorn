@@ -30,6 +30,7 @@ namespace SimpleCooking
         public string ProductID { get; set; }
         public string BurntID { get; set; }
         public bool Smoke { get; set; }
+        public string PlacedSound { get; set; } = "fireball";
         public string CookedSound { get; set; } = "fireball";
         public string BurntSound { get; set; } = "furnace";
 
@@ -51,6 +52,8 @@ namespace SimpleCooking
 
         public void Update(Object obj, int timeOfDay)
         {
+            if (Burned)
+                return;
             if (timeOfDay < LastCheckTime)
                 timeOfDay += 2400;
             if (WillBurn(timeOfDay))

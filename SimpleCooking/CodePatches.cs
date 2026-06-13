@@ -6,6 +6,7 @@ using StardewValley;
 using StardewValley.ItemTypeDefinitions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -26,35 +27,53 @@ namespace SimpleCooking
                 }
                 if (TryGetCookingData(__instance, out var data) && CookerDict.TryGetValue(__instance.QualifiedItemId, out var cdata))
                 {
+                    var offset = new Vector2(cdata.CookOffset.X, cdata.CookOffset.Y);
                     ParsedItemData idata;
                     Color color = Color.White;
                     if (data.Burned)
                     {
                         color = Color.DarkSlateGray;
                         idata = ItemRegistry.GetDataOrErrorItem(data.BurntID);
+                        if (data.Smoke && (__instance is not Torch || __instance.IsOn) && Game1.currentGameTime.TotalGameTime.Ticks % 50 == 0)
+                        {
+                            TemporaryAnimatedSprite sprite = TemporaryAnimatedSprite.GetTemporaryAnimatedSprite("LooseSprites\\Cursors", new Rectangle(372, 1956, 10, 10), __instance.TileLocation * 64 + offset + new Vector2(32, 0), false, 0.002f, Color.Gray);
+                            sprite.alpha = 1f;
+                            sprite.motion = new Vector2(0f, -0.5f);
+                            sprite.acceleration = new Vector2(0.002f, 0f);
+                            sprite.interval = 99999f;
+                            sprite.layerDepth = 1f;
+                            sprite.scale = 1;
+                            sprite.scaleChange = 0.02f;
+                            sprite.rotationChange = (float)Game1.random.Next(-5, 6) * 3.1415927f / 256f;
+                            __instance.Location.temporarySprites.Add(sprite);
+                        }
                     }
                     else if(data.Progress >= 1)
                     {
                         color = data.ProductID.StartsWith(grilledPrefix) ? Config.GrilledColor : Color.White;
                         idata = ItemRegistry.GetDataOrErrorItem(data.ProductID);
+
+                        if (data.Smoke && (__instance is not Torch || __instance.IsOn) && Game1.currentGameTime.TotalGameTime.Ticks % 50 == 0)
+                        {
+                            TemporaryAnimatedSprite sprite = TemporaryAnimatedSprite.GetTemporaryAnimatedSprite("LooseSprites\\Cursors", new Rectangle(372, 1956, 10, 10), __instance.TileLocation * 64 + offset + new Vector2(32, 0), false, 0.002f, Color.Gray);
+                            sprite.alpha = 0.5f + (data.Progress - 1) / Math.Max(1, data.BurnedAt - 1) / 2f;
+                            sprite.motion = new Vector2(0f, -0.5f);
+                            sprite.acceleration = new Vector2(0.002f, 0f);
+                            sprite.interval = 99999f;
+                            sprite.layerDepth = 1f;
+                            sprite.scale = 1;
+                            sprite.scaleChange = 0.02f;
+                            sprite.rotationChange = (float)Game1.random.Next(-5, 6) * 3.1415927f / 256f;
+                            __instance.Location.temporarySprites.Add(sprite);
+                        }
+
                     }
                     else
                     {
                         idata = ItemRegistry.GetDataOrErrorItem(data.InputID);
                     }
                     float draw_layer = Math.Max(0f, (float)((y + 1) * 64 - 24) / 10000f) + (float)x * 1E-05f;
-                    spriteBatch.Draw(idata.GetTexture(), Game1.GlobalToLocal(__instance.TileLocation * 64) + new Vector2(cdata.CookOffset.X, cdata.CookOffset.Y), idata.GetSourceRect(), color, 0, Vector2.Zero, 3f, SpriteEffects.None, draw_layer + cdata.CookOffset.Z);
-
-                    //TemporaryAnimatedSprite sprite = TemporaryAnimatedSprite.GetTemporaryAnimatedSprite("LooseSprites\\Cursors", new Rectangle(372, 1956, 10, 10), __instance.TileLocation * 64, false, 0.002f, Color.Gray);
-                    //sprite.alpha = 0.5f * progress;
-                    //sprite.motion = new Vector2(0f, -0.5f);
-                    //sprite.acceleration = new Vector2(0.002f, 0f);
-                    //sprite.interval = 99999f;
-                    //sprite.layerDepth = 1f;
-                    //sprite.scale = 1;
-                    //sprite.scaleChange = 0.02f;
-                    //sprite.rotationChange = (float)Game1.random.Next(-5, 6) * 3.1415927f / 256f;
-                    //__instance.Location.temporarySprites.Add(sprite);
+                    spriteBatch.Draw(idata.GetTexture(), Game1.GlobalToLocal(__instance.TileLocation * 64) + offset, idata.GetSourceRect(), color, 0, Vector2.Zero, 3f, SpriteEffects.None, draw_layer + cdata.CookOffset.Z / 10000f);
                 }
             }
         }
@@ -70,6 +89,21 @@ namespace SimpleCooking
                 if (__instance.ItemId.StartsWith(grilledPrefix))
                 {
                     color = Config.GrilledColor;
+                }
+            }
+        }
+        [HarmonyPatch(typeof(Item), nameof(Item.DrawMenuIcons))]
+        public class Item_DrawMenuIcons_Patch
+        {
+            public static void Prefix(Item __instance, ref Color color)
+            {
+                if (!Config.ModEnabled)
+                {
+                    return;
+                }
+                if (__instance.ItemId.StartsWith(grilledPrefix) && color == Config.GrilledColor)
+                {
+                    color = Color.White;
                 }
             }
         }
@@ -122,9 +156,9 @@ namespace SimpleCooking
                 if (!Config.ModEnabled)
                     return true;
                 Farmer f = Game1.player;
-                Vector2 c = f.GetToolLocation(false) / 64f;
-                c.X = (float)((int)c.X);
-                c.Y = (float)((int)c.Y);
+                Vector2 c = f.ActiveObject == null ? f.GetToolLocation(false) / 64f : new Vector2((float)(Game1.getOldMouseX() + Game1.viewport.X), (float)(Game1.getOldMouseY() + Game1.viewport.Y)) / 64;
+                c.X = (int)c.X;
+                c.Y = (int)c.Y;
                 GameLocation l = Game1.currentLocation;
                 if (!l.Objects.TryGetValue(c, out var obj) || !CookerDict.TryGetValue(obj.QualifiedItemId, out var cooker))
                 {
@@ -140,15 +174,18 @@ namespace SimpleCooking
                         Game1.showRedMessage(SHelper.Translation.Get("cooker-busy"));
                         return false;
                     }
-                    l.playSound("coin", obj.TileLocation);
+                    
                     TryReturnObject(cdata.Burned ? ItemRegistry.Create(cdata.BurntID, 1) : ItemRegistry.Create(cdata.ProductID, 1, cdata.Quality), f);
                     obj.modData.Remove(cookingKey);
                     if (!cookable)
+                    {
+                        l.playSound("coin", obj.TileLocation);
                         return false;
+                    }
                 }
                 if (cookable)
                 {
-                    l.playSound("cut", obj.TileLocation);
+                    l.playSound(data.PlacedSound, obj.TileLocation);
                     f.ignoreItemConsumptionThisFrame = false;
                     obj.modData[cookingKey] = JsonConvert.SerializeObject(data);
                     f.reduceActiveItemByOne();

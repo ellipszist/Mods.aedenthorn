@@ -6,5 +6,5 @@
   "UniqueID": "aedenthorn.SimpleCooking",
   "EntryDll": "SimpleCooking.dll",
   "MinimumApiVersion": "4.0.0",
-  "UpdateKeys": [ "Nexus:" ]
+  "UpdateKeys": [ "Nexus:47584" ]
 }
