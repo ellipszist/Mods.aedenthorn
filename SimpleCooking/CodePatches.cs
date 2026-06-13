@@ -27,7 +27,7 @@ namespace SimpleCooking
                 }
                 if (TryGetCookingData(__instance, out var data) && CookerDict.TryGetValue(__instance.QualifiedItemId, out var cdata))
                 {
-                    var offset = new Vector2(cdata.CookOffset.X, cdata.CookOffset.Y);
+                    var offset = new Vector2(cdata.X, cdata.Y);
                     ParsedItemData idata;
                     Color color = Color.White;
                     if (data.Burned)
@@ -73,7 +73,7 @@ namespace SimpleCooking
                         idata = ItemRegistry.GetDataOrErrorItem(data.InputID);
                     }
                     float draw_layer = Math.Max(0f, (float)((y + 1) * 64 - 24) / 10000f) + (float)x * 1E-05f;
-                    spriteBatch.Draw(idata.GetTexture(), Game1.GlobalToLocal(__instance.TileLocation * 64) + offset, idata.GetSourceRect(), color, 0, Vector2.Zero, 3f, SpriteEffects.None, draw_layer + cdata.CookOffset.Z / 10000f);
+                    spriteBatch.Draw(idata.GetTexture(), Game1.GlobalToLocal(__instance.TileLocation * 64) + offset, idata.GetSourceRect(), color, 0, Vector2.Zero, 3f, SpriteEffects.None, draw_layer + cdata.Z / 10000f);
                 }
             }
         }

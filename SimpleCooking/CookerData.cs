@@ -6,6 +6,8 @@ namespace SimpleCooking
 {
     public class CookerData
     {
-        public Vector3 CookOffset { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
+        public float Z { get; set; }
     }
 }

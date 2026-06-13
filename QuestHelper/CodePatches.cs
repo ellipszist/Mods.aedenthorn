@@ -1,10 +1,7 @@
 ﻿using HarmonyLib;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Netcode;
+using StardewModdingAPI;
 using StardewValley;
-using StardewValley.GameData.Locations;
-using StardewValley.Menus;
 using StardewValley.Monsters;
 using StardewValley.Quests;
 using System;
@@ -20,7 +17,7 @@ namespace QuestHelper
         {
             public static void Postfix(NPC __instance, SpriteBatch b)
             {
-                if (!Config.ModEnabled || !Config.ShowQuestMarkers)
+                if (!Config.ModEnabled || !Config.ShowQuestMarkers || !Context.IsPlayerFree)
                     return;
                 bool show = false;
                 foreach (var q in Game1.player.questLog)

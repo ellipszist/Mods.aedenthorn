@@ -71,14 +71,14 @@ namespace SimpleCooking
             {
                 e.LoadFrom(() => new Dictionary<string, CookerData>()
                 {
-                    { "(BC)143", new() { CookOffset = new(8, -60, 7.5f) } },
-                    { "(BC)144", new() { CookOffset = new(8, -60, 7.5f) } },
-                    { "(BC)145", new() { CookOffset = new(8, -60, 7.5f) } },
-                    { "(BC)146", new() { CookOffset = new(8, -8,  9.5f) } },
-                    { "(BC)147", new() { CookOffset = new(8, -60, 7.5f) } },
-                    { "(BC)148", new() { CookOffset = new(8, -60, 7.5f) } },
-                    { "(BC)150", new() { CookOffset = new(8, -60, 7.5f) } },
-                    { "(BC)151", new() { CookOffset = new(8, -60, 7.5f) } }
+                    { "(BC)143", new() { X = 8, Y = -60, Z = 7.5f } },
+                    { "(BC)144", new() { X = 8, Y = -60, Z = 7.5f } },
+                    { "(BC)145", new() { X = 8, Y = -60, Z = 7.5f } },
+                    { "(BC)146", new() { X = 8, Y = -8,  Z = 9.5f } },
+                    { "(BC)147", new() { X = 8, Y = -60, Z = 7.5f } },
+                    { "(BC)148", new() { X = 8, Y = -60, Z = 7.5f } },
+                    { "(BC)150", new() { X = 8, Y = -60, Z = 7.5f } },
+                    { "(BC)151", new() { X = 8, Y = -60, Z = 7.5f } }
                 }, AssetLoadPriority.Exclusive);
             }
             else if (e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))
