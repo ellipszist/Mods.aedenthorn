@@ -164,10 +164,9 @@ namespace SimpleCooking
                 {
                     return true;
                 }
-                var cookable = IsCookable(f.ActiveObject, out var data);
-                if (obj.modData.TryGetValue(cookingKey, out var str))
+                var cookable = TryGetCookingData((Item)f.ActiveObject, out var data);
+                if (TryGetCookingData(obj, out var cdata))
                 {
-                    var cdata = GetCookingData(str);
                     var progress = cdata.Progress;
                     if (progress < 1)
                     {

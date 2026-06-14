@@ -34,6 +34,13 @@ namespace SimpleCooking
         public string CookedSound { get; set; } = "fireball";
         public string BurntSound { get; set; } = "furnace";
 
+        public Object GetProduct()
+        {
+            if (Progress < 1)
+                return null;
+            return ItemRegistry.Create<Object>(ProductID, 1, Quality);
+        }
+
         public bool WillCook(int time)
         {
             if (Progress >= 1)

@@ -101,11 +101,16 @@ namespace SimpleCooking
                             SpriteIndex = kvp.Value.SpriteIndex
                         };
                     }
-                });
+                }, (AssetEditPriority)int.MaxValue);
             }
         }
         private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
         {
+            var automate = Helper.ModRegistry.GetApi<IAutomateAPI>("Pathoschild.Automate");
+            if(automate is not null)
+            {
+                automate.AddFactory(new MyAutomationFactory());
+            }
             //SMonitor.Log(string.Join(",", Game1.objectData.Where(kvp => kvp.Value.Type == "Arch").Select(kvp => kvp.Key)));
             var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (configMenu is not null)

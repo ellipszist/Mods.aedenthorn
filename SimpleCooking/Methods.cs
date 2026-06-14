@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using StardewValley;
+using StardewValley.Extensions;
 using Object = StardewValley.Object;
 
 namespace SimpleCooking
@@ -16,10 +17,10 @@ namespace SimpleCooking
             }
             return color;
         }
-        private static bool IsCookable(Object obj, out CookingData data)
+        public static bool TryGetCookingData(Item item, out CookingData data)
         {
             data = null;
-            if (obj is null)
+            if (item is not Object obj || !obj.HasTypeObject())
                 return false;
             if (CookableDict.TryGetValue(obj.ItemId, out var cdata))
             {
@@ -38,7 +39,7 @@ namespace SimpleCooking
                     BurntID = cdata.BurntID ?? Config.BurntID
                 };
             }
-            else if(obj.Edibility > 0 && (obj.Category == Object.FishCategory || obj.Category == Object.VegetableCategory))
+            else if(Game1.objectData.ContainsKey(grilledPrefix + obj.ItemId) && obj.Edibility > 0 && (obj.Category == Object.FishCategory || obj.Category == Object.VegetableCategory))
             {
                 data = new CookingData()
                 {
