@@ -66,7 +66,7 @@ namespace SimpleCooking
             
             if (ProductID == null)
             {
-                var temp = ItemRegistry.Create<Object>(InputID, 1, Quality);
+                var temp = ItemRegistry.Create(InputID, 1, Quality) as Object;
                 Object item = new ColoredObject("SmokedFish", 1, Color.Orange)
                 {
                     Edibility = (int)Math.Round(temp.Edibility * (Burned ? 1 / ModEntry.Config.GrilledEdibilityMult : ModEntry.Config.GrilledEdibilityMult)),

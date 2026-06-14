@@ -51,7 +51,7 @@ namespace SimpleCooking
                     MinutesToCook = Config.GrillTime,
                     BurntAt = Config.BurntAt,
                     Smoke = true,
-                    InputID = obj.QualifiedItemId,
+                    InputID = obj.ItemId,
                     Quality = obj.Quality,
                     PlacedSound = Config.PlacedSound,
                     CookedSound = Config.CookedSound,
