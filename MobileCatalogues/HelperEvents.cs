@@ -41,7 +41,8 @@ namespace MobileCatalogues
         }
         public static void GameLoop_SaveLoaded(object sender, SaveLoadedEventArgs e)
         {
-            var keys = DataLoader.Shops(Game1.content).Keys;
+            var shops = DataLoader.Shops(Game1.content);
+            var keys = shops.Keys;
             if (Config.AllCatalogues.Count != keys.Count)
             {
                 Config.AllCatalogues.Clear();

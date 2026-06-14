@@ -1,11 +1,12 @@
 ﻿using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
+using Pathoschild.Stardew.Automate;
 using StardewValley;
 using SObject = StardewValley.Object;
 
-namespace SimpleCooking
+namespace SimpleCookingAutomate
 {
-    public class SimpleCookingMachine : IMachine
+    public class SimpleCookingAutomateMachine : IMachine
     {
         /*********
         ** Fields
@@ -25,7 +26,7 @@ namespace SimpleCooking
 
         /// <summary>A unique ID for the machine type.</summary>
         /// <remarks>This value should be identical for two machines if they have the exact same behavior and input logic. For example, if one machine in a group can't process input due to missing items, Automate will skip any other empty machines of that type in the same group since it assumes they need the same inputs.</remarks>
-        public string MachineTypeID { get; } = "aedenthorn.SimpleCooking/Cooker";
+        public string MachineTypeID { get; } = "aedenthorn.SimpleCookingAutomate/Cooker";
 
 
         /*********
@@ -35,7 +36,7 @@ namespace SimpleCooking
         /// <param name="entity">The underlying entity.</param>
         /// <param name="location">The location which contains the machine.</param>
         /// <param name="tile">The tile covered by the machine.</param>
-        public SimpleCookingMachine(SObject entity, GameLocation location, in Vector2 tile)
+        public SimpleCookingAutomateMachine(SObject entity, GameLocation location, in Vector2 tile)
         {
             this.Entity = entity;
             this.Location = location;
@@ -45,7 +46,7 @@ namespace SimpleCooking
         /// <summary>Get the machine's processing state.</summary>
         public MachineState GetState()
         {
-            if (!ModEntry.TryGetCookingData(Entity, out var data))
+            if (!ModEntry.scapi.TryGetCookingDataForCooker(Entity, out var data))
                 return MachineState.Empty;
 
             return data.Progress >= 1
@@ -56,11 +57,11 @@ namespace SimpleCooking
         /// <summary>Get the output item.</summary>
         public ITrackedStack GetOutput()
         {
-            if (!ModEntry.TryGetCookingData(Entity, out var data) || data.Progress < 1)
+            if (!ModEntry.scapi.TryGetCookingDataForCooker(Entity, out var data) || data.Progress < 1)
                 return null;
-            return new TrackedItem(data.GetProduct(), onEmpty: () =>
+            return new TrackedItem(data.GetProduct(), () =>
             {
-                Entity.modData.Remove(ModEntry.cookingKey);
+                ModEntry.scapi.SetCookingDataForCooker(Entity, null);
             });
         }
 
@@ -71,15 +72,17 @@ namespace SimpleCooking
         {
             foreach(var item in input.GetItems())
             {
-                if (ModEntry.TryGetCookingData(item.Sample, out var data))
+                if (item.Sample is not SObject obj)
+                    continue;
+                if (ModEntry.scapi.TryGetCookingDataForCookable(obj, out var data))
                 {
-                    if(input.TryConsume((ITrackedStack stack) => 
+                    if(input.TryConsume(stack =>
                     {
                         return stack.Sample.QualifiedItemId == item.Sample.QualifiedItemId;
                     }, 1))
                     {
                         Entity.Location.playSound(data.PlacedSound, Entity.TileLocation);
-                        Entity.modData[ModEntry.cookingKey] = JsonConvert.SerializeObject(data);
+                        ModEntry.scapi.SetCookingDataForCooker(Entity, data);
                         return true;
                     }
                 }

@@ -1,18 +1,13 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
+using Pathoschild.Stardew.Automate;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
-using StardewValley;
-using StardewValley.GameData.Objects;
-using StardewValley.TokenizableStrings;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Object = StardewValley.Object;
 
-namespace SimpleCooking
+namespace SimpleCookingAutomate
 {
     /// <summary>The mod entry point.</summary>
     public partial class ModEntry : Mod
@@ -22,27 +17,9 @@ namespace SimpleCooking
         public static IModHelper SHelper;
         public static ModConfig Config;
         public static ModEntry context;
+        public static ISimpleCookingAPI scapi;
         public static IAutomateAPI automate;
-        public const string cookingKey = "aedenthorn.SimpleCooking/cooking";
-        public const string cookableDictPath = "aedenthorn.SimpleCooking/cookable";
-        public const string cookerDictPath = "aedenthorn.SimpleCooking/cooker";
-        public const string grilledKey = "aedenthorn.SimpleCooking/grilled";
 
-        public static Dictionary<string, CookableData> CookableDict 
-        { 
-            get
-            {                
-                return SHelper.GameContent.Load<Dictionary<string, CookableData>>(cookableDictPath);
-            } 
-        }
-        public static Dictionary<string, CookerData> CookerDict 
-        { 
-            get
-            {
-                //SHelper.GameContent.InvalidateCache(cookerDictPath);
-                return SHelper.GameContent.Load<Dictionary<string, CookerData>>(cookerDictPath);
-            } 
-        }
         public override void Entry(IModHelper helper)
         {
             Config = Helper.ReadConfig<ModConfig>();
@@ -52,43 +29,19 @@ namespace SimpleCooking
             context = this;
 
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
-            helper.Events.Content.AssetRequested += Content_AssetRequested;
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
             
         }
-
-        public override object GetApi()
-        {
-            return new SimpleCookingAPI();
-        }
-        private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
-        {
-            if (!Config.ModEnabled)
-                return;
-            if (e.NameWithoutLocale.IsEquivalentTo(cookableDictPath))
-            {
-                e.LoadFrom(() => new Dictionary<string, CookableData>(), AssetLoadPriority.Exclusive);
-            }
-            if (e.NameWithoutLocale.IsEquivalentTo(cookerDictPath))
-            {
-                e.LoadFrom(() => new Dictionary<string, CookerData>()
-                {
-                    { "(BC)143", new() { X = 8, Y = -60, Z = 7.5f } },
-                    { "(BC)144", new() { X = 8, Y = -60, Z = 7.5f } },
-                    { "(BC)145", new() { X = 8, Y = -60, Z = 7.5f } },
-                    { "(BC)146", new() { X = 8, Y = -8,  Z = 9.5f } },
-                    { "(BC)147", new() { X = 8, Y = -60, Z = 7.5f } },
-                    { "(BC)148", new() { X = 8, Y = -60, Z = 7.5f } },
-                    { "(BC)150", new() { X = 8, Y = -60, Z = 7.5f } },
-                    { "(BC)151", new() { X = 8, Y = -60, Z = 7.5f } }
-                }, AssetLoadPriority.Exclusive);
-            }
-        }
         private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
         {
-
+            scapi = Helper.ModRegistry.GetApi<ISimpleCookingAPI>("aedenthorn.SimpleCooking");
+            automate = Helper.ModRegistry.GetApi<IAutomateAPI>("Pathoschild.Automate");
+            if(automate is not null)
+            {
+                automate.AddFactory(new MyAutomationFactory());
+            }
             //SMonitor.Log(string.Join(",", Game1.objectData.Where(kvp => kvp.Value.Type == "Arch").Select(kvp => kvp.Key)));
             var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (configMenu is not null)

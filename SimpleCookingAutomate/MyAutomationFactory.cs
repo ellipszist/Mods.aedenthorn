@@ -1,10 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
+using Pathoschild.Stardew.Automate;
 using StardewValley;
 using StardewValley.Buildings;
 using StardewValley.TerrainFeatures;
+using System;
+using System.Linq;
 using SObject = StardewValley.Object;
 
-namespace SimpleCooking
+namespace SimpleCookingAutomate
 {
     public class MyAutomationFactory : IAutomationFactory
     {
@@ -15,8 +18,10 @@ namespace SimpleCooking
         /// <returns>Returns an instance or <c>null</c>.</returns>
         public IAutomatable GetFor(SObject obj, GameLocation location, in Vector2 tile)
         {
-            if (ModEntry.CookerDict.ContainsKey(obj.QualifiedItemId))
-                return new SimpleCookingMachine(obj, location, tile);
+            if (ModEntry.scapi.IsCooker(obj))
+            {
+                return new SimpleCookingAutomateMachine(obj, location, tile);
+            }
 
             return null;
         }
@@ -48,8 +53,6 @@ namespace SimpleCooking
         /// <remarks>Shipping bin logic from <see cref="Farm.leftClick"/>, garbage can logic from <see cref="Town.checkAction"/>.</remarks>
         public IAutomatable GetForTile(GameLocation location, in Vector2 tile)
         {
-            if (location.Objects.TryGetValue(tile, out var obj) && ModEntry.CookerDict.ContainsKey(obj.QualifiedItemId))
-                return new SimpleCookingMachine(obj, location, tile);
             return null;
         }
     }

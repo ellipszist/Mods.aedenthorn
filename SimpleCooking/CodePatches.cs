@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using StardewValley;
 using StardewValley.ItemTypeDefinitions;
+using StardewValley.Objects;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -25,15 +26,15 @@ namespace SimpleCooking
                 {
                     return;
                 }
-                if (TryGetCookingData(__instance, out var data) && CookerDict.TryGetValue(__instance.QualifiedItemId, out var cdata))
+                if (CookerDict.TryGetValue(__instance.QualifiedItemId, out var cdata) && TryGetCookingDataForCooker(__instance, out var data))
                 {
                     var offset = new Vector2(cdata.X, cdata.Y);
                     ParsedItemData idata;
                     Color color = Color.White;
                     if (data.Burned)
                     {
-                        color = Color.DarkSlateGray;
-                        idata = ItemRegistry.GetDataOrErrorItem(data.BurntID);
+                        if(data.BurntID == null) color = Config.BurnedColor;
+                        idata = ItemRegistry.GetDataOrErrorItem(data.BurntID ?? data.InputID);
                         if (data.Smoke && (__instance is not Torch || __instance.IsOn) && Game1.currentGameTime.TotalGameTime.Ticks % 50 == 0)
                         {
                             TemporaryAnimatedSprite sprite = TemporaryAnimatedSprite.GetTemporaryAnimatedSprite("LooseSprites\\Cursors", new Rectangle(372, 1956, 10, 10), __instance.TileLocation * 64 + offset + new Vector2(32, 0), false, 0.002f, Color.Gray);
@@ -50,13 +51,13 @@ namespace SimpleCooking
                     }
                     else if(data.Progress >= 1)
                     {
-                        color = data.ProductID.StartsWith(grilledPrefix) ? Config.GrilledColor : Color.White;
-                        idata = ItemRegistry.GetDataOrErrorItem(data.ProductID);
+                        color = data.ProductID is null ? Config.GrilledColor : Color.White;
+                        idata = ItemRegistry.GetDataOrErrorItem(data.ProductID ?? data.InputID);
 
                         if (data.Smoke && (__instance is not Torch || __instance.IsOn) && Game1.currentGameTime.TotalGameTime.Ticks % 50 == 0)
                         {
                             TemporaryAnimatedSprite sprite = TemporaryAnimatedSprite.GetTemporaryAnimatedSprite("LooseSprites\\Cursors", new Rectangle(372, 1956, 10, 10), __instance.TileLocation * 64 + offset + new Vector2(32, 0), false, 0.002f, Color.Gray);
-                            sprite.alpha = 0.5f + (data.Progress - 1) / Math.Max(1, data.BurnedAt - 1) / 2f;
+                            sprite.alpha = 0.5f + (data.Progress - 1) / Math.Max(1, data.BurntAt - 1) / 2f;
                             sprite.motion = new Vector2(0f, -0.5f);
                             sprite.acceleration = new Vector2(0.002f, 0f);
                             sprite.interval = 99999f;
@@ -77,55 +78,67 @@ namespace SimpleCooking
                 }
             }
         }
-        [HarmonyPatch(typeof(Object), nameof(Object.drawInMenu), new Type[] { typeof(SpriteBatch), typeof(Vector2), typeof(float), typeof(float), typeof(float), typeof(StackDrawType), typeof(Color), typeof(bool) })]
-        public class Object_drawInMenu_Patch
-        {
-            public static void Prefix(Object __instance, ref Color color)
-            {
-                if (!Config.ModEnabled)
-                {
-                    return;
-                }
-                if (__instance.ItemId.StartsWith(grilledPrefix))
-                {
-                    color = Config.GrilledColor;
-                }
-            }
-        }
-        [HarmonyPatch(typeof(Item), nameof(Item.DrawMenuIcons))]
-        public class Item_DrawMenuIcons_Patch
-        {
-            public static void Prefix(Item __instance, ref Color color)
-            {
-                if (!Config.ModEnabled)
-                {
-                    return;
-                }
-                if (__instance.ItemId.StartsWith(grilledPrefix) && color == Config.GrilledColor)
-                {
-                    color = Color.White;
-                }
-            }
-        }
-        [HarmonyPatch(typeof(Object), nameof(Object.drawWhenHeld))]
-        public class Object_drawWhenHeld_Patch
+        [HarmonyPatch(typeof(ColoredObject), "drawSmokedFish")]
+        public class ColoredObject_drawSmokedFish_Patch
         {
             public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
             {
-                SMonitor.Log($"Transpiling Object.drawWhenHeld");
+                SMonitor.Log($"Transpiling ColoredObject.drawSmokedFish");
 
                 var codes = new List<CodeInstruction>(instructions);
                 for (int i = 0; i < codes.Count; i++)
                 {
-                    if (codes[i].opcode == OpCodes.Call && codes[i].operand is MethodInfo mi && mi == AccessTools.PropertyGetter(typeof(Color), nameof(Color.White)))
+                    if (codes[i].opcode == OpCodes.Newobj && codes[i].operand is ConstructorInfo mi && mi == AccessTools.Constructor(typeof(Color), new Type[] { typeof(int), typeof(int), typeof(int) }))
                     {
                         SMonitor.Log($"Adding color switch");
                         codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.SwitchColor))));
                         codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                        i += 2;
                     }
                 }
 
                 return codes.AsEnumerable();
+            }
+        }
+        [HarmonyPatch(typeof(Object), "loadDisplayName")]
+        public class Object_loadDisplayName_Patch
+        {
+            public static bool Prefix(Object __instance, ref string __result)
+            {
+                if (!Config.ModEnabled || __instance.ItemId != "SmokedFish")
+                    return true;
+                if(__instance.Name.StartsWith("Grilled "))
+                {
+                    __result = string.Format(SHelper.Translation.Get("grilled-x"), ItemRegistry.GetDataOrErrorItem(__instance.preservedParentSheetIndex.Value).DisplayName);
+                    return false;
+                }
+                if (__instance.Name.StartsWith("Burnt "))
+                {
+                    __result = string.Format(SHelper.Translation.Get("burnt-x"), ItemRegistry.GetDataOrErrorItem(__instance.preservedParentSheetIndex.Value).DisplayName);
+                    return false;
+                }
+                return true;
+            }
+        }
+        [HarmonyPatch(typeof(Object), "getDescription")]
+        public class Object_getDescription_Patch
+        {
+            public static bool Prefix(Object __instance, ref string __result)
+            {
+                if (!Config.ModEnabled || __instance.ItemId != "SmokedFish")
+                    return true;
+                if (__instance.Name.StartsWith("Grilled "))
+                {
+                    __result = SHelper.Translation.Get("grilled-desc");
+
+                    return false;
+                }
+                if (__instance.Name.StartsWith("Burnt "))
+                {
+                    __result = SHelper.Translation.Get("burnt-desc");
+                    return false;
+                }
+                return true;
             }
         }
         [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.performTenMinuteUpdate))]
@@ -137,7 +150,7 @@ namespace SimpleCooking
                     return;
                 foreach(var kvp in __instance.Objects.Pairs)
                 {
-                    if(TryGetCookingData(kvp.Value, out var data))
+                    if(TryGetCookingDataForCooker(kvp.Value, out var data))
                     {
                         if(kvp.Value is Torch t && !t.IsOn)
                         {
@@ -164,8 +177,8 @@ namespace SimpleCooking
                 {
                     return true;
                 }
-                var cookable = TryGetCookingData((Item)f.ActiveObject, out var data);
-                if (TryGetCookingData(obj, out var cdata))
+                var cookable = TryGetCookingDataForCookable(f.ActiveObject, out var data);
+                if (TryGetCookingDataForCooker(obj, out var cdata))
                 {
                     var progress = cdata.Progress;
                     if (progress < 1)
@@ -174,7 +187,7 @@ namespace SimpleCooking
                         return false;
                     }
                     
-                    TryReturnObject(cdata.Burned ? ItemRegistry.Create(cdata.BurntID, 1) : ItemRegistry.Create(cdata.ProductID, 1, cdata.Quality), f);
+                    TryReturnObject(cdata.GetProduct(), f);
                     obj.modData.Remove(cookingKey);
                     if (!cookable)
                     {

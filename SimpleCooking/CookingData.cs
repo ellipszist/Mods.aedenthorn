@@ -1,11 +1,36 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Xna.Framework;
+using Newtonsoft.Json;
 using StardewValley;
+using StardewValley.Objects;
+using StardewValley.TokenizableStrings;
 using System;
+using static StardewValley.Minigames.CraneGame;
 using Object = StardewValley.Object;
 
 namespace SimpleCooking
 {
-    public class CookingData
+    public interface ICookingData
+    {
+        public int MinutesProgress { get; set; }
+        public int MinutesToCook { get; set; }
+        public int LastCheckTime { get; set; }
+        public float Progress { get; }
+        public bool Burned { get; }
+        public float BurntAt { get; set; }
+        public int Quality { get; set; }
+        public string InputID { get; set; }
+        public string ProductID { get; set; }
+        public string BurntID { get; set; }
+        public bool Smoke { get; set; }
+        public string PlacedSound { get; set; }
+        public string CookedSound { get; set; }
+        public string BurntSound { get; set; }
+        public Object GetProduct();
+        public bool WillCook(int time);
+        public bool WillBurn(int time);
+        public void Update(Object obj, int timeOfDay);
+    }
+    public class CookingData : ICookingData
     {
         public int MinutesProgress { get; set; }
         public int MinutesToCook { get; set; }
@@ -21,16 +46,16 @@ namespace SimpleCooking
         {
             get
             {
-                return Progress >= BurnedAt;
+                return Progress >= Math.Max(Progress, BurntAt);
             }
         }
-        public float BurnedAt { get; set; }
+        public float BurntAt { get; set; } = 2;
         public int Quality { get; set; }
         public string InputID { get; set; }
         public string ProductID { get; set; }
         public string BurntID { get; set; }
         public bool Smoke { get; set; }
-        public string PlacedSound { get; set; } = "fireball";
+        public string PlacedSound { get; set; } = "cut";
         public string CookedSound { get; set; } = "fireball";
         public string BurntSound { get; set; } = "furnace";
 
@@ -38,7 +63,21 @@ namespace SimpleCooking
         {
             if (Progress < 1)
                 return null;
-            return ItemRegistry.Create<Object>(ProductID, 1, Quality);
+            
+            if (ProductID == null)
+            {
+                var temp = ItemRegistry.Create<Object>(InputID, 1, Quality);
+                Object item = new ColoredObject("SmokedFish", 1, Color.Orange)
+                {
+                    Edibility = (int)Math.Round(temp.Edibility * (Burned ? 1 / ModEntry.Config.GrilledEdibilityMult : ModEntry.Config.GrilledEdibilityMult)),
+                    Price =  (int)Math.Round(temp.Price * (Burned ? 1 / ModEntry.Config.GrilledPriceMult : ModEntry.Config.GrilledEdibilityMult)),
+                    Name = Burned ? "Burnt " : "Grilled " + temp.Name
+                };
+                item.preservedParentSheetIndex.Value = InputID;
+                item.modData[ModEntry.grilledKey] = "true";
+                return item;
+            }
+            return ItemRegistry.Create<Object>(Burned ? BurntID : ProductID, 1, Quality);
         }
 
         public bool WillCook(int time)
@@ -54,13 +93,11 @@ namespace SimpleCooking
             if (Burned)
                 return false;
             var min = ModEntry.TimeToMinutes(time) - ModEntry.TimeToMinutes(LastCheckTime);
-            return (MinutesProgress + min) / (float)MinutesToCook >= BurnedAt;
+            return (MinutesProgress + min) / (float)MinutesToCook >= BurntAt;
         }
 
         public void Update(Object obj, int timeOfDay)
         {
-            if (Burned)
-                return;
             if (timeOfDay < LastCheckTime)
                 timeOfDay += 2400;
             if (WillBurn(timeOfDay))

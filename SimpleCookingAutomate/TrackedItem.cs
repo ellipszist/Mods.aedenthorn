@@ -1,7 +1,8 @@
-﻿using StardewValley;
+﻿using Pathoschild.Stardew.Automate;
+using StardewValley;
 using System;
 
-namespace SimpleCooking
+namespace SimpleCookingAutomate
 {
     internal class TrackedItem : ITrackedStack
     {
@@ -25,8 +26,7 @@ namespace SimpleCooking
         public string Type { get; }
 
         /// <summary>The number of items in the stack.</summary>
-        public int Count { get; }
-
+        public int Count { get; set; } = 1;
 
         /*********
         ** Public methods
@@ -35,15 +35,19 @@ namespace SimpleCooking
         /// <param name="count">The number to consume.</param>
         public void Reduce(int count)
         {
-            OnEmpty();
+            Count -= count;
+            if(Count <= 0)
+                OnEmpty();
         }
 
         /// <summary>Remove the specified number of this item from the stack and return a new stack matching the count.</summary>
         /// <param name="count">The number to get.</param>
         public Item? Take(int count)
         {
-            OnEmpty();
-            return null;
+            Count -= count;
+            if (Count <= 0)
+                OnEmpty();
+            return Sample.getOne();
         }
     }
 }

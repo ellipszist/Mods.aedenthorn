@@ -10,14 +10,18 @@ namespace SimpleCooking
     {
         public static Color SwitchColor(Color color, Object obj)
         {
-            if(!Config.ModEnabled) { return color; }
-            if (obj.ItemId.StartsWith(grilledPrefix))
+            if (!Config.ModEnabled) { return color; }
+            if (obj.Name.StartsWith("Grilled "))
             {
-                return Config.GrilledColor;
+                return color.R == color.G && color.R == color.B ? new Color(200,200,200) : Config.GrilledColor;
+            }
+            else if (obj.Name.StartsWith("Burnt "))
+            {
+                return color.R == color.G && color.R == color.B ? new Color(30,30,30) : Color.Black;
             }
             return color;
         }
-        public static bool TryGetCookingData(Item item, out CookingData data)
+        public static bool TryGetCookingDataForCookable(Item item, out ICookingData data)
         {
             data = null;
             if (item is not Object obj || !obj.HasTypeObject())
@@ -28,7 +32,7 @@ namespace SimpleCooking
                 {
                     LastCheckTime = Game1.timeOfDay,
                     MinutesToCook = cdata.CookTime,
-                    BurnedAt = cdata.Burned,
+                    BurntAt = cdata.Burned,
                     Smoke = cdata.ShowSmoke,
                     InputID = obj.QualifiedItemId,
                     ProductID = cdata.ProductID,
@@ -36,24 +40,22 @@ namespace SimpleCooking
                     PlacedSound = cdata.PlacedSound ?? Config.PlacedSound,
                     CookedSound = cdata.CookedSound ?? Config.CookedSound,
                     BurntSound = cdata.BurntSound ?? Config.BurntSound,
-                    BurntID = cdata.BurntID ?? Config.BurntID
+                    BurntID = cdata.BurntID
                 };
             }
-            else if(Game1.objectData.ContainsKey(grilledPrefix + obj.ItemId) && obj.Edibility > 0 && (obj.Category == Object.FishCategory || obj.Category == Object.VegetableCategory))
+            else if(obj.Edibility > 0 && (Config.GrillableCategories.Contains(obj.Category) || Config.GrillableItems.Contains(obj.ItemId)))
             {
                 data = new CookingData()
                 {
                     LastCheckTime = Game1.timeOfDay,
-                    MinutesToCook = obj.Category == Object.FishCategory ? Config.FishCookTime : Config.VegetableCookTime,
-                    BurnedAt = obj.Category == Object.FishCategory ? Config.FishBurn : Config.VegetableBurn,
+                    MinutesToCook = Config.GrillTime,
+                    BurntAt = Config.BurntAt,
                     Smoke = true,
                     InputID = obj.QualifiedItemId,
-                    ProductID = grilledPrefix + obj.ItemId,
                     Quality = obj.Quality,
                     PlacedSound = Config.PlacedSound,
                     CookedSound = Config.CookedSound,
-                    BurntSound = Config.BurntSound,
-                    BurntID = Config.BurntID
+                    BurntSound = Config.BurntSound
                 };
             }
             else
@@ -62,7 +64,7 @@ namespace SimpleCooking
             }
             return true;
         }
-        public static bool TryGetCookingData(Object obj, out CookingData data)
+        public static bool TryGetCookingDataForCooker(Object obj, out ICookingData data)
         {
             if (obj?.modData.TryGetValue(cookingKey, out var str) == true)
             {
