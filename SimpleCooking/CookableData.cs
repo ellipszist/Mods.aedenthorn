@@ -12,7 +12,8 @@ namespace SimpleCooking
         public string BurntSound { get; set; }
         public bool ShowSmoke { get; set; }
         public int CookTime { get; set; }
-        public float Burned { get; set; } = 2f;
+        public float Burned { get; set; } = 3f;
+        public float BurntAt { get; set; } = 3f;
     }
 
 }

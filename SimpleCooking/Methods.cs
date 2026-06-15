@@ -32,7 +32,7 @@ namespace SimpleCooking
                 {
                     LastCheckTime = Game1.timeOfDay,
                     MinutesToCook = cdata.CookTime,
-                    BurntAt = cdata.Burned,
+                    BurntAt = cdata.BurntAt > 1 ? cdata.BurntAt : cdata.Burned,
                     Smoke = cdata.ShowSmoke,
                     InputID = obj.QualifiedItemId,
                     ProductID = cdata.ProductID,
