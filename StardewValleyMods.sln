@@ -737,7 +737,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleCooking", "SimpleCook
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleCookingAutomate", "SimpleCookingAutomate\SimpleCookingAutomate.csproj", "{DAF2830A-C0B4-220B-F10A-6502673AE80B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WallClock", "WallClock\WallClock.csproj", "{C420D37A-012C-F309-89F0-CA37DCCFBE8F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clocks", "Clocks\Clocks.csproj", "{17663058-2CB2-5965-C7CF-33A5BCE41C22}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -3651,14 +3651,14 @@ Global
 		{DAF2830A-C0B4-220B-F10A-6502673AE80B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DAF2830A-C0B4-220B-F10A-6502673AE80B}.Release|x64.ActiveCfg = Release|x64
 		{DAF2830A-C0B4-220B-F10A-6502673AE80B}.Release|x64.Build.0 = Release|x64
-		{C420D37A-012C-F309-89F0-CA37DCCFBE8F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C420D37A-012C-F309-89F0-CA37DCCFBE8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C420D37A-012C-F309-89F0-CA37DCCFBE8F}.Debug|x64.ActiveCfg = Debug|x64
-		{C420D37A-012C-F309-89F0-CA37DCCFBE8F}.Debug|x64.Build.0 = Debug|x64
-		{C420D37A-012C-F309-89F0-CA37DCCFBE8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C420D37A-012C-F309-89F0-CA37DCCFBE8F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C420D37A-012C-F309-89F0-CA37DCCFBE8F}.Release|x64.ActiveCfg = Release|x64
-		{C420D37A-012C-F309-89F0-CA37DCCFBE8F}.Release|x64.Build.0 = Release|x64
+		{17663058-2CB2-5965-C7CF-33A5BCE41C22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{17663058-2CB2-5965-C7CF-33A5BCE41C22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{17663058-2CB2-5965-C7CF-33A5BCE41C22}.Debug|x64.ActiveCfg = Debug|x64
+		{17663058-2CB2-5965-C7CF-33A5BCE41C22}.Debug|x64.Build.0 = Debug|x64
+		{17663058-2CB2-5965-C7CF-33A5BCE41C22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{17663058-2CB2-5965-C7CF-33A5BCE41C22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{17663058-2CB2-5965-C7CF-33A5BCE41C22}.Release|x64.ActiveCfg = Release|x64
+		{17663058-2CB2-5965-C7CF-33A5BCE41C22}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

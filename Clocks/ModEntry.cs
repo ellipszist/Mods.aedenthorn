@@ -1,17 +1,14 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Pathoschild.Stardew.Automate;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
-using StardewValley;
-using StardewValley.Locations;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace WallClock
+namespace Clocks
 {
     /// <summary>The mod entry point.</summary>
     public partial class ModEntry : Mod
@@ -21,7 +18,8 @@ namespace WallClock
         public static IModHelper SHelper;
         public static ModConfig Config;
         public static ModEntry context;
-        public const string dictPath = "aedenthorn.WallClock/dict";
+        public const string dictPath = "aedenthorn.Clocks/dict";
+        public const string clockPath = "aedenthorn.Clocks/WallClock";
         public static Dictionary<string, ClockData> ClockDict
         {
             get
@@ -61,23 +59,6 @@ namespace WallClock
                             DrawOffset = new(34, 70),
                             Scale = 2
                         }
-                    },
-                    {
-                        "1557",
-                        new()
-                        {
-                            DrawOffset = new(64, 64),
-                            HourHand = "LooseSprites/Cursors",
-                            MinuteHand = "LooseSprites/Cursors",
-                            Nub = "LooseSprites/Cursors",
-                            HourHandSourceRect = Town.hourHandSource,
-                            MinuteHandSourceRect = Town.minuteHandSource,
-                            NubSourceRect = Town.clockNub,
-                            HourHandColor = Color.White,
-                            MinuteHandColor = Color.White,
-                            NubColor = Color.White,
-                            Scale = 3
-                        }
                     }
                 }, AssetLoadPriority.Exclusive);
             }
@@ -85,8 +66,12 @@ namespace WallClock
             {
                 e.Edit((IAssetData data) =>
                 {
-                    data.AsImage().PatchImage(SHelper.ModContent.Load<Texture2D>("assets/clock.png"), null, new(192, 10, 16, 16));
+                    data.AsImage().PatchImage(SHelper.GameContent.Load<Texture2D>(clockPath), null, new(192, 10, 16, 16));
                 });
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo(clockPath))
+            {
+                e.LoadFromModFile<Texture2D>("assets/clock.png", AssetLoadPriority.Exclusive);
             }
         }
 
@@ -113,6 +98,8 @@ namespace WallClock
 
                 foreach (var p in props)
                 {
+                    if (p.Name == "Debug")
+                        continue;
                     if (p.PropertyType == typeof(bool))
                     {
                         configMenu.AddBoolOption(

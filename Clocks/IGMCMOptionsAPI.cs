@@ -45,7 +45,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 
-namespace WallClock
+namespace Clocks
 {
     /// <summary>The API which lets other mods add a config UI using one of the complex options defined in GMCMOptions.</summary>
     public interface IGMCMOptionsAPI

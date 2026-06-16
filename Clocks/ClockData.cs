@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 
-namespace WallClock
+namespace Clocks
 {
     public class ClockData
     {
