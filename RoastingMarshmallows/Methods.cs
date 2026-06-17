@@ -69,10 +69,20 @@ namespace RoastingMarshmallows
             farmer.currentLocation.playSound("dwoop");
             if (progress > intervalLength * (frames - 1))
             {
+                if (!farmer.recipesCooked.TryGetValue(burntItem, out int curValue))
+                {
+                    curValue = 0;
+                }
+                farmer.recipesCooked[burntItem] = curValue + 1;
                 Game1.createObjectDebris(burntItem, farmer.TilePoint.X, farmer.TilePoint.Y, farmer.currentLocation);
             }
             else if (progress > intervalLength * (frames - 2))
             {
+                if (!farmer.recipesCooked.TryGetValue(cookedItem, out int curValue))
+                {
+                    curValue = 0;
+                }
+                farmer.recipesCooked[cookedItem] = curValue + 1;
                 Game1.createObjectDebris(cookedItem, farmer.TilePoint.X, farmer.TilePoint.Y, farmer.currentLocation);
             }
             else

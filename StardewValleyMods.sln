@@ -743,6 +743,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FuzzyTime", "FuzzyTime\Fuzz
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdvancedCharacterCustomization", "AdvancedCharacterCustomization\AdvancedCharacterCustomization.csproj", "{81D604F6-55C3-07AA-7845-9319B94ADAC5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShowMissingCollectionEntries", "ShowMissingCollectionEntries\ShowMissingCollectionEntries.csproj", "{A8077C49-DC71-3F21-1EBA-F0DED589E620}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3679,6 +3681,14 @@ Global
 		{81D604F6-55C3-07AA-7845-9319B94ADAC5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{81D604F6-55C3-07AA-7845-9319B94ADAC5}.Release|x64.ActiveCfg = Release|x64
 		{81D604F6-55C3-07AA-7845-9319B94ADAC5}.Release|x64.Build.0 = Release|x64
+		{A8077C49-DC71-3F21-1EBA-F0DED589E620}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8077C49-DC71-3F21-1EBA-F0DED589E620}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8077C49-DC71-3F21-1EBA-F0DED589E620}.Debug|x64.ActiveCfg = Debug|x64
+		{A8077C49-DC71-3F21-1EBA-F0DED589E620}.Debug|x64.Build.0 = Debug|x64
+		{A8077C49-DC71-3F21-1EBA-F0DED589E620}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8077C49-DC71-3F21-1EBA-F0DED589E620}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8077C49-DC71-3F21-1EBA-F0DED589E620}.Release|x64.ActiveCfg = Release|x64
+		{A8077C49-DC71-3F21-1EBA-F0DED589E620}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

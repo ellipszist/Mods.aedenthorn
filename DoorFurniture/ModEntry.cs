@@ -312,7 +312,8 @@ namespace DoorFurniture
                         Category = -101,
                         Price = 0,
                         Texture = keyId,
-                        Edibility = -300
+                        Edibility = -300,
+                        ExcludeFromShippingCollection = true
                     };
                     dict[keyringId] = new()
                     {
@@ -324,7 +325,8 @@ namespace DoorFurniture
                         Price = 0,
                         Texture = keyId,
                         SpriteIndex = 1,
-                        Edibility = -300
+                        Edibility = -300,
+                        ExcludeFromShippingCollection = true
                     };
                 });
             }
