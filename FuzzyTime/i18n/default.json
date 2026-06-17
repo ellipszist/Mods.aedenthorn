@@ -1,0 +1,13 @@
+{
+  "early-morning": "Early Morning",
+  "morning": "Morning",
+  "late-morning": "Late Morning",
+  "noon": "Midday",
+  "early-afternoon": "Early Afternoon",
+  "afternoon": "Afternoon",
+  "late-afternoon": "Late Afternoon",
+  "evening": "Evening",
+  "night": "Night",
+  "midnight": "Midnight",
+  "late-night": "Late Night"
+}

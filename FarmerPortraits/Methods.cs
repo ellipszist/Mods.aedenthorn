@@ -1,9 +1,8 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
-using System;
+using StardewValley.Menus;
 using System.IO;
-using System.Linq;
 
 namespace FarmerPortraits
 {
@@ -122,6 +121,16 @@ namespace FarmerPortraits
             File.Copy(path, dest);
             SMonitor.Log($"Copied {path} to {dest}");
             ReloadTextures();
+        }
+
+        public static int GetPortraitIndex(DialogueBox box)
+        {
+            if (!box.isPortraitBox() || box.characterDialogue.speaker is not NPC npc)
+                return -1;
+            int index = box.characterDialogue.getPortraitIndex();
+            if (ReactionsDict.TryGetValue(npc.Name, out var dict) && dict.TryGetValue(index.ToString(), out var which))
+                return which;
+            return index;
         }
     }
 }

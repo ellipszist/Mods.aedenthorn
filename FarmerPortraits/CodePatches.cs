@@ -65,8 +65,9 @@ namespace FarmerPortraits
                     return;
                 int boxHeight = 384;
                 int boxWidth = 448;
-                drawBox(b, __instance.x - boxWidth - 32, __instance.y + __instance.height - boxHeight, boxWidth, boxHeight, __instance.isPortraitBox() ? __instance.characterDialogue.getPortraitIndex() : -1);
+                drawBox(b, __instance.x - boxWidth - 32, __instance.y + __instance.height - boxHeight, boxWidth, boxHeight, GetPortraitIndex(__instance));
             }
+
 
             private static void drawBox(SpriteBatch b, int xPos, int yPos, int boxWidth, int boxHeight, int which)
             {

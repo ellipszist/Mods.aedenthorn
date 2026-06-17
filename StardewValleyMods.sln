@@ -739,6 +739,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleCookingAutomate", "Si
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clocks", "Clocks\Clocks.csproj", "{17663058-2CB2-5965-C7CF-33A5BCE41C22}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FuzzyTime", "FuzzyTime\FuzzyTime.csproj", "{58E468DD-0AB0-14C0-CA94-FC63803A0902}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdvancedCharacterCustomization", "AdvancedCharacterCustomization\AdvancedCharacterCustomization.csproj", "{81D604F6-55C3-07AA-7845-9319B94ADAC5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3659,6 +3663,22 @@ Global
 		{17663058-2CB2-5965-C7CF-33A5BCE41C22}.Release|Any CPU.Build.0 = Release|Any CPU
 		{17663058-2CB2-5965-C7CF-33A5BCE41C22}.Release|x64.ActiveCfg = Release|x64
 		{17663058-2CB2-5965-C7CF-33A5BCE41C22}.Release|x64.Build.0 = Release|x64
+		{58E468DD-0AB0-14C0-CA94-FC63803A0902}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58E468DD-0AB0-14C0-CA94-FC63803A0902}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58E468DD-0AB0-14C0-CA94-FC63803A0902}.Debug|x64.ActiveCfg = Debug|x64
+		{58E468DD-0AB0-14C0-CA94-FC63803A0902}.Debug|x64.Build.0 = Debug|x64
+		{58E468DD-0AB0-14C0-CA94-FC63803A0902}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58E468DD-0AB0-14C0-CA94-FC63803A0902}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58E468DD-0AB0-14C0-CA94-FC63803A0902}.Release|x64.ActiveCfg = Release|x64
+		{58E468DD-0AB0-14C0-CA94-FC63803A0902}.Release|x64.Build.0 = Release|x64
+		{81D604F6-55C3-07AA-7845-9319B94ADAC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81D604F6-55C3-07AA-7845-9319B94ADAC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81D604F6-55C3-07AA-7845-9319B94ADAC5}.Debug|x64.ActiveCfg = Debug|x64
+		{81D604F6-55C3-07AA-7845-9319B94ADAC5}.Debug|x64.Build.0 = Debug|x64
+		{81D604F6-55C3-07AA-7845-9319B94ADAC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81D604F6-55C3-07AA-7845-9319B94ADAC5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81D604F6-55C3-07AA-7845-9319B94ADAC5}.Release|x64.ActiveCfg = Release|x64
+		{81D604F6-55C3-07AA-7845-9319B94ADAC5}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
