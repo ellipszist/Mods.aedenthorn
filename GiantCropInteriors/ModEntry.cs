@@ -1,127 +1,136 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
+using StardewValley.Buildings;
+using StardewValley.GameData.Buildings;
 using StardewValley.TerrainFeatures;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using xTile.Dimensions;
-using Object = StardewValley.Object;
+using System.Xml.Linq;
+using xTile;
 
-namespace ExpertSitting
+namespace GiantCropInteriors
 {
     /// <summary>The mod entry point.</summary>
-    public class ModEntry : Mod
+    public partial class ModEntry : Mod
     {
 
+        public static IMonitor SMonitor;
+        public static IModHelper SHelper;
+        public static ModConfig Config;
         public static ModEntry context;
+        public const string dictPath = "aedenthorn.GiantCropInteriors/dict";
+        public const string giantCropKey = "aedenthorn.GiantCropInteriors/GiantCrop";
+        public const string pumpkinKey = "aedenthorn.GiantCropInteriors/Pumpkin";
+        public const string builtAtKey = "aedenthorn.GiantCropInteriors/BuiltAt";
+        public const string cropKey = "aedenthorn.GiantCropInteriors/Crop";
+        public static Dictionary<string, string> BuildingDict
+        {
+            get
+            {
+                return SHelper.GameContent.Load<Dictionary<string, string>>(dictPath);
+            }
+        }
 
-        internal static ModConfig Config;
-        private static IMonitor SMonitor;
-
-
-        /// <summary>The mod entry point, called after the mod is first loaded.</summary>
-        /// <param name="helper">Provides simplified APIs for writing mods.</param>
         public override void Entry(IModHelper helper)
         {
+            Config = Helper.ReadConfig<ModConfig>();
+            SMonitor = Monitor;
+            SHelper = helper;
+
             context = this;
-            Config = this.Helper.ReadConfig<ModConfig>();
-            SMonitor = this.Monitor;
+
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
-            
-            Harmony harmony = new(ModManifest.UniqueID);
+            helper.Events.Content.AssetRequested += Content_AssetRequested;
+            helper.Events.Input.ButtonPressed += Input_ButtonPressed;
 
-            harmony.Patch(
-               original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.checkAction)),
-               postfix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.checkAction_Postfix))
-            );
-            harmony.Patch(
-               original: AccessTools.Method(typeof(MapSeat), nameof(MapSeat.RemoveSittingFarmer)),
-               postfix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.RemoveSittingFarmer_Postfix))
-            );
+
+            var harmony = new Harmony(ModManifest.UniqueID);
+            harmony.PatchAll();
 
         }
 
-        private static void RemoveSittingFarmer_Postfix(MapSeat __instance, Farmer farmer)
+        private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
         {
-            if(__instance.seatType.Value.EndsWith("expert sitting mod"))
-            {
-                farmer.currentLocation.mapSeats.Remove(__instance);
-            }
-        }
-
-        private static void checkAction_Postfix(GameLocation __instance, ref bool __result, Location tileLocation, xTile.Dimensions.Rectangle viewport, Farmer who)
-        {
-            if (!Config.EnableMod || __result)
+            if (!Config.ModEnabled)
                 return;
+            SHelper.GameContent.InvalidateCache("Maps/GiantCrop");
 
-            //SMonitor.Log($"Checking for seat");
-
-            foreach(Object obj in __instance.objects.Values)
+            if (Context.IsWorldReady && Config.Debug && e.Button == SButton.NumPad7)
             {
-                if(obj.TileLocation == new Vector2(tileLocation.X, tileLocation.Y) && Config.SeatTypes.Contains(obj.name))
+
+                
+                foreach (var t in Game1.getFarm().terrainFeatures.Values.Where(tf => tf is HoeDirt d && d.crop is not null))
                 {
-                    SMonitor.Log($"Got object seat");
-                    MapSeat ms = new MapSeat();
-                    ms.tilePosition.Value = new Vector2(tileLocation.X, tileLocation.Y);
-                    ms.seatType.Value = "stool expert sitting mod";
-                    ms.size.Value = new Vector2(1,1);
-                    __instance.mapSeats.Add(ms);
-                    who.BeginSitting(ms);
-                    __result = true;
-                    break;
+                    (t as HoeDirt).crop.growCompletely();
+                }
+                foreach (var t in Game1.getFarm().terrainFeatures.Values.Where(tf => tf is HoeDirt d && d.crop is not null))
+                {
+                    (t as HoeDirt).crop.TryGrowGiantCrop(false, Game1.random);
                 }
             }
-            if (__result)
-                return;
+        }
 
-            foreach(ResourceClump rc in __instance.resourceClumps)
+        private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
+        {
+            if (!Config.ModEnabled)
+                return;
+            if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
             {
-                if (rc.occupiesTile(tileLocation.X, tileLocation.Y - 1))
+                e.LoadFrom(() => new Dictionary<string, string>()
                 {
-                    SMonitor.Log($"Got clump seat");
-                    MapSeat ms = new MapSeat();
-                    ms.tilePosition.Value = new Vector2(tileLocation.X, tileLocation.Y);
-                    ms.seatType.Value = "clump expert sitting mod";
-                    switch (who.FacingDirection)
                     {
-                        case 0:
-                        case 2:
-                            ms.direction.Value = 2;
-                            break;
-                        default:
-                            if (rc.occupiesTile(tileLocation.X - 1, tileLocation.Y - 1))
-                                ms.direction.Value = 1;
-                            else
-                                ms.direction.Value = 3;
-                            break;
+                        "Pumpkin",
+                        "Pumpkin"
                     }
-                    ms.size.Value = new Vector2(1, 1);
-                    __instance.mapSeats.Add(ms);
-                    who.BeginSitting(ms);
-                    __result = true;
-                    break;
-                }
+                }, AssetLoadPriority.Exclusive);
             }
-
-            if (__result)
-                return;
-
-            if (Config.AllowMapSit && (Config.MapSitModKey == SButton.None || context.Helper.Input.IsDown(Config.MapSitModKey)) && __instance.map.GetLayer("Buildings")?.PickTile(tileLocation * Game1.tileSize, Game1.viewport.Size) != null && __instance.map.GetLayer("Building")?.PickTile(new Location(tileLocation.X, tileLocation.Y + 1) * Game1.tileSize, Game1.viewport.Size) == null)
+            else if (e.NameWithoutLocale.IsEquivalentTo("Data/Buildings"))
             {
-                SMonitor.Log($"Got map seat");
-                MapSeat ms = new MapSeat();
-                ms.tilePosition.Value = new Vector2(tileLocation.X, tileLocation.Y);
-                ms.size.Value = new Vector2(1, 1);
-                ms.seatType.Value = "map expert sitting mod";
-                __instance.mapSeats.Add(ms);
-                ms.direction.Value = 2;
-                who.BeginSitting(ms);
-                __result = true;
+                e.Edit((IAssetData data) => 
+                {
+                    var dict = data.AsDictionary<string, BuildingData>().Data;
+                    dict["Pumpkin"] = new()
+                    {
+                        Name = "Pumpkin",
+                        Description = "Pumpkin",
+                        Texture = pumpkinKey,
+                        SourceRect = new(0, 0, 1, 1),
+                        Builder = null,
+                        IndoorMap = "GiantCrop",
+                        IndoorMapType = "StardewValley.Locations.DecoratableLocation",
+                        HumanDoor = new(1, 3),
+                        Size = new(3, 3),
+                        DrawShadow = false,
+                        DrawLayers = new()
+                        {
+                            new()
+                            {
+                                Id = "1",
+                                SortTileOffset = -0.0001f,
+                                DrawPosition = new(0,-64),
+                                Texture = pumpkinKey,
+                                SourceRect = new(0,0,48,64)
+                            }
+                        }
+                    };
+                });
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo("Maps/GiantCrop"))
+            {
+                e.LoadFromModFile<Map>("assets/GiantCrop.tmx", AssetLoadPriority.Exclusive);
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo(pumpkinKey))
+            {
+                e.LoadFromModFile<Texture2D>("assets/Pumpkin.png", AssetLoadPriority.Exclusive);
             }
         }
+
         private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
         {
             //SMonitor.Log(string.Join(",", Game1.objectData.Where(kvp => kvp.Value.Type == "Arch").Select(kvp => kvp.Key)));
@@ -240,4 +249,3 @@ namespace ExpertSitting
         }
     }
 }
- 

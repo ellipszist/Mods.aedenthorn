@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Netcode;
 using StardewValley;
+using StardewValley.ItemTypeDefinitions;
 using StardewValley.Menus;
 using StardewValley.TerrainFeatures;
 using System;
@@ -77,35 +78,52 @@ namespace ShowMissingCollectionEntries
         public class CollectionsPage_performHoverAction_Patch
         {
 
-            public static bool Prefix(CollectionsPage __instance, int x, int y, ref string ___hoverText)
+            public static bool Prefix(CollectionsPage __instance, int x, int y, ref string ___hoverText, ref int ___value)
             {
-                if (!Config.ModEnabled || (__instance.currentTab == 5 && Config.ShowMissingAchievementDetails) || !Config.ShowMissingDetails)
+                if (!Config.ModEnabled || __instance.currentTab == 7 || (__instance.currentTab == 5 && !Config.ShowMissingAchievementNames) || (__instance.currentTab != 5 && !Config.ShowMissingItemNames))
                     return true;
-                foreach (ClickableTextureComponent c2 in __instance.collections[__instance.currentTab][__instance.currentPage])
+                ___hoverText = "";
+                ___value = -1;
+                bool found = false;
+                foreach (ClickableTextureComponent cc in __instance.collections[__instance.currentTab][__instance.currentPage])
                 {
-                    if (c2.containsPoint(x, y, 2))
+                    if (cc.containsPoint(x, y, 2))
                     {
-                        c2.scale = Math.Min(c2.scale + 0.02f, c2.baseScale + 0.1f);
-                        string[] data_split = ArgUtility.SplitBySpace(c2.name);
+                        cc.scale = Math.Min(cc.scale + 0.02f, cc.baseScale + 0.1f);
+                        string[] data_split = ArgUtility.SplitBySpace(cc.name);
                         if ((data_split.Length > 1 && Convert.ToBoolean(data_split[1])) || (data_split.Length > 2 && Convert.ToBoolean(data_split[2])))
                         {
                             return true;
                         }
                         else
                         {
-                            if (__instance.currentTab == 7)
-                            {
-                                ___hoverText = Game1.parseText(c2.name.Substring(c2.name.IndexOf(' ', c2.name.IndexOf(' ') + 1) + 1), Game1.smallFont, 256);
-                            }
-                            else
+                            if ((__instance.currentTab != 5 && Config.ShowMissingItemDetails) || (__instance.currentTab == 5 && (Config.ShowMissingAchievementDetails || Game1.achievements[int.Parse(data_split[0])].Split('^')[2] == "true")))
                             {
                                 ___hoverText = __instance.createDescription(data_split[0]);
                             }
+                            else
+                            { 
+                                if(__instance.currentTab == 5)
+                                {
+                                    int index = int.Parse(data_split[0]);
+                                    string[] split = Game1.achievements[index].Split('^', StringSplitOptions.None);
+                                    ___hoverText = split[0];
+                                }
+                                else
+                                {
+                                    ParsedItemData data = ItemRegistry.GetDataOrErrorItem(data_split[0]);
+                                    ___hoverText = Game1.content.LoadStringReturnNullIfNotFound("Strings\\Objects:" + data.ItemId + "_CollectionsTabName", true) ?? data.DisplayName;
+                                }
+                            }
                         }
-                        return false;
+                        found = true;
+                    }
+                    else
+                    {
+                        cc.scale = Math.Max(cc.scale - 0.02f, cc.baseScale);
                     }
                 }
-                return true;
+                return !found;
             }
         }
     }

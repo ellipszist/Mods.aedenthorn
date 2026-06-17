@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using StardewValley.Menus;
 
-namespace ShowMissingCollectionEntries
+namespace GiantCropInteriors
 {
     public partial class ModEntry
     {

@@ -1,7 +1,7 @@
 ﻿
 using Microsoft.Xna.Framework;
 
-namespace ShowMissingCollectionEntries
+namespace GiantCropInteriors
 {
     public class ModConfig
     {
