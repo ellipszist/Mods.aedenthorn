@@ -1,19 +1,51 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FashionSense.Framework.Models.Appearances;
+using FashionSense.Framework.Models.Appearances.Accessory;
+using FashionSense.Framework.Models.Appearances.Body;
+using FashionSense.Framework.Models.Appearances.Hair;
+using FashionSense.Framework.Models.Appearances.Hat;
+using FashionSense.Framework.Models.Appearances.Pants;
+using FashionSense.Framework.Models.Appearances.Shirt;
+using FashionSense.Framework.Models.Appearances.Shoes;
+using FashionSense.Framework.Models.Appearances.Sleeves;
+using FashionSense.Framework.UI;
+using HarmonyLib;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Sickhead.Engine.Util;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.Menus;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
-namespace AdvancedCharacterCustomization
+namespace FashionSenseAppearanceMenu
 {
-    public class AdvancedCharacterCustomizationMenu : IClickableMenu
+    public class FashionSenseAppearanceMenuMenu : IClickableMenu
     {
-        public CharacterCustomization menu;
+        internal const string ACCESSORY_FILTER_BUTTON = "AccessoryFilter";
+        internal const string HAIR_FILTER_BUTTON = "HairFilter";
+        internal const string HAT_FILTER_BUTTON = "HatFilter";
+        internal const string SHIRT_FILTER_BUTTON = "ShirtFilter";
+        internal const string PANTS_FILTER_BUTTON = "PantsFilter";
+        internal const string SLEEVES_FILTER_BUTTON = "SleevesFilter";
+        internal const string SHOES_FILTER_BUTTON = "ShoesFilter";
+        internal const string BODY_FILTER_BUTTON = "BodyFilter";
+
+        internal const string CUSTOM_HAIR_ID = "FashionSense.CustomHair.Id";
+        internal const string CUSTOM_ACCESSORY_ID = "FashionSense.CustomAccessory.Id";
+        internal const string CUSTOM_ACCESSORY_COLLECTIVE_ID = "FashionSense.CustomAccessory.Collective.Id";
+        internal const string CUSTOM_HAT_ID = "FashionSense.CustomHat.Id";
+        internal const string CUSTOM_SHIRT_ID = "FashionSense.CustomShirt.Id";
+        internal const string CUSTOM_PANTS_ID = "FashionSense.CustomPants.Id";
+        internal const string CUSTOM_SLEEVES_ID = "FashionSense.CustomSleeves.Id";
+        internal const string CUSTOM_SHOES_ID = "FashionSense.CustomShoes.Id";
+        internal const string CUSTOM_BODY_ID = "FashionSense.CustomBody.Id";
+
+        public HandMirrorMenu menu;
         private Farmer farmer;
-        private StyleType whichStyle;
+        private string whichFilter;
         public List<Texture2D> allEntries = new();
         public List<ClickableTextureComponent> entries = new();
         public ClickableTextureComponent  leftButton;
@@ -25,37 +57,76 @@ namespace AdvancedCharacterCustomization
         private int oneWidth;
         private int rows;
         private int fit;
-        private object last;
+        private object tm;
+        private AppearanceContentPack last;
         private int lastIndex;
-        public AdvancedCharacterCustomizationMenu(CharacterCustomization m, Farmer f, StyleType w): base(m.xPositionOnScreen, m.yPositionOnScreen, m.width, m.height)
+
+        public FashionSenseAppearanceMenuMenu(HandMirrorMenu m, Farmer f, string w): base(Game1.uiViewport.Width / 2 - (632 + IClickableMenu.borderWidth * 2) / 2, Game1.uiViewport.Height / 2 - (648 + IClickableMenu.borderWidth * 2) / 2 - 64, 632 + IClickableMenu.borderWidth * 2, 648 + IClickableMenu.borderWidth * 2 + 64)
         {
             menu = m;
             farmer = f;
-            whichStyle = w;
-            count = whichStyle switch
+            whichFilter = w;
+            var types = m.GetType().Assembly.GetTypes().Where(t => t.Name.Contains("FashionSense"));
+            var fs = m.GetType().Assembly.GetType("FashionSense.FashionSense");
+            var fi = AccessTools.Field(fs, "textureManager");
+            tm = fi.GetValue(null);
+            List<AppearanceContentPack> appearanceModels = new List<AppearanceContentPack>();
+            var mi = tm.GetType().GetMethods(System.Reflection.BindingFlags.NonPublic).First(i => i.Name == "GetAllAppearanceModels" && !i.IsGenericMethod);
+            var allAppearances = mi.Invoke(tm, Array.Empty<object>()) as List<AppearanceContentPack>;
+            string modDataKey = "null";
+            switch (whichFilter)
             {
-                StyleType.Skin => 24,
-                StyleType.Hair => Farmer.GetAllHairstyleIndices().Count,
-                StyleType.Shirt => menu.GetValidShirtIds().Count,
-                StyleType.Pants => menu.GetValidPantsIds().Count,
-                StyleType.Acc => 31,
-                _ => 31
-            };
-            last = GetLast();
-            lastIndex = GetLastIndex();
+
+                case HAIR_FILTER_BUTTON:
+                    modDataKey = CUSTOM_HAIR_ID;
+                    appearanceModels = allAppearances.Where(m => m is HairContentPack).ToList();
+                    break;
+                case ACCESSORY_FILTER_BUTTON:
+                    modDataKey = CUSTOM_ACCESSORY_COLLECTIVE_ID;
+                    appearanceModels = allAppearances.Where(m => m is AccessoryContentPack).ToList();
+                    break;
+                case HAT_FILTER_BUTTON:
+                    modDataKey = CUSTOM_HAT_ID;
+                    appearanceModels = allAppearances.Where(m => m is HatContentPack).ToList();
+                    break;
+                case SHIRT_FILTER_BUTTON:
+                    modDataKey = CUSTOM_SHIRT_ID;
+                    appearanceModels = allAppearances.Where(m => m is ShirtContentPack).ToList();
+                    break;
+                case PANTS_FILTER_BUTTON:
+                    modDataKey = CUSTOM_PANTS_ID;
+                    appearanceModels = allAppearances.Where(m => m is PantsContentPack).ToList();
+                    break;
+                case SLEEVES_FILTER_BUTTON:
+                    modDataKey = CUSTOM_SLEEVES_ID;
+                    appearanceModels = allAppearances.Where(m => m is SleevesContentPack).ToList();
+                    break;
+                case SHOES_FILTER_BUTTON:
+                    modDataKey = CUSTOM_SHOES_ID;
+                    appearanceModels = allAppearances.Where(m => m is ShoesContentPack).ToList();
+                    break;
+                case BODY_FILTER_BUTTON:
+                    modDataKey = CUSTOM_BODY_ID;
+                    appearanceModels = allAppearances.Where(m => m is BodyContentPack).ToList();
+                    break;
+            }
+            last = appearanceModels.FirstOrDefault(m => (string)AccessTools.PropertyGetter(typeof(AppearanceContentPack), "Id").GetValue(m) == Game1.player.modData[modDataKey]);
+            lastIndex = appearanceModels.IndexOf(last);
+            count = appearanceModels.Count();
             CreatePreviews();
             cols = 4;
             oneHeight = 192;
             oneWidth = 96;
             rows = height / oneHeight;
             fit = rows * cols;
-            scrolled = MathHelper.Clamp(GetLastIndex() / cols, 0, (int)Math.Ceiling((count - fit) / (float)cols));
+            scrolled = MathHelper.Clamp(lastIndex / cols, 0, (int)Math.Ceiling((count - fit) / (float)cols));
             RebuildComponents();
         }
 
         private void CreatePreviews()
         {
             allEntries.Clear();
+            DoChange(0);
             for (int i = 0; i < count; i++)
             {
                 Texture2D tex = new(Game1.graphics.GraphicsDevice, 64, 128);
@@ -69,7 +140,7 @@ namespace AdvancedCharacterCustomization
                 var renderBatch = new SpriteBatch(Game1.graphics.GraphicsDevice);
 
                 renderBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, null);
-                DoChange(i);
+                DoChange();
                 DrawFarmer(renderBatch, new(0, 0, 64, 128));
                 renderBatch.End();
 
@@ -79,15 +150,16 @@ namespace AdvancedCharacterCustomization
                 tex.SetData(data);
                 allEntries.Add(tex);
             }
-            DoChange(last);
+            DoChange(lastIndex);
         }
 
         private void RebuildComponents()
         {
-            xPositionOnScreen = menu.xPositionOnScreen;
-            yPositionOnScreen = menu.yPositionOnScreen;
-            width = menu.width;
-            height = menu.height;
+            xPositionOnScreen = Game1.uiViewport.Width / 2 - (632 + IClickableMenu.borderWidth * 2) / 2;
+            yPositionOnScreen = Game1.uiViewport.Height / 2 - (648 + IClickableMenu.borderWidth * 2) / 2 - 64;
+            width = 632 + IClickableMenu.borderWidth * 2;
+            height = 648 + IClickableMenu.borderWidth * 2 + 64;
+
             int start = cols * scrolled;
             entries.Clear();
             int c = 0;
@@ -124,88 +196,26 @@ namespace AdvancedCharacterCustomization
             farmer.FarmerRenderer.draw(b, farmer.FarmerSprite.CurrentAnimationFrame, farmer.FarmerSprite.CurrentFrame, farmer.FarmerSprite.SourceRect, new Vector2(0, 0), Vector2.Zero, 0.8f, Color.White, 0f, 1f, farmer);
         }
 
-        private void DoChange(object last)
+        private void DoChange()
         {
-
-            switch (whichStyle)
-            {
-                case StyleType.Skin:
-                    farmer.changeSkinColor((int)last, true);
-                    break;
-                case StyleType.Hair:
-                    farmer.changeHairStyle((int)last);
-                    break;
-                case StyleType.Shirt:
-                    farmer.changeShirt((string)last);
-                    break;
-                case StyleType.Pants:
-                    farmer.changePantStyle((string)last);
-                    break;
-                case StyleType.Acc:
-                    farmer.changeAccessory((int)last);
-                    break;
-            }
+            AccessTools.Method(typeof(HandMirrorMenu), "UpdateAppearance").Invoke(menu, new object[] { 1 });
         }
 
         private void DoChange(int i)
         {
-            switch (whichStyle)
-            {
-                case StyleType.Skin:
-                    farmer.changeSkinColor(i, true);
-                    break;
-                case StyleType.Hair:
-                    farmer.changeHairStyle(Farmer.GetAllHairstyleIndices()[i]);
-                    break;
-                case StyleType.Shirt:
-                    farmer.changeShirt(menu.GetValidShirtIds()[i]);
-                    break;
-                case StyleType.Pants:
-                    farmer.changePantStyle(menu.GetValidPantsIds()[i]);
-                    break;
-                case StyleType.Acc:
-                    farmer.changeAccessory(i - 1);
-                    break;
-            }
-        }
-
-        private object GetLast()
-        {
-            return whichStyle switch
-            {
-                StyleType.Skin => farmer.skin.Value,
-                StyleType.Hair => farmer.hair.Value,
-                StyleType.Shirt => farmer.shirt.Value,
-                StyleType.Pants => farmer.pants.Value,
-                StyleType.Acc => farmer.accessory.Value,
-                _ => farmer.accessory.Value
-            };
-        }
-
-        private int GetLastIndex()
-        {
-            return whichStyle switch
-            {
-                StyleType.Skin => (int)last,
-                StyleType.Hair => Farmer.GetAllHairstyleIndices().IndexOf((int)last),
-                StyleType.Shirt => menu.GetValidShirtIds().IndexOf((string)last),
-                StyleType.Pants => menu.GetValidPantsIds().IndexOf((string)last),
-                StyleType.Acc => (int)last,
-                _ => 30
-            };
+            AccessTools.Method(typeof(HandMirrorMenu), "UpdateAppearance").Invoke(menu, new object[] { i, true });
         }
         private bool CantScrollDown()
         {
             return (scrolled * cols + fit) / cols >= (int)Math.Ceiling(count / (float)cols);
         }
 
-
         public override void draw(SpriteBatch b)
         {
 
             //menu.draw(b);
             b.Draw(Game1.staminaRect, new Rectangle(0, 0, Game1.viewport.Width, Game1.viewport.Height), Color.Black * 0.5f);
-            SpriteText.drawStringWithScrollCenteredAt(b, ModEntry.SHelper.Translation.Get(whichStyle.ToString()), xPositionOnScreen + width / 2, yPositionOnScreen);
+            SpriteText.drawStringWithScrollCenteredAt(b, ModEntry.SHelper.Translation.Get(whichFilter.ToString()), xPositionOnScreen + width / 2, yPositionOnScreen);
             Game1.drawDialogueBox(xPositionOnScreen, yPositionOnScreen, width, height, false, true, null, false, true, -1, -1, -1);
             foreach (var cc in entries)
             {
@@ -218,7 +228,6 @@ namespace AdvancedCharacterCustomization
                 {
                     b.Draw(Game1.staminaRect, bounds, Color.White * 0.5f);
                 }
-                
                 cc.draw(b);
             }
             if (scrolled > 0)
@@ -246,26 +255,9 @@ namespace AdvancedCharacterCustomization
                 if(GetRect(cc).Contains(x, y))
                 {
                     var i = int.Parse(cc.name);
-                    switch (whichStyle)
-                    {
-                        case StyleType.Skin:
-                            farmer.changeSkinColor(i, true);
-                            break;
-                        case StyleType.Hair:
-                            farmer.changeHairStyle(Farmer.GetAllHairstyleIndices()[i]);
-                            break;
-                        case StyleType.Shirt:
-                            farmer.changeShirt(menu.GetValidShirtIds()[i]);
-                            break;
-                        case StyleType.Pants:
-                            farmer.changePantStyle(menu.GetValidPantsIds()[i]);
-                            break;
-                        case StyleType.Acc:
-                            farmer.changeAccessory(i - 1);
-                            break;
-                    }
-                    Game1.playSound("bigDeSelect");
-                    TitleMenu.subMenu = menu;
+                    DoChange(i);
+                    Game1.playSound("bigSelect");
+                    Game1.activeClickableMenu = menu;
                     return;
                 }
             }
@@ -295,7 +287,7 @@ namespace AdvancedCharacterCustomization
             if (Game1.options.doesInputListContain(Game1.options.menuButton, key) && this.readyToClose())
             {
                 Game1.playSound("bigDeSelect");
-                TitleMenu.subMenu = menu;
+                Game1.activeClickableMenu = menu;
                 return;
             }
         }
