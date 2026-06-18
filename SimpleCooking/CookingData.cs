@@ -71,7 +71,8 @@ namespace SimpleCooking
                 {
                     Edibility = (int)Math.Round(temp.Edibility * (Burned ? 1 / ModEntry.Config.GrilledEdibilityMult : ModEntry.Config.GrilledEdibilityMult)),
                     Price =  (int)Math.Round(temp.Price * (Burned ? 1 / ModEntry.Config.GrilledPriceMult : ModEntry.Config.GrilledEdibilityMult)),
-                    Name = Burned ? "Burnt " : "Grilled " + temp.Name
+                    Name = Burned ? "Burnt " : "Grilled " + temp.Name,
+                    Quality = Quality
                 };
                 item.preservedParentSheetIndex.Value = InputID;
                 item.modData[ModEntry.grilledKey] = "true";

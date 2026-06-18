@@ -7,19 +7,18 @@ namespace FuzzyTime
     public class ModConfig
     {
         public bool ModEnabled { get; set; } = true;
+        public int ScrollInterval { get; set; } = 500;
+        public string FontType { get; set; } = "small";
         public Dictionary<int, string> TimeNames { get; set; } = new()
         {
-            { 600, "early-morning" },
-            { 800, "morning" },
-            { 1000, "late-morning" },
-            { 1130, "noon" },
-            { 1230, "early-afternoon" },
-            { 1400, "afternoon" },
-            { 1600, "late-afternoon" },
-            { 1900, "evening" },
-            { 2100, "night" },
-            { 2330, "midnight" },
-            { 2430, "late-night" }
+            { 600, "early" },
+            { 830, "morning" },
+            { 1100, "midday" },
+            { 1300, "afternoon" },
+            { 1630, "evening" },
+            { 1930, "night" },
+            { 2200, "midnight" },
+            { 2400, "late" }
         };
     }
 }

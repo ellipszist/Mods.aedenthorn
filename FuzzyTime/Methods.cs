@@ -7,6 +7,9 @@ using StardewValley.Menus;
 using System;
 using System.Linq;
 using System.Text;
+using StardewModdingAPI;
+using StardewModdingAPI.Events;
+using StardewModdingAPI.Utilities;
 
 namespace FuzzyTime
 {
@@ -19,8 +22,14 @@ namespace FuzzyTime
                 Utility.drawTextWithShadow(b, text, font, position, color, scale, layerDepth, horizontalShadowOffset, verticalShadowOffset, shadowIntensity, numShadows);
                 return;
             }
-            font = Game1.smallFont;
-            var str = GetTimeText();
+            font = Config.FontType switch
+            {
+                "small" => Game1.smallFont,
+                "dialogue" => Game1.dialogueFont,
+                "tiny" => Game1.tinyFont,
+                _ => SHelper.GameContent.DoesAssetExist<SpriteFont>(SHelper.GameContent.ParseAssetName(Config.FontType)) ? SHelper.GameContent.Load<SpriteFont>(Config.FontType) : Game1.smallFont
+            };
+            var str = GetTimeText(font);
             Vector2 txtSize = font.MeasureString(str);
 
             var sourceRect = AccessTools.FieldRefAccess<DayTimeMoneyBox, Rectangle>(box, "sourceRect");
@@ -29,13 +38,12 @@ namespace FuzzyTime
             Utility.drawTextWithShadow(b, str, font, box.position + timePosition, color, scale, layerDepth, horizontalShadowOffset, verticalShadowOffset, shadowIntensity, numShadows);
         }
 
-        private static string GetTimeText()
+        private static string GetTimeText(SpriteFont font)
         {
             var keys = Config.TimeNames.Keys.ToList();
             keys.Sort();
             keys.Reverse();
             int key;
-            int maxLength = 12;
             try
             {
                 key = keys.First(k => k <= Game1.timeOfDay);
@@ -49,11 +57,16 @@ namespace FuzzyTime
             {
                 str = SHelper.Translation.Get(str);
             }
-            if(str.Length > maxLength)
+            string check = "a";
+            while(font.MeasureString(check).X < 180)
+            {
+                check += "a";
+            }
+            int maxLength = check.Length;
+            if (str.Length > maxLength)
             {
                 var temp = str + "  ";
-                float speed = 500;
-                var tick = Game1.currentGameTime.TotalGameTime.TotalMilliseconds / speed;
+                var tick = Game1.currentGameTime.TotalGameTime.TotalMilliseconds / Config.ScrollInterval;
                 var offset = (int)(tick % temp.Length);
                 temp = temp.Substring(offset, Math.Min(maxLength, temp.Length - offset));
                 if (temp.Length < maxLength)
