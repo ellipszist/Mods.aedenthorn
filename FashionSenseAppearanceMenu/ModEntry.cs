@@ -25,6 +25,7 @@ namespace FashionSenseAppearanceMenu
         public static IModHelper SHelper;
         public static ModConfig Config;
         public static ModEntry context;
+        public static PerScreen<bool> mute = new();
         public override void Entry(IModHelper helper)
         {
             Config = Helper.ReadConfig<ModConfig>();

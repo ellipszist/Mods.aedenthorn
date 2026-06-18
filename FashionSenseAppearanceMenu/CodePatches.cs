@@ -28,5 +28,14 @@ namespace FashionSenseAppearanceMenu
             }
         }
 
+        [HarmonyPatch(typeof(Game1), nameof(Game1.playSound), new Type[] { typeof(string), typeof(int) })]
+        public class Game1_playSound_Patch
+        {
+
+            public static bool Prefix()
+            {
+                return (!Config.ModEnabled || !mute.Value);
+            }
+        }
     }
 }

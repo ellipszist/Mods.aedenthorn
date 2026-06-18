@@ -19,6 +19,7 @@
     </Reference>
     <Reference Include="FashionSense">
       <HintPath>D:\tmp\s\steamapps\common\Stardew Valley\Mods\FashionSense\FashionSense.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
 

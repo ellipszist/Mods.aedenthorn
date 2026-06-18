@@ -12,7 +12,7 @@ using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Sickhead.Engine.Util;
+using StardewModdingAPI;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.Menus;
@@ -24,6 +24,8 @@ namespace FashionSenseAppearanceMenu
 {
     public class FashionSenseAppearanceMenuMenu : IClickableMenu
     {
+        internal const string UI_HAND_MIRROR_FILTER_BUTTON = "FashionSense.UI.HandMirror.SelectedFilterButton";
+
         internal const string ACCESSORY_FILTER_BUTTON = "AccessoryFilter";
         internal const string HAIR_FILTER_BUTTON = "HairFilter";
         internal const string HAT_FILTER_BUTTON = "HatFilter";
@@ -58,6 +60,7 @@ namespace FashionSenseAppearanceMenu
         private int rows;
         private int fit;
         private object tm;
+        private IModHelper mh;
         private AppearanceContentPack last;
         private int lastIndex;
 
@@ -67,11 +70,11 @@ namespace FashionSenseAppearanceMenu
             farmer = f;
             whichFilter = w;
             var types = m.GetType().Assembly.GetTypes().Where(t => t.Name.Contains("FashionSense"));
-            var fs = m.GetType().Assembly.GetType("FashionSense.FashionSense");
-            var fi = AccessTools.Field(fs, "textureManager");
+            var fi = AccessTools.Field(typeof(FashionSense.FashionSense), "textureManager");
             tm = fi.GetValue(null);
+            mh = (IModHelper)AccessTools.Field(typeof(FashionSense.FashionSense), "modHelper").GetValue(null);
             List<AppearanceContentPack> appearanceModels = new List<AppearanceContentPack>();
-            var mi = tm.GetType().GetMethods(System.Reflection.BindingFlags.NonPublic).First(i => i.Name == "GetAllAppearanceModels" && !i.IsGenericMethod);
+            var mi = tm.GetType().GetMethods().First(i => i.Name.Contains("GetAllAppearanceModels") && !i.IsGenericMethod);
             var allAppearances = mi.Invoke(tm, Array.Empty<object>()) as List<AppearanceContentPack>;
             string modDataKey = "null";
             switch (whichFilter)
@@ -110,13 +113,13 @@ namespace FashionSenseAppearanceMenu
                     appearanceModels = allAppearances.Where(m => m is BodyContentPack).ToList();
                     break;
             }
-            last = appearanceModels.FirstOrDefault(m => (string)AccessTools.PropertyGetter(typeof(AppearanceContentPack), "Id").GetValue(m) == Game1.player.modData[modDataKey]);
+            last = appearanceModels.FirstOrDefault(m => (string)AccessTools.Property(typeof(AppearanceContentPack), "Id").GetValue(m) == Game1.player.modData[modDataKey]);
             lastIndex = appearanceModels.IndexOf(last);
-            count = appearanceModels.Count();
+            count = appearanceModels.Count() + 1;
+            oneHeight = 128 + 40;
+            oneWidth = 64 + 78;
             CreatePreviews();
             cols = 4;
-            oneHeight = 192;
-            oneWidth = 96;
             rows = height / oneHeight;
             fit = rows * cols;
             scrolled = MathHelper.Clamp(lastIndex / cols, 0, (int)Math.Ceiling((count - fit) / (float)cols));
@@ -126,13 +129,13 @@ namespace FashionSenseAppearanceMenu
         private void CreatePreviews()
         {
             allEntries.Clear();
-            DoChange(0);
+            DoChange(-1);
             for (int i = 0; i < count; i++)
             {
-                Texture2D tex = new(Game1.graphics.GraphicsDevice, 64, 128);
-                RenderTarget2D renderTarget = new RenderTarget2D(Game1.graphics.GraphicsDevice, 64, 128);
-                renderTarget.SetData(new Color[64 * 128]);
-                Rectangle destinationRectangle = new Rectangle(0, 0, 64, 128);
+                Texture2D tex = new(Game1.graphics.GraphicsDevice, oneWidth, oneHeight);
+                RenderTarget2D renderTarget = new RenderTarget2D(Game1.graphics.GraphicsDevice, oneWidth, oneHeight);
+                renderTarget.SetData(new Color[oneWidth * oneHeight]);
+                Rectangle destinationRectangle = new Rectangle(0, 0, oneWidth, oneHeight);
 
                 Game1.graphics.GraphicsDevice.SetRenderTarget(renderTarget);
                 Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
@@ -140,8 +143,8 @@ namespace FashionSenseAppearanceMenu
                 var renderBatch = new SpriteBatch(Game1.graphics.GraphicsDevice);
 
                 renderBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null, null);
+                DrawFarmer(renderBatch, new(0, 0, oneWidth, oneHeight));
                 DoChange();
-                DrawFarmer(renderBatch, new(0, 0, 64, 128));
                 renderBatch.End();
 
                 Game1.graphics.GraphicsDevice.SetRenderTarget(null);
@@ -166,12 +169,11 @@ namespace FashionSenseAppearanceMenu
             var end = Math.Min(start + fit, count);
             for (int i = start; i < end; i++)
             {
-                var x = c % cols * width / (cols + 1);
-                var y = c / cols * height / (rows + 1);
-                entries.Add(new(i.ToString(), new (xPositionOnScreen + 96 + x, yPositionOnScreen + 120 + y, 64, 128), null, i.ToString(), allEntries[i], new(0, 0, 64, 128), 1f));
+                var x = c % cols * oneWidth;
+                var y = c / cols * oneHeight;
+                entries.Add(new((i - 1).ToString(), new(xPositionOnScreen + 64 + x, yPositionOnScreen + 120 + y, oneWidth, oneHeight), null, (i - 1).ToString(), allEntries[i], new(0, 0, oneWidth, oneHeight), 1f));
                 c++;
             }
-
             leftButton = new ClickableTextureComponent("Direction", new Rectangle(xPositionOnScreen + width / 2 - 96, yPositionOnScreen + height, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44, -1, -1), 1f, false)
             {
                 myID = 520,
@@ -193,17 +195,23 @@ namespace FashionSenseAppearanceMenu
 
         private void DrawFarmer(SpriteBatch b, Rectangle bounds)
         {
-            farmer.FarmerRenderer.draw(b, farmer.FarmerSprite.CurrentAnimationFrame, farmer.FarmerSprite.CurrentFrame, farmer.FarmerSprite.SourceRect, new Vector2(0, 0), Vector2.Zero, 0.8f, Color.White, 0f, 1f, farmer);
+            var x = bounds.Width / 8;
+            var y = bounds.Height / 16;
+            farmer.FarmerRenderer.draw(b, farmer.FarmerSprite.CurrentAnimationFrame, farmer.FarmerSprite.CurrentFrame, farmer.FarmerSprite.SourceRect, new Vector2(x, y), new Vector2(-x / 2, -y / 2), 0.8f, Color.White, 0f, 1f, farmer);
         }
 
         private void DoChange()
         {
-            AccessTools.Method(typeof(HandMirrorMenu), "UpdateAppearance").Invoke(menu, new object[] { 1 });
+            ModEntry.mute.Value = true;
+            AccessTools.Method(typeof(HandMirrorMenu), "UpdateAppearance").Invoke(menu, new object[] { 1, false });
+            ModEntry.mute.Value = false;
         }
 
         private void DoChange(int i)
         {
+            ModEntry.mute.Value = true;
             AccessTools.Method(typeof(HandMirrorMenu), "UpdateAppearance").Invoke(menu, new object[] { i, true });
+            ModEntry.mute.Value = false;
         }
         private bool CantScrollDown()
         {
@@ -215,7 +223,38 @@ namespace FashionSenseAppearanceMenu
 
             //menu.draw(b);
             b.Draw(Game1.staminaRect, new Rectangle(0, 0, Game1.viewport.Width, Game1.viewport.Height), Color.Black * 0.5f);
-            SpriteText.drawStringWithScrollCenteredAt(b, ModEntry.SHelper.Translation.Get(whichFilter.ToString()), xPositionOnScreen + width / 2, yPositionOnScreen);
+
+            var descriptionName = Game1.player.modData.ContainsKey(UI_HAND_MIRROR_FILTER_BUTTON) ? Game1.player.modData[UI_HAND_MIRROR_FILTER_BUTTON] : String.Empty;
+            string name = null;
+            switch (descriptionName)
+            {
+                case ACCESSORY_FILTER_BUTTON:
+                    name = mh.Translation.Get("ui.fashion_sense.title.accessory");
+                    break;
+                case HAT_FILTER_BUTTON:
+                    name = mh.Translation.Get("ui.fashion_sense.title.hat");
+                    break;
+                case SHIRT_FILTER_BUTTON:
+                    name = mh.Translation.Get("ui.fashion_sense.title.shirt");
+                    break;
+                case PANTS_FILTER_BUTTON:
+                    name = mh.Translation.Get("ui.fashion_sense.title.pants");
+                    break;
+                case SLEEVES_FILTER_BUTTON:
+                    name = mh.Translation.Get("ui.fashion_sense.title.sleeves");
+                    break;
+                case SHOES_FILTER_BUTTON:
+                    name = mh.Translation.Get("ui.fashion_sense.title.shoes");
+                    break;
+                case BODY_FILTER_BUTTON:
+                    name = mh.Translation.Get("ui.fashion_sense.title.body");
+                    break;
+                default:
+                    name = mh.Translation.Get("ui.fashion_sense.title.hair");
+                    break;
+            }
+
+            SpriteText.drawStringWithScrollCenteredAt(b, name, xPositionOnScreen + width / 2, yPositionOnScreen);
             Game1.drawDialogueBox(xPositionOnScreen, yPositionOnScreen, width, height, false, true, null, false, true, -1, -1, -1);
             foreach (var cc in entries)
             {
@@ -240,12 +279,12 @@ namespace FashionSenseAppearanceMenu
             }
             leftButton.draw(b);
             rightButton.draw(b);
-            base.drawMouse(b);
+            drawMouse(b);
         }
 
         private Rectangle GetRect(ClickableTextureComponent cc)
         {
-            return new Rectangle(cc.bounds.X - 39, cc.bounds.Y - 10, cc.bounds.Width + 78, cc.bounds.Height + 30);
+            return cc.bounds;
         }
 
         public override void receiveLeftClick(int x, int y, bool playSound = true)

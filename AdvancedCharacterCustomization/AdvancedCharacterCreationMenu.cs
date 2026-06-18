@@ -264,7 +264,7 @@ namespace AdvancedCharacterCustomization
                             farmer.changeAccessory(i - 1);
                             break;
                     }
-                    Game1.playSound("bigDeSelect");
+                    Game1.playSound("bigSelect");
                     TitleMenu.subMenu = menu;
                     return;
                 }
