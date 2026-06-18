@@ -204,7 +204,7 @@ namespace AdvancedCharacterCustomization
         {
 
             //menu.draw(b);
-            b.Draw(Game1.staminaRect, new Rectangle(0, 0, Game1.viewport.Width, Game1.viewport.Height), Color.Black * 0.5f);
+            //b.Draw(Game1.staminaRect, new Rectangle(0, 0, Game1.viewport.Width, Game1.viewport.Height), Color.Black * 0.5f);
             SpriteText.drawStringWithScrollCenteredAt(b, ModEntry.SHelper.Translation.Get(whichStyle.ToString()), xPositionOnScreen + width / 2, yPositionOnScreen);
             Game1.drawDialogueBox(xPositionOnScreen, yPositionOnScreen, width, height, false, true, null, false, true, -1, -1, -1);
             foreach (var cc in entries)

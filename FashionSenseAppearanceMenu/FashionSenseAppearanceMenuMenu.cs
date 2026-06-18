@@ -116,7 +116,7 @@ namespace FashionSenseAppearanceMenu
             last = appearanceModels.FirstOrDefault(m => (string)AccessTools.Property(typeof(AppearanceContentPack), "Id").GetValue(m) == Game1.player.modData[modDataKey]);
             lastIndex = appearanceModels.IndexOf(last);
             count = appearanceModels.Count() + 1;
-            oneHeight = 128 + 40;
+            oneHeight = 128 + 32;
             oneWidth = 64 + 78;
             CreatePreviews();
             cols = 4;
@@ -171,7 +171,7 @@ namespace FashionSenseAppearanceMenu
             {
                 var x = c % cols * oneWidth;
                 var y = c / cols * oneHeight;
-                entries.Add(new((i - 1).ToString(), new(xPositionOnScreen + 64 + x, yPositionOnScreen + 120 + y, oneWidth, oneHeight), null, (i - 1).ToString(), allEntries[i], new(0, 0, oneWidth, oneHeight), 1f));
+                entries.Add(new((i - 1).ToString(), new(xPositionOnScreen + 64 + x, yPositionOnScreen + 108 + y, oneWidth, oneHeight), null, (i - 1).ToString(), allEntries[i], new(0, 0, oneWidth, oneHeight), 1f));
                 c++;
             }
             leftButton = new ClickableTextureComponent("Direction", new Rectangle(xPositionOnScreen + width / 2 - 96, yPositionOnScreen + height, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44, -1, -1), 1f, false)
@@ -195,9 +195,9 @@ namespace FashionSenseAppearanceMenu
 
         private void DrawFarmer(SpriteBatch b, Rectangle bounds)
         {
-            var x = bounds.Width / 8;
-            var y = bounds.Height / 16;
-            farmer.FarmerRenderer.draw(b, farmer.FarmerSprite.CurrentAnimationFrame, farmer.FarmerSprite.CurrentFrame, farmer.FarmerSprite.SourceRect, new Vector2(x, y), new Vector2(-x / 2, -y / 2), 0.8f, Color.White, 0f, 1f, farmer);
+            var x = bounds.Width / 2 - 32;
+            var y = bounds.Height / 2 - 64;
+            farmer.FarmerRenderer.draw(b, farmer.FarmerSprite.CurrentAnimationFrame, farmer.FarmerSprite.CurrentFrame, farmer.FarmerSprite.SourceRect, new Vector2(x, y), Vector2.Zero, 1f, Color.White, 0f, 1f, farmer);
         }
 
         private void DoChange()
