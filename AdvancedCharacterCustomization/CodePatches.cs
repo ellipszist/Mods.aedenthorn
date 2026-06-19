@@ -44,7 +44,18 @@ namespace AdvancedCharacterCustomization
                 {
                     return true;
                 }
-                TitleMenu.subMenu = new AdvancedCharacterCustomizationMenu(__instance, ____displayFarmer, which);
+                if (Game1.activeClickableMenu == __instance)
+                {
+                    Game1.activeClickableMenu = new AdvancedCharacterCustomizationMenu(__instance, ____displayFarmer, which);
+                }
+                else if (TitleMenu.subMenu == __instance)
+                {
+                    TitleMenu.subMenu = new AdvancedCharacterCustomizationMenu(__instance, ____displayFarmer, which);
+                }
+                else 
+                {
+                    return true;
+                } 
                 if (playSound)
                 {
                     Game1.playSound("bigSelect");

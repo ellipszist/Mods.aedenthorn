@@ -12,7 +12,7 @@ namespace AdvancedCharacterCustomization
         public static Point buttonSize = new Point(66, 60);
         public static bool CheckButton(ClickableComponent label, int x, int y)
         {
-            return label.visible && new Rectangle(label.bounds.Location - buttonOffset, buttonSize).Contains(x, y);
+            return label?.visible == true && new Rectangle(label.bounds.Location - buttonOffset, buttonSize).Contains(x, y);
         }
         public static void DrawButton(SpriteBatch b, ClickableComponent label)
         {

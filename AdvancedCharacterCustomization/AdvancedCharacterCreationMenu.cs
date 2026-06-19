@@ -264,8 +264,15 @@ namespace AdvancedCharacterCustomization
                             farmer.changeAccessory(i - 1);
                             break;
                     }
+                    if (Game1.activeClickableMenu == this)
+                    {
+                        Game1.activeClickableMenu = menu;
+                    }
+                    else if (TitleMenu.subMenu == this)
+                    {
+                        TitleMenu.subMenu = menu;
+                    }
                     Game1.playSound("bigSelect");
-                    TitleMenu.subMenu = menu;
                     return;
                 }
             }
@@ -295,7 +302,14 @@ namespace AdvancedCharacterCustomization
             if (Game1.options.doesInputListContain(Game1.options.menuButton, key) && this.readyToClose())
             {
                 Game1.playSound("bigDeSelect");
-                TitleMenu.subMenu = menu;
+                if (Game1.activeClickableMenu == this)
+                {
+                    Game1.activeClickableMenu = menu;
+                }
+                else if (TitleMenu.subMenu == this)
+                {
+                    TitleMenu.subMenu = menu;
+                }
                 return;
             }
         }
