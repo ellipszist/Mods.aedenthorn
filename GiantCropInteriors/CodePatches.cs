@@ -1,18 +1,10 @@
 ﻿using HarmonyLib;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using Netcode;
 using StardewValley;
 using StardewValley.Buildings;
-using StardewValley.ItemTypeDefinitions;
-using StardewValley.Menus;
 using StardewValley.TerrainFeatures;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
 
 namespace GiantCropInteriors
 {
@@ -20,13 +12,13 @@ namespace GiantCropInteriors
     {
 
         [HarmonyPatch(typeof(GiantCrop), nameof(GiantCrop.draw), new Type[] { typeof(SpriteBatch) })]
-        public class CollectionsPage_draw_Patch
+        public class GiantCrop_draw_Patch
         {
             public static void Postfix(GiantCrop __instance)
             {
                 if (__instance.Location is null)
                     return;
-                if (!Config.ModEnabled || !BuildingDict.TryGetValue(__instance.Id, out var name))
+                if (!Config.ModEnabled || !BuildingDict.ContainsKey(__instance.Id))
                 {
                     if (__instance.modData.ContainsKey(builtAtKey) && __instance.Location.getBuildingAt(__instance.Tile) is Building old)
                     {
@@ -34,20 +26,18 @@ namespace GiantCropInteriors
                     }
                     return;
                 }
-                var asd = new Building(name, __instance.Tile);
-                var d = Game1.buildingData;
-                if (__instance.Location.buildings.FirstOrDefault(i => (int)__instance.Tile.X == i.tileX.Value && (int)__instance.Tile.Y  == i.tileY.Value) is Building exists && exists.buildingType.Value == name)
+                if (__instance.Location.buildings.FirstOrDefault(i => (int)__instance.Tile.X == i.tileX.Value && (int)__instance.Tile.Y  == i.tileY.Value) is Building exists && exists.buildingType.Value == modPrefix + __instance.Id)
                 {
                     return;
                 }
 
-                if (__instance.modData.TryGetValue(builtAtKey, out var str) && __instance.Location.buildings.FirstOrDefault(i => str == $"{i.tileX},{i.tileY}") is Building moved && moved.buildingType.Value == name)
+                if (__instance.modData.TryGetValue(builtAtKey, out var str) && __instance.Location.buildings.FirstOrDefault(i => str == $"{i.tileX},{i.tileY}") is Building moved && moved.buildingType.Value == modPrefix + __instance.Id)
                 {
                     moved.tileX.Value = (int)__instance.Tile.X;
                     moved.tileY.Value = (int)__instance.Tile.Y;
                     return;
                 }
-                Building b = new Building(name, __instance.Tile);
+                Building b = new Building(modPrefix + __instance.Id, __instance.Tile);
                 b.FinishConstruction(true);
                 b.LoadFromBuildingData(b.GetData(), false, true);
                 b.load();
@@ -66,10 +56,28 @@ namespace GiantCropInteriors
                     return;
                 if (!Config.ModEnabled || !__instance.modData.TryGetValue(cropKey, out var cropType))
                     return;
-                if (__instance.GetParentLocation().terrainFeatures.Pairs.FirstOrDefault(kvp => kvp.Value is GiantCrop g && g.Id == cropType && kvp.Key.X == __instance.tileX.Value && kvp.Key.Y == __instance.tileY.Value).Value == null)
+                if (__instance.GetParentLocation().resourceClumps.FirstOrDefault(rc => rc is GiantCrop g && g.Id == cropType && g.Tile.X == __instance.tileX.Value && g.Tile.Y == __instance.tileY.Value) == null)
                 {
-                    __instance.GetParentLocation().buildings.Remove(__instance);
+                    ToRemove.Add(__instance);
+                    SHelper.Events.GameLoop.UpdateTicked += GameLoop_UpdateTicked;
                 }
+            }
+        }
+
+        [HarmonyPatch(typeof(GiantCrop), nameof(GiantCrop.performToolAction))]
+        public class GiantCrop_performToolAction_Patch
+        {
+            public static bool Prefix(GiantCrop __instance)
+            {
+                if (!BuildingDict.ContainsKey(__instance.Id))
+                    return true;
+                var x = __instance.Location.buildings.FirstOrDefault(i => (int)__instance.Tile.X == i.tileX.Value && (int)__instance.Tile.Y == i.tileY.Value);
+                if (__instance.Location.buildings.FirstOrDefault(i => (int)__instance.Tile.X == i.tileX.Value && (int)__instance.Tile.Y == i.tileY.Value) is Building exists && exists.buildingType.Value == modPrefix + __instance.Id && exists.GetIndoors() is GameLocation l && (l.farmers.Any() || l.characters.Any() || l.animals.Any() || ((l.furniture.Any() || l.objects.Values.Where(o => o.Fragility != 2).Any()) && Config.ProtectObjects)))
+                {
+                    Game1.showRedMessage(SHelper.Translation.Get("not-empty"));
+                    return false;
+                }
+                return true;
             }
         }
     }

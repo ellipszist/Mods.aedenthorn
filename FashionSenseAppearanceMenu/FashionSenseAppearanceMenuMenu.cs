@@ -171,23 +171,29 @@ namespace FashionSenseAppearanceMenu
             {
                 var x = c % cols * oneWidth;
                 var y = c / cols * oneHeight;
-                entries.Add(new((i - 1).ToString(), new(xPositionOnScreen + 64 + x, yPositionOnScreen + 108 + y, oneWidth, oneHeight), null, (i - 1).ToString(), allEntries[i], new(0, 0, oneWidth, oneHeight), 1f));
+                entries.Add(new((i - 1).ToString(), new(xPositionOnScreen + 64 + x, yPositionOnScreen + 108 + y, oneWidth, oneHeight), null, (i - 1).ToString(), allEntries[i], new(0, 0, oneWidth, oneHeight), 1f)
+                {
+                    myID = c,
+                    upNeighborID = c - cols,
+                    leftNeighborID = c - 1,
+                    rightNeighborID = c + 1,
+                    downNeighborID = c + cols
+                });
                 c++;
             }
             leftButton = new ClickableTextureComponent("Direction", new Rectangle(xPositionOnScreen + width / 2 - 96, yPositionOnScreen + height, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44, -1, -1), 1f, false)
             {
-                myID = 520,
-                upNeighborID = -99998,
+                myID = c,
+                upNeighborID = 0,
                 leftNeighborID = -99998,
-                leftNeighborImmutable = true,
-                rightNeighborID = -99998,
+                rightNeighborID = c + 1,
                 downNeighborID = -99998
             };
             rightButton = new ClickableTextureComponent("Direction", new Rectangle(xPositionOnScreen + width / 2 + 32, yPositionOnScreen + height, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33, -1, -1), 1f, false)
             {
-                myID = 521,
-                upNeighborID = -99998,
-                leftNeighborID = -99998,
+                myID = c + 1,
+                upNeighborID = 0,
+                leftNeighborID = c,
                 rightNeighborID = -99998,
                 downNeighborID = -99998
             };

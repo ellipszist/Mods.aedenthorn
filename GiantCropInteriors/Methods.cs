@@ -1,25 +1,16 @@
-﻿using Microsoft.Xna.Framework;
+﻿using HarmonyLib;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using StardewValley;
+using StardewValley.Buildings;
 using StardewValley.Menus;
+using StardewValley.TerrainFeatures;
+using System;
+using System.Linq;
 
 namespace GiantCropInteriors
 {
     public partial class ModEntry
     {
-        public static bool AchievementAchieved(bool value)
-        {
-            if (!Config.ModEnabled || !Config.ShowMissingAchievementNames)
-                return value;
-            return true;
-        }
-        public static Color ModifyColor(Color color, CollectionsPage page)
-        {
-            if (!Config.ModEnabled || !Config.ShowMissingIcons || page.currentTab == 5)
-                return color;
-            if(page.currentTab == 4)
-            {
-                return new Color(100, 50, 50, 255);
-            }
-            return Color.White;
-        }
     }
 }

@@ -8,10 +8,10 @@ using StardewValley;
 using StardewValley.Buildings;
 using StardewValley.GameData.Buildings;
 using StardewValley.TerrainFeatures;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Xml.Linq;
 using xTile;
 
 namespace GiantCropInteriors
@@ -27,13 +27,19 @@ namespace GiantCropInteriors
         public const string dictPath = "aedenthorn.GiantCropInteriors/dict";
         public const string giantCropKey = "aedenthorn.GiantCropInteriors/GiantCrop";
         public const string pumpkinKey = "aedenthorn.GiantCropInteriors/Pumpkin";
+        public const string melonKey = "aedenthorn.GiantCropInteriors/Melon";
         public const string builtAtKey = "aedenthorn.GiantCropInteriors/BuiltAt";
         public const string cropKey = "aedenthorn.GiantCropInteriors/Crop";
-        public static Dictionary<string, string> BuildingDict
+        public const string modPrefix = "aedenthorn.GiantCropInteriors/";
+
+        private static List<Building> ToRemove = new();
+
+
+        public static Dictionary<string, GiantCropBuildingData> BuildingDict
         {
             get
             {
-                return SHelper.GameContent.Load<Dictionary<string, string>>(dictPath);
+                return SHelper.GameContent.Load<Dictionary<string, GiantCropBuildingData>>(dictPath);
             }
         }
 
@@ -55,11 +61,24 @@ namespace GiantCropInteriors
 
         }
 
+        private static void GameLoop_UpdateTicked(object sender, UpdateTickedEventArgs e)
+        {
+            foreach (var b in ToRemove)
+            {
+                if (b.GetParentLocation() is GameLocation l)
+                {
+                    l.buildings.Remove(b);
+                }
+            }
+            ToRemove.Clear();
+            SHelper.Events.GameLoop.UpdateTicked -= GameLoop_UpdateTicked;
+        }
+
         private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
         {
             if (!Config.ModEnabled)
                 return;
-            SHelper.GameContent.InvalidateCache("Maps/GiantCrop");
+            //SHelper.GameContent.InvalidateCache("Maps/GiantCrop");
 
             if (Context.IsWorldReady && Config.Debug && e.Button == SButton.NumPad7)
             {
@@ -82,11 +101,21 @@ namespace GiantCropInteriors
                 return;
             if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
             {
-                e.LoadFrom(() => new Dictionary<string, string>()
+                e.LoadFrom(() => new Dictionary<string, GiantCropBuildingData>()
                 {
                     {
                         "Pumpkin",
-                        "Pumpkin"
+                        new()
+                        {
+                            Texture = pumpkinKey
+                        }
+                    },
+                    {
+                        "Melon",
+                        new()
+                        {
+                            Texture = melonKey
+                        }
                     }
                 }, AssetLoadPriority.Exclusive);
             }
@@ -95,30 +124,34 @@ namespace GiantCropInteriors
                 e.Edit((IAssetData data) => 
                 {
                     var dict = data.AsDictionary<string, BuildingData>().Data;
-                    dict["Pumpkin"] = new()
+                    foreach(var kvp in BuildingDict)
                     {
-                        Name = "Pumpkin",
-                        Description = "Pumpkin",
-                        Texture = pumpkinKey,
-                        SourceRect = new(0, 0, 1, 1),
-                        Builder = null,
-                        IndoorMap = "GiantCrop",
-                        IndoorMapType = "StardewValley.Locations.DecoratableLocation",
-                        HumanDoor = new(1, 3),
-                        Size = new(3, 3),
-                        DrawShadow = false,
-                        DrawLayers = new()
+
+                        dict[modPrefix + kvp.Key] = new()
                         {
-                            new()
+                            Name = kvp.Value.Name ?? kvp.Key,
+                            Description = kvp.Value.Description ?? kvp.Key,
+                            Texture = kvp.Value.Texture,
+                            SourceRect = new(0, 0, 1, 1),
+                            Builder = null,
+                            IndoorMap = kvp.Value.IndoorMap,
+                            IndoorMapType = kvp.Value.IndoorMapType,
+                            HumanDoor = new(1, 3),
+                            Size = new(3, 3),
+                            DrawShadow = false,
+                            DrawLayers = new()
                             {
-                                Id = "1",
-                                SortTileOffset = -0.0001f,
-                                DrawPosition = new(0,-64),
-                                Texture = pumpkinKey,
-                                SourceRect = new(0,0,48,64)
+                                new()
+                                {
+                                    Id = "1",
+                                    SortTileOffset = -0.0001f,
+                                    DrawPosition = new(0,-64),
+                                    Texture = kvp.Value.Texture,
+                                    SourceRect = new(0,0,48,64)
+                                }
                             }
-                        }
-                    };
+                        };
+                    }
                 });
             }
             else if (e.NameWithoutLocale.IsEquivalentTo("Maps/GiantCrop"))
@@ -128,6 +161,10 @@ namespace GiantCropInteriors
             else if (e.NameWithoutLocale.IsEquivalentTo(pumpkinKey))
             {
                 e.LoadFromModFile<Texture2D>("assets/Pumpkin.png", AssetLoadPriority.Exclusive);
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo(melonKey))
+            {
+                e.LoadFromModFile<Texture2D>("assets/Melon.png", AssetLoadPriority.Exclusive);
             }
         }
 

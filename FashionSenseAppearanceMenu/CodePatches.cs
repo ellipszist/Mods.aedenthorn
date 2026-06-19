@@ -1,12 +1,12 @@
 ﻿using FashionSense.Framework.UI;
 using HarmonyLib;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 using System;
+using System.Linq;
 
 namespace FashionSenseAppearanceMenu
 {
@@ -21,9 +21,21 @@ namespace FashionSenseAppearanceMenu
             {
                 if (!Config.ModEnabled || Config.MenuKey != (SButton)key)
                     return true;
-                string filter = (string)AccessTools.Method(typeof(HandMirrorMenu), "GetNameOfEnabledFilter").Invoke(__instance, Array.Empty<Type>());
-                Game1.activeClickableMenu = new FashionSenseAppearanceMenuMenu(__instance, Game1.player, filter);
-                Game1.playSound("bigSelect");
+                OpenMenu(__instance);
+                return false;
+            }
+
+        }
+
+        [HarmonyPatch(typeof(HandMirrorMenu), nameof(HandMirrorMenu.receiveLeftClick))]
+        public class HandMirrorMenu_receiveLeftClick_Patch
+        {
+
+            public static bool Prefix(HandMirrorMenu __instance, int x, int y, ClickableComponent ___appearanceLabel, ClickableComponent ___descriptionLabel)
+            {
+                if (!Config.ModEnabled || (!___descriptionLabel.containsPoint(x, y) && !___appearanceLabel.containsPoint(x, y)) || __instance.leftSelectionButtons.Where(b => b.containsPoint(x, y)).Any() || __instance.rightSelectionButtons.Where(b => b.containsPoint(x, y)).Any())
+                    return true;
+                OpenMenu(__instance);
                 return false;
             }
         }

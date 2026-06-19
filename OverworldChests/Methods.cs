@@ -22,7 +22,7 @@ namespace OverworldChests
 				return;
 			Utility.ForEachLocation(location =>
 			{
-				if (location is not FarmHouse && (Config.IncludeIndoorLocations || location.IsOutdoors) && IsLocationAllowed(location))
+				if (location is not FarmHouse && (Config.IncludeIndoorLocations || location.IsOutdoors) && IsLocationAllowed(location) && location?.Map is not null)
 				{
 					int width = location.map.Layers[0].LayerWidth;
 					int height = location.map.Layers[0].LayerHeight;
