@@ -166,10 +166,11 @@ namespace HelpWanted
                         npc = Game1.getCharacterFromName((Game1.questOfTheDay as FishingQuest).target.Value);
                         questType = QuestType.Fishing;
                     }
-                    if (npc is not null)
+                    if (npc is not null && npc.canTalk())
                     {
                         if ((Config.OneQuestPerVillager && npcs.Contains(npc.Name)) ||
-                            (Config.AvoidMaxHearts && !Game1.IsMultiplayer && Game1.player.tryGetFriendshipLevelForNPC(npc.Name) >= Utility.GetMaximumHeartsForCharacter(npc) * 250)
+                            (Config.AvoidMaxHearts && !Game1.IsMultiplayer && Game1.player.tryGetFriendshipLevelForNPC(npc.Name) >= Utility.GetMaximumHeartsForCharacter(npc) * 250) ||
+                            (!npc.CanSocialize)
                         )
                         {
                             tries++;
