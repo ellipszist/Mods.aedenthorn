@@ -126,13 +126,7 @@ namespace LightSwitches
                     reset: () => Config = new ModConfig(),
                     save: () => Helper.WriteConfig(Config)
                 );
-
-                configMenu.AddBoolOption(
-                    mod: ModManifest,
-                    name: () => SHelper.Translation.Get("ModEnabled"),
-                    getValue: () => Config.ModEnabled,
-                    setValue: value => Config.ModEnabled = value
-                );
+                
                 var props = typeof(ModConfig).GetProperties().ToArray();
                 var configMenuExt = Helper.ModRegistry.GetApi<IGMCMOptionsAPI>("jltaylor-us.GMCMOptions");
 
