@@ -132,7 +132,7 @@ namespace LawnGrass
                     return;
                 if(__instance.numberOfWeeds.Value > __state)
                 {
-                    __instance.numberOfWeeds.Value = Math.Clamp(__state + (Game1.random.NextDouble() < Config.GrowChance ? Game1.random.Next(1, Config.MaxDailyGrowth) : 0), 0, 4);
+                    __instance.numberOfWeeds.Value = Math.Clamp(__state + (Game1.random.NextDouble() < Config.GrowChance ? Game1.random.Next(1, Math.Max(Config.MaxDailyGrowth, 1)) : 0), 0, 4);
                 }
             }
         }

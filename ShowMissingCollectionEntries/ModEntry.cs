@@ -3,19 +3,13 @@ using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
 namespace ShowMissingCollectionEntries
 {
-    public enum StyleType
-    {
-        Skin,
-        Hair,
-        Shirt,
-        Pants,
-        Acc
-    }
     /// <summary>The mod entry point.</summary>
     public partial class ModEntry : Mod
     {
@@ -51,12 +45,14 @@ namespace ShowMissingCollectionEntries
                     save: () => Helper.WriteConfig(Config)
                 );
 
+                var skip = new List<string>() { "Debug" };
+
                 var props = typeof(ModConfig).GetProperties().ToArray();
                 var configMenuExt = Helper.ModRegistry.GetApi<IGMCMOptionsAPI>("jltaylor-us.GMCMOptions");
 
                 foreach (var p in props)
                 {
-                    if (p.Name == "Debug")
+                    if (skip.Contains(p.Name))
                         continue;
                     if (p.PropertyType == typeof(bool))
                     {
@@ -65,8 +61,8 @@ namespace ShowMissingCollectionEntries
                             name: () => { var t = Helper.Translation.Get(p.Name); return t.HasValue() ? t : AddSpaces(p.Name); },
                             tooltip: () => { var t = Helper.Translation.Get(p.Name + ".Desc"); return t.HasValue() ? t : null; },
                             getValue: () => (bool)p.GetValue(Config),
-                            setValue: value => p.SetValue(Config, value)
-                        );
+                            setValue: value => { p.SetValue(Config, value); ReloadCollections(); }
+                        ); 
                     }
                     else if (p.PropertyType == typeof(int))
                     {
@@ -141,7 +137,6 @@ namespace ShowMissingCollectionEntries
                 }
             }
         }
-
         public static string AddSpaces(string str)
         {
             string newStr = "";

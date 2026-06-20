@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
+using StardewValley;
 using StardewValley.Menus;
+using System;
 
 namespace ShowMissingCollectionEntries
 {
@@ -17,9 +19,28 @@ namespace ShowMissingCollectionEntries
                 return color;
             if(page.currentTab == 4)
             {
-                return new Color(100, 50, 50, 255);
+                return Config.MissingRecipeTint;
             }
             return Color.White;
         }
+
+        private void ReloadCollections()
+        {
+            if (!Config.ModEnabled || Game1.activeClickableMenu is not GameMenu gm)
+                return;
+            for(int i = 0; i < gm.pages.Count; i++)
+            {
+                if (gm.pages[i] is CollectionsPage cp)
+                {
+                    gm.pages[i] = new CollectionsPage(cp.xPositionOnScreen, cp.yPositionOnScreen, cp.width, cp.height);
+                    if(i == gm.currentTab)
+                    {
+                        gm.pages[i].populateClickableComponentList();
+                        gm.AddTabsToClickableComponents(gm.pages[i]);
+                    }
+                }
+            }
+        }
+
     }
 }
