@@ -35,6 +35,33 @@ namespace LightSwitches
             }
 
         }
+        [HarmonyPatch(typeof(Furniture), nameof(Furniture.placementAction))]
+        public static class Furniture_placementAction_Patch
+        {
+            public static void Postfix(Furniture __instance, GameLocation location, bool __result)
+            {
+                if (!Config.ModEnabled || !__result || !LightSwitches.TryGetValue(__instance.ItemId, out var data) || !__instance.modData.TryGetValue(onOffKey, out var str) || str != "on")
+                {
+                    return;
+                }
+                __instance.modData[onOffKey] = "off";
+                ToggleSwitch(__instance, data);
+            }
+
+        }
+        [HarmonyPatch(typeof(GameLocation), "removeQueuedFurniture")]
+        public static class GameLocation_removeQueuedFurniture_Patch
+        {
+            public static void Prefix(GameLocation __instance, Guid guid)
+            {
+                if (!Config.ModEnabled || !__instance.furniture.TryGetValue(guid, out var f) || !Game1.player.couldInventoryAcceptThisItem(f) || !LightSwitches.TryGetValue(f.ItemId, out var data) || !f.modData.TryGetValue(onOffKey, out var str) || str != "on")
+                {
+                    return;
+                }
+                __instance.modData[onOffKey] = "off";
+            }
+
+        }
         
         [HarmonyPatch(typeof(Furniture), nameof(Furniture.draw), new Type[] { typeof(SpriteBatch),typeof(int),typeof(int),typeof(float), })]
         public static class Furniture_draw_Patch

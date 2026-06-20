@@ -1,10 +1,18 @@
 ﻿using HarmonyLib;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
+using StardewValley.Audio;
 using StardewValley.Buildings;
+using StardewValley.Locations;
 using StardewValley.TerrainFeatures;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using xTile.Dimensions;
+using xTile.Layers;
+using xTile.Tiles;
 
 namespace GiantCropInteriors
 {
@@ -26,12 +34,15 @@ namespace GiantCropInteriors
                     }
                     return;
                 }
-                if (__instance.Location.buildings.FirstOrDefault(i => (int)__instance.Tile.X == i.tileX.Value && (int)__instance.Tile.Y  == i.tileY.Value) is Building exists && exists.buildingType.Value == modPrefix + __instance.Id)
+                if (__instance.Location.buildings.FirstOrDefault(i => (int)__instance.Tile.X == i.tileX.Value && (int)__instance.Tile.Y  == i.tileY.Value) is Building exists)
                 {
-                    return;
+                    if(exists.buildingType.Value == modPrefix + __instance.Id)
+                    {
+                        return;
+                    }
+                    __instance.Location.buildings.Remove(exists);
                 }
-
-                if (__instance.modData.TryGetValue(builtAtKey, out var str) && __instance.Location.buildings.FirstOrDefault(i => str == $"{i.tileX},{i.tileY}") is Building moved && moved.buildingType.Value == modPrefix + __instance.Id)
+                else if (__instance.modData.TryGetValue(builtAtKey, out var str) && __instance.Location.buildings.FirstOrDefault(i => str == $"{i.tileX},{i.tileY}") is Building moved && moved.buildingType.Value == modPrefix + __instance.Id)
                 {
                     moved.tileX.Value = (int)__instance.Tile.X;
                     moved.tileY.Value = (int)__instance.Tile.Y;
@@ -80,5 +91,19 @@ namespace GiantCropInteriors
                 return true;
             }
         }
+
+        [HarmonyPatch(typeof(DecoratableLocation), "IsFloorableTile")]
+        public class DecoratableLocation_IsFloorableTile_Patch
+        {
+            public static void Postfix(DecoratableLocation __instance, int x, int y, ref bool __result)
+            {
+                if (!__result)
+                    return;
+
+                string floor_id = __instance.GetFloorID(x, y);
+                __result = floor_id != null;
+            }
+        }
+
     }
 }

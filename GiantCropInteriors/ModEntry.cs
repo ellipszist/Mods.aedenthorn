@@ -78,19 +78,25 @@ namespace GiantCropInteriors
         {
             if (!Config.ModEnabled)
                 return;
-            //SHelper.GameContent.InvalidateCache("Maps/GiantCrop");
-
-            if (Context.IsWorldReady && Config.Debug && e.Button == SButton.NumPad7)
+            if (Config.Debug)
             {
+                if (Context.IsWorldReady)
+                {
+                    Game1.currentLocation.MakeMapModifications();
+                    //SHelper.GameContent.InvalidateCache("Maps/GiantCrop");
+                    if (e.Button == SButton.NumPad7)
+                    {
 
-                
-                foreach (var t in Game1.getFarm().terrainFeatures.Values.Where(tf => tf is HoeDirt d && d.crop is not null))
-                {
-                    (t as HoeDirt).crop.growCompletely();
-                }
-                foreach (var t in Game1.getFarm().terrainFeatures.Values.Where(tf => tf is HoeDirt d && d.crop is not null))
-                {
-                    (t as HoeDirt).crop.TryGrowGiantCrop(false, Game1.random);
+
+                        foreach (var t in Game1.getFarm().terrainFeatures.Values.Where(tf => tf is HoeDirt d && d.crop is not null))
+                        {
+                            (t as HoeDirt).crop.growCompletely();
+                        }
+                        foreach (var t in Game1.getFarm().terrainFeatures.Values.Where(tf => tf is HoeDirt d && d.crop is not null))
+                        {
+                            (t as HoeDirt).crop.TryGrowGiantCrop(false, Game1.random);
+                        }
+                    }
                 }
             }
         }

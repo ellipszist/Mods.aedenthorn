@@ -18,13 +18,29 @@ namespace LightSwitches
                 SMonitor.Log("Error, switch is null or location is null", StardewModdingAPI.LogLevel.Warn);
                 return;
             }
-            if(!f.modData.TryGetValue(onKey, out var str))
+            if(!f.modData.TryGetValue(onOffKey, out var str))
             {
                 str = "off";
             }
             bool on = str == "off";
-            f.modData[onKey] = on ? "on" : "off";
-            l.modData[onKey] = on ? "on" : "off";
+            f.modData[onOffKey] = on ? "on" : "off";
+            l.modData[onOffKey] = on ? "on" : "off";
+            if(f.modData.TryGetValue(onTimeKey, out var onTime))
+            {
+                l.modData[onTimeKey] = onTime;
+            }
+            else
+            {
+                l.modData.Remove(onTimeKey);
+            }
+            if(f.modData.TryGetValue(offTimeKey, out var offTime))
+            {
+                l.modData[offTimeKey] = offTime;
+            }
+            else
+            {
+                l.modData.Remove(offTimeKey);
+            }
             if (on)
             {
                 string color;
@@ -47,7 +63,7 @@ namespace LightSwitches
                 foreach (var f2 in l.furniture.Where(f => LightSwitches.ContainsKey(f.ItemId)))
                 {
                     if(f2 != f)
-                        f2.modData[onKey] = "off";
+                        f2.modData[onOffKey] = "off";
                 }
             }
             l.playSound(on ? Config.OnSound : Config.OffSound, f.TileLocation);
@@ -55,7 +71,7 @@ namespace LightSwitches
         }
         public static bool TrySetAmbientLight(GameLocation l, float lightLevel)
         {
-            if (!Config.ModEnabled || !Game1.isStartingToGetDarkOut(l) || lightLevel > 0f || (l.IsOutdoors && Config.IndoorsOnly) || !l.modData.TryGetValue(onKey, out var str) || str != "on")
+            if (!Config.ModEnabled || lightLevel > 0f || (l.IsOutdoors && Config.IndoorsOnly) || !l.modData.TryGetValue(onOffKey, out var str) || str != "on")
             {
                 return true;
             }
@@ -71,6 +87,23 @@ namespace LightSwitches
             Game1.ambientLight = new(scolor.R, scolor.G, scolor.B);
             return false;
 
+        }
+
+        private static bool IsOffTime(Furniture f)
+        {
+            if (!f.modData.TryGetValue(onTimeKey, out var onTime))
+                return false;
+            if (Game1.timeOfDay < int.Parse(onTime))
+                return true;
+            if (!f.modData.TryGetValue(offTimeKey, out var offTime))
+                return false;
+            return Game1.timeOfDay >= int.Parse(offTime);
+        }
+        private static bool IsOnTime(Furniture f, int time)
+        {
+            if (!f.modData.TryGetValue(onTimeKey, out var onTime))
+                return false;
+            return time == int.Parse(onTime);
         }
 
         public static Color GetLightColor(GameLocation l)
@@ -105,10 +138,10 @@ namespace LightSwitches
         {
             if (!Config.ModEnabled || !LightSwitches.TryGetValue(f.ItemId, out var data))
                 return tex;
-            if (!f.modData.TryGetValue(onKey, out var str))
+            if (!f.modData.TryGetValue(onOffKey, out var str))
             {
                 str = "off";
-                f.modData[onKey] = str;
+                f.modData[onOffKey] = str;
             }
             if(str == "off" && data.OffTexture != null)
             {
@@ -120,5 +153,10 @@ namespace LightSwitches
             }
             return tex;
         }
+        public static bool IsOn(Furniture f)
+        {
+            return f.modData.TryGetValue(ModEntry.onOffKey, out var on) && on == "on";
+        }
+
     }
 }

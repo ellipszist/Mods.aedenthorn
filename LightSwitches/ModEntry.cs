@@ -6,6 +6,7 @@ using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.GameData.Shops;
+using StardewValley.Objects;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -21,7 +22,9 @@ namespace LightSwitches
         public static IModHelper SHelper;
         public static ModConfig Config;
         public static ModEntry context;
-        public const string onKey = "aedenthorn.LightSwitches/on";
+        public const string onOffKey = "aedenthorn.LightSwitches/on";
+        public const string onTimeKey = "aedenthorn.LightSwitches/onTime";
+        public const string offTimeKey = "aedenthorn.LightSwitches/offTime";
         public const string onTextureKey = "aedenthorn.LightSwitches/offTexture";
         public const string colorKey = "aedenthorn.LightSwitches/color";
         public const string strobeKey = "aedenthorn.LightSwitches/strobe";
@@ -42,6 +45,7 @@ namespace LightSwitches
             context = this;
 
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
+            helper.Events.GameLoop.TimeChanged += GameLoop_TimeChanged;
             helper.Events.Content.AssetRequested += Content_AssetRequested;
             helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
 
@@ -88,6 +92,30 @@ namespace LightSwitches
             }
         }
 
+        private void GameLoop_TimeChanged(object sender, TimeChangedEventArgs e)
+        {
+            if (!Config.ModEnabled)
+                return;
+            Utility.ForEachLocation((GameLocation l) =>
+            {
+                foreach (var f in l.furniture)
+                {
+                    if (LightSwitches.TryGetValue(f.ItemId, out var data))
+                    {
+                        if(IsOn(f) && IsOffTime(f))
+                        {
+                            ToggleSwitch(f, data);
+                        }
+                        else if(!IsOn(f) && IsOnTime(f, e.NewTime))
+                        {
+                            ToggleSwitch(f, data);
+                        }
+                    }
+                }
+                return true;
+            },
+            true, true);
+        }
         private void Input_ButtonsChanged(object sender, ButtonsChangedEventArgs e)
         {
             if (!Config.ModEnabled)
