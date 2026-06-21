@@ -106,13 +106,13 @@ namespace CloserCrops
                 if (!Config.ModEnabled || skip || !Config.MultiplyPlantAndHarvest || !TryGetMiniCropNumber(__instance, out var num))
                     return true;
                 skip = true;
-                bool regrow = __instance.fullyGrown.Value && __instance.RegrowsAfterHarvest() && __instance.dayOfCurrentPhase.Value <= 0;
+                var days = __instance.dayOfCurrentPhase.Value;
                 for (int i = 0; i < num; i++)
                 {
                     __instance.modData[whichKey] = (i + 1).ToString();
                     __result = __instance.harvest(xTile, yTile, soil, junimoHarvester, isForcedScytheHarvest);
                     __instance.modData.Remove(whichKey);
-                    if (regrow && i < num - 1)
+                    if (__instance.RegrowsAfterHarvest() && i < num - 1 && __instance.dayOfCurrentPhase.Value != days)
                     {
                         __instance.dayOfCurrentPhase.Value = 0;
                     }

@@ -1,16 +1,25 @@
-﻿using HarmonyLib;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+﻿using StardewModdingAPI;
 using StardewValley;
-using StardewValley.Buildings;
-using StardewValley.Menus;
-using StardewValley.TerrainFeatures;
-using System;
-using System.Linq;
 
 namespace GiantCropInteriors
 {
     public partial class ModEntry
     {
+        public static void RemoveAllBuildings()
+        {
+            if (!Context.IsWorldReady)
+                return;
+            Utility.ForEachLocation((GameLocation l) =>
+            {
+                for(int i = l.buildings.Count - 1; i >= 0; i--)
+                {
+                    if (l.buildings[i]?.modData.ContainsKey(cropKey) == true)
+                    {
+                        l.buildings.RemoveAt(i);
+                    }
+                }
+                return true;
+            });
+        }
     }
 }

@@ -63,10 +63,15 @@ namespace GiantCropInteriors
         {
             public static void Postfix(Building __instance)
             {
-                if (__instance.GetParentLocation() is null)
+                if (__instance.GetParentLocation() is not GameLocation l)
                     return;
-                if (!Config.ModEnabled || !__instance.modData.TryGetValue(cropKey, out var cropType))
+                if (!__instance.modData.TryGetValue(cropKey, out var cropType))
                     return;
+                if (!Config.ModEnabled)
+                {
+                    l.buildings.Remove(__instance);
+                    return;
+                }
                 if (__instance.GetParentLocation().resourceClumps.FirstOrDefault(rc => rc is GiantCrop g && g.Id == cropType && g.Tile.X == __instance.tileX.Value && g.Tile.Y == __instance.tileY.Value) == null)
                 {
                     ToRemove.Add(__instance);

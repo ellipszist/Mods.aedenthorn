@@ -52,6 +52,8 @@ namespace GiantCropInteriors
             context = this;
 
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
+            helper.Events.GameLoop.Saving += GameLoop_Saving;
+            helper.Events.GameLoop.DayStarted += GameLoop_DayStarted;
             helper.Events.Content.AssetRequested += Content_AssetRequested;
             helper.Events.Input.ButtonPressed += Input_ButtonPressed;
 
@@ -59,6 +61,22 @@ namespace GiantCropInteriors
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
 
+        }
+
+        private void GameLoop_Saving(object sender, SavingEventArgs e)
+        {
+            if (!Config.ModEnabled)
+            {
+                RemoveAllBuildings();
+            }
+        }
+
+        private void GameLoop_DayStarted(object sender, DayStartedEventArgs e)
+        {
+            if (!Config.ModEnabled)
+            {
+                RemoveAllBuildings();
+            }
         }
 
         private static void GameLoop_UpdateTicked(object sender, UpdateTickedEventArgs e)
@@ -186,12 +204,25 @@ namespace GiantCropInteriors
                     save: () => Helper.WriteConfig(Config)
                 );
 
+                var exclude = new List<string>()
+                {
+                    "Debug",
+                    "ModEnabled"
+                };
                 var props = typeof(ModConfig).GetProperties().ToArray();
                 var configMenuExt = Helper.ModRegistry.GetApi<IGMCMOptionsAPI>("jltaylor-us.GMCMOptions");
 
+                configMenu.AddBoolOption(
+                    mod: ModManifest,
+                    name: () => { var t = Helper.Translation.Get("ModEnabled"); return t.HasValue() ? t : AddSpaces("ModEnabled"); },
+                    tooltip: () => { var t = Helper.Translation.Get("ModEnabled" + ".Desc"); return t.HasValue() ? t : null; },
+                    getValue: () => Config.ModEnabled,
+                    setValue: value => { Config.ModEnabled = value; if (!value) { RemoveAllBuildings(); } }
+                );
+
                 foreach (var p in props)
                 {
-                    if (p.Name == "Debug")
+                    if (exclude.Contains(p.Name))
                         continue;
                     if (p.PropertyType == typeof(bool))
                     {
