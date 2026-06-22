@@ -1,7 +1,7 @@
 ﻿{
   "Name": "Light Switches",
   "Author": "aedenthorn",
-  "Version": "0.2.0",
+  "Version": "0.2.1",
   "Description": "Light Switches.",
   "UniqueID": "aedenthorn.LightSwitches",
   "EntryDll": "LightSwitches.dll",

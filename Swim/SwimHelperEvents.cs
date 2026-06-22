@@ -964,18 +964,18 @@ namespace Swim
                     AddScubaChest(Game1.player.currentLocation, new Vector2(8, 8), "ScubaFins");
                 }
 
-                Game1.player.currentLocation.setMapTile(8, 16, 91, "Buildings", null);
-                Game1.player.currentLocation.setMapTile(9, 16, 92, "Buildings", null);
+                Game1.player.currentLocation.setMapTile(8, 16, 91, "Buildings", "desert-new");
+                Game1.player.currentLocation.setMapTile(9, 16, 92, "Buildings", "desert-new");
                 Game1.player.currentLocation.setTileProperty(9, 16, "Back", "Water", "T");
-                Game1.player.currentLocation.setMapTile(10, 16, 93, "Buildings", null);
-                Game1.player.currentLocation.setMapTile(8, 17, 107, "Buildings", null);
-                Game1.player.currentLocation.setMapTile(9, 17, 108, "Back", null);
+                Game1.player.currentLocation.setMapTile(10, 16, 93, "Buildings", "desert-new");
+                Game1.player.currentLocation.setMapTile(8, 17, 107, "Buildings", "desert-new");
+                Game1.player.currentLocation.setMapTile(9, 17, 108, "Back", "desert-new");
                 Game1.player.currentLocation.setTileProperty(9, 17, "Back", "Water", "T");
                 Game1.player.currentLocation.removeTile(9, 17, "Buildings");
-                Game1.player.currentLocation.setMapTile(10, 17, 109, "Buildings", null);
-                Game1.player.currentLocation.setMapTile(8, 18, 139, "Buildings", null);
-                Game1.player.currentLocation.setMapTile(9, 18, 140, "Buildings", null);
-                Game1.player.currentLocation.setMapTile(10, 18, 141, "Buildings", null);
+                Game1.player.currentLocation.setMapTile(10, 17, 109, "Buildings", "desert-new");
+                Game1.player.currentLocation.setMapTile(8, 18, 139, "Buildings", "desert-new");
+                Game1.player.currentLocation.setMapTile(9, 18, 140, "Buildings", "desert-new");
+                Game1.player.currentLocation.setMapTile(10, 18, 141, "Buildings", "desert-new"  );
                 AddWaterTiles(Game1.player.currentLocation);
             }
             else
@@ -999,7 +999,15 @@ namespace Swim
                             p = new Point(16, 8 + which);
                             break;
                     }
-                    Game1.player.currentLocation.characters.Add(new AbigailMetalHead(new Vector2(p.X * Game1.tileSize, p.Y * Game1.tileSize), 0));
+                    var m = new MetalHead(new Vector2(p.X * Game1.tileSize, p.Y * Game1.tileSize), 0)
+                    {
+                        DamageToFarmer = 100000,
+                        Health = 1
+                    };
+                    m.modData[monsterTypeKey] = "AbigailMetalHead";
+                    m.moveTowardPlayerThreshold.Value = 50;
+                    m.objectsToDrop.Clear();
+                    Game1.player.currentLocation.characters.Add(m);
                 }
 
             }

@@ -22,7 +22,7 @@ namespace Swim
         {
             public static bool Prefix(Serpent __instance, SpriteBatch b)
             {
-                if (!IsMonster(__instance, "Fishie"))
+                if (!IsMonster(__instance))
                     return true;
                 __instance.invincibleCountdown = 1000;
                 if (Utility.isOnScreen(__instance.Position, 128))
@@ -42,7 +42,7 @@ namespace Swim
         {
             public static void Postfix(Serpent __instance, GameTime time)
             {
-                if (!IsMonster(__instance, "Fishie"))
+                if (!IsMonster(__instance))
                     return;
                 if (__instance.wasHitCounter >= 0)
                 {

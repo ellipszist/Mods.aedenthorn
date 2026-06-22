@@ -753,6 +753,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TreeHat", "TreeHat\TreeHat.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tutorials", "Tutorials\Tutorials.csproj", "{5FD7C7EC-447B-A918-E233-3CA13D1D616E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AreaOfEffect", "AreaOfEffect\AreaOfEffect.csproj", "{34A59EE4-F773-AE4E-03E5-76CEC2D66136}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3729,6 +3731,14 @@ Global
 		{5FD7C7EC-447B-A918-E233-3CA13D1D616E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5FD7C7EC-447B-A918-E233-3CA13D1D616E}.Release|x64.ActiveCfg = Release|x64
 		{5FD7C7EC-447B-A918-E233-3CA13D1D616E}.Release|x64.Build.0 = Release|x64
+		{34A59EE4-F773-AE4E-03E5-76CEC2D66136}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34A59EE4-F773-AE4E-03E5-76CEC2D66136}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34A59EE4-F773-AE4E-03E5-76CEC2D66136}.Debug|x64.ActiveCfg = Debug|x64
+		{34A59EE4-F773-AE4E-03E5-76CEC2D66136}.Debug|x64.Build.0 = Debug|x64
+		{34A59EE4-F773-AE4E-03E5-76CEC2D66136}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34A59EE4-F773-AE4E-03E5-76CEC2D66136}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34A59EE4-F773-AE4E-03E5-76CEC2D66136}.Release|x64.ActiveCfg = Release|x64
+		{34A59EE4-F773-AE4E-03E5-76CEC2D66136}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -34,7 +34,7 @@ namespace Swim
         {
             public static bool Prefix(Monster __instance)
             {
-                if (!IsMonster(__instance, "BigFishie"))
+                if (!IsMonster(__instance))
                     return true;
                 __instance.invincibleCountdown = 1000;
                 return false;
@@ -46,7 +46,7 @@ namespace Swim
         {
             public static bool Prefix(DinoMonster __instance, GameTime time, ref bool ___moveLeft, ref bool ___moveRight, ref bool ___moveUp, ref bool ___moveDown)
             {
-                if (!IsMonster(__instance, "BigFishie"))
+                if (!IsMonster(__instance))
                     return true;
 
                 __instance.IsWalkingTowardPlayer = false;

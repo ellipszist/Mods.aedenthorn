@@ -575,5 +575,9 @@ namespace Swim
         {
             return monster?.modData.TryGetValue(monsterTypeKey, out var w) == true && w == which;
         }
+        public static bool IsMonster(Monster monster)
+        {
+            return monster?.modData.ContainsKey(monsterTypeKey) == true;
+        }
     }
 }

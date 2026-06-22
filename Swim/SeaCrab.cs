@@ -21,7 +21,7 @@ namespace Swim
         {
             public static void Postfix(Monster __instance)
             {
-                if (!IsMonster(__instance, "SeaCrab"))
+                if (!IsMonster(__instance))
                     return;
                 __instance.position.Field.AxisAlignedMovement = true;
             }
@@ -32,7 +32,7 @@ namespace Swim
         {
             public static bool Prefix(RockCrab __instance, ref int __result)
             {
-                if (!IsMonster(__instance, "SeaCrab"))
+                if (!IsMonster(__instance))
                     return true;
                 __result = 0;
                 return false;
@@ -44,7 +44,7 @@ namespace Swim
         {
             public static bool Prefix(RockCrab __instance, Tool t, ref bool __result)
             {
-                if (!IsMonster(__instance, "SeaCrab") || t is not Pickaxe || t.getLastFarmerToUse() is null || __instance.shellHealth.Value <= 0)
+                if (!IsMonster(__instance) || t is not Pickaxe || t.getLastFarmerToUse() is null || __instance.shellHealth.Value <= 0)
                     return true;
 
                 __instance.currentLocation.playSound("hammer");
@@ -70,7 +70,7 @@ namespace Swim
         {
             public static bool Prefix(RockCrab __instance, GameTime time)
             {
-                if (!IsMonster(__instance, "SeaCrab"))
+                if (!IsMonster(__instance))
                     return true;
 
                 if (__instance.shellGone.Value)
@@ -112,7 +112,7 @@ namespace Swim
         {
             public static bool Prefix(RockCrab __instance, GameTime time)
             {
-                if (!IsMonster(__instance, "SeaCrab"))
+                if (!IsMonster(__instance))
                     return true;
 
                 if (__instance.isMoving())

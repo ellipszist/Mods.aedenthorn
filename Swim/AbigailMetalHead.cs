@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using HarmonyLib;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.Monsters;
@@ -10,43 +11,64 @@ using System.Threading.Tasks;
 
 namespace Swim
 {
-    public class AbigailMetalHead : MetalHead
+    public partial class ModEntry
     {
-        public AbigailMetalHead() : base()
+        [HarmonyPatch(typeof(MetalHead), nameof(MetalHead.shedChunks))]
+        public static class MetalHead_shedChunks_Patch
         {
+            public static bool Prefix(MetalHead __instance)
+            {
+                if (!IsMonster(__instance))
+                    return true;
+                return false;
+            }
         }
-
-        public AbigailMetalHead(Vector2 position, int mineArea) : base(position, mineArea)
+        [HarmonyPatch(typeof(MetalHead), nameof(MetalHead.takeDamage))]
+        public static class MetalHead_takeDamage_Patch
         {
-            DamageToFarmer = 100000;
-            Health = 1;
-            moveTowardPlayerThreshold.Value = 50;
-            objectsToDrop.Clear();
+            public static bool Prefix(MetalHead __instance, ref int __result)
+            {
+                if (!IsMonster(__instance))
+                    return true;
+                __instance.objectsToDrop.Clear();
+                if (__instance.currentLocation.characters.Contains(__instance))
+                    __instance.currentLocation.characters.Remove(__instance);
+                __result = 1000;
+                return false;
+            }
         }
-
-        public override void shedChunks(int number, float scale)
+        [HarmonyPatch(typeof(MetalHead), nameof(MetalHead.getExtraDropItems))]
+        public static class MetalHead_getExtraDropItems_Patch
         {
-            
+            public static bool Prefix(MetalHead __instance, ref List<Item> __result)
+            {
+                if (!IsMonster(__instance))
+                    return true;
+                __result = new();
+                return false;
+            }
         }
-        public override int takeDamage(int damage, int xTrajectory, int yTrajectory, bool isBomb, double addedPrecision, Farmer who)
+        [HarmonyPatch(typeof(NPC), nameof(NPC.Removed))]
+        public static class NPC_Removed_Patch
         {
-            objectsToDrop.Clear();
-            if(currentLocation.characters.Contains(this))
-                currentLocation.characters.Remove(this);
-            return 1000;
+            public static bool Prefix(MetalHead __instance)
+            {
+                if (!IsMonster(__instance))
+                    return true;
+                return false;
+            }
         }
-        public override List<Item> getExtraDropItems()
+        [HarmonyPatch(typeof(Monster), nameof(Monster.onDealContactDamage))]
+        public static class Monster_onDealContactDamage_Patch
         {
-            return new List<Item>();
-        }
-
-        public override void Removed()
-        {
-        }
-        public override void onDealContactDamage(Farmer who)
-        {
-            Game1.playSound("cowboy_dead");
-            ModEntry.abigailTicks.Value = -1;
+            public static bool Prefix(MetalHead __instance)
+            {
+                if (!IsMonster(__instance, "AbigailMetalHead"))
+                    return true;
+                Game1.playSound("cowboy_dead");
+                ModEntry.abigailTicks.Value = -1;
+                return false;
+            }
         }
     }
 }
