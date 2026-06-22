@@ -109,6 +109,5 @@ namespace GiantCropInteriors
                 __result = floor_id != null;
             }
         }
-
     }
 }

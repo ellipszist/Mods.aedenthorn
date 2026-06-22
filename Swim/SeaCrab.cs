@@ -1,148 +1,163 @@
-﻿using Microsoft.Xna.Framework;
-using Netcode;
+﻿using HarmonyLib;
+using Microsoft.Xna.Framework;
 using StardewValley;
 using StardewValley.Monsters;
 using StardewValley.Tools;
 using System;
 using System.Collections.Generic;
-using System.Xml.Serialization;
 
 namespace Swim
 {
-    public class SeaCrab : RockCrab
+    public partial class ModEntry
     {
-        public List<string> crabTextures = new List<string>()
+        public static List<string> crabTextures = new List<string>()
         {
             "HermitCrab",
             "ChestCrab",
         };
 
-        public SeaCrab() : base()
+        [HarmonyPatch(typeof(RockCrab), "initNetFields")]
+        public static class RockCrab_initNetFields_Patch
         {
-        }
-
-        public SeaCrab(Vector2 position) : base(position)
-        {
-            Sprite.LoadTexture("aedenthorn.Swim/Fishies/" + crabTextures[Game1.random.Next(100) < ModEntry.Config.PercentChanceCrabIsMimic ? 1 : 0]);
-            moveTowardPlayerThreshold.Value = 1;
-            damageToFarmer.Value = 0;
-        }
-        protected override void initNetFields()
-        {
-            base.initNetFields();
-            NetFields.AddField(
-                shellGone
-            );
-            NetFields.AddField(
-                shellHealth
-            );
-            position.Field.AxisAlignedMovement = true;
-        }
-
-        public override int takeDamage(int damage, int xTrajectory, int yTrajectory, bool isBomb, double addedPrecision, Farmer who)
-        {
-            return 0;
-        }
-        public override bool hitWithTool(Tool t)
-        {
-            if (t is Pickaxe && t.getLastFarmerToUse() != null && shellHealth.Value > 0)
+            public static void Postfix(Monster __instance)
             {
-                currentLocation.playSound("hammer");
-                NetInt netInt = shellHealth;
-                int value = netInt.Value;
-                netInt.Value = value - 1;
-                shake(500);
-                setTrajectory(Utility.getAwayFromPlayerTrajectory(GetBoundingBox(), t.getLastFarmerToUse()));
-                if (shellHealth.Value <= 0)
-                {
-                    shellGone.Value = true;
-                    moveTowardPlayer(-1);
-                    currentLocation.playSound("stoneCrack");
-                    Game1.createRadialDebris(currentLocation, 14, (int)Tile.X, (int)Tile.Y, Game1.random.Next(2, 7), false, -1, false);
-                    Game1.createRadialDebris(currentLocation, 14, (int)Tile.X, (int)Tile.Y, Game1.random.Next(2, 7), false, -1, false);
-                }
-                return true;
-            }
-            return base.hitWithTool(t);
-        }
-        public override void behaviorAtGameTick(GameTime time)
-        {
-            if (shellGone.Value)
-            {
-                Sprite.CurrentFrame = 16 + Sprite.currentFrame % 4;
-            }
-            if (withinPlayerThreshold())
-            {
-                if (Math.Abs(Player.GetBoundingBox().Center.Y - GetBoundingBox().Center.Y) < Math.Abs(Player.GetBoundingBox().Center.X - GetBoundingBox().Center.X))
-                {
-                    if (Player.GetBoundingBox().Center.X - GetBoundingBox().Center.X > 0 && TilePoint.X > 0)
-                    {
-                        SetMovingLeft(true);
-                    }
-                    else if (Player.GetBoundingBox().Center.X - GetBoundingBox().Center.X < 0 && TilePoint.X < currentLocation.map.Layers[0].TileWidth)
-                    {
-                        SetMovingRight(true);
-                    }
-                }
-                else if (Player.GetBoundingBox().Center.Y - GetBoundingBox().Center.Y > 0 && TilePoint.Y > 0)
-                {
-                    SetMovingUp(true);
-                }
-                else if (Player.GetBoundingBox().Center.Y - GetBoundingBox().Center.Y < 0 && TilePoint.Y < currentLocation.map.Layers[0].TileHeight)
-                {
-                    SetMovingDown(true);
-                }
-                MovePosition(time, Game1.viewport, currentLocation);
-            }
-            else
-            {
-                Halt();
+                if (!IsMonster(__instance, "SeaCrab"))
+                    return;
+                __instance.position.Field.AxisAlignedMovement = true;
             }
         }
 
-        protected override void updateMonsterSlaveAnimation(GameTime time)
+        [HarmonyPatch(typeof(RockCrab), nameof(RockCrab.takeDamage))]
+        public static class RockCrab_takeDamage_Patch
         {
-            if (isMoving())
+            public static bool Prefix(RockCrab __instance, ref int __result)
             {
-                if (base.FacingDirection == 0)
-                {
-                    Sprite.AnimateUp(time, 0, "");
-                }
-                else if (base.FacingDirection == 3)
-                {
-                    Sprite.AnimateLeft(time, 0, "");
-                }
-                else if (base.FacingDirection == 1)
-                {
-                    Sprite.AnimateRight(time, 0, "");
-                }
-                else if (base.FacingDirection == 2)
-                {
-                    Sprite.AnimateDown(time, 0, "");
-                }
+                if (!IsMonster(__instance, "SeaCrab"))
+                    return true;
+                __result = 0;
+                return false;
             }
-            else
+        }
+
+        [HarmonyPatch(typeof(RockCrab), nameof(RockCrab.hitWithTool))]
+        public static class RockCrab_hitWithTool_Patch
+        {
+            public static bool Prefix(RockCrab __instance, Tool t, ref bool __result)
             {
-                Sprite.StopAnimation();
-            }
-            if (isMoving() && Sprite.currentFrame % 4 == 0)
-            {
-                Sprite.currentFrame++;
-                Sprite.UpdateSourceRect();
-            }
-            if (shellGone.Value)
-            {
-                updateGlow();
-                if (invincibleCountdown > 0)
+                if (!IsMonster(__instance, "SeaCrab") || t is not Pickaxe || t.getLastFarmerToUse() is null || __instance.shellHealth.Value <= 0)
+                    return true;
+
+                __instance.currentLocation.playSound("hammer");
+
+                __instance.shellHealth.Value--;
+                __instance.shake(500);
+                __instance.setTrajectory(Utility.getAwayFromPlayerTrajectory(__instance.GetBoundingBox(), t.getLastFarmerToUse()));
+                if (__instance.shellHealth.Value <= 0)
                 {
-                    glowingColor = Color.Cyan;
-                    invincibleCountdown -= time.ElapsedGameTime.Milliseconds;
-                    if (invincibleCountdown <= 0)
+                    __instance.shellGone.Value = true;
+                    __instance.moveTowardPlayer(-1);
+                    __instance.currentLocation.playSound("stoneCrack");
+                    Game1.createRadialDebris(__instance.currentLocation, 14, (int)__instance.Tile.X, (int)__instance.Tile.Y, Game1.random.Next(2, 7), false, -1, false);
+                    Game1.createRadialDebris(__instance.currentLocation, 14, (int)__instance.Tile.X, (int)__instance.Tile.Y, Game1.random.Next(2, 7), false, -1, false);
+                }
+                __result = true;
+                return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(RockCrab), nameof(RockCrab.behaviorAtGameTick))]
+        public static class RockCrab_behaviorAtGameTick_Patch
+        {
+            public static bool Prefix(RockCrab __instance, GameTime time)
+            {
+                if (!IsMonster(__instance, "SeaCrab"))
+                    return true;
+
+                if (__instance.shellGone.Value)
+                {
+                    __instance.Sprite.CurrentFrame = 16 + __instance.Sprite.currentFrame % 4;
+                }
+                if (__instance.withinPlayerThreshold())
+                {
+                    if (Math.Abs(__instance.Player.GetBoundingBox().Center.Y - __instance.GetBoundingBox().Center.Y) < Math.Abs(__instance.Player.GetBoundingBox().Center.X - __instance.GetBoundingBox().Center.X))
                     {
-                        stopGlowing();
+                        if (__instance.Player.GetBoundingBox().Center.X - __instance.GetBoundingBox().Center.X > 0 && __instance.TilePoint.X > 0)
+                        {
+                            __instance.SetMovingLeft(true);
+                        }
+                        else if (__instance.Player.GetBoundingBox().Center.X - __instance.GetBoundingBox().Center.X < 0 && __instance.TilePoint.X < __instance.currentLocation.map.Layers[0].TileWidth)
+                        {
+                            __instance.SetMovingRight(true);
+                        }
+                    }
+                    else if (__instance.Player.GetBoundingBox().Center.Y - __instance.GetBoundingBox().Center.Y > 0 && __instance.TilePoint.Y > 0)
+                    {
+                        __instance.SetMovingUp(true);
+                    }
+                    else if (__instance.Player.GetBoundingBox().Center.Y - __instance.GetBoundingBox().Center.Y < 0 && __instance.TilePoint.Y < __instance.currentLocation.map.Layers[0].TileHeight)
+                    {
+                        __instance.SetMovingDown(true);
+                    }
+                    __instance.MovePosition(time, Game1.viewport, __instance.currentLocation);
+                }
+                else
+                {
+                    __instance.Halt();
+                }
+                return false;
+            }
+        }
+        [HarmonyPatch(typeof(RockCrab), "updateMonsterSlaveAnimation")]
+        public static class RockCrab_updateMonsterSlaveAnimation_Patch
+        {
+            public static bool Prefix(RockCrab __instance, GameTime time)
+            {
+                if (!IsMonster(__instance, "SeaCrab"))
+                    return true;
+
+                if (__instance.isMoving())
+                {
+                    if (__instance.FacingDirection == 0)
+                    {
+                        __instance.Sprite.AnimateUp(time, 0, "");
+                    }
+                    else if (__instance.FacingDirection == 3)
+                    {
+                        __instance.Sprite.AnimateLeft(time, 0, "");
+                    }
+                    else if (__instance.FacingDirection == 1)
+                    {
+                        __instance.Sprite.AnimateRight(time, 0, "");
+                    }
+                    else if (__instance.FacingDirection == 2)
+                    {
+                        __instance.Sprite.AnimateDown(time, 0, "");
                     }
                 }
-                Sprite.currentFrame = 16 + Sprite.currentFrame % 4;
+                else
+                {
+                    __instance.Sprite.StopAnimation();
+                }
+                if (__instance.isMoving() && __instance.Sprite.currentFrame % 4 == 0)
+                {
+                    __instance.Sprite.currentFrame++;
+                    __instance.Sprite.UpdateSourceRect();
+                }
+                if (__instance.shellGone.Value)
+                {
+                    __instance.updateGlow();
+                    if (__instance.invincibleCountdown > 0)
+                    {
+                        __instance.glowingColor = Color.Cyan;
+                        __instance.invincibleCountdown -= time.ElapsedGameTime.Milliseconds;
+                        if (__instance.invincibleCountdown <= 0)
+                        {
+                            __instance.stopGlowing();
+                        }
+                    }
+                    __instance.Sprite.currentFrame = 16 + __instance.Sprite.currentFrame % 4;
+                }
+                return false;
             }
         }
     }

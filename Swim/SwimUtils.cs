@@ -6,6 +6,7 @@ using StardewModdingAPI;
 using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Locations;
+using StardewValley.Monsters;
 using StardewValley.TerrainFeatures;
 using System;
 using System.Collections.Generic;
@@ -19,11 +20,8 @@ using xTile.Tiles;
 
 namespace Swim
 {
-    internal class SwimUtils
+    public partial class ModEntry
     {
-        private static IMonitor Monitor;
-        private static ModConfig Config;
-        private static IModHelper Helper;
         public static Dictionary<string, string> seaMonsterSounds = new Dictionary<string, string>() {
             {"A","dialogueCharacter"},
             {"B","grunt"},
@@ -53,13 +51,6 @@ namespace Swim
             {"Z","harvest"},
         };
 
-        public static void Initialize(IMonitor monitor, IModHelper helper, ModConfig config)
-        {
-            Monitor = monitor;
-            Config = config;
-            Helper = helper;
-        }
-
         public static Point GetEdgeWarpDestination(int idxPos, EdgeWarp edge)
         {
             try
@@ -71,12 +62,12 @@ namespace Swim
                 int tileIdx = edge.OtherMapFirstTile - 1 + otherIdx;
                 if (edge.DestinationHorizontal == true)
                 {
-                    Monitor.Log($"idx {idx} length {length} otherIdx {otherIdx} tileIdx {tileIdx} warp point: {tileIdx},{edge.OtherMapIndex}");
+                    SMonitor.Log($"idx {idx} length {length} otherIdx {otherIdx} tileIdx {tileIdx} warp point: {tileIdx},{edge.OtherMapIndex}");
                     return new Point(tileIdx, edge.OtherMapIndex);
                 }
                 else
                 {
-                    Monitor.Log($"warp point: {edge.OtherMapIndex},{tileIdx}");
+                    SMonitor.Log($"warp point: {edge.OtherMapIndex},{tileIdx}");
                     return new Point(edge.OtherMapIndex, tileIdx);
                 }
             }
@@ -92,7 +83,7 @@ namespace Swim
             DivePosition dp = diveLocation.OtherMapPos;
             if (dp == null)
             {
-                Monitor.Log($"Diving to existing tile position");
+                SMonitor.Log($"Diving to existing tile position");
                 Point pos = Game1.player.TilePoint;
                 dp = new DivePosition()
                 {
@@ -102,7 +93,7 @@ namespace Swim
             }
             if (!IsMapUnderwater(Game1.player.currentLocation.Name))
             {
-                ModEntry.bubbles.Value.Clear();
+                bubbles.Value.Clear();
             }
             else
             {
@@ -119,7 +110,7 @@ namespace Swim
 
         public static bool IsMapUnderwater(string name)
         {
-            return ModEntry.diveMaps.ContainsKey(name) && ModEntry.diveMaps[name].Features.Contains("Underwater");
+            return diveMaps.ContainsKey(name) && diveMaps[name].Features.Contains("Underwater");
         }
 
         // Replaces myButtonDown because this is what that variable really did
@@ -138,13 +129,13 @@ namespace Swim
             }
 
             // Modded player state checks
-            if(Game1.player.millisecondsPlayed - SwimHelperEvents.lastJump.Value < 250 || IsMapUnderwater(Game1.player.currentLocation.Name))
+            if(Game1.player.millisecondsPlayed - lastJump.Value < 250 || IsMapUnderwater(Game1.player.currentLocation.Name))
             {
                 return false;
             }
 
             // Player input checks
-            if(!((Game1.player.isMoving() && Config.ReadyToSwim) || (Helper.Input.IsDown(Config.ManualJumpButton) && Config.EnableClickToSwim)) || Helper.Input.IsDown(SButton.LeftShift))
+            if(!((Game1.player.isMoving() && Config.ReadyToSwim) || (SHelper.Input.IsDown(Config.ManualJumpButton) && Config.EnableClickToSwim)) || SHelper.Input.IsDown(SButton.LeftShift))
             {
                 return false;
             }
@@ -155,35 +146,35 @@ namespace Swim
         private static readonly PerScreen<bool> surfacing = new PerScreen<bool>();
         public static void updateOxygenValue()
         {
-            if (ModEntry.isUnderwater.Value)
+            if (isUnderwater.Value)
             {
-                if (ModEntry.oxygen.Value >= 0)
+                if (oxygen.Value >= 0)
                 {
                     if (!IsWearingScubaGear())
-                        ModEntry.oxygen.Value--;
+                        oxygen.Value--;
                     else
                     {
-                        if (ModEntry.oxygen.Value < MaxOxygen())
-                            ModEntry.oxygen.Value++;
-                        if (ModEntry.oxygen.Value < MaxOxygen())
-                            ModEntry.oxygen.Value++;
+                        if (oxygen.Value < MaxOxygen())
+                            oxygen.Value++;
+                        if (oxygen.Value < MaxOxygen())
+                            oxygen.Value++;
                     }
                 }
-                if (ModEntry.oxygen.Value < 0 && !surfacing.Value)
+                if (oxygen.Value < 0 && !surfacing.Value)
                 {
                     surfacing.Value = true;
                     Game1.playSound("pullItemFromWater");
-                    DiveLocation diveLocation = ModEntry.diveMaps[Game1.player.currentLocation.Name].DiveLocations.Last();
+                    DiveLocation diveLocation = diveMaps[Game1.player.currentLocation.Name].DiveLocations.Last();
                     DiveTo(diveLocation);
                 }
             }
             else
             {
                 surfacing.Value = false;
-                if (ModEntry.oxygen.Value < MaxOxygen())
-                    ModEntry.oxygen.Value++;
-                if (ModEntry.oxygen.Value < MaxOxygen())
-                    ModEntry.oxygen.Value++;
+                if (oxygen.Value < MaxOxygen())
+                    oxygen.Value++;
+                if (oxygen.Value < MaxOxygen())
+                    oxygen.Value++;
             }
         }
 
@@ -270,8 +261,8 @@ namespace Swim
 
         public static bool IsWearingScubaGear()
         {
-            bool tank = ModEntry.scubaTankID.Value != "" && Game1.player.shirtItem.Value != null && Game1.player.shirtItem.Value.ItemId == ModEntry.scubaTankID.Value;
-            bool mask = ModEntry.scubaMaskID.Value != "" && Game1.player.hat.Value != null && Game1.player.hat.Value.ItemId == ModEntry.scubaMaskID.Value;
+            bool tank = scubaTankID.Value != "" && Game1.player.shirtItem.Value != null && Game1.player.shirtItem.Value.ItemId == scubaTankID.Value;
+            bool mask = scubaMaskID.Value != "" && Game1.player.hat.Value != null && Game1.player.hat.Value.ItemId == scubaMaskID.Value;
 
             return tank && mask;
         }
@@ -388,20 +379,20 @@ namespace Swim
 
         public static void MakeOxygenBar(int current, int max)
         {
-            ModEntry.OxygenBarTexture.Value = new Texture2D(Game1.graphics.GraphicsDevice, (int)Math.Round(Game1.viewport.Width * 0.74f), 30);
-            Color[] data = new Color[ModEntry.OxygenBarTexture.Value.Width * ModEntry.OxygenBarTexture.Value.Height];
-            ModEntry.OxygenBarTexture.Value.GetData(data);
+            OxygenBarTexture.Value = new Texture2D(Game1.graphics.GraphicsDevice, (int)Math.Round(Game1.viewport.Width * 0.74f), 30);
+            Color[] data = new Color[OxygenBarTexture.Value.Width * OxygenBarTexture.Value.Height];
+            OxygenBarTexture.Value.GetData(data);
             for (int i = 0; i < data.Length; i++)
             {
-                if (i <= ModEntry.OxygenBarTexture.Value.Width || i % ModEntry.OxygenBarTexture.Value.Width == ModEntry.OxygenBarTexture.Value.Width - 1)
+                if (i <= OxygenBarTexture.Value.Width || i % OxygenBarTexture.Value.Width == OxygenBarTexture.Value.Width - 1)
                 {
                     data[i] = new Color(0.5f, 1f, 0.5f);
                 }
-                else if (data.Length - i < ModEntry.OxygenBarTexture.Value.Width || i % ModEntry.OxygenBarTexture.Value.Width == 0)
+                else if (data.Length - i < OxygenBarTexture.Value.Width || i % OxygenBarTexture.Value.Width == 0)
                 {
                     data[i] = new Color(0, 0.5f, 0);
                 }
-                else if ((i % ModEntry.OxygenBarTexture.Value.Width) / (float)ModEntry.OxygenBarTexture.Value.Width < (float)current / (float)max)
+                else if ((i % OxygenBarTexture.Value.Width) / (float)OxygenBarTexture.Value.Width < (float)current / (float)max)
                 {
                     data[i] = Color.GhostWhite;
                 }
@@ -410,7 +401,7 @@ namespace Swim
                     data[i] = Color.Black;
                 }
             }
-            ModEntry.OxygenBarTexture.Value.SetData(data);
+            OxygenBarTexture.Value.SetData(data);
         }
 
         public static string doesTileHaveProperty(Map map, int xTile, int yTile, string propertyName, string layerName)
@@ -440,14 +431,14 @@ namespace Swim
         {
             foreach (DiveMap map in data.Maps)
             {
-                if (!ModEntry.diveMaps.ContainsKey(map.Name))
+                if (!diveMaps.ContainsKey(map.Name))
                 {
-                    ModEntry.diveMaps.Add(map.Name, map);
-                    Monitor.Log($"added dive map info for {map.Name}", LogLevel.Debug);
+                    diveMaps.Add(map.Name, map);
+                    SMonitor.Log($"added dive map info for {map.Name}", LogLevel.Debug);
                 }
                 else
                 {
-                    Monitor.Log($"dive map info already exists for {map.Name}", LogLevel.Warn);
+                    SMonitor.Log($"dive map info already exists for {map.Name}", LogLevel.Warn);
                 }
             }
         }
@@ -520,7 +511,7 @@ namespace Swim
                 return false;
 
             GameLocation location = Game1.player.currentLocation;
-            bool result = (!Config.SwimIndoors || location.IsOutdoors) && location is not VolcanoDungeon && location is not BathHousePool && !ModEntry.locationIsPool.Value;
+            bool result = (!Config.SwimIndoors || location.IsOutdoors) && location is not VolcanoDungeon && location is not BathHousePool && !locationIsPool.Value;
             if (!result)
                 return false;
             
@@ -530,8 +521,8 @@ namespace Swim
 
             if (property == "PoolEntrance" || property == "ChangeIntoSwimsuit")
             {
-                Monitor.Log("The current tile is a pool entrance! Disabling swimming in this location.");
-                ModEntry.locationIsPool.Value = true;
+                SMonitor.Log("The current tile is a pool entrance! Disabling swimming in this location.");
+                locationIsPool.Value = true;
                 return false;
             }
 
@@ -578,6 +569,11 @@ namespace Swim
                     return 0; // Up
                 }
             }
+        }
+
+        public static bool IsMonster(Monster monster, string which)
+        {
+            return monster?.modData.TryGetValue(monsterTypeKey, out var w) == true && w == which;
         }
     }
 }

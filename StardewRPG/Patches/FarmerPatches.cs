@@ -2,6 +2,7 @@
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Buffs;
+using StardewValley.Menus;
 using StardewValley.Tools;
 using System;
 using Object = StardewValley.Object;
@@ -58,9 +59,9 @@ namespace StardewRPG
 		}
 		private static bool Farmer_gainExperience_Prefix(Farmer __instance, int howMuch, int which)
 		{
-			if (!Config.EnableMod || which > 4)
+			if (!Config.EnableMod || which > 4 || __instance.Level >= 25)
 				return true;
-			if (howMuch > 0)
+            if (howMuch > 0)
 			{
 				GainExperience(ref __instance, howMuch);
 				//SMonitor.Log($"Gained {howMuch} exp, new total {GetModData(__instance, "exp")}");

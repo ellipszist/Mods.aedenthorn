@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using StardewValley;
+using StardewValley.Menus;
 using System;
 using System.Collections.Generic;
 
@@ -28,8 +29,8 @@ namespace StardewRPG
 		};
 
 		public static void GainExperience(ref Farmer instance, int howMuch)
-		{
-			int currentXP = GetStatValue(instance, "exp");
+        {
+           int currentXP = GetStatValue(instance, "exp");
 			int newXP = currentXP + (int)Math.Round(howMuch * (1 + GetStatMod(GetStatValue(Game1.player, "wis", Config.BaseStatValue)) * Config.WisExpBonus));
 			SetModData(instance, "exp", newXP);
 			bool levelUp = false;

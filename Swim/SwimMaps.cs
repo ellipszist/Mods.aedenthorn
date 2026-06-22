@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Monsters;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
 using StardewValley.Tools;
@@ -11,27 +12,18 @@ using xTile;
 using xTile.Dimensions;
 using xTile.ObjectModel;
 using xTile.Tiles;
+using static StardewValley.Minigames.CraneGame;
 using Object = StardewValley.Object;
 
 namespace Swim
 {
-    public class SwimMaps
+    public partial class ModEntry
     {
-        private static IMonitor Monitor;
-        private static ModConfig Config;
-        private static IModHelper Helper;
-
-        public static void Initialize(IMonitor monitor, IModHelper helper, ModConfig config)
-        {
-            Monitor = monitor;
-            Config = config;
-            Helper = helper;
-        }
 
         public static Object SpawnForageItem(GameLocation location, Vector2 position, string itemID)
         {
             Object item = ItemRegistry.Create<Object>(itemID.StartsWith("(") ? itemID : "(O)" + itemID);
-            Monitor.Log($"Spawning forage {item.Name} at ({position.X}, {position.Y})");
+            SMonitor.Log($"Spawning forage {item.Name} at ({position.X}, {position.Y})");
             location.numberOfSpawnedObjectsOnMap++;
             location.overlayObjects[position] = item;
             item.IsSpawnedObject = true;
@@ -42,7 +34,7 @@ namespace Swim
         public static Object SpawnWorldItem(GameLocation location, Vector2 position, string itemID)
         {
             Object item = ItemRegistry.Create<Object>(itemID.StartsWith("(") ? itemID : "(O)" + itemID);
-            Monitor.Log($"Spawning world item {item.Name} at ({position.X}, {position.Y})");
+            SMonitor.Log($"Spawning world item {item.Name} at ({position.X}, {position.Y})");
             location.overlayObjects[position] = item;
             return item;
         }
@@ -79,12 +71,12 @@ namespace Swim
             }
             if (!foundAnyWater)
             {
-                Monitor.Log($"{Game1.player.currentLocation.Name} has no water tiles");
+                SMonitor.Log($"{Game1.player.currentLocation.Name} has no water tiles");
                 gameLocation.waterTiles = null;
             }
             else
             {
-                Monitor.Log($"Gave {Game1.player.currentLocation.Name} water tiles");
+                SMonitor.Log($"Gave {Game1.player.currentLocation.Name} water tiles");
             }
         }
 
@@ -122,7 +114,7 @@ namespace Swim
                 if (chance < 0.2 && !l.map.GetLayer("Back").Tiles[(int)tile.X, (int)tile.Y].Properties.ContainsKey("Treasure") && !l.map.GetLayer("Back").Tiles[(int)tile.X, (int)tile.Y].Properties.ContainsKey("Diggable"))
                 {
                     l.map.GetLayer("Back").Tiles[(int)tile.X, (int)tile.Y].TileIndex = 1299;
-                    l.map.GetLayer("Back").Tiles[(int)tile.X, (int)tile.Y].Properties.Add("Treasure", new PropertyValue("Object " + SwimUtils.CheckForBuriedItem(Game1.player)));
+                    l.map.GetLayer("Back").Tiles[(int)tile.X, (int)tile.Y].Properties.Add("Treasure", new PropertyValue("Object " + ModEntry.CheckForBuriedItem(Game1.player)));
                     l.map.GetLayer("Back").Tiles[(int)tile.X, (int)tile.Y].Properties.Add("Diggable", new PropertyValue("T"));
                 }
                 else if (chance < 0.4)
@@ -195,7 +187,12 @@ namespace Swim
                 for (int i = 0; i < crabs; i++)
                 {
                     int idx = Game1.random.Next(spots.Count);
-                    l.characters.Add(new SeaCrab(new Vector2(spots[idx].X * Game1.tileSize, spots[idx].Y * Game1.tileSize)));
+                    var m = new RockCrab(new Vector2(spots[idx].X * Game1.tileSize, spots[idx].Y * Game1.tileSize));
+                    m.modData[monsterTypeKey] = "SeaCrab";
+                    m.Sprite.LoadTexture("aedenthorn.Swim/Fishies/" + crabTextures[Game1.random.Next(100) < Config.PercentChanceCrabIsMimic ? 1 : 0]);
+                    m.moveTowardPlayerThreshold.Value = 1;
+                    m.DamageToFarmer = 0;
+                    l.characters.Add(m);
                 }
             }
         }
@@ -218,7 +215,7 @@ namespace Swim
                 }
                 if(spots.Count == 0)
                 {
-                    Monitor.Log($"No spots for fishies in map {l.Name}", LogLevel.Warn);
+                    SMonitor.Log($"No spots for fishies in map {l.Name}", LogLevel.Warn);
                     return;
                 }
                 int n = spots.Count;
@@ -236,7 +233,15 @@ namespace Swim
                     for (int i = 0; i < fishes; i++)
                     {
                         int idx = Game1.random.Next(spots.Count);
-                        l.characters.Add(new Fishie(new Vector2(spots[idx].X * Game1.tileSize, spots[idx].Y * Game1.tileSize)));
+                        var m = new Serpent(new Vector2(spots[idx].X * Game1.tileSize, spots[idx].Y * Game1.tileSize))
+                        {
+                            Scale = ((float)Game1.random.NextDouble() + 0.1f) * 0.35f,
+                            DamageToFarmer = 0
+                        };
+                        m.modData[monsterTypeKey] = "Fishie";
+                        m.Sprite.LoadTexture("aedenthorn.Swim/Fishies/" + fishTextures[Game1.random.Next(fishTextures.Count)]);
+                        m.moveTowardPlayerThreshold.Value = 50;
+                        l.characters.Add(m);
                     }
                 }
                 else
@@ -245,7 +250,17 @@ namespace Swim
                     for (int i = 0; i < bigFishes; i++)
                     {
                         int idx = Game1.random.Next(spots.Count);
-                        l.characters.Add(new BigFishie(new Vector2(spots[idx].X * Game1.tileSize, spots[idx].Y * Game1.tileSize)));
+                        var m = new DinoMonster(new Vector2(spots[idx].X * Game1.tileSize, spots[idx].Y * Game1.tileSize))
+                        {
+                            Scale = 0.5f + (float)Game1.random.NextDouble() / 4f,
+                            DamageToFarmer = 0,
+                            Slipperiness = 24 + Game1.random.Next(10),
+                            farmerPassesThrough = true
+                        };
+                        m.modData[monsterTypeKey] = "BigFishie";
+                        m.Sprite.LoadTexture("aedenthorn.Swim/Fishies/" + bigFishTextures[Game1.random.Next(bigFishTextures.Count)]);
+                        m.collidesWithOtherCharacters.Value = false;
+                        l.characters.Add(m);
                     }
                 }
             }
@@ -567,7 +582,7 @@ namespace Swim
                 }
                 foreach (var obj in treasures)
                 {
-                    Monitor.Log($"Treasures: {obj.QualifiedItemId} {obj.DisplayName}");
+                    SMonitor.Log($"Treasures: {obj.QualifiedItemId} {obj.DisplayName}");
                 }
             }
         }
@@ -583,7 +598,7 @@ namespace Swim
             {
                 for (int y = 0; y < map.Layers[0].LayerHeight; y++)
                 {
-                    if (SwimUtils.doesTileHaveProperty(map, x, y, "Water", "Back") != null)
+                    if (ModEntry.doesTileHaveProperty(map, x, y, "Water", "Back") != null)
                     {
                         Tile tile = map.GetLayer("Back").PickTile(new Location(x, y) * Game1.tileSize, Game1.viewport.Size);
                         if (tile != null)
@@ -604,7 +619,7 @@ namespace Swim
             {
                 for (int y = 0; y < map.Layers[0].LayerHeight; y++)
                 {
-                    if (SwimUtils.doesTileHaveProperty(map, x, y, "Water", "Back") != null)
+                    if (ModEntry.doesTileHaveProperty(map, x, y, "Water", "Back") != null)
                     {
                         Tile tile = map.GetLayer("Back").PickTile(new Location(x, y) * Game1.tileSize, Game1.viewport.Size);
                         if (tile != null)
@@ -639,7 +654,7 @@ namespace Swim
             {
                 for (int y = 0; y < map.Layers[0].LayerHeight; y++)
                 {
-                    if (SwimUtils.doesTileHaveProperty(map, x, y, "Water", "Back") != null)
+                    if (ModEntry.doesTileHaveProperty(map, x, y, "Water", "Back") != null)
                     {
                         Tile tile = map.GetLayer("Back").PickTile(new Location(x, y) * Game1.tileSize, Game1.viewport.Size);
                         if (tile != null)

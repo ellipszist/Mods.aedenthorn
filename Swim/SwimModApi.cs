@@ -17,7 +17,7 @@ namespace Swim
             {
                 Monitor.Log($"Reading content pack: {contentPack.Manifest.Name} {contentPack.Manifest.Version} from {contentPack.DirectoryPath}");
                 DiveMapData data = contentPack.ReadJsonFile<DiveMapData>("content.json");
-                SwimUtils.ReadDiveMapData(data);
+                ModEntry.ReadDiveMapData(data);
                 return true;
             }
             catch

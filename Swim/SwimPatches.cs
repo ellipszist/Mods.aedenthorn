@@ -11,21 +11,12 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading.Tasks;
 using xTile.Dimensions;
+using static System.Collections.Specialized.BitVector32;
 
 namespace Swim
 {
-    internal class SwimPatches
+    public partial class ModEntry
     {
-        private static IMonitor Monitor;
-        private static ModConfig Config;
-        private static IModHelper Helper;
-
-        public static void Initialize(IMonitor monitor, IModHelper helper, ModConfig config)
-        {
-            Monitor = monitor;
-            Config = config;
-            Helper = helper;
-        }
         public static bool FarmerSprite_checkForFootstep_Prefix()
         {
             try
@@ -37,7 +28,7 @@ namespace Swim
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(FarmerSprite_checkForFootstep_Prefix)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(FarmerSprite_checkForFootstep_Prefix)}:\n{ex}", LogLevel.Error);
             }
             return true;
         }
@@ -53,7 +44,7 @@ namespace Swim
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(FarmerRenderer_draw_Prefix)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(FarmerRenderer_draw_Prefix)}:\n{ex}", LogLevel.Error);
             }
         }
         internal static void FarmerRenderer_draw_Postfix(Farmer who, bool __state)
@@ -67,7 +58,7 @@ namespace Swim
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(FarmerRenderer_draw_Postfix)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(FarmerRenderer_draw_Postfix)}:\n{ex}", LogLevel.Error);
             }
         }
 
@@ -89,10 +80,10 @@ namespace Swim
 	         * 2  IL_0e93: callvirt instance !0 class Netcode.NetFieldBase`2<class StardewValley.Objects.Hat, class Netcode.NetRef`1<class StardewValley.Objects.Hat>>::get_Value()
 	         * 3  IL_0e98: brfalse IL_116d
              *
-             *    // We want to edit this section so that instead of checking farmer.bathingClothes, it calls SwimUtils.ShouldNotDrawHat()
+             *    // We want to edit this section so that instead of checking farmer.bathingClothes, it calls ModEntry.ShouldNotDrawHat()
 	         * 4  IL_0e9d: ldarg.3 <- keep (it loads the Farmer object onto the stack)
 	         * 5  IL_0e9e: ldfld class Netcode.NetBool StardewValley.Farmer::bathingClothes <- delete (we only need 3 instructions)
-	         * 6  IL_0ea3: call bool Netcode.NetBool::op_Implicit(class Netcode.NetBool) <- replace operand with SwimUtils.ShouldNotDrawHat()
+	         * 6  IL_0ea3: call bool Netcode.NetBool::op_Implicit(class Netcode.NetBool) <- replace operand with ModEntry.ShouldNotDrawHat()
 	         * 7  IL_0ea8: brtrue IL_116d <- keep
              *
 	         * 8  IL_0ead: ldarg.3
@@ -112,18 +103,18 @@ namespace Swim
                         (FieldInfo)codes[i+5].operand == AccessTools.Field(typeof(Farmer), nameof(Farmer.bathingClothes)) && (MethodInfo)codes[i+6].operand == AccessTools.Method(typeof(NetBool), "op_Implicit") &&
                         (FieldInfo)codes[i+11].operand == AccessTools.Field(typeof(FarmerSprite.AnimationFrame), nameof(FarmerSprite.AnimationFrame.flip)))
                     {
-                        Monitor.Log($"Transpiling Farmer.drawHairAndAccessories");
+                        SMonitor.Log($"Transpiling Farmer.drawHairAndAccessories");
 
                         codes[i + 5].opcode = OpCodes.Nop;
                         codes[i + 5].operand = null;
 
-                        codes[i + 6].operand = AccessTools.Method(typeof(SwimUtils), nameof(SwimUtils.ShouldNotDrawHat));
+                        codes[i + 6].operand = AccessTools.Method(typeof(ModEntry), nameof(ShouldNotDrawHat));
                     }
                 }
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(FarmerRenderer_drawHairAndAccessories_Transpiler)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(FarmerRenderer_drawHairAndAccessories_Transpiler)}:\n{ex}", LogLevel.Error);
             }
 
             return codes.AsEnumerable();
@@ -142,33 +133,30 @@ namespace Swim
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(GameLocation_StartEvent_Postfix)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(GameLocation_StartEvent_Postfix)}:\n{ex}", LogLevel.Error);
             }
         }
         internal static void Event_exitEvent_Postfix(Event __instance)
         {
             try
             {
-                Monitor.Log($"exiting event");
+                SMonitor.Log($"exiting event");
                 if (__instance.exitLocation != null && __instance.exitLocation != null && __instance.exitLocation.Location.waterTiles != null && __instance.exitLocation.Location.waterTiles[(int)(Game1.player.positionBeforeEvent.X),(int)(Game1.player.positionBeforeEvent.Y)])
                 {
-                    Monitor.Log($"swimming again");
-                    ChangeAfterEvent();
+                    SMonitor.Log($"swimming again");
+                    var d = new DelayedAction(1500, () => 
+                    {
+                        Game1.player.changeIntoSwimsuit();
+                        Game1.player.swimming.Value = true;
+                    });
+                    Game1.delayedActions.Add(d);
                 }
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(Event_exitEvent_Postfix)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(Event_exitEvent_Postfix)}:\n{ex}", LogLevel.Error);
             }
         }
-
-        private static async Task ChangeAfterEvent()
-        {
-            await Task.Delay(1500);
-            Game1.player.changeIntoSwimsuit();
-            Game1.player.swimming.Value = true;
-        }
-
 
         public static void Farmer_updateCommon_Prefix(ref Farmer __instance)
         {
@@ -188,7 +176,7 @@ namespace Swim
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(Farmer_updateCommon_Prefix)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(Farmer_updateCommon_Prefix)}:\n{ex}", LogLevel.Error);
             }
         }
         public static void Farmer_updateCommon_Postfix(ref Farmer __instance)
@@ -214,7 +202,7 @@ namespace Swim
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(Farmer_updateCommon_Postfix)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(Farmer_updateCommon_Postfix)}:\n{ex}", LogLevel.Error);
             }
         }
         public static IEnumerable<CodeInstruction> Farmer_updateCommon_Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -233,12 +221,12 @@ namespace Swim
                         if(start == -1 && codes[i].opcode == OpCodes.Ldfld && codes[i].operand as FieldInfo == typeof(Farmer).GetField("timerSinceLastMovement"))
                         {
                             start = i - 1;
-                            Monitor.Log($"start at {start}");
+                            SMonitor.Log($"start at {start}");
                         }
                         if (codes[i].opcode == OpCodes.Stfld && codes[i].operand as FieldInfo == typeof(Farmer).GetField("health"))
                         {
                             end = i + 1;
-                            Monitor.Log($"end at {end}");
+                            SMonitor.Log($"end at {end}");
                         }
                     }
                     else if (codes[i].operand as string == "slosh")
@@ -253,7 +241,7 @@ namespace Swim
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(Farmer_updateCommon_Transpiler)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(Farmer_updateCommon_Transpiler)}:\n{ex}", LogLevel.Error);
             }
 
             return codes.AsEnumerable();
@@ -270,7 +258,7 @@ namespace Swim
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(Game1_pressUseToolButton_Prefix)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(Game1_pressUseToolButton_Prefix)}:\n{ex}", LogLevel.Error);
             }
         }
 
@@ -283,7 +271,7 @@ namespace Swim
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(Farmer_changeIntoSwimsuit_Postfix)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(Farmer_changeIntoSwimsuit_Postfix)}:\n{ex}", LogLevel.Error);
             }
         }
         
@@ -299,7 +287,7 @@ namespace Swim
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(Farmer_changeIntoSwimsuit_Postfix)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(Farmer_changeIntoSwimsuit_Postfix)}:\n{ex}", LogLevel.Error);
             }
         }
         public static void Farmer_setRunning_Postfix(Farmer __instance, bool __state)
@@ -311,7 +299,7 @@ namespace Swim
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(Farmer_setRunning_Postfix)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(Farmer_setRunning_Postfix)}:\n{ex}", LogLevel.Error);
             }
         }
 
@@ -324,7 +312,7 @@ namespace Swim
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(Toolbar_draw_Prefix)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(Toolbar_draw_Prefix)}:\n{ex}", LogLevel.Error);
             }
             return true;
         }
@@ -363,7 +351,7 @@ namespace Swim
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(Wand_DoFunction_Transpiler)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(Wand_DoFunction_Transpiler)}:\n{ex}", LogLevel.Error);
             }
 
             return codes.AsEnumerable();
@@ -381,7 +369,7 @@ namespace Swim
                     else
                     {
                         __instance.mapPath.Value = "Maps\\CrystalCave";
-                        ModEntry.oldMariner.Value = new NPC(new AnimatedSprite("Characters\\Mariner", 0, 16, 32), new Vector2(10f, 7f) * 64f, 2, "Old Mariner", null);
+                        oldMariner.Value = new NPC(new AnimatedSprite("Characters\\Mariner", 0, 16, 32), new Vector2(10f, 7f) * 64f, 2, "Old Mariner", null);
 
                     }
                     //__instance.updateMap();
@@ -389,7 +377,7 @@ namespace Swim
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(GameLocation_resetForPlayerEntry_Prefix)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(GameLocation_resetForPlayerEntry_Prefix)}:\n{ex}", LogLevel.Error);
             }
         }
         public static void GameLocation_draw_Prefix(GameLocation __instance, SpriteBatch b)
@@ -400,13 +388,13 @@ namespace Swim
                 {
                     if (!Game1.player.mailReceived.Contains("SwimMod_Mariner_Completed"))
                     {
-                        ModEntry.oldMariner.Value.draw(b);
+                        oldMariner.Value.draw(b);
                     }
                 }
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(GameLocation_draw_Prefix)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(GameLocation_draw_Prefix)}:\n{ex}", LogLevel.Error);
             }
         }
         public static bool GameLocation_isCollidingPosition_Prefix(GameLocation __instance, Microsoft.Xna.Framework.Rectangle position, xTile.Dimensions.Rectangle viewport, bool isFarmer, int damagesFarmer, bool glider, Character character, ref bool __result)
@@ -415,7 +403,7 @@ namespace Swim
             {
                 if(__instance.Name == "Custom_ScubaCrystalCave")
                 {
-                    if (!Game1.player.mailReceived.Contains("SwimMod_Mariner_Completed") && ModEntry.oldMariner != null && position.Intersects(ModEntry.oldMariner.Value.GetBoundingBox()))
+                    if (!Game1.player.mailReceived.Contains("SwimMod_Mariner_Completed") && oldMariner != null && position.Intersects(oldMariner.Value.GetBoundingBox()))
                     {
                         __result = true;
                         return false;
@@ -424,7 +412,7 @@ namespace Swim
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(GameLocation_isCollidingPosition_Prefix)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(GameLocation_isCollidingPosition_Prefix)}:\n{ex}", LogLevel.Error);
             }
             return true;
         }
@@ -436,16 +424,16 @@ namespace Swim
                 {
                     if (!Game1.player.mailReceived.Contains("SwimMod_Mariner_Completed"))
                     {
-                        if (ModEntry.oldMariner != null)
+                        if (oldMariner != null)
                         {
-                            ModEntry.oldMariner.Value.update(time, __instance);
+                            oldMariner.Value.update(time, __instance);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(GameLocation_UpdateWhenCurrentLocation_Postfix)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(GameLocation_UpdateWhenCurrentLocation_Postfix)}:\n{ex}", LogLevel.Error);
             }
         }
 
@@ -461,7 +449,7 @@ namespace Swim
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(GameLocation_performTouchAction_Prefix)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(GameLocation_performTouchAction_Prefix)}:\n{ex}", LogLevel.Error);
             }
         }
         public static void GameLocation_performTouchAction_PrefixArray(string[] action)
@@ -479,7 +467,7 @@ namespace Swim
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(GameLocation_performTouchAction_PrefixArray)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(GameLocation_performTouchAction_PrefixArray)}:\n{ex}", LogLevel.Error);
             }
         }
         public static void GameLocation_performTouchAction_Postfix(string fullActionString)
@@ -494,13 +482,13 @@ namespace Swim
                 {
                     if (Game1.player.swimming.Value)
                     {
-                        Config = Helper.ReadConfig<ModConfig>();
+                        Config = SHelper.ReadConfig<ModConfig>();
                     }
                 }
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(GameLocation_performTouchAction_Postfix)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(GameLocation_performTouchAction_Postfix)}:\n{ex}", LogLevel.Error);
             }
         }
         public static void GameLocation_checkAction_Prefix(GameLocation __instance, Location tileLocation, xTile.Dimensions.Rectangle viewport, Farmer who)
@@ -511,13 +499,13 @@ namespace Swim
                 {
                     if (!who.mailReceived.Contains("SwimMod_Mariner_Completed"))
                     {
-                        if (ModEntry.oldMariner != null && ModEntry.oldMariner.Value.Tile.X == tileLocation.X && ModEntry.oldMariner.Value.Tile.Y == tileLocation.Y)
+                        if (oldMariner != null && oldMariner.Value.Tile.X == tileLocation.X && oldMariner.Value.Tile.Y == tileLocation.Y)
                         {
                             string playerTerm = Game1.content.LoadString("Strings\\Locations:Beach_Mariner_Player_" + (who.IsMale ? "Male" : "Female"));
 
-                            if (ModEntry.marinerQuestionsWrongToday.Value)
+                            if (marinerQuestionsWrongToday.Value)
                             {
-                                string preface = Helper.Translation.Get("SwimMod_Mariner_Wrong_Today");
+                                string preface = SHelper.Translation.Get("SwimMod_Mariner_Wrong_Today");
                                 Game1.drawObjectDialogue(string.Format(preface, playerTerm));
                             }
                             else
@@ -527,7 +515,7 @@ namespace Swim
                                 new Response("SwimMod_Mariner_Questions_Yes", Game1.content.LoadString("Strings\\Lexicon:QuestionDialogue_Yes")),
                                 new Response("SwimMod_Mariner_Questions_No", Game1.content.LoadString("Strings\\Lexicon:QuestionDialogue_No"))
                                 };
-                                __instance.createQuestionDialogue(Game1.parseText(String.Format(Helper.Translation.Get(Game1.player.mailReceived.Contains("SwimMod_Mariner_Already") ? "SwimMod_Mariner_Questions_Old" : "SwimMod_Mariner_Questions").ToString(), playerTerm)), answers, "SwimMod_Mariner_Questions");
+                                __instance.createQuestionDialogue(Game1.parseText(String.Format(SHelper.Translation.Get(Game1.player.mailReceived.Contains("SwimMod_Mariner_Already") ? "SwimMod_Mariner_Questions_Old" : "SwimMod_Mariner_Questions").ToString(), playerTerm)), answers, "SwimMod_Mariner_Questions");
                             }
                         }
                     }
@@ -535,43 +523,43 @@ namespace Swim
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(GameLocation_UpdateWhenCurrentLocation_Postfix)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(GameLocation_UpdateWhenCurrentLocation_Postfix)}:\n{ex}", LogLevel.Error);
             }
         }
         public static void GameLocation_isCollidingPosition_Postfix(GameLocation __instance, ref bool __result, Microsoft.Xna.Framework.Rectangle position, xTile.Dimensions.Rectangle viewport, bool isFarmer, int damagesFarmer, bool glider, Character character, bool pathfinding, bool projectile = false, bool ignoreCharacterRequirement = false)
         {
             try
             {
-                if (__result == false || !isFarmer || character?.Equals(Game1.player) != true || !Game1.player.swimming.Value || ModEntry.isUnderwater.Value)
+                if (__result == false || !isFarmer || character?.Equals(Game1.player) != true || !Game1.player.swimming.Value || isUnderwater.Value)
                     return;
 
-                Vector2 next = SwimUtils.GetNextTile();
-                Monitor.Log($"Checking collide {SwimUtils.doesTileHaveProperty(__instance.map, (int)next.X, (int)next.Y, "Water", "Back") != null}");
-                if ((int)next.X <= 0 || (int)next.Y <= 0 || __instance.Map.Layers[0].LayerWidth <= (int)next.X || __instance.Map.Layers[0].LayerHeight <= (int)next.Y || SwimUtils.doesTileHaveProperty(__instance.map, (int)next.X, (int)next.Y, "Water", "Back") != null)
+                Vector2 next = GetNextTile();
+                SMonitor.Log($"Checking collide {doesTileHaveProperty(__instance.map, (int)next.X, (int)next.Y, "Water", "Back") != null}");
+                if ((int)next.X <= 0 || (int)next.Y <= 0 || __instance.Map.Layers[0].LayerWidth <= (int)next.X || __instance.Map.Layers[0].LayerHeight <= (int)next.Y || doesTileHaveProperty(__instance.map, (int)next.X, (int)next.Y, "Water", "Back") != null)
                 {
                     __result = false;
                 }
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(GameLocation_isCollidingPosition_Postfix)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(GameLocation_isCollidingPosition_Postfix)}:\n{ex}", LogLevel.Error);
             }
         }
         public static void GameLocation_sinkDebris_Postfix(GameLocation __instance, bool __result, Debris debris, Vector2 chunkTile, Vector2 chunkPosition)
         {
             try
             {
-                if (__result == false || !Game1.IsMasterGame || !SwimUtils.DebrisIsAnItem(debris))
+                if (__result == false || !Game1.IsMasterGame || !DebrisIsAnItem(debris))
                     return;
 
-                Monitor.Log($"Sinking debris: {debris.itemId.Value} ({debris.item.Name})");
+                SMonitor.Log($"Sinking debris: {debris.itemId.Value} ({debris.item.Name})");
 
-                if (ModEntry.diveMaps.ContainsKey(__instance.Name) && ModEntry.diveMaps[__instance.Name].DiveLocations.Count > 0)
+                if (diveMaps.ContainsKey(__instance.Name) && diveMaps[__instance.Name].DiveLocations.Count > 0)
                 {
                     Point pos = new Point((int)chunkTile.X, (int)chunkTile.Y);
                     Location loc = new Location(pos.X, pos.Y);
 
-                    DiveMap dm = ModEntry.diveMaps[__instance.Name];
+                    DiveMap dm = diveMaps[__instance.Name];
                     DiveLocation diveLocation = null;
                     foreach (DiveLocation dl in dm.DiveLocations)
                     {
@@ -584,13 +572,13 @@ namespace Swim
 
                     if (diveLocation == null)
                     {
-                        Monitor.Log($"sink debris: No dive destination for this point on this map");
+                        SMonitor.Log($"sink debris: No dive destination for this point on this map");
                         return;
                     }
 
                     if (Game1.getLocationFromName(diveLocation.OtherMapName) == null)
                     {
-                        Monitor.Log($"sink debris: Can't find destination map named {diveLocation.OtherMapName}", LogLevel.Warn);
+                        SMonitor.Log($"sink debris: Can't find destination map named {diveLocation.OtherMapName}", LogLevel.Warn);
                         return;
                     }
 
@@ -600,11 +588,11 @@ namespace Swim
 
                         if(chunk.position.Value == chunkPosition)
                         {
-                            Monitor.Log($"sink debris: creating copy of debris {debris.debrisType} item {debris.item != null} on {diveLocation.OtherMapName}");
+                            SMonitor.Log($"sink debris: creating copy of debris {debris.debrisType} item {debris.item != null} on {diveLocation.OtherMapName}");
 
                             if (debris.debrisType.Value != Debris.DebrisType.ARCHAEOLOGY && debris.debrisType.Value != Debris.DebrisType.OBJECT && chunk.randomOffset % 2 != 0)
                             {
-                                Monitor.Log($"sink debris: non-item debris");
+                                SMonitor.Log($"sink debris: non-item debris");
                                 break;
                             }
 
@@ -629,7 +617,7 @@ namespace Swim
             }
             catch (Exception ex)
             {
-                Monitor.Log($"Failed in {nameof(GameLocation_sinkDebris_Postfix)}:\n{ex}", LogLevel.Error);
+                SMonitor.Log($"Failed in {nameof(GameLocation_sinkDebris_Postfix)}:\n{ex}", LogLevel.Error);
             }
         }
     }

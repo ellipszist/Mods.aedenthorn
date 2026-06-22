@@ -21,12 +21,8 @@ using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Swim
 {
-    public class SwimHelperEvents
+    public partial class ModEntry
     {
-
-        private static IMonitor Monitor;
-        private static ModConfig Config;
-        private static IModHelper Helper;
 
         public static readonly PerScreen<bool> isJumping = new PerScreen<bool>(() => false);
         public static readonly PerScreen<Vector2> startJumpLoc = new PerScreen<Vector2>();
@@ -57,12 +53,6 @@ namespace Swim
 
         private static readonly PerScreen<int> lastBreatheSound = new PerScreen<int>();
 
-        public static void Initialize(IMonitor monitor, IModHelper helper, ModConfig config)
-        {
-            Monitor = monitor;
-            Config = config;
-            Helper = helper;
-        }
 
         public static void Player_Warped(object sender, WarpedEventArgs e)
         {
@@ -85,10 +75,10 @@ namespace Swim
             }
             if (Game1.player.swimming.Value)
             {
-                //SwimMaps.SwitchToWaterTiles(e.NewLocation);
+                //SwitchToWaterTiles(e.NewLocation);
             }
 
-            ModEntry.locationIsPool.Value = false;
+            locationIsPool.Value = false;
         }
 
         public static void Player_InventoryChanged(object sender, InventoryChangedEventArgs e)
@@ -96,19 +86,19 @@ namespace Swim
             if (e.Player != Game1.player)
                 return;
 
-            if (!Game1.player.mailReceived.Contains("ScubaTank") && ModEntry.scubaTankID.Value != "" && e.Added != null && e.Added.Any() && e.Added.FirstOrDefault() != null && e.Added.FirstOrDefault().GetType() == typeof(Clothing) && e.Added.FirstOrDefault().ItemId == ModEntry.scubaTankID.Value)
+            if (!Game1.player.mailReceived.Contains("ScubaTank") && scubaTankID.Value != "" && e.Added != null && e.Added.Any() && e.Added.FirstOrDefault() != null && e.Added.FirstOrDefault().GetType() == typeof(Clothing) && e.Added.FirstOrDefault().ItemId == scubaTankID.Value)
             {
-                Monitor.Log("Player found scuba tank");
+                SMonitor.Log("Player found scuba tank");
                 Game1.player.mailReceived.Add("ScubaTank");
             }
-            if (!Game1.player.mailReceived.Contains("ScubaMask") && ModEntry.scubaMaskID.Value != "" && e.Added != null && e.Added.Any() && e.Added.FirstOrDefault() != null && e.Added.FirstOrDefault().GetType() == typeof(Hat) && (e.Added.FirstOrDefault() as Hat).ItemId == ModEntry.scubaMaskID.Value + "")
+            if (!Game1.player.mailReceived.Contains("ScubaMask") && scubaMaskID.Value != "" && e.Added != null && e.Added.Any() && e.Added.FirstOrDefault() != null && e.Added.FirstOrDefault().GetType() == typeof(Hat) && (e.Added.FirstOrDefault() as Hat).ItemId == scubaMaskID.Value + "")
             {
-                Monitor.Log("Player found scuba mask");
+                SMonitor.Log("Player found scuba mask");
                 Game1.player.mailReceived.Add("ScubaMask");
             }
-            if (!Game1.player.mailReceived.Contains("ScubaFins") && ModEntry.scubaTankID.Value != "" && e.Added != null && e.Added.Any() && e.Added.FirstOrDefault() != null && e.Added.FirstOrDefault().GetType() == typeof(Boots) && e.Added.FirstOrDefault().ItemId == ModEntry.scubaFinsID.Value)
+            if (!Game1.player.mailReceived.Contains("ScubaFins") && scubaTankID.Value != "" && e.Added != null && e.Added.Any() && e.Added.FirstOrDefault() != null && e.Added.FirstOrDefault().GetType() == typeof(Boots) && e.Added.FirstOrDefault().ItemId == scubaFinsID.Value)
             {
-                Monitor.Log("Player found scuba fins");
+                SMonitor.Log("Player found scuba fins");
                 Game1.player.mailReceived.Add("ScubaFins");
             }
         }
@@ -119,7 +109,7 @@ namespace Swim
             {
                 for (int i = l.characters.Count - 1; i >= 0; i--)
                 {
-                    if (l.characters[i] is Fishie || l.characters[i] is BigFishie || l.characters[i] is SeaCrab || l.characters[i] is AbigailMetalHead)
+                    if(l.characters[i]?.modData.ContainsKey(monsterTypeKey) == true)
                         l.characters.RemoveAt(i);
                 }
             }
@@ -131,81 +121,81 @@ namespace Swim
             
             if(DataLoader.Boots(Game1.content).ContainsKey("Swim_ScubaFins"))
             {
-                ModEntry.scubaFinsID.Value = "Swim_ScubaFins";
+                scubaFinsID.Value = "Swim_ScubaFins";
 
-                Monitor.Log($"Swim mod item #1 ID is {ModEntry.scubaFinsID.Value}.");
-                if (Game1.player.boots.Value != null && Game1.player.boots.Value.Name == "Scuba Fins" && Game1.player.boots.Value.ItemId != ModEntry.scubaFinsID.Value)
+                SMonitor.Log($"Swim mod item #1 ID is {scubaFinsID.Value}.");
+                if (Game1.player.boots.Value != null && Game1.player.boots.Value.Name == "Scuba Fins" && Game1.player.boots.Value.ItemId != scubaFinsID.Value)
                 {
-                    Game1.player.boots.Value = ItemRegistry.Create<Boots>(ModEntry.scubaFinsID.Value);
+                    Game1.player.boots.Value = ItemRegistry.Create<Boots>(scubaFinsID.Value);
                 }
             }
             else
             {
-                Monitor.Log("Could not find scuba fins! Do you have the swim items content pack installed?", LogLevel.Warn);
+                SMonitor.Log("Could not find scuba fins! Do you have the swim items content pack installed?", LogLevel.Warn);
             }
 
             if (DataLoader.Shirts(Game1.content).ContainsKey("Swim_ScubaTank"))
             {
-                ModEntry.scubaTankID.Value = "Swim_ScubaTank";
+                scubaTankID.Value = "Swim_ScubaTank";
 
-                Monitor.Log($"Swim mod item #2 ID is {ModEntry.scubaTankID.Value}.");
-                if (Game1.player.shirtItem.Value != null && Game1.player.shirtItem.Value.Name == "Scuba Tank" && Game1.player.shirtItem.Value.ItemId != ModEntry.scubaTankID.Value)
+                SMonitor.Log($"Swim mod item #2 ID is {scubaTankID.Value}.");
+                if (Game1.player.shirtItem.Value != null && Game1.player.shirtItem.Value.Name == "Scuba Tank" && Game1.player.shirtItem.Value.ItemId != scubaTankID.Value)
                 {
-                    Game1.player.shirtItem.Value = ItemRegistry.Create<Clothing>(ModEntry.scubaTankID.Value);
+                    Game1.player.shirtItem.Value = ItemRegistry.Create<Clothing>(scubaTankID.Value);
                 }
             }
             else
             {
-                Monitor.Log("Could not find scuba tank! Do you have the swim items content pack installed?", LogLevel.Warn);
+                SMonitor.Log("Could not find scuba tank! Do you have the swim items content pack installed?", LogLevel.Warn);
             }
 
             if (DataLoader.Hats(Game1.content).ContainsKey("Swim_ScubaMask"))
             {
-                ModEntry.scubaMaskID.Value = "Swim_ScubaMask";
+                scubaMaskID.Value = "Swim_ScubaMask";
 
-                Monitor.Log($"Swim mod item #3 ID is {ModEntry.scubaMaskID.Value}.");
-                if (Game1.player.hat.Value != null && Game1.player.hat.Value.Name == "Scuba Mask" && Game1.player.hat.Value.ItemId != ModEntry.scubaMaskID.Value)
+                SMonitor.Log($"Swim mod item #3 ID is {scubaMaskID.Value}.");
+                if (Game1.player.hat.Value != null && Game1.player.hat.Value.Name == "Scuba Mask" && Game1.player.hat.Value.ItemId != scubaMaskID.Value)
                 {
-                    Game1.player.hat.Value = ItemRegistry.Create<Hat>(ModEntry.scubaMaskID.Value);
+                    Game1.player.hat.Value = ItemRegistry.Create<Hat>(scubaMaskID.Value);
                 }
             }
             else
             {
-                Monitor.Log("Could not find scuba mask! Do you have the swim items content pack installed?", LogLevel.Warn);
+                SMonitor.Log("Could not find scuba mask! Do you have the swim items content pack installed?", LogLevel.Warn);
             }
 
             // load dive maps
 
-            foreach (IContentPack contentPack in Helper.ContentPacks.GetOwned())
+            foreach (IContentPack contentPack in SHelper.ContentPacks.GetOwned())
             {
                 try
                 {
-                    Monitor.Log($"Reading content pack: {contentPack.Manifest.Name} {contentPack.Manifest.Version} from {contentPack.DirectoryPath}");
+                    SMonitor.Log($"Reading content pack: {contentPack.Manifest.Name} {contentPack.Manifest.Version} from {contentPack.DirectoryPath}");
                     DiveMapData data = contentPack.ReadJsonFile<DiveMapData>("content.json");
-                    SwimUtils.ReadDiveMapData(data);
+                    ReadDiveMapData(data);
                 }
                 catch
                 {
-                    Monitor.Log($"couldn't read content.json in content pack {contentPack.Manifest.Name}", LogLevel.Warn);
+                    SMonitor.Log($"couldn't read content.json in content pack {contentPack.Manifest.Name}", LogLevel.Warn);
                 }
             }
 
-            Monitor.Log($"Reading content pack from assets/swim-map-content.json");
+            SMonitor.Log($"Reading content pack from assets/swim-map-content.json");
 
             try
             {
-                DiveMapData myData = Helper.Data.ReadJsonFile<DiveMapData>("assets/swim-map-content.json");
-                SwimUtils.ReadDiveMapData(myData);
+                DiveMapData myData = SHelper.Data.ReadJsonFile<DiveMapData>("assets/swim-map-content.json");
+                ReadDiveMapData(myData);
             }
             catch (Exception ex)
             {
-                Monitor.Log($"assets/swim-map-content.json file read error. Exception: {ex}", LogLevel.Warn);
+                SMonitor.Log($"assets/swim-map-content.json file read error. Exception: {ex}", LogLevel.Warn);
             }
 
-            if (!SwimUtils.IsWearingScubaGear() && Config.SwimSuitAlways && !Config.NoAutoSwimSuit)
+            if (!IsWearingScubaGear() && Config.SwimSuitAlways && !Config.NoAutoSwimSuit)
                 Game1.player.changeIntoSwimsuit();
 
-            bubbleTexture = Helper.GameContent.Load<Texture2D>("LooseSprites/temporary_sprites_1");
+            bubbleTexture = SHelper.GameContent.Load<Texture2D>("LooseSprites/temporary_sprites_1");
         }
 
 
@@ -214,25 +204,25 @@ namespace Swim
 
         public static void Display_RenderedWorld(object sender, RenderedWorldEventArgs e)
         {
-            if (ModEntry.isUnderwater.Value && SwimUtils.IsMapUnderwater(Game1.player.currentLocation.Name))
+            if (isUnderwater.Value && IsMapUnderwater(Game1.player.currentLocation.Name))
             {
                 if ((ticksUnderwater.Value % 100 / Math.Min(100, Config.BubbleMult)) - bubbleOffset.Value == 0)
                 {
                     Game1.playSound("tinyWhip");
-                    ModEntry.bubbles.Value.Add(new Vector2(Game1.player.position.X + Game1.random.Next(-24, 25), Game1.player.position.Y - 96));
-                    if (ModEntry.bubbles.Value.Count > 100)
+                    bubbles.Value.Add(new Vector2(Game1.player.position.X + Game1.random.Next(-24, 25), Game1.player.position.Y - 96));
+                    if (bubbles.Value.Count > 100)
                     {
-                        ModEntry.bubbles.Value = ModEntry.bubbles.Value.Skip(1).ToList();
+                        bubbles.Value = bubbles.Value.Skip(1).ToList();
                     }
                     bubbleOffset.Value = Game1.random.Next(30 / Math.Min(100, Config.BubbleMult));
                 }
 
-                for (int k = 0; k < ModEntry.bubbles.Value.Count; k++)
+                for (int k = 0; k < bubbles.Value.Count; k++)
                 {
-                    ModEntry.bubbles.Value[k] = new Vector2(ModEntry.bubbles.Value[k].X, ModEntry.bubbles.Value[k].Y - 2);
+                    bubbles.Value[k] = new Vector2(bubbles.Value[k].X, bubbles.Value[k].Y - 2);
                 }
 
-                foreach (Vector2 v in ModEntry.bubbles.Value)
+                foreach (Vector2 v in bubbles.Value)
                 {
                     e.SpriteBatch.Draw(bubbleTexture, v + new Vector2((float)Math.Sin(ticksUnderwater.Value / 20f) * 10f - Game1.viewport.X, -Game1.viewport.Y), new Rectangle?(new Rectangle(132, 20, 8, 8)), new Color(1, 1, 1, 0.5f), 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.001f);
                 }
@@ -253,21 +243,21 @@ namespace Swim
                     e.SpriteBatch.Draw(Game1.mouseCursors, new Vector2(Game1.viewport.Width, Game1.viewport.Height) / 2 - new Vector2(78, 31) / 2, new Rectangle?(new Rectangle(353, 1649, 78, 31)), new Color(255, 255, 255, abigailTicks.Value > 30 * 3 ? (int)Math.Round(255 * (abigailTicks.Value - 90) / 60f) : 255), 0f, Vector2.Zero, 3f, SpriteEffects.None, 0.99f);
                 }
                 if (abigailTicks.Value > 0 && abigailTicks.Value < 80000 / 16 && Config.ShowOxygenBar)
-                    SwimUtils.MakeOxygenBar((80000 / 16) - abigailTicks.Value, 80000 / 16);
-                e.SpriteBatch.Draw(ModEntry.OxygenBarTexture.Value, new Vector2((int)Math.Round(Game1.viewport.Width * 0.13f), 100), Color.White);
+                    MakeOxygenBar((80000 / 16) - abigailTicks.Value, 80000 / 16);
+                e.SpriteBatch.Draw(OxygenBarTexture.Value, new Vector2((int)Math.Round(Game1.viewport.Width * 0.13f), 100), Color.White);
                 return;
             }
-            int maxOx = SwimUtils.MaxOxygen();
-            if (ModEntry.oxygen.Value < maxOx && Config.ShowOxygenBar)
+            int maxOx = MaxOxygen();
+            if (oxygen.Value < maxOx && Config.ShowOxygenBar)
             {
-                SwimUtils.MakeOxygenBar(ModEntry.oxygen.Value, maxOx);
-                e.SpriteBatch.Draw(ModEntry.OxygenBarTexture.Value, new Vector2((int)Math.Round(Game1.viewport.Width * 0.13f), 100), Color.White);
+                MakeOxygenBar(oxygen.Value, maxOx);
+                e.SpriteBatch.Draw(OxygenBarTexture.Value, new Vector2((int)Math.Round(Game1.viewport.Width * 0.13f), 100), Color.White);
             }
         }
 
         public static void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
         {
-            ModEntry.setupModConfig();
+            setupModConfig();
             // load scuba gear
 
             /*
@@ -284,23 +274,23 @@ namespace Swim
 
             // fix dive maps
 
-            foreach (IContentPack contentPack in Helper.ContentPacks.GetOwned())
+            foreach (IContentPack contentPack in SHelper.ContentPacks.GetOwned())
             {
                 try
                 {
-                    Monitor.Log($"Reading content pack: {contentPack.Manifest.Name} {contentPack.Manifest.Version} from {contentPack.DirectoryPath}");
+                    SMonitor.Log($"Reading content pack: {contentPack.Manifest.Name} {contentPack.Manifest.Version} from {contentPack.DirectoryPath}");
                     DiveMapData data = contentPack.ReadJsonFile<DiveMapData>("content.json");
                     foreach (DiveMap map in data.Maps)
                     {
-                        if (map.Features.Contains("FixWaterTiles") && !ModEntry.changeLocations.ContainsKey(map.Name))
+                        if (map.Features.Contains("FixWaterTiles") && !changeLocations.ContainsKey(map.Name))
                         {
-                            ModEntry.changeLocations.Add(map.Name, false);
+                            changeLocations.Add(map.Name, false);
                         }
                     }
                 }
                 catch
                 {
-                    Monitor.Log($"couldn't read content.json in content pack {contentPack.Manifest.Name}", LogLevel.Warn);
+                    SMonitor.Log($"couldn't read content.json in content pack {contentPack.Manifest.Name}", LogLevel.Warn);
                 }
             }
 
@@ -314,81 +304,81 @@ namespace Swim
 
         private static void LoadBreatheSound()
         {
-            string filePath = Path.Combine(Helper.DirectoryPath, "assets", "breathe.wav");
+            string filePath = Path.Combine(SHelper.DirectoryPath, "assets", "breathe.wav");
             if (File.Exists(filePath))
             {
                 breatheEffect.Value = SoundEffect.FromStream(new FileStream(filePath, FileMode.Open));
-                Monitor.Log("Loaded breathing sound.");
+                SMonitor.Log("Loaded breathing sound.");
             }
         }
 
         public static void GameLoop_DayStarted(object sender, DayStartedEventArgs e)
         {
-            foreach (KeyValuePair<string, DiveMap> kvp in ModEntry.diveMaps)
+            foreach (KeyValuePair<string, DiveMap> kvp in diveMaps)
             {
                 GameLocation location = Game1.getLocationFromName(kvp.Key);
                 if (location == null)
                 {
-                    Monitor.Log($"GameLocation {kvp.Key} not found in day started loop");
+                    SMonitor.Log($"GameLocation {kvp.Key} not found in day started loop");
                     continue;
                 }
                 if (kvp.Value.Features.Contains("OceanTreasure") || kvp.Value.Features.Contains("OceanResources") || kvp.Value.Features.Contains("Minerals"))
                 {
-                    Monitor.Log($"Clearing overlay objects from GameLocation {location.Name} ");
+                    SMonitor.Log($"Clearing overlay objects from GameLocation {location.Name} ");
                     location.overlayObjects.Clear();
                 }
                 if (kvp.Value.Features.Contains("OceanTreasure"))
                 {
-                    Monitor.Log($"Adding ocean treasure to GameLocation {location.Name} ");
-                    SwimMaps.AddOceanTreasure(location);
+                    SMonitor.Log($"Adding ocean treasure to GameLocation {location.Name} ");
+                    AddOceanTreasure(location);
                 }
                 if (kvp.Value.Features.Contains("OceanResources"))
                 {
-                    Monitor.Log($"Adding ocean forage to GameLocation {location.Name} ");
-                    SwimMaps.AddOceanForage(location);
+                    SMonitor.Log($"Adding ocean forage to GameLocation {location.Name} ");
+                    AddOceanForage(location);
                 }
                 if (kvp.Value.Features.Contains("Minerals"))
                 {
-                    Monitor.Log($"Adding minerals to GameLocation {location.Name} ");
-                    SwimMaps.AddMinerals(location);
+                    SMonitor.Log($"Adding minerals to GameLocation {location.Name} ");
+                    AddMinerals(location);
                 }
                 if (kvp.Value.Features.Contains("SmolFishies") || kvp.Value.Features.Contains("BigFishies") || kvp.Value.Features.Contains("Crabs"))
                 {
-                    Monitor.Log($"Clearing characters from GameLocation {location.Name} ");
+                    SMonitor.Log($"Clearing characters from GameLocation {location.Name} ");
                     location.characters.Clear();
                 }
                 if (kvp.Value.Features.Contains("SmolFishies"))
                 {
-                    Monitor.Log($"Adding smol fishies to GameLocation {location.Name} ");
-                    SwimMaps.AddFishies(location);
+                    SMonitor.Log($"Adding smol fishies to GameLocation {location.Name} ");
+                    AddFishies(location);
                 }
                 if (kvp.Value.Features.Contains("BigFishies"))
                 {
-                    Monitor.Log($"Adding big fishies to GameLocation {location.Name} ");
-                    SwimMaps.AddFishies(location, false);
+                    SMonitor.Log($"Adding big fishies to GameLocation {location.Name} ");
+                    AddFishies(location, false);
                 }
                 if (kvp.Value.Features.Contains("Crabs"))
                 {
-                    Monitor.Log($"Adding crabs to GameLocation {location.Name} ");
-                    SwimMaps.AddCrabs(location);
+                    SMonitor.Log($"Adding crabs to GameLocation {location.Name} ");
+                    AddCrabs(location);
                 }
                 if (kvp.Value.Features.Contains("WaterTiles"))
                 {
-                    Monitor.Log($"Adding water tiles to GameLocation {location.Name} ");
-                    SwimMaps.AddWaterTiles(location);
+                    SMonitor.Log($"Adding water tiles to GameLocation {location.Name} ");
+                    AddWaterTiles(location);
                 }
                 if (kvp.Value.Features.Contains("Underwater"))
                 {
-                    Monitor.Log($"Removing water tiles from GameLocation {location.Name} ");
-                    SwimMaps.RemoveWaterTiles(location);
+                    SMonitor.Log($"Removing water tiles from GameLocation {location.Name} ");
+                    RemoveWaterTiles(location);
                 }
             }
             if (Game1.getLocationFromName("Custom_ScubaCave") != null && !Game1.player.mailReceived.Contains("ScubaMask"))
             {
-                SwimMaps.AddScubaChest(Game1.getLocationFromName("Custom_ScubaCave"), new Vector2(10, 14), "ScubaMask");
+                AddScubaChest(Game1.getLocationFromName("Custom_ScubaCave"), new Vector2(10, 14), "ScubaMask");
             }
-            ModEntry.marinerQuestionsWrongToday.Value = false;
-            ModEntry.oxygen.Value = SwimUtils.MaxOxygen();
+            marinerQuestionsWrongToday.Value = false;
+            oxygen.Value = MaxOxygen();
         }
 
         public static void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
@@ -399,7 +389,7 @@ namespace Swim
             }
             if (false && e.Button == SButton.Q)
             {
-                SwimUtils.SeaMonsterSay("The quick brown fox jumped over the slow lazy dog.");
+                SeaMonsterSay("The quick brown fox jumped over the slow lazy dog.");
             }
 
             if (Game1.activeClickableMenu != null && Game1.player.currentLocation.Name == "Custom_ScubaCrystalCave" && Game1.player.currentLocation.lastQuestionKey?.StartsWith("SwimMod_Mariner_") == true)
@@ -416,7 +406,7 @@ namespace Swim
                     return;
                 Game1.player.currentLocation.lastQuestionKey = "";
 
-                SwimDialog.OldMarinerDialogue(resps[resp].responseKey);
+                OldMarinerDialogue(resps[resp].responseKey);
                 return;
             }
 
@@ -427,19 +417,19 @@ namespace Swim
                 //Game1.player.currentLocation.overlayObjects[Game1.player.getTileLocation() + new Vector2(0, 1)] = new Chest(0, new List<Item>() { Helper.Value.Input.IsDown(SButton.LeftShift) ? (Item)(new StardewValley.Object(434, 1)) : (new Hat(ModEntry.scubaMaskID.Value)) }, Game1.player.getTileLocation() + new Vector2(0, 1), false, 0);
             }
 
-            if (e.Button == Config.DiveKey && Game1.activeClickableMenu == null && !Game1.player.UsingTool && ModEntry.diveMaps.ContainsKey(Game1.player.currentLocation.Name) && ModEntry.diveMaps[Game1.player.currentLocation.Name].DiveLocations.Count > 0)
+            if (e.Button == Config.DiveKey && Game1.activeClickableMenu == null && !Game1.player.UsingTool && diveMaps.ContainsKey(Game1.player.currentLocation.Name) && diveMaps[Game1.player.currentLocation.Name].DiveLocations.Count > 0)
             {
-                Monitor.Log("Trying to dive!");
+                SMonitor.Log("Trying to dive!");
                 Point pos = Game1.player.TilePoint;
                 Location loc = new Location(pos.X, pos.Y);
 
-                if (!SwimUtils.IsInWater())
+                if (!IsInWater())
                 {
-                    Monitor.Log("Not in water");
+                    SMonitor.Log("Not in water");
                     return;
                 }
 
-                DiveMap dm = ModEntry.diveMaps[Game1.player.currentLocation.Name];
+                DiveMap dm = diveMaps[Game1.player.currentLocation.Name];
                 DiveLocation diveLocation = null;
                 foreach (DiveLocation dl in dm.DiveLocations)
                 {
@@ -452,33 +442,33 @@ namespace Swim
 
                 if (diveLocation == null)
                 {
-                    Monitor.Log($"No dive destination for this point on this map", LogLevel.Debug);
+                    SMonitor.Log($"No dive destination for this point on this map", LogLevel.Debug);
                     return;
                 }
 
                 if (Game1.getLocationFromName(diveLocation.OtherMapName) == null)
                 {
-                    Monitor.Log($"Can't find destination map named {diveLocation.OtherMapName}", LogLevel.Warn);
+                    SMonitor.Log($"Can't find destination map named {diveLocation.OtherMapName}", LogLevel.Warn);
                     return;
                 }
 
-                Monitor.Log($"warping to {diveLocation.OtherMapName}", LogLevel.Debug);
-                SwimUtils.DiveTo(diveLocation);
+                SMonitor.Log($"warping to {diveLocation.OtherMapName}", LogLevel.Debug);
+                DiveTo(diveLocation);
                 return;
             }
 
             if (e.Button == Config.SwimKey && Game1.activeClickableMenu == null && (!Game1.player.swimming.Value || !Config.ReadyToSwim) && !isJumping.Value)
             {
                 Config.ReadyToSwim = !Config.ReadyToSwim;
-                Helper.WriteConfig(Config);
-                Monitor.Log($"Ready to swim: {Config.ReadyToSwim}");
+                SHelper.WriteConfig(Config);
+                SMonitor.Log($"Ready to swim: {Config.ReadyToSwim}");
                 return;
             }
 
             if (e.Button == Config.SwimSuitKey && Game1.activeClickableMenu == null)
             {
                 Config.SwimSuitAlways = !Config.SwimSuitAlways;
-                Helper.WriteConfig(Config);
+                SHelper.WriteConfig(Config);
                 if (!Game1.player.swimming.Value)
                 {
                     if (!Config.SwimSuitAlways)
@@ -496,7 +486,7 @@ namespace Swim
             if (Game1.player?.currentLocation == null || Game1.farmEvent != null || Game1.CurrentEvent != null || Game1.eventUp || !Game1.displayFarmer || Game1.player.position == null)
                 return;
 
-            ModEntry.isUnderwater.Value = SwimUtils.IsMapUnderwater(Game1.player.currentLocation.Name);
+            isUnderwater.Value = IsMapUnderwater(Game1.player.currentLocation.Name);
 
             if (Game1.player.currentLocation.Name == "Custom_ScubaAbigailCave")
             {
@@ -505,15 +495,15 @@ namespace Swim
 
             if (Game1.activeClickableMenu == null)
             {
-                SwimUtils.updateOxygenValue();
+                updateOxygenValue();
             }
 
-            if (SwimUtils.IsWearingScubaGear())
+            if (IsWearingScubaGear())
             {
                 ticksWearingScubaGear.Value++;
                 if (Config.BreatheSound && breatheEffect.Value != null && (lastBreatheSound.Value == 0 || ticksWearingScubaGear.Value - lastBreatheSound.Value > 6000 / 16))
                 {
-                    Monitor.Log("Playing breathe sound");
+                    SMonitor.Log("Playing breathe sound");
                     lastBreatheSound.Value = ticksWearingScubaGear.Value;
                     breatheEffect.Value.Play(0.25f * Game1.options.soundVolumeLevel, 0f, 0f);
                 }
@@ -538,7 +528,7 @@ namespace Swim
                 {
                     Game1.player.position.Value = endJumpLoc.Value;
                     isJumping.Value = false;
-                    if (ModEntry.willSwim.Value)
+                    if (willSwim.Value)
                     {
                         Game1.player.currentLocation.playSound("waterSlosh");
                         Game1.player.swimming.Value = true;
@@ -553,13 +543,13 @@ namespace Swim
                 Game1.player.position.Value = new Vector2(endJumpLoc.Value.X - (difx * completed), endJumpLoc.Value.Y - (dify * completed) - (float)Math.Sin(completed * Math.PI) * 64);
                 return;
             }
-            if (!SwimUtils.CanSwimHere())
+            if (!CanSwimHere())
                 return;
 
-            if (Game1.player.swimming.Value && !SwimUtils.IsInWater() && !isJumping.Value)
+            if (Game1.player.swimming.Value && !IsInWater() && !isJumping.Value)
             {
-                Monitor.Log("Swimming out of water");
-                ModEntry.willSwim.Value = false;
+                SMonitor.Log("Swimming out of water");
+                willSwim.Value = false;
                 Game1.player.freezePause = Config.JumpTimeInMilliseconds;
                 Game1.player.currentLocation.playSound("dwop");
                 Game1.player.currentLocation.playSound("waterSlosh");
@@ -572,11 +562,11 @@ namespace Swim
                     Game1.player.changeOutOfSwimSuit();
             }
 
-            if (!Game1.player.swimming.Value && SwimUtils.IsInWater() && !isJumping.Value)
+            if (!Game1.player.swimming.Value && IsInWater() && !isJumping.Value)
             {
-                Monitor.Log("In water not swimming");
+                SMonitor.Log("In water not swimming");
 
-                ModEntry.willSwim.Value = true;
+                willSwim.Value = true;
                 Game1.player.freezePause = Config.JumpTimeInMilliseconds;
                 Game1.player.currentLocation.playSound("dwop");
                 isJumping.Value = true;
@@ -585,7 +575,7 @@ namespace Swim
 
 
                 Game1.player.swimming.Value = true;
-                if (!Game1.player.bathingClothes.Value && !SwimUtils.IsWearingScubaGear() && !Config.NoAutoSwimSuit)
+                if (!Game1.player.bathingClothes.Value && !IsWearingScubaGear() && !Config.NoAutoSwimSuit)
                     Game1.player.changeIntoSwimsuit();
             }
 
@@ -601,7 +591,7 @@ namespace Swim
 
             if (Game1.player.swimming.Value)
             {
-                if (SwimUtils.IsWearingScubaGear() && !Config.SwimSuitAlways && SwimUtils.IsMapUnderwater(Game1.currentLocation.Name))
+                if (IsWearingScubaGear() && !Config.SwimSuitAlways && IsMapUnderwater(Game1.currentLocation.Name))
                 {
                     if(Game1.player.bathingClothes.Value)
                     {
@@ -612,13 +602,13 @@ namespace Swim
                     Game1.player.changeIntoSwimsuit();
 
 
-                if (Game1.player.boots.Value != null && ModEntry.scubaFinsID.Value != "" && Game1.player.boots.Value.ItemId == ModEntry.scubaFinsID.Value)
+                if (Game1.player.boots.Value != null && scubaFinsID.Value != "" && Game1.player.boots.Value.ItemId == scubaFinsID.Value)
                 {
                     string buffId = "Swim_ScubaFinsSpeed";
                     Buff buff = Game1.player.buffs.AppliedBuffs.Values.FirstOrDefault((Buff p) => p.Equals(buffId));
                     if (buff == null)
                     {
-                        buff = new Buff(buffId, "Scuba Fins", Helper.Translation.Get("scuba-fins"), 50, Game1.content.Load<Texture2D>("TileSheets/BuffsIcons"), 9, new BuffEffects() {Speed = {2}});
+                        buff = new Buff(buffId, "Scuba Fins", SHelper.Translation.Get("scuba-fins"), 50, Game1.content.Load<Texture2D>("TileSheets/BuffsIcons"), 9, new BuffEffects() {Speed = {2}});
 
                         Game1.player.applyBuff(buff);
                     }
@@ -632,7 +622,7 @@ namespace Swim
                 Game1.player.setRunning(false);
             }
 
-            if(!SwimUtils.isSafeToTryJump())
+            if(!isSafeToTryJump())
             {
                 return;
             }
@@ -642,7 +632,7 @@ namespace Swim
             bool didJump = tryToJumpInDirection(direction); // Try to jump in the direction the player is facing
 
             // If we didn't just jump, 
-            if (!didJump && Helper.Input.IsDown(Config.ManualJumpButton) && SwimUtils.isMouseButton(Config.ManualJumpButton) && Config.EnableClickToSwim)
+            if (!didJump && SHelper.Input.IsDown(Config.ManualJumpButton) && isMouseButton(Config.ManualJumpButton) && Config.EnableClickToSwim)
             {
                 try
                 {
@@ -654,7 +644,7 @@ namespace Swim
                     if (isClickingOnOppositeTerrain || !Config.MustClickOnOppositeTerrain)
                     {
                         // Set the direction to the direction of the cursor relative to the player.
-                        direction = SwimUtils.GetDirection(Game1.player.TilePoint.X, Game1.player.TilePoint.Y, xTile, yTile);
+                        direction = GetDirection(Game1.player.TilePoint.X, Game1.player.TilePoint.Y, xTile, yTile);
 
                         if(direction != Game1.player.FacingDirection)
                         {
@@ -669,7 +659,7 @@ namespace Swim
                 catch
                 {
                     // Assiming this happens when the game can't get the mouse position
-                    Monitor.Log("Error in manual direction calculation!");
+                    SMonitor.Log("Error in manual direction calculation!");
                 }
             }
         }
@@ -679,7 +669,7 @@ namespace Swim
             double distance = -1;
             int maxDistance = 0;
 
-            List<Vector2> tiles = SwimUtils.GetTilesInDirection(5, direction);
+            List<Vector2> tiles = GetTilesInDirection(5, direction);
             Vector2 jumpLocation = Vector2.Zero;
 
             switch (direction)
@@ -704,16 +694,16 @@ namespace Swim
 
             //Monitor.Log("Distance: " + distance);
 
-            bool nextToLand = Game1.player.swimming.Value && !SwimUtils.IsWaterTile(tiles[tiles.Count - 2]) && distance < maxDistance;
+            bool nextToLand = Game1.player.swimming.Value && !IsWaterTile(tiles[tiles.Count - 2]) && distance < maxDistance;
 
 
             bool nextToWater = false;
             try
             {
                 nextToWater = !Game1.player.swimming.Value &&
-                    !SwimUtils.IsTilePassable(Game1.player.currentLocation, new Location((int)tiles.Last().X, (int)tiles.Last().Y), Game1.viewport) &&
+                    !IsTilePassable(Game1.player.currentLocation, new Location((int)tiles.Last().X, (int)tiles.Last().Y), Game1.viewport) &&
                     (Game1.player.currentLocation.waterTiles[(int)tiles.Last().X, (int)tiles.Last().Y]
-                        || SwimUtils.IsWaterTile(tiles[tiles.Count - 2]))
+                        || IsWaterTile(tiles[tiles.Count - 2]))
                     && distance < maxDistance;
             }
             catch
@@ -725,7 +715,7 @@ namespace Swim
 
             if (nextToLand || nextToWater)
             {
-                Monitor.Log("okay to jump");
+                SMonitor.Log("okay to jump");
                 for (int i = 0; i < tiles.Count; i++)
                 {
                     Vector2 tileV = tiles[i];
@@ -734,10 +724,10 @@ namespace Swim
                     try
                     {
                         Tile tile = Game1.player.currentLocation.map.GetLayer("Buildings").PickTile(new Location((int)tileV.X * Game1.tileSize, (int)tileV.Y * Game1.tileSize), Game1.viewport.Size);
-                        isWater = SwimUtils.IsWaterTile(tileV);
-                        isPassable = (nextToLand && !isWater && SwimUtils.IsTilePassable(Game1.player.currentLocation, new Location((int)tileV.X, (int)tileV.Y), Game1.viewport)) || (nextToWater && isWater && (tile == null || tile.TileIndex == 76));
-                        Monitor.Log($"Trying {tileV} is passable {isPassable} isWater {isWater}");
-                        if (!SwimUtils.IsTilePassable(Game1.player.currentLocation, new Location((int)tileV.X, (int)tileV.Y), Game1.viewport) && !isWater && nextToLand)
+                        isWater = IsWaterTile(tileV);
+                        isPassable = (nextToLand && !isWater && IsTilePassable(Game1.player.currentLocation, new Location((int)tileV.X, (int)tileV.Y), Game1.viewport)) || (nextToWater && isWater && (tile == null || tile.TileIndex == 76));
+                        SMonitor.Log($"Trying {tileV} is passable {isPassable} isWater {isWater}");
+                        if (!IsTilePassable(Game1.player.currentLocation, new Location((int)tileV.X, (int)tileV.Y), Game1.viewport) && !isWater && nextToLand)
                         {
                             //Monitor.Value.Log($"Nixing {tileV}");
                             jumpLocation = Vector2.Zero;
@@ -745,18 +735,18 @@ namespace Swim
                     }
                     catch (Exception ex)
                     {
-                        Monitor.Log("" + ex);
+                        SMonitor.Log("" + ex);
                     }
                     if (nextToLand && !isWater && isPassable)
                     {
-                        Monitor.Log($"Jumping to {tileV}");
+                        SMonitor.Log($"Jumping to {tileV}");
                         jumpLocation = tileV;
 
                     }
 
                     if (nextToWater && isWater && isPassable)
                     {
-                        Monitor.Log($"Jumping to {tileV}");
+                        SMonitor.Log($"Jumping to {tileV}");
                         jumpLocation = tileV;
 
                     }
@@ -774,7 +764,7 @@ namespace Swim
                 //Monitor.Value.Log("got swim location");
                 if (Game1.player.swimming.Value)
                 {
-                    ModEntry.willSwim.Value = false;
+                    willSwim.Value = false;
                     Game1.player.swimming.Value = false;
                     Game1.player.freezePause = Config.JumpTimeInMilliseconds;
                     Game1.player.currentLocation.playSound("dwop");
@@ -782,8 +772,8 @@ namespace Swim
                 }
                 else
                 {
-                    ModEntry.willSwim.Value = true;
-                    if (!SwimUtils.IsWearingScubaGear() && !Config.NoAutoSwimSuit)
+                    willSwim.Value = true;
+                    if (!IsWearingScubaGear() && !Config.NoAutoSwimSuit)
                         Game1.player.changeIntoSwimsuit();
 
                     Game1.player.freezePause = Config.JumpTimeInMilliseconds;
@@ -822,29 +812,29 @@ namespace Swim
 
             Vector2 v = Vector2.Zero;
             float yrt = (float)(1 / Math.Sqrt(2));
-            if (Helper.Input.IsDown(SButton.Up) || Helper.Input.IsDown(SButton.RightThumbstickUp))
+            if (SHelper.Input.IsDown(SButton.Up) || SHelper.Input.IsDown(SButton.RightThumbstickUp))
             {
-                if (Helper.Input.IsDown(SButton.Right) || Helper.Input.IsDown(SButton.RightThumbstickRight))
+                if (SHelper.Input.IsDown(SButton.Right) || SHelper.Input.IsDown(SButton.RightThumbstickRight))
                     v = new Vector2(yrt, -yrt);
-                else if (Helper.Input.IsDown(SButton.Left) || Helper.Input.IsDown(SButton.RightThumbstickLeft))
+                else if (SHelper.Input.IsDown(SButton.Left) || SHelper.Input.IsDown(SButton.RightThumbstickLeft))
                     v = new Vector2(-yrt, -yrt);
                 else
                     v = new Vector2(0, -1);
             }
-            else if (Helper.Input.IsDown(SButton.Down) || Helper.Input.IsDown(SButton.RightThumbstickDown))
+            else if (SHelper.Input.IsDown(SButton.Down) || SHelper.Input.IsDown(SButton.RightThumbstickDown))
             {
-                if (Helper.Input.IsDown(SButton.Right) || Helper.Input.IsDown(SButton.RightThumbstickRight))
+                if (SHelper.Input.IsDown(SButton.Right) || SHelper.Input.IsDown(SButton.RightThumbstickRight))
                     v = new Vector2(yrt, yrt);
-                else if (Helper.Input.IsDown(SButton.Left) || Helper.Input.IsDown(SButton.RightThumbstickLeft))
+                else if (SHelper.Input.IsDown(SButton.Left) || SHelper.Input.IsDown(SButton.RightThumbstickLeft))
                     v = new Vector2(-yrt, yrt);
                 else
                     v = new Vector2(0, 1);
             }
-            else if (Helper.Input.IsDown(SButton.Right) || Helper.Input.IsDown(SButton.RightThumbstickDown))
+            else if (SHelper.Input.IsDown(SButton.Right) || SHelper.Input.IsDown(SButton.RightThumbstickDown))
                 v = new Vector2(1, 0);
-            else if (Helper.Input.IsDown(SButton.Left) || Helper.Input.IsDown(SButton.RightThumbstickLeft))
+            else if (SHelper.Input.IsDown(SButton.Left) || SHelper.Input.IsDown(SButton.RightThumbstickLeft))
                 v = new Vector2(-1, 0);
-            else if (Helper.Input.IsDown(SButton.MouseLeft))
+            else if (SHelper.Input.IsDown(SButton.MouseLeft))
             {
                 float x = Game1.viewport.X + Game1.getOldMouseX() - Game1.player.position.X;
                 float y = Game1.viewport.Y + Game1.getOldMouseY() - Game1.player.position.Y;
@@ -934,12 +924,12 @@ namespace Swim
             {
                 Game1.player.currentLocation.projectiles.Add(new AbigailProjectile(1, 3, 0, 0, 0, v.X * 6, v.Y * 6, new Vector2(Game1.player.StandingPixel.X - 24, Game1.player.StandingPixel.Y - 48), "Cowboy_monsterDie", null, "Cowboy_gunshot", false, true, Game1.player.currentLocation, Game1.player, shotItemId: "(O)382"));
                 lastProjectile.Value = Game1.player.millisecondsPlayed;
-                Game1.player.faceDirection(SwimUtils.GetDirection(0, 0, v.X, v.Y));
+                Game1.player.faceDirection(GetDirection(0, 0, v.X, v.Y));
             }
 
             foreach (SButton button in abigailShootButtons)
             {
-                if (Helper.Input.IsDown(button))
+                if (SHelper.Input.IsDown(button))
                 {
                     switch (button)
                     {
@@ -971,7 +961,7 @@ namespace Swim
                 if (!Game1.player.mailReceived.Contains("ScubaFins"))
                 {
                     Game1.playSound("Cowboy_Secret");
-                    SwimMaps.AddScubaChest(Game1.player.currentLocation, new Vector2(8, 8), "ScubaFins");
+                    AddScubaChest(Game1.player.currentLocation, new Vector2(8, 8), "ScubaFins");
                 }
 
                 Game1.player.currentLocation.setMapTile(8, 16, 91, "Buildings", null);
@@ -986,7 +976,7 @@ namespace Swim
                 Game1.player.currentLocation.setMapTile(8, 18, 139, "Buildings", null);
                 Game1.player.currentLocation.setMapTile(9, 18, 140, "Buildings", null);
                 Game1.player.currentLocation.setMapTile(10, 18, 141, "Buildings", null);
-                SwimMaps.AddWaterTiles(Game1.player.currentLocation);
+                AddWaterTiles(Game1.player.currentLocation);
             }
             else
             {
@@ -1022,9 +1012,9 @@ namespace Swim
 
             string locationName = Game1.player.currentLocation.Name == "BeachNightMarket" ? "Beach" : Game1.player.currentLocation.Name;
 
-            if (ModEntry.diveMaps.ContainsKey(locationName))
+            if (diveMaps.ContainsKey(locationName))
             {
-                dm = ModEntry.diveMaps[locationName];
+                dm = diveMaps[locationName];
             }
             else
             {
@@ -1036,14 +1026,14 @@ namespace Swim
                 Game1.player.position.Value = new Vector2(Game1.player.position.X, Game1.viewport.Y + Game1.viewport.Height - 17);
                 if (dm != null)
                 {
-                    Monitor.Log($"Trying to warp from ({edgePos.X}, {edgePos.Y})");
+                    SMonitor.Log($"Trying to warp from ({edgePos.X}, {edgePos.Y})");
                     EdgeWarp edge = dm.EdgeWarps.Find((x) => x.ThisMapEdge == "Bottom" && x.FirstTile <= edgePos.X && x.LastTile >= edgePos.X);
                     if (edge != null)
                     {
-                        Point pos = SwimUtils.GetEdgeWarpDestination(edgePos.X, edge);
+                        Point pos = GetEdgeWarpDestination(edgePos.X, edge);
                         if (pos != Point.Zero)
                         {
-                            Monitor.Log("warping south");
+                            SMonitor.Log("warping south");
                             Game1.warpFarmer(edge.OtherMapName, pos.X, pos.Y, false);
                             return true;
                         }
@@ -1056,14 +1046,14 @@ namespace Swim
 
                 if (dm != null)
                 {
-                    Monitor.Log($"Trying to warp from ({edgePos.X}, {edgePos.Y})");
+                    SMonitor.Log($"Trying to warp from ({edgePos.X}, {edgePos.Y})");
                     EdgeWarp edge = dm.EdgeWarps.Find((x) => x.ThisMapEdge == "Top" && x.FirstTile <= edgePos.X && x.LastTile >= edgePos.X);
                     if (edge != null)
                     {
-                        Point pos = SwimUtils.GetEdgeWarpDestination(edgePos.X, edge);
+                        Point pos = GetEdgeWarpDestination(edgePos.X, edge);
                         if (pos != Point.Zero)
                         {
-                            Monitor.Log("warping north");
+                            SMonitor.Log("warping north");
                             Game1.warpFarmer(edge.OtherMapName, pos.X, pos.Y, false);
                             return true;
                         }
@@ -1076,14 +1066,14 @@ namespace Swim
 
                 if (dm != null)
                 {
-                    Monitor.Log($"Trying to warp from ({edgePos.X}, {edgePos.Y})");
+                    SMonitor.Log($"Trying to warp from ({edgePos.X}, {edgePos.Y})");
                     EdgeWarp edge = dm.EdgeWarps.Find((x) => x.ThisMapEdge == "Right" && x.FirstTile <= edgePos.Y && x.LastTile >= edgePos.Y);
                     if (edge != null)
                     {
-                        Point pos = SwimUtils.GetEdgeWarpDestination(edgePos.Y, edge);
+                        Point pos = GetEdgeWarpDestination(edgePos.Y, edge);
                         if (pos != Point.Zero)
                         {
-                            Monitor.Log("warping east");
+                            SMonitor.Log("warping east");
                             Game1.warpFarmer(edge.OtherMapName, pos.X, pos.Y, false);
                             return true;
                         }
@@ -1096,14 +1086,14 @@ namespace Swim
 
                 if (dm != null)
                 {
-                    Monitor.Log($"Trying to warp from ({edgePos.X}, {edgePos.Y})");
+                    SMonitor.Log($"Trying to warp from ({edgePos.X}, {edgePos.Y})");
                     EdgeWarp edge = dm.EdgeWarps.Find((x) => x.ThisMapEdge == "Left" && x.FirstTile <= edgePos.Y && x.LastTile >= edgePos.Y);
                     if (edge != null)
                     {
-                        Point pos = SwimUtils.GetEdgeWarpDestination(edgePos.Y, edge);
+                        Point pos = GetEdgeWarpDestination(edgePos.Y, edge);
                         if (pos != Point.Zero)
                         {
-                            Monitor.Log("warping west");
+                            SMonitor.Log("warping west");
                             Game1.warpFarmer(edge.OtherMapName, pos.X, pos.Y, false);
                             return true;
                         }
