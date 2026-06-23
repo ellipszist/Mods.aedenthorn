@@ -258,7 +258,7 @@ namespace DoorFurniture
             }
         }
 
-        [HarmonyPatch(typeof(Furniture), nameof(Furniture.drawInMenu), new Type[] { typeof(SpriteBatch), typeof(Vector2), typeof(float), typeof(float), typeof(float), typeof(StackDrawType), typeof(Color), typeof(bool), })]
+        [HarmonyPatch(typeof(Furniture), nameof(Furniture.drawInMenu), new Type[] { typeof(SpriteBatch), typeof(Vector2), typeof(float), typeof(float), typeof(float), typeof(StackDrawType), typeof(Color), typeof(bool) })]
         public static class Furniture_drawInMenu_Patch
         {
             public static void Postfix(Furniture __instance, SpriteBatch spriteBatch, Vector2 location, float scaleSize, float transparency, float layerDepth)

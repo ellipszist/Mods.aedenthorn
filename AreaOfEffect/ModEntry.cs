@@ -6,14 +6,10 @@ using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Buildings;
-using StardewValley.GameData.Buildings;
-using StardewValley.Menus;
-using StardewValley.TerrainFeatures;
-using System;
+using StardewValley.GameData.Tools;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using xTile;
 
 namespace AreaOfEffect
 {
@@ -26,11 +22,13 @@ namespace AreaOfEffect
         public static ModConfig Config;
         public static ModEntry context;
         public const string dictPath = "aedenthorn.AreaOfEffect/dict";
+        public const string testWand = "aedenthorn.AreaOfEffect/wand";
+        public const string chargesKey = "aedenthorn.AreaOfEffect/charges";
 
         private static List<Building> ToRemove = new();
 
 
-        public static Dictionary<string, AOEToolData> TutorialDict
+        public static Dictionary<string, AOEToolData> ToolDict
         {
             get
             {
@@ -56,6 +54,11 @@ namespace AreaOfEffect
 
         }
 
+        public override object GetApi()
+        {
+            return new AOEAPI();
+        }
+
         private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
         {
             if (!Config.ModEnabled)
@@ -64,9 +67,9 @@ namespace AreaOfEffect
             {
                 if (Context.IsWorldReady)
                 {
+                    SHelper.GameContent.InvalidateCache(dictPath);
                     if (e.Button == SButton.NumPad7)
                     {
-                        Game1.activeClickableMenu = new CustomTutorialMenu(new());
                     }
                 }
             }
@@ -78,13 +81,78 @@ namespace AreaOfEffect
                 return;
             if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
             {
-                e.LoadFrom(() => new Dictionary<string, AOEToolData>(), AssetLoadPriority.Exclusive);
+                e.LoadFrom(() => new Dictionary<string, AOEToolData>()
+                {
+                    {
+                        testWand,
+                        new()
+                        {
+                            MaxCharges = 10,
+                            RechargeItem = "768",
+                            RechargeAmount = 10,
+                            MaxDistance = 10,
+                            Radius = 3,
+                            CastSound = "fireball",
+                            RechargeSound = "cowboy_powerup",
+                            Sprites = new()
+                            {
+                                new()
+                                {
+                                    Type = SpriteType.Fire
+                                }
+                            },
+                            Effects = new()
+                            {
+                                new()
+                                {
+                                    EffectType = AOEEffectType.Damage,
+                                    Affected = new()
+                                    {
+                                        AOEAffectedType.Monster
+                                    },
+                                    Value = 20
+                                },
+                                new()
+                                {
+                                    EffectType = AOEEffectType.Burn,
+                                    Affected = new()
+                                    {
+                                        AOEAffectedType.Twig,
+                                        AOEAffectedType.Weed,
+                                        AOEAffectedType.Grass,
+                                        AOEAffectedType.Tree
+                                    }
+                                }
+                            }
+                        }
+                    },
+                },
+                AssetLoadPriority.Exclusive);
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo("Data/Tools"))
+            {
+                e.Edit((IAssetData data) =>
+                {
+                    var dict = data.AsDictionary<string, ToolData>().Data;
+                    dict[testWand] = new()
+                    {
+                        ClassName = "GenericTool",
+                        Name = "Test Wand",
+                        DisplayName = "Wand of Fireball",
+                        Description = "Shoots exploding balls of fire. Recharge with solar essence.",
+                        Texture = testWand,
+                        SpriteIndex = 0
+                    };
+                });
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo(testWand))
+            {
+                e.LoadFromModFile<Texture2D>("assets/weapon.png", AssetLoadPriority.Exclusive);
             }
         }
 
         private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
         {
-            //SMonitor.Log(string.Join(",", Game1.objectData.Where(kvp => kvp.Value.Type == "Arch").Select(kvp => kvp.Key)));
             var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (configMenu is not null)
             {

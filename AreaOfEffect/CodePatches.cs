@@ -2,62 +2,143 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
-using StardewValley.Audio;
-using StardewValley.Buildings;
-using StardewValley.Locations;
-using StardewValley.TerrainFeatures;
+using StardewValley.Extensions;
+using StardewValley.Menus;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using xTile.Dimensions;
-using xTile.Layers;
-using xTile.Tiles;
+using Object = StardewValley.Object;
 
 namespace AreaOfEffect
 {
     public partial class ModEntry
     {
 
-        //[HarmonyPatch(typeof(GiantCrop), nameof(GiantCrop.draw), new Type[] { typeof(SpriteBatch) })]
-        //public class GiantCrop_draw_Patch
-        //{
-        //    public static void Postfix(GiantCrop __instance)
-        //    {
-        //        if (__instance.Location is null)
-        //            return;
-        //        if (!Config.ModEnabled || !TutorialDict.ContainsKey(__instance.Id))
-        //        {
-        //            if (__instance.modData.ContainsKey(builtAtKey) && __instance.Location.getBuildingAt(__instance.Tile) is Building old)
-        //            {
-        //                __instance.Location.buildings.Remove(old);
-        //            }
-        //            return;
-        //        }
-        //        if (__instance.Location.buildings.FirstOrDefault(i => (int)__instance.Tile.X == i.tileX.Value && (int)__instance.Tile.Y  == i.tileY.Value) is Building exists)
-        //        {
-        //            if(exists.buildingType.Value == modPrefix + __instance.Id)
-        //            {
-        //                return;
-        //            }
-        //            __instance.Location.buildings.Remove(exists);
-        //        }
-        //        else if (__instance.modData.TryGetValue(builtAtKey, out var str) && __instance.Location.buildings.FirstOrDefault(i => str == $"{i.tileX},{i.tileY}") is Building moved && moved.buildingType.Value == modPrefix + __instance.Id)
-        //        {
-        //            moved.tileX.Value = (int)__instance.Tile.X;
-        //            moved.tileY.Value = (int)__instance.Tile.Y;
-        //            return;
-        //        }
-        //        Building b = new Building(modPrefix + __instance.Id, __instance.Tile);
-        //        b.FinishConstruction(true);
-        //        b.LoadFromBuildingData(b.GetData(), false, true);
-        //        b.load();
-        //        b.modData[cropKey] = __instance.Id;
-        //        __instance.modData[builtAtKey] = $"{__instance.Tile.X},{__instance.Tile.Y}";
-        //        __instance.Location.buildings.Add(b);
-        //    }
-        //}
+        [HarmonyPatch(typeof(Tool), nameof(Tool.DoFunction))]
+        public class Tool_DoFunction_Patch
+        {
+            public static void Postfix(Tool __instance)
+            {
+                if (!Config.ModEnabled || __instance.lastUser is not Farmer f || !ToolDict.TryGetValue(__instance.ItemId, out var data))
+                {
+                    return;
+                }
+                var charges = GetCurrentCharges(__instance, data.MaxCharges);
+                if (charges <= 0)
+                {
+                    Game1.showRedMessage(string.Format(SHelper.Translation.Get("x-no-charges-y"), __instance.DisplayName, ItemRegistry.GetDataOrErrorItem(data.RechargeItem).DisplayName));
+                    return;
+                }
+                var tile = GetTargetTile(f, data);
+                ApplyAOEEffect(f.currentLocation, f, tile, data);
+                SetCurrentCharges(__instance, --charges);
+                if (!string.IsNullOrEmpty(data.CastSound))
+                {
+                    f.currentLocation.playSound(data.CastSound, f.Tile);
+                }
+            }
+        }
 
+        [HarmonyPatch(typeof(Tool), nameof(Tool.doesShowTileLocationMarker))]
+        public class Tool_doesShowTileLocationMarker_Patch
+        {
+            public static bool Prefix(Tool __instance)
+            {
+                if (!Config.ModEnabled || !ToolDict.TryGetValue(__instance.ItemId, out var data))
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(Tool), nameof(Tool.canBeDropped))]
+        public class Tool_canBeDropped_Patch
+        {
+            public static bool Prefix(Tool __instance, ref bool __result)
+            {
+                if (!Config.ModEnabled || !ToolDict.TryGetValue(__instance.ItemId, out var data))
+                {
+                    return true;
+                }
+                __result = true;
+                return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(Item), nameof(Item.canBeTrashed))]
+        public class Item_canBeTrashed_Patch
+        {
+            public static bool Prefix(Item __instance, ref bool __result)
+            {
+                if (!Config.ModEnabled || __instance is not Tool t || !ToolDict.TryGetValue(t.ItemId, out var data))
+                {
+                    return true;
+                }
+                __result = true;
+                return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(Farmer), nameof(Farmer.draw), new Type[] { typeof(SpriteBatch) })]
+        public class Farmer_draw_Patch
+        {
+            public static void Postfix(Farmer __instance, SpriteBatch b)
+            {
+                if (!Config.ModEnabled || Game1.activeClickableMenu != null || Game1.eventUp || !__instance.IsLocalPlayer || __instance.CurrentTool is not Tool tool || !ToolDict.TryGetValue(tool.ItemId, out var data))
+                {
+                    return;
+                }
+                Vector2 mouse_position = Utility.PointToVector2(Game1.getMousePosition()) + new Vector2((float)Game1.viewport.X, (float)Game1.viewport.Y);
+                Vector2 draw_location = Game1.GlobalToLocal(Game1.viewport, GetTargetTile(__instance, data) * 64);
+                b.Draw(Game1.mouseCursors, draw_location, new Microsoft.Xna.Framework.Rectangle?(Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 29, -1, -1)), Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, draw_location.Y / 10000f);
+            }
+        }
+
+        [HarmonyPatch(typeof(Tool), nameof(Tool.drawInMenu), new Type[] { typeof(SpriteBatch), typeof(Vector2), typeof(float), typeof(float), typeof(float), typeof(StackDrawType), typeof(Color), typeof(bool) })]
+        public static class Tool_drawInMenu_Patch
+        {
+            public static void Postfix(Tool __instance, SpriteBatch spriteBatch, Vector2 location, float scaleSize, float transparency, float layerDepth, StackDrawType drawStackNumber, Color color, bool drawShadow)
+            {
+                if (!Config.ModEnabled || !ToolDict.TryGetValue(__instance.ItemId, out var data) || data.MaxCharges <= 0)
+                {
+                    return;
+                }
+                spriteBatch.Draw(Game1.mouseCursors, location + new Vector2(4f, 44f), new Rectangle?(new Rectangle(297, 420, 14, 5)), Color.White * 0.5f * transparency, 0f, Vector2.Zero, 4f, SpriteEffects.None, layerDepth + 0.0001f);
+                spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)location.X + 8, (int)location.Y + 64 - 16, (int)((float)GetCurrentCharges(__instance, data.MaxCharges) / (float)data.MaxCharges * 48f), 8), Color.DodgerBlue * 0.7f * transparency);
+            }
+        }
+
+        [HarmonyPatch(typeof(InventoryMenu), nameof(InventoryMenu.draw), new Type[] { typeof(SpriteBatch), typeof(int), typeof(int), typeof(int) })]
+        public static class InventoryMenu_draw_Patch
+        {
+            public static void Prefix(InventoryMenu __instance)
+            {
+                if (!Config.ModEnabled || Game1.player.CursorSlotItem is not Object held || !held.HasTypeObject() || !Config.RechargeButton.JustPressed())
+                {
+                    return;
+                }
+                var mousePos = Game1.getMousePosition(true);
+                for (int i = 0; i < __instance.inventory.Count; i++)
+                {
+                    var cc = __instance.inventory[i];
+                    if (cc.containsPoint(mousePos.X, mousePos.Y))
+                    {
+                        if (__instance.actualInventory.Count > i && __instance.actualInventory[i] is Tool tool && ToolDict.TryGetValue(tool.ItemId, out var data) && data.RechargeItem == held.ItemId)
+                        {
+                            var current = GetCurrentCharges(tool, data.MaxCharges);
+                            if (current >= data.MaxCharges)
+                                return;
+                            int increase = Math.Min(data.MaxCharges - current, held.Stack * data.RechargeAmount);
+                            held.Stack -= (int)Math.Ceiling(increase / (float)data.RechargeAmount);
+                            SetCurrentCharges(tool, current + increase);
+                            if(!string.IsNullOrEmpty(data.RechargeSound))
+                                Game1.playSound(data.RechargeSound);
+                        }
+                        return;
+                    }
+                }
+
+            }
+        }
         //[HarmonyPatch(typeof(Building), nameof(Building.draw), new Type[] { typeof(SpriteBatch) })]
         //public class Building_draw_Patch
         //{

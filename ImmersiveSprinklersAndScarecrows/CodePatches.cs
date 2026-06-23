@@ -252,7 +252,7 @@ namespace ImmersiveSprinklersAndScarecrows
                         if (s.heldObject.Value is Object obj && obj.ItemId == "913" && obj.heldObject.Value is Chest chest && chest.Items.Count > 0 && chest.Items[0] is Item f)
                         {
                             var radius = s.GetModifiedRadiusForSprinkler();
-                            if (GetSprinklerTiles(s.TileLocation, radius).Contains(tileVector) && dirt.plant(Crop.ResolveSeedId(f.ItemId, location), who, true))
+                            if (GetSprinklerTiles(s.TileLocation, radius).Contains(tileVector) && dirt.plant(f.ItemId, who, true))
                             {
                                 f.Stack--;
                                 if (f.Stack <= 0)
