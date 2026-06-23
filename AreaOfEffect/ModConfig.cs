@@ -9,6 +9,8 @@ namespace AreaOfEffect
     {
         public bool ModEnabled { get; set; } = true;
         public KeybindList RechargeButton { get; set; } = new(SButton.MouseMiddle);
+        public KeybindList CastButton { get; set; } = new(new Keybind(SButton.LeftControl, SButton.MouseLeft));
+        public string SetEffectSound { get; set; } = "cowboy_explosion";
         public bool Debug { get; set; } = false;
     }
 }

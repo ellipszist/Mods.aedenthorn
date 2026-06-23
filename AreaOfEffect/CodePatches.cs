@@ -17,19 +17,28 @@ namespace AreaOfEffect
         {
             public static void Postfix(Tool __instance)
             {
-                if (!Config.ModEnabled || __instance.lastUser is not Farmer f || !ToolDict.TryGetValue(__instance.ItemId, out var data))
+                if (!Config.ModEnabled || __instance.lastUser is not Farmer f || !TryGetTool(__instance, out var tdata))
                 {
                     return;
                 }
-                var charges = GetCurrentCharges(__instance, data.MaxCharges);
-                if (charges <= 0)
+                if (tdata.MaxCharges > 0)
                 {
-                    Game1.showRedMessage(string.Format(SHelper.Translation.Get("x-no-charges-y"), __instance.DisplayName, ItemRegistry.GetDataOrErrorItem(data.RechargeItem).DisplayName));
+                    var charges = GetCurrentCharges(__instance, tdata.MaxCharges);
+                    if(charges <= 0)
+                    {
+                        Game1.showRedMessage(string.Format(SHelper.Translation.Get("x-no-charges-y"), __instance.DisplayName, ItemRegistry.GetDataOrErrorItem(tdata.RechargeItem).DisplayName));
+                        return;
+                    }
+                    SetCurrentCharges(__instance, --charges);
+                }
+                if(!TryGetEffect(__instance, out var data))
+                {
+                    Game1.showRedMessage(string.Format(SHelper.Translation.Get("x-no-spell"), __instance.DisplayName));
                     return;
                 }
-                var tile = GetTargetTile(f, data);
+                var tile = GetTargetTile(f, data, tdata.MaxDistance);
                 ApplyAOEEffect(f.currentLocation, f, tile, data);
-                SetCurrentCharges(__instance, --charges);
+                
                 if (!string.IsNullOrEmpty(data.CastSound))
                 {
                     f.currentLocation.playSound(data.CastSound, f.Tile);
@@ -42,7 +51,7 @@ namespace AreaOfEffect
         {
             public static bool Prefix(Tool __instance)
             {
-                if (!Config.ModEnabled || !ToolDict.TryGetValue(__instance.ItemId, out var data))
+                if (!Config.ModEnabled || !TryGetEffect(__instance, out var data))
                 {
                     return true;
                 }
@@ -55,7 +64,7 @@ namespace AreaOfEffect
         {
             public static bool Prefix(Tool __instance, ref bool __result)
             {
-                if (!Config.ModEnabled || !ToolDict.TryGetValue(__instance.ItemId, out var data))
+                if (!Config.ModEnabled || !TryGetEffect(__instance, out var data))
                 {
                     return true;
                 }
@@ -69,7 +78,7 @@ namespace AreaOfEffect
         {
             public static bool Prefix(Item __instance, ref bool __result)
             {
-                if (!Config.ModEnabled || __instance is not Tool t || !ToolDict.TryGetValue(t.ItemId, out var data))
+                if (!Config.ModEnabled || __instance is not Tool t || !TryGetEffect(t, out var data))
                 {
                     return true;
                 }
@@ -83,12 +92,12 @@ namespace AreaOfEffect
         {
             public static void Postfix(Farmer __instance, SpriteBatch b)
             {
-                if (!Config.ModEnabled || Game1.activeClickableMenu != null || Game1.eventUp || !__instance.IsLocalPlayer || __instance.CurrentTool is not Tool tool || !ToolDict.TryGetValue(tool.ItemId, out var data))
+                if (!Config.ModEnabled || Game1.activeClickableMenu != null || Game1.eventUp || !__instance.IsLocalPlayer || __instance.CurrentTool is not Tool tool || !TryGetTool(tool, out var tdata) || !TryGetEffect(tool, out var data))
                 {
                     return;
                 }
                 Vector2 mouse_position = Utility.PointToVector2(Game1.getMousePosition()) + new Vector2((float)Game1.viewport.X, (float)Game1.viewport.Y);
-                Vector2 draw_location = Game1.GlobalToLocal(Game1.viewport, GetTargetTile(__instance, data) * 64);
+                Vector2 draw_location = Game1.GlobalToLocal(Game1.viewport, GetTargetTile(__instance, data, tdata.MaxDistance) * 64);
                 b.Draw(Game1.mouseCursors, draw_location, new Microsoft.Xna.Framework.Rectangle?(Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 29, -1, -1)), Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, draw_location.Y / 10000f);
             }
         }
@@ -98,12 +107,12 @@ namespace AreaOfEffect
         {
             public static void Postfix(Tool __instance, SpriteBatch spriteBatch, Vector2 location, float scaleSize, float transparency, float layerDepth, StackDrawType drawStackNumber, Color color, bool drawShadow)
             {
-                if (!Config.ModEnabled || !ToolDict.TryGetValue(__instance.ItemId, out var data) || data.MaxCharges <= 0)
+                if (!Config.ModEnabled || !TryGetTool(__instance, out var data) || data.MaxCharges <= 0)
                 {
                     return;
                 }
                 spriteBatch.Draw(Game1.mouseCursors, location + new Vector2(4f, 44f), new Rectangle?(new Rectangle(297, 420, 14, 5)), Color.White * 0.5f * transparency, 0f, Vector2.Zero, 4f, SpriteEffects.None, layerDepth + 0.0001f);
-                spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)location.X + 8, (int)location.Y + 64 - 16, (int)((float)GetCurrentCharges(__instance, data.MaxCharges) / (float)data.MaxCharges * 48f), 8), Color.DodgerBlue * 0.7f * transparency);
+                spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)location.X + 8, (int)location.Y + 64 - 16, (int)((float)GetCurrentCharges(__instance, data.MaxCharges) / (float)data.MaxCharges * 48f), 8), data.ChargeColor * 0.7f * transparency);
             }
         }
 
@@ -122,7 +131,7 @@ namespace AreaOfEffect
                     var cc = __instance.inventory[i];
                     if (cc.containsPoint(mousePos.X, mousePos.Y))
                     {
-                        if (__instance.actualInventory.Count > i && __instance.actualInventory[i] is Tool tool && ToolDict.TryGetValue(tool.ItemId, out var data) && data.RechargeItem == held.ItemId)
+                        if (__instance.actualInventory.Count > i && __instance.actualInventory[i] is Tool tool && TryGetTool(tool, out var data) && data.RechargeItem == held.ItemId)
                         {
                             var current = GetCurrentCharges(tool, data.MaxCharges);
                             if (current >= data.MaxCharges)

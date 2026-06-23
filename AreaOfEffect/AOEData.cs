@@ -3,6 +3,18 @@ using System.Collections.Generic;
 
 namespace AreaOfEffect
 {
+    public enum SpellDirection
+    {
+        Up, 
+        UpRight, 
+        Right,
+        DownRight,
+        Down, 
+        DownLeft, 
+        Left,
+        UpLeft,
+        None
+    }
     public enum SpriteType
     {
         Ice,
@@ -55,9 +67,21 @@ namespace AreaOfEffect
         public string RechargeItem { get; set; }
         public int RechargeAmount { get; set; } = 1;
         public int MaxDistance { get; set; }
+        public string RechargeSound { get; set; }
+        public string Type { get; set; }
+        public Color ChargeColor { get; set; } = Color.White;
+    }
+    public class AOESpellData
+    {
+        public string Type { get; set; }
+        public List<SpellDirection> Sequence { get; set; }
+
+    }
+    public class AOEEffectData
+    {
+        public string CastSound { get; set; }
+        public List<string> EffectTypes { get; set; }
         public int Radius { get; set; }
-        public string CastSound { get; set; } 
-        public string RechargeSound { get; set; } 
         public ProjectileData Projectile { get; set; }
         public List<SpriteData> Sprites { get; set; }
         public List<AOEEffect> Effects { get; set; }

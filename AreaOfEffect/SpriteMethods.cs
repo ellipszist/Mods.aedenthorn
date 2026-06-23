@@ -43,7 +43,7 @@ namespace AreaOfEffect
         {
             if (!Context.IsWorldReady || l is null)
                 return;
-            var t = new TemporaryAnimatedSprite("LooseSprites\\Cursors", new Microsoft.Xna.Framework.Rectangle(276, 1985, 12, 11), tile * 64 + new Vector2(32f, -32f) + new Vector2((float)Game1.random.Next(-32, 32), (float)Game1.random.Next(-16, 16)), false, 0f, Color.White)
+            var t = new TemporaryAnimatedSprite("LooseSprites\\Cursors", new Microsoft.Xna.Framework.Rectangle(276, 1985, 12, 11), tile * 64 + new Vector2((float)Game1.random.Next(-16, 16), (float)Game1.random.Next(-16, 16)), false, 0f, Color.White)
             {
                 interval = 30f,
                 totalNumberOfLoops = 15,

@@ -14,7 +14,7 @@ namespace AreaOfEffect
     public partial class ModEntry
     {
 
-        public static void ApplyAOEEffect(GameLocation l, Farmer who, Vector2 center, AOEToolData data)
+        public static void ApplyAOEEffect(GameLocation l, Farmer who, Vector2 center, AOEEffectData data)
         {
             if (!Context.IsWorldReady || l is null || data is null)
                 return;
@@ -41,16 +41,16 @@ namespace AreaOfEffect
 
         public static List<Vector2> GetTiles(Vector2 tileLocation, int radius)
         {
-            Vector2 start = tileLocation + new Vector2(-1, -1) * (radius - 2);
-            Vector2 position = tileLocation + new Vector2(0.5f, 0.5f);
+            Vector2 start = tileLocation + new Vector2(-1, -1) * radius;
+            Vector2 position = tileLocation;
             List<Vector2> list = new();
-            var diameter = (radius - 1) * 2;
+            var diameter = (radius) * 2;
             for (int x = 0; x < diameter; x++)
             {
                 for (int y = 0; y < diameter; y++)
                 {
                     Vector2 tile = start + new Vector2(x, y);
-                    var distance = (int)Math.Ceiling(Vector2.Distance(position, tile));
+                    var distance = (int)Math.Round(Vector2.Distance(position, tile));
                     if (distance <= radius)
                         list.Add(tile);
                 }
@@ -213,10 +213,10 @@ namespace AreaOfEffect
             }
         }
 
-        public static Vector2 GetTargetTile(Farmer f, AOEToolData t)
+        public static Vector2 GetTargetTile(Farmer f, AOEEffectData t, int maxDistance)
         {
             var target = Game1.currentCursorTile;
-            int d = t.MaxDistance;
+            int d = maxDistance;
             float m = Vector2.Distance(target, f.Tile);
             if(m > d)
             {
@@ -265,6 +265,45 @@ namespace AreaOfEffect
                     g.reduceBy(4, true);
                 }
             }
+        }
+
+        public static bool TryGetTool(Tool __instance, out AOEToolData data)
+        {
+            var key = __instance.ItemId;
+            if(!ToolDict.TryGetValue(__instance.ItemId, out data))
+            {
+                data = null;
+                return false;
+            }
+            return true;
+        }
+        public static bool TryGetEffect(Tool __instance, out AOEEffectData data)
+        {
+            var key = __instance.ItemId;
+            if (__instance.modData.TryGetValue(effectKey, out key))
+            {
+            }
+            else if(TryGetTool(__instance, out var tdata) && tdata.Type != null)
+            {
+                key = tdata.Type;
+            }
+            else
+            {
+                data = null;
+                return false;
+            }
+            if (!EffectDict.TryGetValue(key, out data))
+            {
+                data = null;
+                return false;
+            }
+            return true;
+        }
+
+        public static void SetEffect(Tool tool, string type)
+        {
+            Game1.playSound(Config.SetEffectSound);
+            tool.modData[effectKey] = type;
         }
     }
 }

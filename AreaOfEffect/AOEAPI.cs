@@ -11,7 +11,7 @@ namespace AreaOfEffect
     {
         public void ApplyAOEEffect(GameLocation l, Farmer who, Vector2 center, string type)
         {
-            if(!ModEntry.ToolDict.TryGetValue(type, out var data))
+            if(!ModEntry.EffectDict.TryGetValue(type, out var data))
             {
                 ModEntry.SMonitor.Log($"AOE Effect for {type} not found!", StardewModdingAPI.LogLevel.Warn);
                 return;

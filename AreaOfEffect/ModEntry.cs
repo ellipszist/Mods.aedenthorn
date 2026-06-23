@@ -1,14 +1,18 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using Newtonsoft.Json;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Buildings;
 using StardewValley.GameData.Tools;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 
 namespace AreaOfEffect
@@ -21,18 +25,36 @@ namespace AreaOfEffect
         public static IModHelper SHelper;
         public static ModConfig Config;
         public static ModEntry context;
-        public const string dictPath = "aedenthorn.AreaOfEffect/dict";
+        public const string toolsPath = "aedenthorn.AreaOfEffect/tools";
+        public const string effectsPath = "aedenthorn.AreaOfEffect/effects";
+        public const string spellsPath = "aedenthorn.AreaOfEffect/spells";
         public const string testWand = "aedenthorn.AreaOfEffect/wand";
+        public const string testWand2 = "aedenthorn.AreaOfEffect/wand2";
         public const string chargesKey = "aedenthorn.AreaOfEffect/charges";
+        public const string effectKey = "aedenthorn.AreaOfEffect/effect";
 
-        private static List<Building> ToRemove = new();
 
+        public static Dictionary<string, AOEEffectData> EffectDict
+        {
+            get
+            {
+                return SHelper.GameContent.Load<Dictionary<string, AOEEffectData>>(effectsPath);
+            }
+        }
 
         public static Dictionary<string, AOEToolData> ToolDict
         {
             get
             {
-                return SHelper.GameContent.Load<Dictionary<string, AOEToolData>>(dictPath);
+                return SHelper.GameContent.Load<Dictionary<string, AOEToolData>>(toolsPath);
+            }
+        }
+
+        public static Dictionary<string, AOESpellData> SpellDict
+        {
+            get
+            {
+                return SHelper.GameContent.Load<Dictionary<string, AOESpellData>>(spellsPath);
             }
         }
 
@@ -47,11 +69,32 @@ namespace AreaOfEffect
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
             helper.Events.Content.AssetRequested += Content_AssetRequested;
             helper.Events.Input.ButtonPressed += Input_ButtonPressed;
+            helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
 
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
 
+        }
+
+        private void Input_ButtonsChanged(object sender, ButtonsChangedEventArgs e)
+        {
+            if (!Config.ModEnabled)
+                return;
+            if (Context.IsPlayerFree)
+            {
+                if (Config.CastButton.JustPressed() && Game1.player.CurrentTool is Tool t && TryGetTool(t, out var data) && data.Type == null)
+                {
+                    Game1.activeClickableMenu = new CastSpellMenu(t);
+                    foreach(var k in Config.CastButton.Keybinds)
+                    {
+                        foreach (var b in k.Buttons)
+                        {
+                            SHelper.Input.Suppress(b);
+                        }
+                    }
+                }
+            }
         }
 
         public override object GetApi()
@@ -67,9 +110,10 @@ namespace AreaOfEffect
             {
                 if (Context.IsWorldReady)
                 {
-                    SHelper.GameContent.InvalidateCache(dictPath);
-                    if (e.Button == SButton.NumPad7)
+                    SHelper.GameContent.InvalidateCache(effectsPath);
+                    if (e.Button == SButton.NumPad4)
                     {
+                        File.WriteAllText(Path.Combine(SHelper.DirectoryPath, "test.json"), JsonConvert.SerializeObject(EffectDict, Formatting.Indented));
                     }
                 }
             }
@@ -79,7 +123,7 @@ namespace AreaOfEffect
         {
             if (!Config.ModEnabled)
                 return;
-            if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
+            if (e.NameWithoutLocale.IsEquivalentTo(toolsPath))
             {
                 e.LoadFrom(() => new Dictionary<string, AOEToolData>()
                 {
@@ -87,13 +131,61 @@ namespace AreaOfEffect
                         testWand,
                         new()
                         {
-                            MaxCharges = 10,
+                            MaxCharges = 100,
                             RechargeItem = "768",
                             RechargeAmount = 10,
                             MaxDistance = 10,
-                            Radius = 3,
-                            CastSound = "fireball",
+                            Type = "Fireball",
                             RechargeSound = "cowboy_powerup",
+                            ChargeColor = Color.OrangeRed
+                        }
+                    },
+                    {
+                        testWand2,
+                        new()
+                        {
+                            MaxCharges = 100,
+                            RechargeItem = "768",
+                            RechargeAmount = 10,
+                            MaxDistance = 10,
+                            RechargeSound = "cowboy_powerup",
+                            ChargeColor = Color.CornflowerBlue
+                        }
+                    },
+                },
+                AssetLoadPriority.Exclusive);
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo(spellsPath))
+            {
+                e.LoadFrom(() => new Dictionary<string, AOESpellData>()
+                {
+                    {
+                        "Fireball",
+                        new()
+                        {
+                            Type = "Fireball",
+                            Sequence = new()
+                            {
+                                SpellDirection.Up,
+                                SpellDirection.DownRight,
+                                SpellDirection.UpRight,
+                                SpellDirection.Down
+                            }
+                        }
+                    },
+                },
+                AssetLoadPriority.Exclusive);
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo(effectsPath))
+            {
+                e.LoadFrom(() => new Dictionary<string, AOEEffectData>()
+                {
+                    {
+                        "Fireball",
+                        new()
+                        {
+                            Radius = 5,
+                            CastSound = "fireball",
                             Sprites = new()
                             {
                                 new()
@@ -140,6 +232,15 @@ namespace AreaOfEffect
                         Name = "Test Wand",
                         DisplayName = "Wand of Fireball",
                         Description = "Shoots exploding balls of fire. Recharge with solar essence.",
+                        Texture = testWand,
+                        SpriteIndex = 0
+                    };
+                    dict[testWand2] = new()
+                    {
+                        ClassName = "GenericTool",
+                        Name = "Test Wand 2",
+                        DisplayName = "Magic Wand",
+                        Description = "Casts spells. Recharge with solar essence.",
                         Texture = testWand,
                         SpriteIndex = 0
                     };
