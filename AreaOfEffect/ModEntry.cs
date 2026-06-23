@@ -131,7 +131,7 @@ namespace AreaOfEffect
             {
                 if (Context.IsWorldReady)
                 {
-                    //SHelper.GameContent.InvalidateCache(spellsPath);
+                    SHelper.GameContent.InvalidateCache(spellsPath);
                     if (e.Button == SButton.NumPad4)
                     {
                         File.WriteAllText(Path.Combine(SHelper.DirectoryPath, "test.json"), JsonConvert.SerializeObject(EffectDict, Formatting.Indented));
@@ -197,6 +197,22 @@ namespace AreaOfEffect
                         }
                     },
                     {
+                        "IceStorm",
+                        new()
+                        {
+                            Type = "IceStorm",
+                            Sound = "frozen",
+                            DisplayName = "Ice Storm",
+                            Sequence = new()
+                            {
+                                SpellDirection.UpLeft,
+                                SpellDirection.UpRight,
+                                SpellDirection.DownRight,
+                                SpellDirection.DownLeft
+                            }
+                        }
+                    },
+                    {
                         "Heal",
                         new()
                         {
@@ -211,6 +227,23 @@ namespace AreaOfEffect
                                 SpellDirection.UpRight,
                                 SpellDirection.DownRight,
                                 SpellDirection.DownLeft
+                            }
+                        }
+                    },
+                    {
+                        "Deluge",
+                        new()
+                        {
+                            Type = "Deluge",
+                            Sound = "thunder",
+                            DisplayName = "Deluge",
+                            Sequence = new()
+                            {
+                                SpellDirection.DownLeft,
+                                SpellDirection.Down,
+                                SpellDirection.Right,
+                                SpellDirection.Up,
+                                SpellDirection.UpLeft
                             }
                         }
                     },
@@ -261,6 +294,44 @@ namespace AreaOfEffect
                         }
                     },
                     {
+                        "IceStorm",
+                        new()
+                        {
+                            Radius = 3,
+                            CastSound = "frozen",
+                            Sprites = new()
+                            {
+                                new()
+                                {
+                                    Type = SpriteType.Ice
+                                }
+                            },
+                            Effects = new()
+                            {
+                                new()
+                                {
+                                    EffectType = AOEEffectType.Damage,
+                                    Affected = new()
+                                    {
+                                        AOEAffectedType.Monster,
+                                        AOEAffectedType.Farmer
+                                    },
+                                    Value = 10
+                                },
+                                new()
+                                {
+                                    EffectType = AOEEffectType.Buff,
+                                    Affected = new()
+                                    {
+                                        AOEAffectedType.Monster,
+                                        AOEAffectedType.Farmer
+                                    },
+                                    Value = "19"
+                                }
+                            }
+                        }
+                    },
+                    {
                         "Heal",
                         new()
                         {
@@ -284,6 +355,33 @@ namespace AreaOfEffect
                                         AOEAffectedType.Farmer
                                     },
                                     Value = 20
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "Deluge",
+                        new()
+                        {
+                            Radius = 5,
+                            CastSound = "thunder",
+                            Sprites = new()
+                            {
+                                new()
+                                {
+                                    Type = SpriteType.Fountain,
+                                    PerTile = false
+                                }
+                            },
+                            Effects = new()
+                            {
+                                new()
+                                {
+                                    EffectType = AOEEffectType.Water,
+                                    Affected = new()
+                                    {
+                                        AOEAffectedType.HoeDirt
+                                    }
                                 }
                             }
                         }

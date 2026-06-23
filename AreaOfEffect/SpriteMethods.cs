@@ -1,12 +1,7 @@
-﻿using HarmonyLib;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
-using StardewValley.Extensions;
-using StardewValley.TerrainFeatures;
-using System;
-using xTile.Tiles;
-using Object = StardewValley.Object;
+using System.Collections.Generic;
 
 namespace AreaOfEffect
 {
@@ -74,6 +69,35 @@ namespace AreaOfEffect
                 rotationChange = (float)Game1.random.Next(-5, 6) * 3.1415927f / 256f
             };
             l.TemporarySprites.Add(t);
+        }
+        public static void CreateFountain(GameLocation l, Vector2 tile, Farmer who, AOEEffectData data, SpriteData sdata)
+        {
+            if (!Context.IsWorldReady || l is null)
+                return;
+            int id = (int)(tile.X * 4000f + tile.Y * 10);
+            float layerDepth = 1;
+
+            float scale =  data.Radius / 1.6f;
+            var t = new TemporaryAnimatedSprite("TileSheets\\animations", new Rectangle(0, 2176, 320, 320), 60f, 4, 20, tile * 64 + new Vector2(32f, 32f) + new Vector2(-160f, -160f) * scale, false, false)
+            {
+                color = Color.White * 0.4f,
+                delayBeforeAnimationStart = sdata.Delay,
+                id = id,
+                layerDepth = layerDepth,
+                scale = scale
+            };
+            t.endFunction = new((int id) =>
+            {
+                foreach (var e in data.Effects)
+                {
+                    List<object> applied = new();
+                    foreach (var tile in GetTiles(tile, data.Radius))
+                    {
+                        ApplyEffectToTile(l, who, tile, e, applied);
+                    }
+                }
+            });
+            l.temporarySprites.Add(t);
         }
         public static void CreateSparkle(GameLocation l, Rectangle r, SpriteData data)
         {

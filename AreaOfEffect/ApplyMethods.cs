@@ -1,5 +1,4 @@
-﻿using HarmonyLib;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Monsters;
@@ -28,11 +27,20 @@ namespace AreaOfEffect
             }
             foreach (var s in data.Sprites)
             {
-                foreach (var tile in GetTiles(center, data.Radius))
+                if (s.PerTile)
                 {
-                    if (s.PerTile)
+                    foreach (var tile in GetTiles(center, data.Radius)) 
                     {
                         ApplySpriteToTile(l, tile, s);
+                    }
+                }
+                else
+                {
+                    switch (s.Type)
+                    {
+                        case SpriteType.Fountain:
+                            CreateFountain(l, center, who, data, s);
+                            break;
                     }
                 }
             }
@@ -121,13 +129,18 @@ namespace AreaOfEffect
                 case AOEAffectedType.ResourceClump:
                     break;
                 case AOEAffectedType.HoeDirt:
-                    if (l.terrainFeatures.TryGetValue(tile, out tf) && tf is Grass && !applied.Contains(tf))
+                    if (l.terrainFeatures.TryGetValue(tile, out tf) && tf is HoeDirt && !applied.Contains(tf))
                     {
                         ApplyTerrainFeatureEffect(l, who, tile, tf, effect);
                         applied.Add(tf);
                     }
                     break;
                 case AOEAffectedType.Crop:
+                    if (l.terrainFeatures.TryGetValue(tile, out tf) && tf is HoeDirt dirt && dirt.crop is not null && !applied.Contains(tf))
+                    {
+                        ApplyCropEffect(l, who, tile, dirt, effect);
+                        applied.Add(tf);
+                    }
                     break;
                 case AOEAffectedType.Grass:
                     if (l.terrainFeatures.TryGetValue(tile, out tf) && tf is Grass && !applied.Contains(tf))
@@ -165,6 +178,11 @@ namespace AreaOfEffect
                     }
                     break;
                 case AOEAffectedType.FruitTree:
+                    if (l.terrainFeatures.TryGetValue(tile, out tf) && tf is FruitTree && !applied.Contains(tf))
+                    {
+                        ApplyTerrainFeatureEffect(l, who, tile, tf, effect);
+                        applied.Add(tf);
+                    }
                     break;
                 
             }
@@ -193,6 +211,9 @@ namespace AreaOfEffect
                     break;
                 case AOEEffectType.Damage:
                     f.takeDamage((int)effect.Value, true, null);
+                    break;
+                case AOEEffectType.Buff:
+                    f.applyBuff((string)effect.Value);
                     break;
             }
         }
@@ -231,6 +252,16 @@ namespace AreaOfEffect
                     {
                         (tf as HoeDirt).plant((string)effect.Value, who, true);
                     }
+                    break;
+            }
+        }
+
+        public static void ApplyCropEffect(GameLocation l, Farmer who, Vector2 tile, HoeDirt dirt, AOEEffect effect)
+        {
+            switch (effect.EffectType)
+            {
+                case AOEEffectType.Grow:
+                    dirt.crop?.growCompletely();
                     break;
             }
         }

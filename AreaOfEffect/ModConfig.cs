@@ -11,6 +11,8 @@ namespace AreaOfEffect
         public KeybindList RechargeButton { get; set; } = new(SButton.MouseMiddle);
         public KeybindList CastButton { get; set; } = new(new Keybind(SButton.LeftControl, SButton.MouseLeft));
         public string SetEffectSound { get; set; } = "cowboy_explosion";
+        public bool AutoOpenUI { get; set; } = true;
+        public bool ResetSpell { get; set; } = true;
         public bool Debug { get; set; } = false;
     }
 }

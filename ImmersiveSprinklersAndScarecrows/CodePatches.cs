@@ -259,8 +259,9 @@ namespace ImmersiveSprinklersAndScarecrows
                                 {
                                     chest.Items.RemoveAt(0);
                                 }
-                                SetData(location, x / 64, y / 64, GetImmersiveData(s, true));
+                                SetData(location, (int)s.TileLocation.X, (int)s.TileLocation.Y, GetImmersiveData(s, true));
                                 update = true;
+                                break;
                             }
                         }
                     }

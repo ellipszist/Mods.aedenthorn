@@ -21,6 +21,18 @@ namespace AreaOfEffect
                 {
                     return;
                 }
+                if (!TryGetEffect(__instance, out var data))
+                {
+                    if (Config.AutoOpenUI)
+                    {
+                        Game1.activeClickableMenu = new CastSpellMenu(__instance);
+                    }
+                    else
+                    {
+                        Game1.showRedMessage(string.Format(SHelper.Translation.Get("x-no-spell"), __instance.DisplayName));
+                    }
+                    return;
+                }
                 if (tdata.MaxCharges > 0)
                 {
                     var charges = GetCurrentCharges(__instance, tdata.MaxCharges);
@@ -31,10 +43,9 @@ namespace AreaOfEffect
                     }
                     SetCurrentCharges(__instance, --charges);
                 }
-                if(!TryGetEffect(__instance, out var data))
+                if (Config.ResetSpell)
                 {
-                    Game1.showRedMessage(string.Format(SHelper.Translation.Get("x-no-spell"), __instance.DisplayName));
-                    return;
+                    __instance.modData.Remove(effectKey);
                 }
                 var tile = GetTargetTile(f, data, tdata.MaxDistance);
                 ApplyAOEEffect(f.currentLocation, f, tile, data);

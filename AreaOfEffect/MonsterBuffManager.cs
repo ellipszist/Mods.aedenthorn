@@ -16,6 +16,10 @@ namespace AreaOfEffect
         }
         public void AddBuff(string id)
         {
+            if(id == "19")
+            {
+                monster.stunTime.Value = 4000;
+            }
             buffs.Add(new Buff(id, null, null, -1, null, -1, null, null, null, null));
         }
         public bool Update(GameTime time)

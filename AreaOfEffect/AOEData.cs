@@ -20,6 +20,7 @@ namespace AreaOfEffect
         Ice,
         Fire,
         Smoke,
+        Fountain,
         Sparkle,
         Heart
     }
