@@ -1,15 +1,14 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.Buildings;
+using StardewValley.Buffs;
 using StardewValley.GameData.Tools;
-using System;
+using StardewValley.Monsters;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -33,6 +32,7 @@ namespace AreaOfEffect
         public const string chargesKey = "aedenthorn.AreaOfEffect/charges";
         public const string effectKey = "aedenthorn.AreaOfEffect/effect";
 
+        public static Dictionary<Monster, MonsterBuffManager> BuffDict = new();
 
         public static Dictionary<string, AOEEffectData> EffectDict
         {
@@ -67,6 +67,7 @@ namespace AreaOfEffect
             context = this;
 
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
+            helper.Events.GameLoop.UpdateTicked += GameLoop_UpdateTicked;
             helper.Events.Content.AssetRequested += Content_AssetRequested;
             helper.Events.Input.ButtonPressed += Input_ButtonPressed;
             helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
@@ -75,6 +76,26 @@ namespace AreaOfEffect
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
 
+        }
+
+        private void GameLoop_UpdateTicked(object sender, UpdateTickedEventArgs e)
+        {
+            if (BuffDict.Any())
+            {
+                if (!Context.IsWorldReady)
+                {
+                    BuffDict.Clear();
+                    return;
+                }
+                foreach (var key in BuffDict.Keys.ToArray())
+                {
+                    var m = BuffDict[key];
+                    if (m.Update(Game1.currentGameTime))
+                    {
+                        BuffDict.Remove(key);
+                    }
+                }
+            }
         }
 
         private void Input_ButtonsChanged(object sender, ButtonsChangedEventArgs e)
@@ -110,7 +131,7 @@ namespace AreaOfEffect
             {
                 if (Context.IsWorldReady)
                 {
-                    SHelper.GameContent.InvalidateCache(effectsPath);
+                    //SHelper.GameContent.InvalidateCache(spellsPath);
                     if (e.Button == SButton.NumPad4)
                     {
                         File.WriteAllText(Path.Combine(SHelper.DirectoryPath, "test.json"), JsonConvert.SerializeObject(EffectDict, Formatting.Indented));
@@ -164,12 +185,32 @@ namespace AreaOfEffect
                         new()
                         {
                             Type = "Fireball",
+                            Sound = "fireball",
+                            DisplayName = "Fireball",
                             Sequence = new()
                             {
                                 SpellDirection.Up,
                                 SpellDirection.DownRight,
                                 SpellDirection.UpRight,
                                 SpellDirection.Down
+                            }
+                        }
+                    },
+                    {
+                        "Heal",
+                        new()
+                        {
+                            Type = "Heal",
+                            Sound = "yoba",
+                            DisplayName = "Heal",
+                            Sequence = new()
+                            {
+                                SpellDirection.UpLeft,
+                                SpellDirection.UpRight,
+                                SpellDirection.DownRight,
+                                SpellDirection.UpRight,
+                                SpellDirection.DownRight,
+                                SpellDirection.DownLeft
                             }
                         }
                     },
@@ -184,7 +225,7 @@ namespace AreaOfEffect
                         "Fireball",
                         new()
                         {
-                            Radius = 5,
+                            Radius = 3,
                             CastSound = "fireball",
                             Sprites = new()
                             {
@@ -200,7 +241,8 @@ namespace AreaOfEffect
                                     EffectType = AOEEffectType.Damage,
                                     Affected = new()
                                     {
-                                        AOEAffectedType.Monster
+                                        AOEAffectedType.Monster,
+                                        AOEAffectedType.Farmer
                                     },
                                     Value = 20
                                 },
@@ -214,6 +256,34 @@ namespace AreaOfEffect
                                         AOEAffectedType.Grass,
                                         AOEAffectedType.Tree
                                     }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "Heal",
+                        new()
+                        {
+                            Radius = 3,
+                            CastSound = "yoba",
+                            Sprites = new()
+                            {
+                                new()
+                                {
+                                    Type = SpriteType.Heart
+                                }
+                            },
+                            Effects = new()
+                            {
+                                new()
+                                {
+                                    EffectType = AOEEffectType.Heal,
+                                    Affected = new()
+                                    {
+                                        AOEAffectedType.Monster,
+                                        AOEAffectedType.Farmer
+                                    },
+                                    Value = 20
                                 }
                             }
                         }

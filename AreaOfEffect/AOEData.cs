@@ -52,7 +52,6 @@ namespace AreaOfEffect
         Fertilize,
         Grow,
         Explode,
-        Debuff,
         Buff,
         Index,
         TileSheet,
@@ -73,14 +72,14 @@ namespace AreaOfEffect
     }
     public class AOESpellData
     {
+        public string DisplayName { get; set; }
         public string Type { get; set; }
+        public string Sound { get; set; }
         public List<SpellDirection> Sequence { get; set; }
-
     }
     public class AOEEffectData
     {
         public string CastSound { get; set; }
-        public List<string> EffectTypes { get; set; }
         public int Radius { get; set; }
         public ProjectileData Projectile { get; set; }
         public List<SpriteData> Sprites { get; set; }
@@ -128,6 +127,6 @@ namespace AreaOfEffect
     {
         public List<AOEAffectedType> Affected { get; set; }
         public AOEEffectType EffectType { get; set; }
-        public float Value { get; set; }
+        public object Value { get; set; }
     }
 }

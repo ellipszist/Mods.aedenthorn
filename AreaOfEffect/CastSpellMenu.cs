@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.BellsAndWhistles;
 using StardewValley.Menus;
 using System;
 using System.Collections.Generic;
@@ -17,8 +18,6 @@ namespace AreaOfEffect
         private List<int> ends = new();
         private List<SpellDirection> directions = new();
         private SpellDirection currentDirection = SpellDirection.None;
-        private Vector2 lastEnd;
-        private Vector2 lastOnTrack;
         private int lastOnTrackDot;
         private bool spelling;
 
@@ -33,13 +32,18 @@ namespace AreaOfEffect
             b.Draw(Game1.fadeToBlackRect, Game1.graphics.GraphicsDevice.Viewport.Bounds, Color.Black * 0.75f);
             if (directions.Any())
             {
-                for (int i = 0; i < directions.Count; i++)
+                //for (int i = 0; i < directions.Count; i++)
+                //{
+                //    b.DrawString(Game1.dialogueFont, directions[i].ToString(), new Vector2(0, i * 64), Color.White);
+                //}
+            }
+            if (spelling)
+            {
+                var spell = GetSpell(true);
+                if (spell != null)
                 {
-                    //b.DrawString(Game1.dialogueFont, directions[i].ToString(), new Vector2(0, i * 64), Color.White);
+                    SpriteText.drawStringWithScrollCenteredAt(b, spell.DisplayName, Game1.viewport.Width / 2, Game1.viewport.Height - 128);
                 }
-                var spell = GetSpell();
-                if(spell != null)
-                    b.DrawString(Game1.dialogueFont, spell, new Vector2(Game1.viewport.Width / 2, Game1.viewport.Height - 128), Color.White);
             }
             //b.DrawString(Game1.dialogueFont, currentDirection.ToString(), new Vector2(0, directions.Count * 64), Color.White);
             if (dots.Any())
@@ -88,7 +92,6 @@ namespace AreaOfEffect
                     ends.Clear();
                     directions.Clear();
                     dots.Add(lastPos);
-                    lastEnd = lastPos;
                     lastOnTrackDot = 0;
                     currentDirection = SpellDirection.None;
                     return;
@@ -135,7 +138,6 @@ namespace AreaOfEffect
                     directions.Add(currentDirection);
                     ends.Add(lastOnTrackDot);
                 }
-                lastEnd = dots[lastOnTrackDot];
                 lastOnTrackDot = dots.Count - 1;
                 currentDirection = newDirection;
             }
@@ -186,12 +188,19 @@ namespace AreaOfEffect
             if (!directions.Any())
                 return;
 
-            var spell = GetSpell();
-            ModEntry.SetEffect(tool, spell);
-            Game1.activeClickableMenu = null;
+            var spell = GetSpell(false);
+            if(spell != null)
+            {
+                var sound = spell.Sound;
+                if (!string.IsNullOrEmpty(sound))
+                    Game1.playSound(sound);
+
+                ModEntry.SetEffect(tool, spell.Type);
+                Game1.activeClickableMenu = null;
+            }
         }
 
-        private string GetSpell()
+        private AOESpellData GetSpell(bool spelling)
         {
             var dir = directions.ToList();
             if (spelling)
@@ -209,7 +218,7 @@ namespace AreaOfEffect
                             goto next;
                         }
                     }
-                    return kvp.Value.Type;
+                    return kvp.Value;
                 next:
                     continue;
                 }
