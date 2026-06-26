@@ -22,7 +22,7 @@ namespace CustomCraneGame
                     return;
                 }
                 var game = GetCraneGameAtCursor();
-                if (!game && afterDialogueBehavior.Method.Name.ToLower() != "trytostartcranegame")
+                if (!game && afterDialogueBehavior?.Method.Name.ToLower() != "trytostartcranegame")
                     return;
                 lastQuestion.Value = question;
                 lastBehavior.Value = afterDialogueBehavior;

@@ -64,7 +64,7 @@ namespace Swim
             SwimRestoresVitals = false;
 
             JumpTimeInMilliseconds = 500;
-            OxygenMult = 2;
+            OxygenMult = 1;
             BubbleMult = 1;
 
             AllowActionsWhileInSwimsuit = true;

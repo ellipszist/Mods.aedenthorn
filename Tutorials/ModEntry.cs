@@ -5,15 +5,9 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.Buildings;
-using StardewValley.GameData.Buildings;
-using StardewValley.Menus;
-using StardewValley.TerrainFeatures;
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using xTile;
 
 namespace Tutorials
 {
@@ -26,15 +20,21 @@ namespace Tutorials
         public static ModConfig Config;
         public static ModEntry context;
         public const string dictPath = "aedenthorn.Tutorials/dict";
+        public const string triggersPath = "aedenthorn.Tutorials/triggers";
 
-        private static List<Building> ToRemove = new();
-
-
-        public static Dictionary<string, TutorialData> TutorialDict
+        public static Dictionary<string, ITutorialData> TutorialDict
         {
             get
             {
-                return SHelper.GameContent.Load<Dictionary<string, TutorialData>>(dictPath);
+                return SHelper.GameContent.Load<Dictionary<string, ITutorialData>>(dictPath);
+            }
+        }
+
+        public static Dictionary<string, TutorialTrigger> TutorialTriggerDict
+        {
+            get
+            {
+                return SHelper.GameContent.Load<Dictionary<string, TutorialTrigger>>(triggersPath);
             }
         }
 
@@ -49,11 +49,28 @@ namespace Tutorials
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
             helper.Events.Content.AssetRequested += Content_AssetRequested;
             helper.Events.Input.ButtonPressed += Input_ButtonPressed;
+            helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
 
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
 
+        }
+        public override object GetApi()
+        {
+            return new TutorialAPI();
+        }
+        private void Input_ButtonsChanged(object sender, ButtonsChangedEventArgs e)
+        {
+            if (!Config.ModEnabled)
+                return;
+            if (Context.IsPlayerFree)
+            {
+                if (Config.OpenTutorialKey.JustPressed())
+                {
+                    OpenTutorial(null);
+                }
+            }
         }
 
         private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
@@ -66,7 +83,8 @@ namespace Tutorials
                 {
                     if (e.Button == SButton.NumPad7)
                     {
-                        Game1.activeClickableMenu = new CustomTutorialMenu(new());
+                        SHelper.GameContent.InvalidateCache(dictPath);
+                        Game1.activeClickableMenu = new CustomTutorialMenu();
                     }
                 }
             }
@@ -76,9 +94,223 @@ namespace Tutorials
         {
             if (!Config.ModEnabled)
                 return;
-            if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
+            if (e.NameWithoutLocale.StartsWith("aedenthorn.Tutorials/picture"))
             {
-                e.LoadFrom(() => new Dictionary<string, TutorialData>(), AssetLoadPriority.Exclusive);
+                e.LoadFromModFile<Texture2D>(e.NameWithoutLocale.ToString().Replace("aedenthorn.Tutorials/picture", "assets/"), AssetLoadPriority.Exclusive);
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo(triggersPath))
+            {
+                e.LoadFrom(() => new Dictionary<string, TutorialTrigger>(), AssetLoadPriority.Exclusive);
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
+            {
+                e.LoadFrom(() => new Dictionary<string, ITutorialData>()
+                {
+                    { "aedenthorn.Test/1", new TutorialData()
+                        {
+                            Title = "Farming Basics",
+                            Category = "Farming1",
+                            Frames = new() 
+                            {
+                                new TutorialFrame()
+                                {
+                                    Texture = "aedenthorn.Tutorials/picturefireball",
+                                    StartRect = new Rectangle(0, 0, 1970, 1109),
+                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
+                                    Frames = 4,
+                                    FrameRate = 60
+                                }
+                            }
+                        }
+                    },
+                    { "aedenthorn.Test/2", new TutorialData()
+                        {
+                            Title = "Farming Basics",
+                            Category = "Farming2",
+                            Frames = new() 
+                            {
+                                new TutorialFrame()
+                                {
+                                    Texture = "aedenthorn.Tutorials/picturefireball",
+                                    StartRect = new Rectangle(0, 0, 1970, 1109),
+                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
+                                    Frames = 4,
+                                    FrameRate = 60
+                                }
+                            }
+                        }
+                    },
+                    { "aedenthorn.Test/3", new TutorialData()
+                        {
+                            Title = "Farming Basics",
+                            Category = "Farming3",
+                            Frames = new() 
+                            {
+                                new TutorialFrame()
+                                {
+                                    Texture = "aedenthorn.Tutorials/picturefireball",
+                                    StartRect = new Rectangle(0, 0, 1970, 1109),
+                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
+                                    Frames = 4,
+                                    FrameRate = 60
+                                }
+                            }
+                        }
+                    },
+                    { "aedenthorn.Test/4", new TutorialData()
+                        {
+                            Title = "Farming Basics",
+                            Category = "Farming4",
+                            Frames = new() 
+                            {
+                                new TutorialFrame()
+                                {
+                                    Texture = "aedenthorn.Tutorials/picturefireball",
+                                    StartRect = new Rectangle(0, 0, 1970, 1109),
+                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
+                                    Frames = 4,
+                                    FrameRate = 60
+                                }
+                            }
+                        }
+                    },
+                    { "aedenthorn.Test/5", new TutorialData()
+                        {
+                            Title = "Farming Basics",
+                            Category = "Farming5",
+                            Frames = new() 
+                            {
+                                new TutorialFrame()
+                                {
+                                    Texture = "aedenthorn.Tutorials/picturefireball",
+                                    StartRect = new Rectangle(0, 0, 1970, 1109),
+                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
+                                    Frames = 4,
+                                    FrameRate = 60
+                                }
+                            }
+                        }
+                    },
+                    { "aedenthorn.Test/6", new TutorialData()
+                        {
+                            Title = "Farming Basics",
+                            Category = "Farming6",
+                            Frames = new() 
+                            {
+                                new TutorialFrame()
+                                {
+                                    Texture = "aedenthorn.Tutorials/picturefireball",
+                                    StartRect = new Rectangle(0, 0, 1970, 1109),
+                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
+                                    Frames = 4,
+                                    FrameRate = 60
+                                }
+                            }
+                        }
+                    },
+                    { "aedenthorn.Test/7", new TutorialData()
+                        {
+                            Title = "Farming Basics",
+                            Category = "Farming7",
+                            Frames = new() 
+                            {
+                                new TutorialFrame()
+                                {
+                                    Texture = "aedenthorn.Tutorials/picturefireball",
+                                    StartRect = new Rectangle(0, 0, 1970, 1109),
+                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
+                                    Frames = 4,
+                                    FrameRate = 60
+                                }
+                            }
+                        }
+                    },
+                    { "aedenthorn.Test/8", new TutorialData()
+                        {
+                            Title = "Farming Basics",
+                            Category = "Farming8",
+                            Frames = new() 
+                            {
+                                new TutorialFrame()
+                                {
+                                    Texture = "aedenthorn.Tutorials/picturefireball",
+                                    StartRect = new Rectangle(0, 0, 1970, 1109),
+                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
+                                    Frames = 4,
+                                    FrameRate = 60
+                                }
+                            }
+                        }
+                    },
+                    { "aedenthorn.Test/9", new TutorialData()
+                        {
+                            Title = "Farming Basics",
+                            Category = "Farming9",
+                            Frames = new() 
+                            {
+                                new TutorialFrame()
+                                {
+                                    Texture = "aedenthorn.Tutorials/picturefireball",
+                                    StartRect = new Rectangle(0, 0, 1970, 1109),
+                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
+                                    Frames = 4,
+                                    FrameRate = 60
+                                }
+                            }
+                        }
+                    },
+                    { "aedenthorn.Test/10", new TutorialData()
+                        {
+                            Title = "Farming Basics",
+                            Category = "Farming10",
+                            Frames = new() 
+                            {
+                                new TutorialFrame()
+                                {
+                                    Texture = "aedenthorn.Tutorials/picturefireball",
+                                    StartRect = new Rectangle(0, 0, 1970, 1109),
+                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
+                                    Frames = 4,
+                                    FrameRate = 60
+                                }
+                            }
+                        }
+                    },
+                    { "aedenthorn.Test/11", new TutorialData()
+                        {
+                            Title = "Farming Basics",
+                            Category = "Farming11",
+                            Frames = new() 
+                            {
+                                new TutorialFrame()
+                                {
+                                    Texture = "aedenthorn.Tutorials/picturefireball",
+                                    StartRect = new Rectangle(0, 0, 1970, 1109),
+                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
+                                    Frames = 4,
+                                    FrameRate = 60
+                                }
+                            }
+                        }
+                    },
+                    { "aedenthorn.Test/12", new TutorialData()
+                        {
+                            Title = "Farming Basics",
+                            Category = "Farming12",
+                            Frames = new() 
+                            {
+                                new TutorialFrame()
+                                {
+                                    Texture = "aedenthorn.Tutorials/picturefireball",
+                                    StartRect = new Rectangle(0, 0, 1970, 1109),
+                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
+                                    Frames = 4,
+                                    FrameRate = 60
+                                }
+                            }
+                        }
+                    }
+                }, AssetLoadPriority.Exclusive);
             }
         }
 

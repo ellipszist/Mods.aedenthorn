@@ -1,7 +1,7 @@
 ﻿{
   "Name": "Immersive Sprinklers and Scarecrows",
   "Author": "aedenthorn",
-  "Version": "2.4.3",
+  "Version": "2.4.5",
   "Description": "Immersive Sprinklers and Scarecrows.",
   "UniqueID": "aedenthorn.ImmersiveSprinklersAndScarecrows",
   "EntryDll": "ImmersiveSprinklersAndScarecrows.dll",

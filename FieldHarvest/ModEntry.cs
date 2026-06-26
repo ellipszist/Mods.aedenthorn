@@ -39,8 +39,8 @@ namespace FieldHarvest
             );
             
             harmony.Patch(
-               original: AccessTools.Method(typeof(Crop), nameof(Crop.harvest)),
-               prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.Crop_harvest_Prefix))
+               original: AccessTools.Method(typeof(Crop), nameof(Crop.GetHarvestMethod)),
+               prefix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.Crop_GetHarvestMethod_Prefix))
             );
 
 

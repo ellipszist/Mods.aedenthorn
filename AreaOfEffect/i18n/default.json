@@ -1,4 +1,14 @@
 {
   "x-no-charges-y": "{0} has no charges left! Recharge with {1}.",
-  "x-no-spell": "{0} has no spell set!"
+  "x-no-spell": "{0} has no spell set!",
+  "aoe-spells": "AOE Spells",
+  "to-cast-x-y": "To cast {0}, draw {1}.",
+  "Up": "Up",
+  "UpRight": "Up-Right",
+  "Right": "Right",
+  "DownRight": "Down-Right",
+  "Down": "Down",
+  "DownLeft": "Down-Left",
+  "Left": "Left",
+  "UpLeft": "Up-Left"
 }

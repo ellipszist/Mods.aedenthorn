@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using StardewValley;
 using StardewValley.Characters;
+using StardewValley.GameData.Crops;
 using StardewValley.Locations;
 using StardewValley.TerrainFeatures;
 using System.Collections.Generic;
@@ -11,15 +12,15 @@ namespace FieldHarvest
     public partial class ModEntry
     {
         public static bool harvestingField = false;
-        private static void Crop_harvest_Prefix(Crop __instance, JunimoHarvester junimoHarvester)
+        private static void Crop_GetHarvestMethod_Prefix(Crop __instance, ref HarvestMethod __result)
         {
             if (!harvestingField || Config.AutoCollect)
                 return;
-            __instance.harvestMethod.Value = 1;
+            __result = HarvestMethod.Scythe;
         }
-        private static bool HoeDirt_performUseAction_Prefix(HoeDirt __instance, Vector2 tileLocation, GameLocation location, ref bool __result)
+        private static bool HoeDirt_performUseAction_Prefix(HoeDirt __instance, Vector2 tileLocation, ref bool __result)
         {
-            if (!Config.EnableMod || !SHelper.Input.IsDown(Config.ModButton) || (Config.OnlySameSeed && __instance.crop == null))
+            if (!Config.EnableMod || !SHelper.Input.IsDown(Config.ModButton) || (Config.OnlySameSeed && __instance.crop == null) || __instance.Location is not GameLocation location)
                 return true;
             SMonitor.Log($"Harvesting all");
 
@@ -41,13 +42,11 @@ namespace FieldHarvest
                 harvestingField = true;
                 if (dirt.crop.harvest((int)p.X, (int)p.Y, dirt))
                 {
-                    if (location != null && location is IslandLocation && Game1.random.NextDouble() < 0.05)
+                    if (location is IslandLocation && Game1.random.NextDouble() < 0.05)
                     {
                         Game1.player.team.RequestLimitedNutDrops("IslandFarming", location, (int)tileLocation.X * 64, (int)tileLocation.Y * 64, 5, 1);
                     }
-                    (location.terrainFeatures[p] as HoeDirt).crop = null;
-                    (location.terrainFeatures[p] as HoeDirt).nearWaterForPaddy.Value = -1;
-
+                    dirt.destroyCrop(false);
                     count++;
                 }
                 harvestingField = false;

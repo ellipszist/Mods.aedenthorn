@@ -6,9 +6,9 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.Buffs;
 using StardewValley.GameData.Tools;
 using StardewValley.Monsters;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -31,30 +31,26 @@ namespace AreaOfEffect
         public const string testWand2 = "aedenthorn.AreaOfEffect/wand2";
         public const string chargesKey = "aedenthorn.AreaOfEffect/charges";
         public const string effectKey = "aedenthorn.AreaOfEffect/effect";
+        public const string lightKey = "aedenthorn.AreaOfEffect/light";
+        public const string texturePrefix = "aedenthorn.AreaOfEffect/textures/";
 
-        public static Dictionary<Monster, MonsterBuffManager> BuffDict = new();
+        public static Dictionary<string, Texture2D> TextureDict { get; set; } = new();
+        public static Dictionary<string, SpellLightData> LightDict { get; set; } = new();
+        public static Dictionary<Monster, MonsterBuffManager> BuffDict { get; set; } = new();
 
-        public static Dictionary<string, AOEEffectData> EffectDict
+        public static Dictionary<string, SpellToolData> ToolDict
         {
             get
             {
-                return SHelper.GameContent.Load<Dictionary<string, AOEEffectData>>(effectsPath);
+                return SHelper.GameContent.Load<Dictionary<string, SpellToolData>>(toolsPath);
             }
         }
 
-        public static Dictionary<string, AOEToolData> ToolDict
+        public static Dictionary<string, SpellData> SpellDict
         {
             get
             {
-                return SHelper.GameContent.Load<Dictionary<string, AOEToolData>>(toolsPath);
-            }
-        }
-
-        public static Dictionary<string, AOESpellData> SpellDict
-        {
-            get
-            {
-                return SHelper.GameContent.Load<Dictionary<string, AOESpellData>>(spellsPath);
+                return SHelper.GameContent.Load<Dictionary<string, SpellData>>(spellsPath);
             }
         }
 
@@ -80,19 +76,33 @@ namespace AreaOfEffect
 
         private void GameLoop_UpdateTicked(object sender, UpdateTickedEventArgs e)
         {
-            if (BuffDict.Any())
+            if(Game1.activeClickableMenu is null)
             {
-                if (!Context.IsWorldReady)
+                if (BuffDict.Any())
                 {
-                    BuffDict.Clear();
-                    return;
-                }
-                foreach (var key in BuffDict.Keys.ToArray())
-                {
-                    var m = BuffDict[key];
-                    if (m.Update(Game1.currentGameTime))
+                    if (!Context.IsWorldReady)
                     {
-                        BuffDict.Remove(key);
+                        BuffDict.Clear();
+                        return;
+                    }
+                    foreach (var key in BuffDict.Keys.ToArray())
+                    {
+                        var m = BuffDict[key];
+                        if (m.Update(Game1.currentGameTime))
+                        {
+                            BuffDict.Remove(key);
+                        }
+                    }
+                }
+                if (LightDict.Any())
+                {
+                    foreach (var key in LightDict.Keys.ToArray())
+                    {
+                        var m = LightDict[key];
+                        if (m.Update(Game1.currentGameTime))
+                        {
+                            LightDict.Remove(key);
+                        }
                     }
                 }
             }
@@ -131,10 +141,15 @@ namespace AreaOfEffect
             {
                 if (Context.IsWorldReady)
                 {
-                    SHelper.GameContent.InvalidateCache(spellsPath);
+                    //SHelper.GameContent.InvalidateCache(spellsPath);
                     if (e.Button == SButton.NumPad4)
                     {
-                        File.WriteAllText(Path.Combine(SHelper.DirectoryPath, "test.json"), JsonConvert.SerializeObject(EffectDict, Formatting.Indented));
+                        //foreach(var k in TextureDict.Keys)
+                        //{
+                        //    SHelper.GameContent.InvalidateCache(k);
+                        //}
+                        CreateTutorials();
+                        //File.WriteAllText(Path.Combine(SHelper.DirectoryPath, "test.json"), JsonConvert.SerializeObject(SpellDict, Formatting.Indented));
                     }
                 }
             }
@@ -146,7 +161,7 @@ namespace AreaOfEffect
                 return;
             if (e.NameWithoutLocale.IsEquivalentTo(toolsPath))
             {
-                e.LoadFrom(() => new Dictionary<string, AOEToolData>()
+                e.LoadFrom(() => new Dictionary<string, SpellToolData>()
                 {
                     {
                         testWand,
@@ -158,7 +173,8 @@ namespace AreaOfEffect
                             MaxDistance = 10,
                             Type = "Fireball",
                             RechargeSound = "cowboy_powerup",
-                            ChargeColor = Color.OrangeRed
+                            ChargesColor = Color.OrangeRed,
+                            AuraColor = Color.OrangeRed,
                         }
                     },
                     {
@@ -170,7 +186,7 @@ namespace AreaOfEffect
                             RechargeAmount = 10,
                             MaxDistance = 10,
                             RechargeSound = "cowboy_powerup",
-                            ChargeColor = Color.CornflowerBlue
+                            ChargesColor = Color.CornflowerBlue
                         }
                     },
                 },
@@ -178,14 +194,62 @@ namespace AreaOfEffect
             }
             else if (e.NameWithoutLocale.IsEquivalentTo(spellsPath))
             {
-                e.LoadFrom(() => new Dictionary<string, AOESpellData>()
+                e.LoadFrom(() => new Dictionary<string, SpellData>()
                 {
+                    {
+                        "Illuminate",
+                        new()
+                        {
+                            SetSound = "discoverMineral",
+                            DisplayName = "Illuminate",
+                            Sequence = new()
+                            {
+                                SpellDirection.DownRight,
+                                SpellDirection.Up,
+                                SpellDirection.Down,
+                                SpellDirection.UpRight
+                            },
+                            SpellLevels = new()
+                            {
+                                new()
+                                {
+                                    CastSound = "discoverMineral",
+                                    Radius = 0,
+                                    Sprites = new()
+                                    {
+                                        new()
+                                        {
+                                            Type = SpriteType.Sparkle,
+                                            Interval = 300,
+                                            Number = 5,
+                                        }
+                                    },
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Light,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Monster,
+                                                SpellAffectedType.Farmer,
+                                                SpellAffectedType.Tile
+                                            },
+                                            First = true,
+                                            Value = 30000,
+                                            Color = new Color(0, 50, 170),
+                                            Radius = 10
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
                     {
                         "Fireball",
                         new()
                         {
-                            Type = "Fireball",
-                            Sound = "fireball",
+                            SetSound = "fireball",
                             DisplayName = "Fireball",
                             Sequence = new()
                             {
@@ -193,6 +257,134 @@ namespace AreaOfEffect
                                 SpellDirection.DownRight,
                                 SpellDirection.UpRight,
                                 SpellDirection.Down
+                            },
+                            SpellLevels = new()
+                            {
+                                new()
+                                {
+                                    CastSound = "fireball",
+                                    TriggerSound = "fireball",
+                                    Radius = 3,
+                                    Projectiles = new()
+                                    {
+                                        new(){ SpriteIndex = 10 },
+                                    },
+                                    Sprites = new()
+                                    {
+                                        new()
+                                        {
+                                            Type = SpriteType.Fire
+                                        }
+                                    },
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Damage,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Monster,
+                                                SpellAffectedType.Farmer
+                                            },
+                                            Value = 20
+                                        },
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Burn,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Twig,
+                                                SpellAffectedType.Weed,
+                                                SpellAffectedType.Grass,
+                                                SpellAffectedType.Tree
+                                            }
+                                        }
+                                    }
+                                },
+                                new()
+                                {
+                                    CastSound = "fireball",
+                                    TriggerSound = "fireball",
+                                    Radius = 5,
+                                    Projectiles = new()
+                                    {
+                                        new(){ SpriteIndex = 10 },
+                                    },
+                                    Sprites = new()
+                                    {
+                                        new()
+                                        {
+                                            Type = SpriteType.Fire
+                                        }
+                                    },
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Damage,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Monster,
+                                                SpellAffectedType.Farmer
+                                            },
+                                            Value = 30
+                                        },
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Burn,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Twig,
+                                                SpellAffectedType.Weed,
+                                                SpellAffectedType.Grass,
+                                                SpellAffectedType.Tree
+                                            }
+                                        }
+                                    }
+                                },
+                                new()
+                                {
+                                    CastSound = "fireball",
+                                    TriggerSound = "fireball",
+                                    Radius = 5,
+                                    Projectiles = new()
+                                    {
+                                        new(){ SpriteIndex = 10, MinAngleOffset = -45, MaxAngleOffset = -45 },
+                                        new(){ SpriteIndex = 10 },
+                                        new(){ SpriteIndex = 10, MinAngleOffset = 45, MaxAngleOffset = 45 }
+                                    },
+                                    Sprites = new()
+                                    {
+                                        new()
+                                        {
+                                            Type = SpriteType.Fire
+                                        }
+                                    },
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Damage,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Monster,
+                                                SpellAffectedType.Farmer
+                                            },
+                                            Value = 40
+                                        },
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Burn,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Twig,
+                                                SpellAffectedType.Weed,
+                                                SpellAffectedType.Grass,
+                                                SpellAffectedType.Tree
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     },
@@ -200,8 +392,7 @@ namespace AreaOfEffect
                         "IceStorm",
                         new()
                         {
-                            Type = "IceStorm",
-                            Sound = "frozen",
+                            SetSound = "frozen",
                             DisplayName = "Ice Storm",
                             Sequence = new()
                             {
@@ -209,6 +400,44 @@ namespace AreaOfEffect
                                 SpellDirection.UpRight,
                                 SpellDirection.DownRight,
                                 SpellDirection.DownLeft
+                            },
+                            SpellLevels = new()
+                            {
+                                new()
+                                {
+                                    CastSound = "frozen",
+                                    Radius = 3,
+                                    Sprites = new()
+                                    {
+                                        new()
+                                        {
+                                            Type = SpriteType.Ice
+                                        }
+                                    },
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Damage,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Monster,
+                                                SpellAffectedType.Farmer
+                                            },
+                                            Value = 10
+                                        },
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Buff,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Monster,
+                                                SpellAffectedType.Farmer
+                                            },
+                                            Value = "19"
+                                        }
+                                    }
+                                }
                             }
                         }
                     },
@@ -216,8 +445,7 @@ namespace AreaOfEffect
                         "Heal",
                         new()
                         {
-                            Type = "Heal",
-                            Sound = "yoba",
+                            SetSound = "yoba",
                             DisplayName = "Heal",
                             Sequence = new()
                             {
@@ -227,6 +455,34 @@ namespace AreaOfEffect
                                 SpellDirection.UpRight,
                                 SpellDirection.DownRight,
                                 SpellDirection.DownLeft
+                            },
+                            SpellLevels = new()
+                            {
+                                new()
+                                {
+                                    CastSound = "yoba",
+                                    Radius = 3,
+                                    Sprites = new()
+                                    {
+                                        new()
+                                        {
+                                            Type = SpriteType.Heart
+                                        }
+                                    },
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Heal,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Monster,
+                                                SpellAffectedType.Farmer
+                                            },
+                                            Value = 20
+                                        }
+                                    }
+                                }
                             }
                         }
                     },
@@ -234,8 +490,7 @@ namespace AreaOfEffect
                         "Deluge",
                         new()
                         {
-                            Type = "Deluge",
-                            Sound = "thunder",
+                            SetSound = "thunder",
                             DisplayName = "Deluge",
                             Sequence = new()
                             {
@@ -244,148 +499,185 @@ namespace AreaOfEffect
                                 SpellDirection.Right,
                                 SpellDirection.Up,
                                 SpellDirection.UpLeft
-                            }
-                        }
-                    },
-                },
-                AssetLoadPriority.Exclusive);
-            }
-            else if (e.NameWithoutLocale.IsEquivalentTo(effectsPath))
-            {
-                e.LoadFrom(() => new Dictionary<string, AOEEffectData>()
-                {
-                    {
-                        "Fireball",
-                        new()
-                        {
-                            Radius = 3,
-                            CastSound = "fireball",
-                            Sprites = new()
-                            {
-                                new()
-                                {
-                                    Type = SpriteType.Fire
-                                }
                             },
-                            Effects = new()
+                            SpellLevels = new()
                             {
                                 new()
                                 {
-                                    EffectType = AOEEffectType.Damage,
-                                    Affected = new()
+                                    CastSound = "thunder",
+                                    Radius = 5,
+                                    Sprites = new()
                                     {
-                                        AOEAffectedType.Monster,
-                                        AOEAffectedType.Farmer
+                                        new()
+                                        {
+                                            Type = SpriteType.Fountain,
+                                            PerTile = false
+                                        }
                                     },
-                                    Value = 20
-                                },
-                                new()
-                                {
-                                    EffectType = AOEEffectType.Burn,
-                                    Affected = new()
+                                    Effects = new()
                                     {
-                                        AOEAffectedType.Twig,
-                                        AOEAffectedType.Weed,
-                                        AOEAffectedType.Grass,
-                                        AOEAffectedType.Tree
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Water,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.HoeDirt
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
                     },
                     {
-                        "IceStorm",
+                        "EtherealAxe",
                         new()
                         {
-                            Radius = 3,
-                            CastSound = "frozen",
-                            Sprites = new()
+                            SetSound = "axchop",
+                            DisplayName = "Ethereal Axe",
+                            Sequence = new()
                             {
-                                new()
-                                {
-                                    Type = SpriteType.Ice
-                                }
+                                SpellDirection.Up,
+                                SpellDirection.UpRight,
+                                SpellDirection.Down,
+                                SpellDirection.UpLeft
                             },
-                            Effects = new()
+                            SpellLevels = new()
                             {
                                 new()
                                 {
-                                    EffectType = AOEEffectType.Damage,
-                                    Affected = new()
+                                    CastSound = "axchop",
+                                    Radius = 5,
+                                    Effects = new()
                                     {
-                                        AOEAffectedType.Monster,
-                                        AOEAffectedType.Farmer
-                                    },
-                                    Value = 10
-                                },
-                                new()
-                                {
-                                    EffectType = AOEEffectType.Buff,
-                                    Affected = new()
-                                    {
-                                        AOEAffectedType.Monster,
-                                        AOEAffectedType.Farmer
-                                    },
-                                    Value = "19"
-                                }
-                            }
-                        }
-                    },
-                    {
-                        "Heal",
-                        new()
-                        {
-                            Radius = 3,
-                            CastSound = "yoba",
-                            Sprites = new()
-                            {
-                                new()
-                                {
-                                    Type = SpriteType.Heart
-                                }
-                            },
-                            Effects = new()
-                            {
-                                new()
-                                {
-                                    EffectType = AOEEffectType.Heal,
-                                    Affected = new()
-                                    {
-                                        AOEAffectedType.Monster,
-                                        AOEAffectedType.Farmer
-                                    },
-                                    Value = 20
-                                }
-                            }
-                        }
-                    },
-                    {
-                        "Deluge",
-                        new()
-                        {
-                            Radius = 5,
-                            CastSound = "thunder",
-                            Sprites = new()
-                            {
-                                new()
-                                {
-                                    Type = SpriteType.Fountain,
-                                    PerTile = false
-                                }
-                            },
-                            Effects = new()
-                            {
-                                new()
-                                {
-                                    EffectType = AOEEffectType.Water,
-                                    Affected = new()
-                                    {
-                                        AOEAffectedType.HoeDirt
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Tool,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Crop,
+                                                SpellAffectedType.Object,
+                                                SpellAffectedType.ResourceClump,
+                                                SpellAffectedType.Tree,
+                                            },
+                                            Value = "(T)IridiumAxe"
+                                        }
                                     }
                                 }
                             }
                         }
                     },
+                    {
+                        "EtherealPickaxe",
+                        new()
+                        {
+                            SetSound = "hammer",
+                            DisplayName = "Ethereal Pickaxe",
+                            Sequence = new()
+                            {
+                                SpellDirection.Up,
+                                SpellDirection.DownLeft,
+                                SpellDirection.UpRight,
+                                SpellDirection.DownRight
+                            },
+                            SpellLevels = new()
+                            {
+                                new()
+                                {
+                                    CastSound = "hammer",
+                                    Radius = 5,
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Tool,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Crop,
+                                                SpellAffectedType.Object,
+                                                SpellAffectedType.ResourceClump,
+                                                SpellAffectedType.Tree,
+                                            },
+                                            Value = "(T)IridiumPickaxe"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "EtherealHoe",
+                        new()
+                        {
+                            SetSound = "hoeHit",
+                            DisplayName = "Ethereal Hoe",
+                            Sequence = new()
+                            {
+                                SpellDirection.Up,
+                                SpellDirection.UpLeft,
+                                SpellDirection.Right,
+                                SpellDirection.DownLeft  
+                            },
+                            SpellLevels = new()
+                            {
+                                new()
+                                {
+                                    CastSound = "hoeHit",
+                                    Radius = 5,
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Tool,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Tile,
+                                                SpellAffectedType.Object
+                                            },
+                                            Value = "(T)IridiumHoe"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "Meteor",
+                        new()
+                        {
+                            SetSound = "explosion",
+                            DisplayName = "Meteor Strike",
+                            Sequence = new()
+                            {
+                                SpellDirection.Down,
+                                SpellDirection.DownLeft,
+                                SpellDirection.Right,
+                                SpellDirection.UpLeft
+                            },
+                            SpellLevels = new()
+                            {
+                                new()
+                                {
+                                    CastSound = "explosion",
+                                    Radius = 5,
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Explode,
+                                            PerTile = false,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Farmer,
+                                                SpellAffectedType.Object
+                                            },
+                                            Value = -1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 },
                 AssetLoadPriority.Exclusive);
             }
@@ -401,7 +693,8 @@ namespace AreaOfEffect
                         DisplayName = "Wand of Fireball",
                         Description = "Shoots exploding balls of fire. Recharge with solar essence.",
                         Texture = testWand,
-                        SpriteIndex = 0
+                        SpriteIndex = 0,
+                        UpgradeLevel = 3,
                     };
                     dict[testWand2] = new()
                     {
@@ -418,10 +711,25 @@ namespace AreaOfEffect
             {
                 e.LoadFromModFile<Texture2D>("assets/weapon.png", AssetLoadPriority.Exclusive);
             }
+            else if (TextureDict.TryGetValue(e.NameWithoutLocale.ToString(), out Texture2D tex))
+            {
+                e.LoadFrom(() => tex, Priority.Last);
+            }
         }
 
         private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
         {
+            if (Helper.ModRegistry.IsLoaded("aedenthorn.Tutorials"))
+            {
+                CreateTutorials();
+            }
+            if (Config.Debug)
+            {
+                var qCPF = Helper.ModRegistry.GetApi<IQCPFAPI>("aedenthorn.QCPF");
+                qCPF.StartPack();
+                qCPF.AddEditData(spellsPath, new Dictionary<string, object>(SpellDict.Select(kvp => new KeyValuePair<string, object>(kvp.Key, kvp.Value))));
+                //qCPF.WritePack(Path.Combine(SHelper.DirectoryPath, "content.json"));
+            }
             var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (configMenu is not null)
             {

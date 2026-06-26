@@ -12,6 +12,8 @@ namespace AreaOfEffect
 {
     public class CastSpellMenu : IClickableMenu
     {
+
+        private Vector2? tile;
         private Tool tool;
         private Vector2 lastPos;
         private List<Vector2> dots = new();
@@ -21,8 +23,9 @@ namespace AreaOfEffect
         private int lastOnTrackDot;
         private bool spelling;
 
-        public CastSpellMenu(Tool t)
+        public CastSpellMenu(Tool t, Vector2? v = null)
         {
+            tile = v;
             tool = t;
             dots = new();
             ends = new();
@@ -40,9 +43,9 @@ namespace AreaOfEffect
             if (spelling)
             {
                 var spell = GetSpell(true);
-                if (spell != null)
+                if (spell.Value != null)
                 {
-                    SpriteText.drawStringWithScrollCenteredAt(b, spell.DisplayName, Game1.viewport.Width / 2, Game1.viewport.Height - 128);
+                    SpriteText.drawStringWithScrollCenteredAt(b, spell.Value.DisplayName, Game1.viewport.Width / 2, Game1.viewport.Height - 128);
                 }
             }
             //b.DrawString(Game1.dialogueFont, currentDirection.ToString(), new Vector2(0, directions.Count * 64), Color.White);
@@ -64,18 +67,7 @@ namespace AreaOfEffect
         private Color GetColor(int i)
         {
             var idx = directions.Count <= i ? (int)currentDirection :(int)directions[i];
-            return idx switch
-            {
-                0 => Color.Red,
-                1 => Color.Orange,
-                2 => Color.Yellow,
-                3 => Color.Lime,
-                4 => Color.Cyan,
-                5 => new Color(0, 100, 255),
-                6 => new Color(152, 96, 255),
-                7 => new Color(255, 100, 255),
-                _ => Color.White,
-            };
+            return ModEntry.GetDirectionColor(idx);
         }
 
         public override void update(GameTime time)
@@ -189,18 +181,18 @@ namespace AreaOfEffect
                 return;
 
             var spell = GetSpell(false);
-            if(spell != null)
+            if(spell.Value != null)
             {
-                var sound = spell.Sound;
+                var sound = spell.Value.SetSound;
                 if (!string.IsNullOrEmpty(sound))
                     Game1.playSound(sound);
 
-                ModEntry.SetEffect(tool, spell.Type);
+                ModEntry.SetEffect(tool, spell.Key);
                 Game1.activeClickableMenu = null;
             }
         }
 
-        private AOESpellData GetSpell(bool spelling)
+        private KeyValuePair<string, SpellData> GetSpell(bool spelling)
         {
             var dir = directions.ToList();
             if (spelling)
@@ -209,6 +201,8 @@ namespace AreaOfEffect
             }
             foreach (var kvp in ModEntry.SpellDict)
             {
+                if (kvp.Value.Sequence == null)
+                    continue;
                 if (kvp.Value.Sequence.Count == dir.Count)
                 {
                     for (int i = 0; i < dir.Count; i++)
@@ -218,12 +212,12 @@ namespace AreaOfEffect
                             goto next;
                         }
                     }
-                    return kvp.Value;
+                    return kvp;
                 next:
                     continue;
                 }
             }
-            return null;
+            return default;
         }
     }
 }

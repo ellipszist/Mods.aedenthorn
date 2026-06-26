@@ -223,9 +223,17 @@ namespace MobilePhone
             npc.grantConversationFriendship(Game1.player, 20);
             while (npc.CurrentDialogue.Count > 0 && ModEntry.phoneOpen)
             {
-                if (!(Game1.activeClickableMenu is DialogueBox))
+                if (Game1.activeClickableMenu is not DialogueBox)
                 {
-                    Game1.drawDialogue(npc);
+                    try
+                    {
+                        Game1.drawDialogue(npc);
+                    }
+                    catch
+                    {
+                        Monitor.Log($"Error drawing dialogue, aborting. Dialogues left {npc.CurrentDialogue.Count}");
+                        break;
+                    }
                     Monitor.Log($"Dialogues left {npc.CurrentDialogue.Count}");
                 }
                 await Task.Delay(50);

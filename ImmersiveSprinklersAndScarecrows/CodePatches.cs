@@ -33,12 +33,13 @@ namespace ImmersiveSprinklersAndScarecrows
                 var mouseTile = GetMouseCornerTile();
                 if (Vector2.Distance(placementTile, mouseTile.ToVector2()) >= 3)
                     return true; 
-                var tile = GetMouseCornerTile();
-                var x = tile.X;
-                var y = tile.Y;
                 var obj = GetSprinklerAtMouse();
+
                 if (obj is not null)
                 {
+                    var tile = obj.TileLocation;
+                    int x = (int)tile.X;
+                    int y = (int)tile.Y;
                     if (obj.heldObject.Value is not Object held || held.ItemId == "913" || held.ItemId == "915") // 913 enricher 915 nozzle
                     {
                         if (who.CurrentItem?.ItemId == "913" && obj.heldObject.Value?.ItemId == "915")
@@ -145,6 +146,9 @@ namespace ImmersiveSprinklersAndScarecrows
                 obj = GetScarecrowAtMouse();
                 if (obj != null)
                 {
+                    var tile = obj.TileLocation;
+                    int x = (int)tile.X;
+                    int y = (int)tile.Y;
                     if (obj.ParentSheetIndex == 126)
                     {
                         if (who.CurrentItem is Hat hat)

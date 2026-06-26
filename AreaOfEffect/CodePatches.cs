@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.Extensions;
 using StardewValley.Menus;
+using StardewValley.Projectiles;
 using System;
 using Object = StardewValley.Object;
 
@@ -11,11 +12,51 @@ namespace AreaOfEffect
 {
     public partial class ModEntry
     {
+        [HarmonyPatch(typeof(Game1), nameof(Game1.pressUseToolButton))]
+        private static class Game1_pressUseToolButton_Patch
+        {
+            private static bool Prefix(ref bool __result)
+            {
+                if (!Config.ModEnabled || Game1.player.CurrentTool is not Tool t || !TryGetTool(t, out var tdata))
+                    return true;
 
+                if (!TryGetEffect(t, out var data))
+                {
+                    if (Config.ForceRecast)
+                    {
+                        Game1.activeClickableMenu = new CastSpellMenu(t);
+                    }
+                    else
+                    {
+                        Game1.showRedMessage(string.Format(SHelper.Translation.Get("x-no-spell"), t.DisplayName));
+                    }
+                    return false;
+                }
+                return true;
+            }
+        }
+        [HarmonyPatch(typeof(Tool), nameof(Tool.draw))]
+        public class Tool_draw_Patch
+        {
+            public static bool Prefix(Tool __instance, SpriteBatch b)
+            {
+                if (!Config.ModEnabled || __instance.lastUser is not Farmer f || !TryGetTool(__instance, out var tdata))
+                {
+                    return true;
+                }
+                if(f.toolPower.Value > 0)
+                {
+                    int size = 60 * f.toolPower.Value;
+                    Point center = f.GetBoundingBox().Center;
+                    b.Draw(Game1.mouseCursors, Game1.GlobalToLocal(Game1.viewport, new Rectangle(center - new Point(size, size), new Point(size * 2, size * 2))), new Rectangle(88, 1779, 30, 30), tdata.AuraColor * 0.25f, 0, Vector2.Zero, SpriteEffects.None, 1f);
+                }
+                return false;
+            }
+        }
         [HarmonyPatch(typeof(Tool), nameof(Tool.DoFunction))]
         public class Tool_DoFunction_Patch
         {
-            public static void Postfix(Tool __instance)
+            public static void Postfix(Tool __instance, int power)
             {
                 if (!Config.ModEnabled || __instance.lastUser is not Farmer f || !TryGetTool(__instance, out var tdata))
                 {
@@ -25,7 +66,7 @@ namespace AreaOfEffect
                 {
                     if (Config.AutoOpenUI)
                     {
-                        Game1.activeClickableMenu = new CastSpellMenu(__instance);
+                        Game1.activeClickableMenu = new CastSpellMenu(__instance, GetTargetTile(f, data, tdata.MaxDistance));
                     }
                     else
                     {
@@ -33,27 +74,8 @@ namespace AreaOfEffect
                     }
                     return;
                 }
-                if (tdata.MaxCharges > 0)
-                {
-                    var charges = GetCurrentCharges(__instance, tdata.MaxCharges);
-                    if(charges <= 0)
-                    {
-                        Game1.showRedMessage(string.Format(SHelper.Translation.Get("x-no-charges-y"), __instance.DisplayName, ItemRegistry.GetDataOrErrorItem(tdata.RechargeItem).DisplayName));
-                        return;
-                    }
-                    SetCurrentCharges(__instance, --charges);
-                }
-                if (Config.ResetSpell)
-                {
-                    __instance.modData.Remove(effectKey);
-                }
                 var tile = GetTargetTile(f, data, tdata.MaxDistance);
-                ApplyAOEEffect(f.currentLocation, f, tile, data);
-                
-                if (!string.IsNullOrEmpty(data.CastSound))
-                {
-                    f.currentLocation.playSound(data.CastSound, f.Tile);
-                }
+                CastSpell(__instance, f, tdata, data, f.toolPower.Value, tile);
             }
         }
 
@@ -98,6 +120,33 @@ namespace AreaOfEffect
             }
         }
 
+        [HarmonyPatch(typeof(Projectile), nameof(Projectile.GetTexture))]
+        public class Projectile_GetTexture_Patch
+        {
+            public static bool Prefix(Projectile __instance, ref Texture2D __result)
+            {
+                if (!Config.ModEnabled || __instance is not SpellProjectile sp || sp.Texture is null)
+                {
+                    return true;
+                }
+                __result = SHelper.GameContent.Load<Texture2D>(sp.Texture);
+                return false;
+            }
+        }
+        [HarmonyPatch(typeof(Projectile), nameof(Projectile.GetSourceRect))]
+        public class Projectile_GetSourceRect_Patch
+        {
+            public static bool Prefix(Projectile __instance, ref Rectangle __result)
+            {
+                if (!Config.ModEnabled || __instance is not SpellProjectile sp || sp.SourceRect is null)
+                {
+                    return true;
+                }
+                __result = sp.SourceRect.Value;
+                return false;
+            }
+        }
+
         [HarmonyPatch(typeof(Farmer), nameof(Farmer.draw), new Type[] { typeof(SpriteBatch) })]
         public class Farmer_draw_Patch
         {
@@ -122,8 +171,20 @@ namespace AreaOfEffect
                 {
                     return;
                 }
-                spriteBatch.Draw(Game1.mouseCursors, location + new Vector2(4f, 44f), new Rectangle?(new Rectangle(297, 420, 14, 5)), Color.White * 0.5f * transparency, 0f, Vector2.Zero, 4f, SpriteEffects.None, layerDepth + 0.0001f);
-                spriteBatch.Draw(Game1.staminaRect, new Rectangle((int)location.X + 8, (int)location.Y + 64 - 16, (int)((float)GetCurrentCharges(__instance, data.MaxCharges) / (float)data.MaxCharges * 48f), 8), data.ChargeColor * 0.7f * transparency);
+                var charges = GetCurrentCharges(__instance, data.MaxCharges);
+                var fraction = charges / (float)data.MaxCharges;
+                int height = 52;
+                int offset = (int)Math.Round(height - fraction * height);
+                int fheight = height - offset;
+                int width = 4;
+                int x = (int)location.X + 54;
+                int y = (int)location.Y + 6;
+                //spriteBatch.Draw(Game1.mouseCursors, location + new Vector2(4f, 44f), new Rectangle?(new Rectangle(297, 420, 14, 5)), Color.White * 0.5f * transparency, 0f, Vector2.Zero, 4f, SpriteEffects.None, layerDepth + 0.0001f);
+                spriteBatch.Draw(Game1.staminaRect, new Rectangle(x - 2, y - 2, width + 4, height + 4), Color.Black * transparency);
+                if (charges > 0)
+                {
+                    spriteBatch.Draw(Game1.staminaRect, new Rectangle(x, y + offset, width, fheight), data.ChargesColor * transparency);
+                }
             }
         }
 
