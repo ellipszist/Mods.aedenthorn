@@ -1,13 +1,4 @@
 {
-  "stop":  "Stop",
-  "play": "Play",
-  "add": "Add to playlist",
-  "prev": "Prev",
-  "next": "Next",
-  "search": "Search",
-  "playing-x": "Playing {0}",
-  "x-paused": "{0} Paused",
-  "remove": "Remove from playlist",
-  "clear": "Clear playlist",
-  "jukebox": "Jukebox"
+  "open-drawer":  "Open Launcher",
+  "Close-drawer":  "Close Launcher"
 }

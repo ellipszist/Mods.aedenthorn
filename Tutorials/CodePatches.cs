@@ -29,7 +29,12 @@ namespace Tutorials
                         {
                             var value = TutorialTriggerDict.FirstOrDefault(p => p.Key == obj.QualifiedItemId).Value;
                             if(value is not null)
-                                OpenTutorial(value.Tutorial, value.Categories);
+                            {
+                                if(value.Tutorial is not null)
+                                    OpenTutorial(value.Tutorial, null, value.Categories);
+                                else if(value.Category is not null)
+                                    OpenTutorial(null, value.Category, value.Categories);
+                            }
                         }
                         return;
                     }

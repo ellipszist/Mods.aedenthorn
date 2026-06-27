@@ -1,11 +1,8 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
-using System;
 using System.Linq;
 using System.Text;
 
@@ -19,44 +16,83 @@ namespace LauncherDrawer
         {
             public static void Prefix(DayTimeMoneyBox __instance, SpriteBatch b, int overrideX, ref int overrideY)
             {
-                if (!Config.ModEnabled || !drawerOpen.Value)
+                if (!Config.ModEnabled || currentDrawerState.Value == DrawerState.Closed)
                     return;
                 var height = MenuHeight;
-                var per = height / LauncherDict.Count;
-                height += 32;
-                overrideY = height + 180;
-                int xoff = (int)__instance.position.X + 48;
-                int yoff = (int)__instance.position.Y + 172;
-                int width = 224;
-                IClickableMenu.drawTextureBox(b, xoff, yoff, width, height, Color.White);
-                foreach(var kvp in LauncherDict)
+                var dict = LauncherDict;
+                if (!dict.Any())
+                    return;
+                var per = height / dict.Count;
+                if(!Config.CustomPosition)
+                    overrideY = height + 184;
+                int count = 0;
+                Vector2 position = GetPosition(__instance.position);
+                foreach (var key in SortedKeys)
                 {
                     try
                     {
-                        string name = (kvp.Value.TryGetValue("DisplayName", out var str) && str is string s) ? s : kvp.Key;
-                        b.DrawString(Game1.smallFont, name, new Vector2(xoff + 18, yoff + 18), Game1.textColor);
-                        yoff += per;
+                        Rectangle bounds = GetBounds(position, per, count++);
+                        IClickableMenu.drawTextureBox(b, bounds.X, bounds.Y, bounds.Width, per + 4, Color.White);
+                        if(currentDrawerState.Value == DrawerState.Open)
+                        {
+                            string name = dict[key]["Name"].ToString();
+                            var w = Game1.smallFont.MeasureString(name).X;
+                            Utility.drawTextWithShadow(b, name, Game1.smallFont, new Vector2(bounds.X + (bounds.Width - w) / 2, bounds.Y + 16), Game1.textColor);
+                        }
                     }
                     catch { }
                 }
+                if(currentDrawerState.Value == DrawerState.Closing)
+                {
+                    ticks.Value--;
+                    if(ticks.Value <= 0)
+                    {
+                        currentDrawerState.Value = DrawerState.Closed;
+                    }
+                }
+                else if(currentDrawerState.Value == DrawerState.Opening)
+                {
+                    ticks.Value++;
+                    if(ticks.Value >= Config.DrawerSpeed)
+                    {
+                        currentDrawerState.Value = DrawerState.Open;
+                    }
+                }
             }
+
         }
         [HarmonyPatch(typeof(DayTimeMoneyBox), nameof(DayTimeMoneyBox.receiveLeftClick))]
         public static class DayTimeMoneyBox_receiveLeftClick_Patch
         {
             public static bool Prefix(DayTimeMoneyBox __instance, int x, int y)
             {
-                if (!Config.ModEnabled)
+                if (!Config.ModEnabled || currentDrawerState.Value > DrawerState.Open)
                     return true;
-                if(new Rectangle(__instance.xPositionOnScreen + 116 + 48 + 4, __instance.yPositionOnScreen + 68, 40, 36).Contains(x, y))
+                if (!LauncherDict.Any())
+                    return true;
+
+                if (new Rectangle(__instance.xPositionOnScreen + 116 + 48 + 4, __instance.yPositionOnScreen + 68, 40, 36).Contains(x, y))
                 {
                     ToggleMenu();
                     return false;
                 }
-                else if(new Rectangle(__instance.xPositionOnScreen + 116 + 48 + 4, __instance.yPositionOnScreen + 68, 40, 36).Contains(x, y))
+                else
                 {
-                    ToggleMenu();
-                    return false;
+                    var height = MenuHeight;
+                    var dict = LauncherDict;
+                    var per = height / dict.Count;
+                    int count = 0;
+                    Vector2 position = GetPosition(__instance.position);
+
+                    foreach (var key in SortedKeys)
+                    {
+                        Rectangle bounds = GetBounds(position, per, count++);
+                        if(bounds.Contains(x, y))
+                        {
+                            LaunchEntry(LauncherDict[key]);
+                            return false;
+                        }
+                    }
                 }
                 return true;
             }
@@ -66,10 +102,23 @@ namespace LauncherDrawer
         {
             public static bool Prefix(DayTimeMoneyBox __instance, int x, int y,ref bool __result)
             {
-                if (!Config.ModEnabled || !new Rectangle(__instance.xPositionOnScreen + 116 + 48 + 4, __instance.yPositionOnScreen + 68, 40, 36).Contains(x, y))
+                if (!Config.ModEnabled || currentDrawerState.Value > DrawerState.Open)
                     return true;
-                __result = true;
-                return false;
+                if (!LauncherDict.Any())
+                    return true;
+                if (new Rectangle(__instance.xPositionOnScreen + 116 + 48 + 4, __instance.yPositionOnScreen + 68, 40, 36).Contains(x, y))
+                {
+                    __result = true;
+                    return false;
+                }
+                Vector2 position = GetPosition(__instance.position);
+                var bounds = GetBounds(position, MenuHeight, 0);
+                if(bounds.Contains(x, y))
+                {
+                    __result = true;
+                    return false;
+                }
+                return true;
             }
         }
         [HarmonyPatch(typeof(DayTimeMoneyBox), nameof(DayTimeMoneyBox.performHoverAction))]
@@ -77,11 +126,42 @@ namespace LauncherDrawer
         {
             public static bool Prefix(DayTimeMoneyBox __instance, int x, int y, StringBuilder ____hoverText)
             {
-                if (!Config.ModEnabled || !new Rectangle(__instance.xPositionOnScreen + 116 + 48 + 4, __instance.yPositionOnScreen + 68, 40, 36).Contains(x, y))
+                if (!Config.ModEnabled || currentDrawerState.Value > DrawerState.Open)
                     return true;
-                ____hoverText.Clear();
-                ____hoverText.Append(SHelper.Translation.Get("jukebox"));
-                return false;
+                if (!LauncherDict.Any())
+                    return true;
+                if (new Rectangle(__instance.xPositionOnScreen + 116 + 48 + 4, __instance.yPositionOnScreen + 68, 40, 36).Contains(x, y))
+                {
+                    ____hoverText.Clear();
+                    //____hoverText.Append(SHelper.Translation.Get(drawerState.Value == DrawerState.Open ? "close-drawer" : "open-drawer"));
+                    return false;
+
+                }
+                if (currentDrawerState.Value == DrawerState.Closed)
+                    return true;
+                var height = MenuHeight;
+                var dict = LauncherDict;
+                var per = height / dict.Count;
+                int count = 0;
+                foreach (var key in SortedKeys)
+                {
+                    try
+                    {
+                        Vector2 position = GetPosition(__instance.position);
+                        Rectangle bounds = GetBounds(position, per, count++);
+                        if(bounds.Contains(x, y))
+                        {
+                            ____hoverText.Clear(); 
+                            if (dict[key].TryGetValue("Description", out var str) && !string.IsNullOrEmpty(str.ToString()))
+                            {
+                                tooltip.Value = str.ToString();
+                            }
+                            return false;
+                        }
+                    }
+                    catch { }
+                }
+                return true;
             }
         }
         

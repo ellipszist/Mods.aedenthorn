@@ -717,8 +717,8 @@ namespace AllChestsMenu
                 }
                 b.Draw(Game1.staminaRect, scrollbarBack, Color.Gray);
                 b.Draw(Game1.staminaRect, scrollbarRect, Color.Orange);
-                SpriteText.drawString(b, barOffset+"", 16, 16);
-                SpriteText.drawString(b, scrollbarSize+"", 16, 64);
+                //SpriteText.drawString(b, barOffset+"", 16, 16);
+                //SpriteText.drawString(b, scrollbarSize+"", 16, 64);
             }
 
             Game1.drawDialogueBox(xPositionOnScreen, cutoff - borderWidth * 2, width, 64 * 4 + borderWidth * 2, false, true, null, false, true);

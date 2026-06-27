@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
-using StardewValley;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -68,7 +68,7 @@ namespace Tutorials
             {
                 if (Config.OpenTutorialKey.JustPressed())
                 {
-                    OpenTutorial(null);
+                    OpenTutorial();
                 }
             }
         }
@@ -84,7 +84,7 @@ namespace Tutorials
                     if (e.Button == SButton.NumPad7)
                     {
                         SHelper.GameContent.InvalidateCache(dictPath);
-                        Game1.activeClickableMenu = new CustomTutorialMenu();
+                        OpenTutorial();
                     }
                 }
             }
@@ -102,6 +102,18 @@ namespace Tutorials
             {
                 e.LoadFrom(() => new Dictionary<string, TutorialTrigger>(), AssetLoadPriority.Exclusive);
             }
+            else if (e.NameWithoutLocale.IsEquivalentTo("aedenthorn.LauncherDrawer/dict"))
+            {
+                e.Edit((IAssetData data) =>
+                {
+                    data.AsDictionary<string, Dictionary<string, object>>().Data["aedenthorn.Tutorials"] = new()
+                    {
+                        { "Name", SHelper.Translation.Get("tutorials") },
+                        { "Description", SHelper.Translation.Get("open-tutorials") },
+                        { "Action", new Action(() => OpenTutorial()) }
+                    };
+                });
+            }
             else if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
             {
                 e.LoadFrom(() => new Dictionary<string, ITutorialData>()
@@ -109,7 +121,7 @@ namespace Tutorials
                     { "aedenthorn.Test/1", new TutorialData()
                         {
                             Title = "Farming Basics",
-                            Category = "Farming1",
+                            Category = "Farming",
                             Frames = new() 
                             {
                                 new TutorialFrame()
@@ -125,8 +137,8 @@ namespace Tutorials
                     },
                     { "aedenthorn.Test/2", new TutorialData()
                         {
-                            Title = "Farming Basics",
-                            Category = "Farming2",
+                            Title = "Cooking Basics",
+                            Category = "Cooking",
                             Frames = new() 
                             {
                                 new TutorialFrame()
@@ -142,8 +154,8 @@ namespace Tutorials
                     },
                     { "aedenthorn.Test/3", new TutorialData()
                         {
-                            Title = "Farming Basics",
-                            Category = "Farming3",
+                            Title = "Mining Basics",
+                            Category = "Mining",
                             Frames = new() 
                             {
                                 new TutorialFrame()
@@ -159,8 +171,8 @@ namespace Tutorials
                     },
                     { "aedenthorn.Test/4", new TutorialData()
                         {
-                            Title = "Farming Basics",
-                            Category = "Farming4",
+                            Title = "Foraging Basics",
+                            Category = "Foraging",
                             Frames = new() 
                             {
                                 new TutorialFrame()
@@ -176,8 +188,8 @@ namespace Tutorials
                     },
                     { "aedenthorn.Test/5", new TutorialData()
                         {
-                            Title = "Farming Basics",
-                            Category = "Farming5",
+                            Title = "Combat Basics",
+                            Category = "Combat",
                             Frames = new() 
                             {
                                 new TutorialFrame()
@@ -193,8 +205,8 @@ namespace Tutorials
                     },
                     { "aedenthorn.Test/6", new TutorialData()
                         {
-                            Title = "Farming Basics",
-                            Category = "Farming6",
+                            Title = "Fishing Basics",
+                            Category = "Fishing",
                             Frames = new() 
                             {
                                 new TutorialFrame()
@@ -210,8 +222,8 @@ namespace Tutorials
                     },
                     { "aedenthorn.Test/7", new TutorialData()
                         {
-                            Title = "Farming Basics",
-                            Category = "Farming7",
+                            Title = "Friendship Basics",
+                            Category = "Friendship",
                             Frames = new() 
                             {
                                 new TutorialFrame()
@@ -227,8 +239,8 @@ namespace Tutorials
                     },
                     { "aedenthorn.Test/8", new TutorialData()
                         {
-                            Title = "Farming Basics",
-                            Category = "Farming8",
+                            Title = "Bundle Basics",
+                            Category = "Bundles",
                             Frames = new() 
                             {
                                 new TutorialFrame()
@@ -244,59 +256,8 @@ namespace Tutorials
                     },
                     { "aedenthorn.Test/9", new TutorialData()
                         {
-                            Title = "Farming Basics",
-                            Category = "Farming9",
-                            Frames = new() 
-                            {
-                                new TutorialFrame()
-                                {
-                                    Texture = "aedenthorn.Tutorials/picturefireball",
-                                    StartRect = new Rectangle(0, 0, 1970, 1109),
-                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
-                                    Frames = 4,
-                                    FrameRate = 60
-                                }
-                            }
-                        }
-                    },
-                    { "aedenthorn.Test/10", new TutorialData()
-                        {
-                            Title = "Farming Basics",
-                            Category = "Farming10",
-                            Frames = new() 
-                            {
-                                new TutorialFrame()
-                                {
-                                    Texture = "aedenthorn.Tutorials/picturefireball",
-                                    StartRect = new Rectangle(0, 0, 1970, 1109),
-                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
-                                    Frames = 4,
-                                    FrameRate = 60
-                                }
-                            }
-                        }
-                    },
-                    { "aedenthorn.Test/11", new TutorialData()
-                        {
-                            Title = "Farming Basics",
-                            Category = "Farming11",
-                            Frames = new() 
-                            {
-                                new TutorialFrame()
-                                {
-                                    Texture = "aedenthorn.Tutorials/picturefireball",
-                                    StartRect = new Rectangle(0, 0, 1970, 1109),
-                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
-                                    Frames = 4,
-                                    FrameRate = 60
-                                }
-                            }
-                        }
-                    },
-                    { "aedenthorn.Test/12", new TutorialData()
-                        {
-                            Title = "Farming Basics",
-                            Category = "Farming12",
+                            Title = "Ranching Basics",
+                            Category = "Ranching",
                             Frames = new() 
                             {
                                 new TutorialFrame()

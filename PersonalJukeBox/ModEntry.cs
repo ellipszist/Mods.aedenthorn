@@ -82,10 +82,29 @@ namespace PersonalJukeBox
             helper.Events.GameLoop.OneSecondUpdateTicked += GameLoop_OneSecondUpdateTicked;
             helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
             helper.Events.Input.ButtonPressed += Input_ButtonPressed;
+            helper.Events.Content.AssetRequested += Content_AssetRequested;
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
             
+        }
+
+        private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
+        {
+            if (!Config.ModEnabled)
+                return;
+            if (e.NameWithoutLocale.IsEquivalentTo("aedenthorn.LauncherDrawer/dict"))
+            {
+                e.Edit((IAssetData data) =>
+                {
+                    data.AsDictionary<string, Dictionary<string, object>>().Data["aedenthorn.PersonalJukeBox"] = new()
+                    {
+                        { "Name", SHelper.Translation.Get("jukebox") },
+                        { "Description", SHelper.Translation.Get("toggle-jukebox") },
+                        { "Action", new Action(() => ToggleMenu()) }
+                    };
+                });
+            }
         }
 
         private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)

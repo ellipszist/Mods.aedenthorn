@@ -2,8 +2,10 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
+using StardewModdingAPI.Events;
 using StardewValley;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Screenshot
@@ -36,7 +38,6 @@ namespace Screenshot
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
 
         }
-
         private void Input_ButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
         {
             if(Config.EnableMod && e.Button == Config.ScreenshotKey)

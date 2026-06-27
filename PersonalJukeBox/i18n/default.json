@@ -9,5 +9,6 @@
   "x-paused": "{0} Paused",
   "remove": "Remove from playlist",
   "clear": "Clear playlist",
-  "jukebox": "Jukebox"
+  "jukebox": "Jukebox",
+  "toggle-jukebox": "Toggle Jukebox"
 }

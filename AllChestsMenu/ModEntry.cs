@@ -1,8 +1,10 @@
-﻿using System.IO;
-using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
+using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace AllChestsMenu
 {
@@ -28,9 +30,26 @@ namespace AllChestsMenu
 
 			Helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
 			Helper.Events.Input.ButtonPressed += Input_ButtonPressed;
-		}
-
-		public void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
+            helper.Events.Content.AssetRequested += Content_AssetRequested;
+        }
+        private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
+        {
+            if (!Config.ModEnabled)
+                return;
+            if (e.NameWithoutLocale.IsEquivalentTo("aedenthorn.LauncherDrawer/dict"))
+            {
+                e.Edit((IAssetData data) =>
+                {
+                    data.AsDictionary<string, Dictionary<string, object>>().Data["aedenthorn.AllChestsMenu"] = new()
+                    {
+                        { "Name", SHelper.Translation.Get("chests") },
+                        { "Description", SHelper.Translation.Get("open-chests") },
+                        { "Action", new Action(() => OpenMenu()) }
+                    };
+                });
+            }
+        }
+        public void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
 		{
 			if (!Config.ModEnabled)
 				return;

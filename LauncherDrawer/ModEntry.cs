@@ -1,14 +1,12 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Media;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Extensions;
-using System;
-using System.Collections;
+using StardewValley.Menus;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -18,25 +16,48 @@ namespace LauncherDrawer
     /// <summary>The mod entry point.</summary>
     public partial class ModEntry : Mod
     {
-
+        public enum DrawerState
+        {
+            Closed,
+            Open,
+            Closing,
+            Opening
+        }
         public static IMonitor SMonitor;
         public static IModHelper SHelper;
         public static ModConfig Config;
         public static ModEntry context;
-        public static PerScreen<bool> drawerOpen = new();
+        public static PerScreen<DrawerState> currentDrawerState = new(() => DrawerState.Closed);
+        public static PerScreen<int> ticks = new();
+        public static PerScreen<int> scrolled = new();
+        public static PerScreen<string> tooltip = new();
         public const string dictPath = "aedenthorn.LauncherDrawer/dict";
+        public const string keybindPrefix = "aedenthorn.LauncherDrawer/keybinds/";
         public static Dictionary<string, Dictionary<string, object>> LauncherDict 
         { 
             get
             {
-                return SHelper.GameContent.Load<Dictionary<string, Dictionary<string, object>>>(dictPath);
+                var dict = SHelper.GameContent.Load<Dictionary<string, Dictionary<string, object>>>(dictPath);
+                return dict;
+            }
+        }
+        public static List<string> sortedKeys = new();
+        public static List<string> SortedKeys {
+            get
+            {
+                return sortedKeys.Where(k => !Config.HideList.Contains(k)).Skip(scrolled.Value).Take(Config.MaxEntries > 0 ? Config.MaxEntries : sortedKeys.Count).ToList();
+            }
+            set
+            {
+                sortedKeys = value;
             }
         }
         public static int MenuHeight
         { 
             get
             {
-                return LauncherDict.Count * 32;
+                Config.DrawerSpeed = 10;
+                return (int)(LauncherDict.Count * 56 * ticks.Value / (float)Config.DrawerSpeed);
             }
         }
 
@@ -50,11 +71,59 @@ namespace LauncherDrawer
 
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
             helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
+            helper.Events.Input.MouseWheelScrolled += Input_MouseWheelScrolled;
             helper.Events.Content.AssetRequested += Content_AssetRequested;
+            helper.Events.Content.AssetReady += Content_AssetReady;
+            helper.Events.Display.RenderedStep += Display_RenderedStep;
             
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
             
+        }
+
+        private void Input_MouseWheelScrolled(object sender, MouseWheelScrolledEventArgs e)
+        {
+            if (!Config.ModEnabled || currentDrawerState.Value != DrawerState.Open || Config.MaxEntries < 0)
+                return;
+            var count = LauncherDict.Keys.Where(k => !Config.HideList.Contains(k)).Count();
+            if(count <= Config.MaxEntries)
+                return;
+            Vector2 position = GetPosition(Game1.dayTimeMoneyBox.position);
+            var bounds = GetBounds(position, MenuHeight, 0);
+            if (bounds.Contains(Game1.getMousePosition(true)))
+            {
+                if(e.Delta > 0 && scrolled.Value > 0)
+                {
+                    scrolled.Value--;
+                    Game1.playSound("shiny4");
+                }
+                else if(e.Delta < 0 && scrolled.Value + Config.MaxEntries < count)
+                {
+                    scrolled.Value++;
+                    Game1.playSound("shiny4");
+                }
+                SHelper.Input.SuppressScrollWheel();
+            }
+        }
+        private void Display_RenderedStep(object sender, RenderedStepEventArgs e)
+        {
+            if (!Config.ModEnabled)
+                return;
+            if (e.Step == StardewValley.Mods.RenderSteps.Overlays && tooltip.Value is not null)
+            {
+                IClickableMenu.drawHoverText(e.SpriteBatch, tooltip.Value, Game1.smallFont);
+                tooltip.Value = null;
+            }
+        }
+
+        private void Content_AssetReady(object sender, AssetReadyEventArgs e)
+        {
+            var dict = LauncherDict;
+            SortedKeys = dict.Keys.ToList();
+            SortedKeys.Sort((string a, string b) =>
+            {
+                return (dict[a].TryGetValue("Name", out var name) ? name.ToString() : a).CompareTo(dict[b].TryGetValue("Name", out var name2) ? name2.ToString() : b);
+            });
         }
 
         private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
@@ -63,23 +132,66 @@ namespace LauncherDrawer
                 return;
             if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
             {
-                e.LoadFrom(() => new Dictionary<string, Dictionary<string, object>>() 
+                var dict = new Dictionary<string, Dictionary<string, object>>();
+                if(Config.Keybinds is not null)
                 {
-                    {"Entry One", new() },
-                    {"Entry Two", new() },
-                    {"Entry Three", new() }
-                }, AssetLoadPriority.Exclusive);
+                    for (int i = 0; i < Config.Keybinds.Count; i++)
+                    {
+                        var split = Config.Keybinds[i].Split('|');
+                        if (split.Length < 3)
+                            continue;
+                        dict[keybindPrefix + i] = new()
+                            {
+                                { "Name", split[0] },
+                                { "Description", split[1]  },
+                                { "Keybind", split[2].Split(',') },
+                            };
+                    }
+                }
+                e.LoadFrom(() => dict, AssetLoadPriority.Exclusive);
             }
         }
 
         private void Input_ButtonsChanged(object sender, ButtonsChangedEventArgs e)
         {
+            if (Config.Debug)
+            {
+                //var dict = LauncherDict;
+                SHelper.GameContent.InvalidateCache(dictPath);
+            }
             if (!Config.ModEnabled || !Context.IsPlayerFree)
+                return;
+            if (!LauncherDict.Any())
                 return;
             if (Config.DrawerKey.JustPressed())
             {
-                ToggleMenu();
-                Suppress(Config.DrawerKey);
+                if (ToggleMenu())
+                {
+                    Suppress(Config.DrawerKey);
+                }
+                return;
+            }
+            if (Config.HideKey.JustPressed())
+            {
+                var height = MenuHeight;
+                var dict = LauncherDict;
+                var per = height / dict.Count;
+                int count = 0;
+                Vector2 position = GetPosition(Game1.dayTimeMoneyBox.position);
+                var x = Game1.getMouseX(true);
+                var y = Game1.getMouseY(true);
+                foreach (var key in SortedKeys)
+                {
+                    Rectangle bounds = GetBounds(position, per, count++);
+                    if (bounds.Contains(x, y))
+                    {
+                        Config.HideList.Add(key);
+                        SHelper.WriteConfig(Config);
+                        Suppress(Config.HideKey);
+                        Game1.playSound("grassyStep");
+                        return;
+                    }
+                }
                 return;
             }
         }
@@ -107,6 +219,7 @@ namespace LauncherDrawer
 
         private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
         {
+            SHelper.GameContent.InvalidateCache(dictPath);
             var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (configMenu is not null)
             {

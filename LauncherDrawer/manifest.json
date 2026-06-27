@@ -1,10 +1,10 @@
 ﻿{
   "Name": "Launcher Drawer",
   "Author": "aedenthorn",
-  "Version": "0.1.0",
+  "Version": "0.3.0",
   "Description": "Launcher Drawer.",
   "UniqueID": "aedenthorn.LauncherDrawer",
   "EntryDll": "LauncherDrawer.dll",
   "MinimumApiVersion": "4.0.0",
-  "UpdateKeys": [ "Nexus:" ]
+  "UpdateKeys": [ "Nexus:48269" ]
 }

@@ -6,6 +6,7 @@ using StardewValley.BellsAndWhistles;
 using StardewValley.Menus;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Tutorials
 {
@@ -30,7 +31,7 @@ namespace Tutorials
         private bool openingTutorial;
         private bool keyPress;
 
-        public CustomTutorialMenu(string key = null, List<string> cats = null) : base(Game1.uiViewport.Width / 2 - (600 + borderWidth * 2) / 2, Game1.uiViewport.Height / 2 - (600 + borderWidth * 2) / 2 - 192, 600 + borderWidth * 2, 600 + borderWidth * 2 + 192, true)
+        public CustomTutorialMenu(string key = null, string cat = null, List<string> cats = null) : base(Game1.uiViewport.Width / 2 - (600 + borderWidth * 2) / 2, Game1.uiViewport.Height / 2 - (600 + borderWidth * 2) / 2 - 192, 600 + borderWidth * 2, 600 + borderWidth * 2 + 192, true)
         {
 
             foreach (var kvp in ModEntry.TutorialDict)
@@ -43,6 +44,10 @@ namespace Tutorials
                 }
                 categorizedTutorials[kvp.Value.Category].Add(kvp.Key);
             }
+            foreach(var k in categorizedTutorials.Keys)
+            {
+                categorizedTutorials[k].Sort();
+            }
             orderedCategories.AddRange(categorizedTutorials.Keys);
             orderedCategories.Sort();
             if(key != null)
@@ -51,6 +56,13 @@ namespace Tutorials
                 tutorialKey = key;
                 tutorial = ModEntry.TutorialDict[key];
                 currentCategory = tutorial.Category;
+            }
+            else if(cat != null)
+            {
+                openingTutorial = true;
+                tutorialKey = categorizedTutorials[cat].First();
+                tutorial = ModEntry.TutorialDict[tutorialKey];
+                currentCategory = cat;
             }
             Recalibrate();
         }

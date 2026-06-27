@@ -7,7 +7,7 @@ namespace Tutorials
 {
     public partial class ModEntry
     {
-        public static void OpenTutorial(string key, List<string> cats = null)
+        public static void OpenTutorial(string key = null, string cat = null, List<string> cats = null)
         {
             if (!Context.IsWorldReady)
                 return;
@@ -19,7 +19,7 @@ namespace Tutorials
                 }
             }
             Game1.playSound("bigSelect");
-            Game1.activeClickableMenu = new CustomTutorialMenu(key, cats);
+            Game1.activeClickableMenu = new CustomTutorialMenu(key, cat, cats);
         }
     }
 }

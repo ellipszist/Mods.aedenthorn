@@ -1,4 +1,6 @@
 ﻿{
+	"chests": "Chests",
+	"open-chests": "Open Chests Menu",
 	"filter": "Filter",
 	"name": "Name",
 	"fridge": "Fridge",
