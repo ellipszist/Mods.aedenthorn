@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework.Graphics;
+using Newtonsoft.Json.Linq;
 using StardewValley;
 using StardewValley.Menus;
 using System;
@@ -27,13 +28,13 @@ namespace Tutorials
                     {
                         if (__instance.actualInventory.Count > i && __instance.actualInventory[i] is Item obj)
                         {
-                            var value = TutorialTriggerDict.FirstOrDefault(p => p.Key == obj.QualifiedItemId).Value;
-                            if(value is not null)
+                            var list = TutorialTriggerDict.Where(p => p.Key == obj.QualifiedItemId);
+                            foreach(var kvp in list)
                             {
-                                if(value.Tutorial is not null)
-                                    OpenTutorial(value.Tutorial, null, value.Categories);
-                                else if(value.Category is not null)
-                                    OpenTutorial(null, value.Category, value.Categories);
+                                if (kvp.Value.Tutorial is not null && OpenTutorial(kvp.Value.Tutorial, null, kvp.Value.Categories))
+                                    return;
+                                if (kvp.Value.Category is not null && OpenTutorial(null, kvp.Value.Category, kvp.Value.Categories))
+                                    return;
                             }
                         }
                         return;
