@@ -20,6 +20,8 @@ namespace CustomMounts
             if (stable is null)
                 return;
             var bd = stable.GetData();
+            if (bd is null)
+                return;
             foreach (var kvp in MountDict)
             {
                 if (bd.Name == kvp.Value.Stable || stable.buildingType.Value == kvp.Value.Stable)

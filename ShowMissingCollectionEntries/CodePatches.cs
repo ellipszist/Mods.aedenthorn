@@ -74,6 +74,29 @@ namespace ShowMissingCollectionEntries
             }
         }
 
+        [HarmonyPatch(typeof(PowersTab), nameof(PowersTab.draw), new Type[] { typeof(SpriteBatch) })]
+        public class PowersTab_draw_Patch
+        {
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling PowersTab.draw");
+
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Call && codes[i].operand is MethodInfo mi && mi == AccessTools.PropertyGetter(typeof(Color), nameof(Color.Black)))
+                    {
+                        SMonitor.Log("Adding color replace");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(ModEntry.ModifyColor))));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                        break;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+
         [HarmonyPatch(typeof(CollectionsPage), nameof(CollectionsPage.performHoverAction))]
         public class CollectionsPage_performHoverAction_Patch
         {
@@ -124,6 +147,42 @@ namespace ShowMissingCollectionEntries
                     }
                 }
                 return !found;
+            }
+        }
+
+        [HarmonyPatch(typeof(PowersTab), nameof(PowersTab.performHoverAction))]
+        public class PowersTab_performHoverAction_Patch
+        {
+
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling PowersTab.performHoverAction");
+
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Ldfld && codes[i].operand is FieldInfo fi && fi == AccessTools.Field(typeof(ClickableTextureComponent), nameof(ClickableTextureComponent.drawShadow)))
+                    {
+                        SMonitor.Log("Adding replace to allow name");
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ModEntry), nameof(AllowName))));
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Ldarg_0));
+                        break;
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+            public static void Postfix(PowersTab __instance)
+            {
+                if (!Config.ModEnabled || Config.ShowMissingPowerDetails || string.IsNullOrEmpty(__instance.hoverText))
+                    return;
+                foreach(var p in __instance.powers[__instance.currentPage])
+                {
+                    if(p.label == __instance.hoverText && !p.drawShadow)
+                    {
+                        __instance.descriptionText = "";
+                    }
+                }
             }
         }
     }

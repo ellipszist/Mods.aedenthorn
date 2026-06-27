@@ -13,15 +13,33 @@ namespace ShowMissingCollectionEntries
                 return value;
             return true;
         }
-        public static Color ModifyColor(Color color, CollectionsPage page)
+        public static Color ModifyColor(Color color, IClickableMenu iPage)
         {
-            if (!Config.ModEnabled || !Config.ShowMissingIcons || page.currentTab == 5)
+            if (!Config.ModEnabled)
                 return color;
-            if(page.currentTab == 4)
+            if(iPage is CollectionsPage page)
             {
-                return Config.MissingRecipeTint;
+                if (!Config.ShowMissingItemIcons || page.currentTab == 5)
+                    return color;
+                if (page.currentTab == 4)
+                {
+                    return Config.MissingRecipeTint;
+                }
+                return Color.White;
             }
-            return Color.White;
+            else if(iPage is PowersTab tab)
+            {
+                if (!Config.ShowMissingPowerIcons)
+                    return color;
+                return Color.White;
+            }
+            return color;
+        }
+        public static bool AllowName(bool value, PowersTab tab)
+        {
+            if (value || Config.ModEnabled || !Config.ShowMissingPowerNames)
+                return value;
+            return value;
         }
 
         private void ReloadCollections()
