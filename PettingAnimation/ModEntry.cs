@@ -4,9 +4,8 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.Menus;
-using StardewValley.Tools;
-using System;
+using StardewValley.Characters;
+using StardewValley.Extensions;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -21,7 +20,10 @@ namespace PettingAnimation
         public static IModHelper SHelper;
         public static ModConfig Config;
         public static ModEntry context;
-        public const string facingKey = "aedenthorn.PettingAnimation/facing";
+        public const string pettingKey = "aedenthorn.PettingAnimation/facing";
+        public static PerScreen<Vector2> offset = new PerScreen<Vector2>();
+        public static PerScreen<float> layer = new PerScreen<float>();
+        public static PerScreen<int> ticks = new PerScreen<int>();
         public override void Entry(IModHelper helper)
         {
             Config = Helper.ReadConfig<ModConfig>();
@@ -40,13 +42,20 @@ namespace PettingAnimation
 
         private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
         {
-            Config.Debug = true;
-            SHelper.WriteConfig(Config);
+            if (Config.Debug)
+            {
+                Config.Debug = false;
+                SHelper.WriteConfig(Config);
+            }
             if (Context.IsPlayerFree && Config.Debug && e.Button == SButton.NumPad9)
             {
                 //Game1.activeClickableMenu = new AnimationPreviewTool();
-                //asreturn;
-                
+
+                string type = Game1.random.ChooseFrom(Game1.petData.Keys.ToArray());
+                string breed = Game1.random.ChooseFrom(Game1.petData[type].Breeds.Select(b => b.Id).ToArray());
+                var point = Game1.player.TilePoint + new Point(Game1.random.Choose(-1, 1), Game1.random.Choose(-1, 1));
+                var pet = new Pet(point.X, point.Y, breed, type);
+                pet.warpToFarmHouse(Game1.player);
             }
         }
 

@@ -1,4 +1,9 @@
 {
-  "open-drawer":  "Open Launcher",
-  "Close-drawer":  "Close Launcher"
+  "open-drawer": "Open Launcher",
+  "Close-drawer": "Close Launcher",
+  "keybinds": "Keybinds",
+  "back": "<- Back",
+  "name": "Name",
+  "desc": "Description",
+  "keybind": "Keybind"
 }

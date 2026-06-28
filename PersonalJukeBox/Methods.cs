@@ -41,7 +41,6 @@ namespace PersonalJukeBox
             AccessTools.StaticFieldRefAccess<Game1, bool>("requestedMusicDirty") = true;
             AccessTools.StaticFieldRefAccess<Game1, string>("requestedMusicTrack") = song;
             AccessTools.StaticFieldRefAccess<Game1, bool>("requestedMusicTrackOverrideable") = false;
-            Game1.activeClickableMenu = null;
             if (Menu is not null)
             {
                 Menu.RebuildElements();

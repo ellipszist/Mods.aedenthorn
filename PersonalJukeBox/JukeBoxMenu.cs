@@ -183,11 +183,13 @@ namespace PersonalJukeBox
             {
                 Game1.playSound("shiny4");
                 ChangeMusic(null);
+                musicDropdown.SetCurrentItem(song);
             }
             else if (song == null && playButton.bounds.Contains(x, y))
             {
                 Game1.playSound("shiny4");
                 ModEntry.playingSong.Value = null;
+                ModEntry.restarting.Value = true;
                 ChangeMusic(musicDropdown.GetCurrentItem());
             }
             else if (prevButton.bounds.Contains(x, y))
@@ -249,11 +251,12 @@ namespace PersonalJukeBox
                     UpdateSongFlags();
                     return;
                 }
-                if (Game1.currentSong?.Name == song)
+                if (Game1.currentSong?.Name == song && !ModEntry.restarting.Value)
                 {
                     UpdateSongFlags();
                     return;
                 }
+                ModEntry.restarting.Value = false;
             }
             else
             {

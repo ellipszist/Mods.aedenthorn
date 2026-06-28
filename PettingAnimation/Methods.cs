@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
+using StardewValley.Characters;
 using StardewValley.ItemTypeDefinitions;
 using StardewValley.Menus;
 using System;
@@ -9,21 +10,26 @@ namespace PettingAnimation
 {
     public partial class ModEntry
     {
-        public static Vector2 GetOffset(string str)
+        public static void PetPet(Character target, Farmer who)
         {
-            int amount = 32;
-            return str switch
+            ticks.Value = 0;
+            layer.Value = who.FacingDirection == 2 ? -1 : target.StandingPixel.Y / 10000f + 0.0002f;
+            int amount = target.GetType().Name switch
             {
-                "1" => new(0, -amount),
-                "2" => new(amount, 0),
-                "3" => new(0, amount),
-                "4" => new(-amount, 0),
-                _ => new(0, 0),
+               nameof(Pet) => 32,
+               nameof(FarmAnimal) => 32,
+               _ => 32
             };
-        }
-        public static void PetPet(Farmer who)
-        {
-            who.modData[facingKey] = (who.FacingDirection + 1).ToString();
+            Vector2 distance = (target.GetBoundingBox().Center - who.GetBoundingBox().Center).ToVector2();
+            offset.Value = who.FacingDirection switch
+            {
+                0 => distance - new Vector2(0, -amount),
+                1 => distance - new Vector2(amount, 0),
+                2 => distance - new Vector2(0, amount),
+                3 => distance - new Vector2(-amount, 0),
+                _ => distance - new Vector2(0, 0),
+            };
+            who.modData[pettingKey] = "true";
             int which = who.FacingDirection switch
             {
                 0 => FarmerSprite.swordswipeUp,
@@ -32,7 +38,7 @@ namespace PettingAnimation
                 _ => FarmerSprite.swordswipeLeft,
             };
             who.animateOnce(which);
-            int speed = 300;
+            int speed = Config.FrameMilliseconds;
             who.FarmerSprite.timer = speed;
             for (int i = 0; i < who.FarmerSprite.currentAnimation.Count; i++)
             {
@@ -44,7 +50,9 @@ namespace PettingAnimation
                     xOffset = f.xOffset,
                     frameEndBehavior = i == who.FarmerSprite.currentAnimation.Count - 1 ? new AnimatedSprite.endOfAnimationBehavior((Farmer f) =>
                     {
-                        f.modData.Remove(facingKey);
+                        offset.Value = Vector2.Zero;
+                        layer.Value = -1;
+                        ticks.Value = 0;
                     }) : null
                 };
             }

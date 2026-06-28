@@ -1,14 +1,11 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Media;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Extensions;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -27,6 +24,7 @@ namespace PersonalJukeBox
         public const string listKey = "aedenthorn.PersonalJukeBox/list";
         public static PerScreen<string> playingSong = new();
         public static PerScreen<bool> clicked = new();
+        public static PerScreen<bool> restarting = new();
 
         public static string PlayerSong
         {

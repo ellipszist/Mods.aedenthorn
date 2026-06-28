@@ -52,22 +52,22 @@ namespace TwoPlayerPrairieKing
 
             configMenu.AddBoolOption(
                 mod: ModManifest,
-                name: () => "Mod Enabled?",
+                name: () => SHelper.Translation.Get("ModEnabled"),
                 getValue: () => Config.ModEnabled,
                 setValue: value => Config.ModEnabled = value
             );
             
             configMenu.AddBoolOption(
                 mod: ModManifest,
-                name: () => "Same Location Only?",
-                tooltip: () => "Only play with NPCs in the same location as you",
+                name: () => SHelper.Translation.Get("SameLocation"),
+                tooltip: () => SHelper.Translation.Get("SameLocation.Desc"),
                 getValue: () => Config.SameLocation,
                 setValue: value => Config.SameLocation = value
             );
 
             configMenu.AddNumberOption(
                 mod: ModManifest,
-                name: () => "Min Hearts To Invite",
+                name: () => SHelper.Translation.Get("MinHearts"),
                 getValue: () => Config.MinHearts,
                 setValue: value => Config.MinHearts = value,
                 min: 0,

@@ -1,12 +1,15 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
+using StardewValley.BellsAndWhistles;
 using StardewValley.Extensions;
 using StardewValley.Menus;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -157,7 +160,7 @@ namespace LauncherDrawer
             if (Config.Debug)
             {
                 //var dict = LauncherDict;
-                SHelper.GameContent.InvalidateCache(dictPath);
+                //SHelper.GameContent.InvalidateCache(dictPath);
             }
             if (!Config.ModEnabled || !Context.IsPlayerFree)
                 return;
@@ -322,6 +325,60 @@ namespace LauncherDrawer
                         );
                     }
                 }
+                //configMenu.AddPageLink(
+                //    mod: ModManifest,
+                //    pageId: "keybinds",
+                //    text: () => Helper.Translation.Get("keybinds")
+                //);
+                //configMenu.AddPage(
+                //    mod: ModManifest,
+                //    pageId: "keybinds"
+                //);
+                //configMenu.AddPageLink(
+                //    mod: ModManifest,
+                //    pageId: "main",
+                //    text: () => Helper.Translation.Get("back")
+                //);
+                //for(int i = 0; i < Config.Keybinds.Count; i++)
+                //{
+                //    var split = Config.Keybinds[i].Split('|');
+
+                //    configMenu.AddComplexOption(
+                //        mod: ModManifest,
+                //        name: () => Config.Keybinds[i],
+                //        draw: (SpriteBatch b, Vector2 pos) =>
+                //        {
+                //            var str = Helper.Translation.Get("delete");
+                //            var mpos = Game1.getMousePosition(true);
+                //            var size = Game1.getMousePosition(true);
+                //            if (mpos.X > pos.X && mpos.Y > pos.Y && )
+                //            foreach(var ib in Game1.options.useToolButton)
+                //            {
+                //                if(SHelper.Input.IsDown((SButton)ib.key))
+                //            }
+                //            Utility.drawTextWithShadow(b, str, Game1.dialogueFont, pos, Game1.textColor);
+                //        }
+                //    );
+
+                //    configMenu.AddTextOption(
+                //        mod: ModManifest,
+                //        name: () => Helper.Translation.Get("name"),
+                //        getValue: () => split[0],
+                //        setValue: value => { split[0] = value; Config.Keybinds[i] = string.Join('|', split); }  
+                //    );
+                //    configMenu.AddTextOption(
+                //        mod: ModManifest,
+                //        name: () => Helper.Translation.Get("desc"),
+                //        getValue: () => split[1],
+                //        setValue: value => { split[1] = value; Config.Keybinds[i] = string.Join('|', split); }  
+                //    );
+                //    configMenu.AddKeybindList(
+                //        mod: ModManifest,
+                //        name: () => Helper.Translation.Get("keybind"),
+                //        getValue: () => new KeybindList(new Keybind(split[2].Split(',').Select(s => Enum.Parse<SButton>(s)).ToArray())),
+                //        setValue: value => { split[2] = string.Join(',', value.Keybinds[0].Buttons.Select(b => b.ToString())); Config.Keybinds[i] = string.Join('|', split); }  
+                //    );
+                //}
             }
         }
 
