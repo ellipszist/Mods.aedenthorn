@@ -1,14 +1,43 @@
-﻿using System.Collections;
+﻿using Microsoft.Xna.Framework;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Tutorials
 {
     public interface ITutorialAPI
     {
+        public void AddTutorialFrame(string key, string subtitle, string texture, int frames, int frameRate, float scale, Rectangle? startRect, string text);
+        public void AddTutorialTrigger(string key, string tutorial, string category, List<string> categories);
         public void AddTutorial(string key, object indata);
     }
     public class TutorialAPI : ITutorialAPI
     {
+        public void AddTutorialFrame(string key, string subtitle, string texture, int frames, int frameRate, float scale, Rectangle? startRect, string text)
+        {
+            if(ModEntry.TutorialDict.TryGetValue(key, out var data))
+            {
+                data.Frames.Add(new TutorialFrame()
+                {
+                    Subtitle = subtitle,
+                    Texture = texture,
+                    Frames = frames,
+                    FrameRate = frameRate,
+                    Scale = scale,
+                    StartRect = startRect,
+                    Text = text
+                });
+            }
+        }
+        public void AddTutorialTrigger(string key, string tutorial, string category, List<string> categories)
+        {
+            ModEntry.TutorialTriggerDict.Add(key, new()
+            {
+                Tutorial = tutorial,
+                Category = category,
+                Categories = categories
+            });
+        }
+
         public void AddTutorial(string key, object indata)
         {
             var data = new TutorialData();

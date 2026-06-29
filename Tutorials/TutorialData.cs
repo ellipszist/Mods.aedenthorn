@@ -7,7 +7,6 @@ namespace Tutorials
     {
         public string Title { get; set; }
         public string Category { get; set; }
-        public List<string> Triggers { get; set; }
         public List<ITutorialFrame> Frames { get; set; }
     }
 
@@ -25,7 +24,6 @@ namespace Tutorials
     {
         public string Title { get; set; }
         public string Category { get; set; }
-        public List<string> Triggers { get; set; } = new();
         public List<ITutorialFrame> Frames { get; set; } = new();
     }
 
@@ -40,4 +38,11 @@ namespace Tutorials
         public string Text { get; set; }
     }
 
+    public class TutorialTrigger
+    {
+        public string Tutorial { get; set; }
+        public string Category { get; set; }
+        public List<string> Categories { get; set; } = new();
+
+    }
 }

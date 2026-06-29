@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Netcode;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Extensions;
 using StardewValley.GameData;
 using StardewValley.GameData.Weapons;
 using StardewValley.Internal;
@@ -74,29 +75,50 @@ namespace AreaOfEffect
 
         }
 
-        public static List<Vector2> GetTiles(Vector2 tileLocation, int radius)
+        public static List<Vector2> GetTiles(Vector2 origin, Vector2 target, SpellCastData data)
         {
-            Vector2 start = tileLocation + new Vector2(-1, -1) * radius;
-            Vector2 position = tileLocation;
-            List<Vector2> list = new();
-            if(radius == 0)
+            if(data.AreaType == AOEType.Line)
             {
-                list.Add(tileLocation);
+                HashSet<Vector2> set = new();
+                var length = (target - origin).Length();
+                for (int i = 0; i < length; i++)
+                {
+                    Vector2 pos = Vector2.Lerp(origin, target, i);
+                    set.AddRange(GetRoundedTiles(pos));
+                }
+                return set.ToList();
+            }
+            List<Vector2> list = new();
+            Vector2 start = target + new Vector2(-1, -1) * data.Radius;
+            Vector2 position = target;
+            if(data.Radius == 0)
+            {
+                list.Add(target);
                 return list;
             }
-            var diameter = (radius) * 2;
+            var diameter = (data.Radius) * 2;
             for (int x = 0; x < diameter; x++)
             {
                 for (int y = 0; y < diameter; y++)
                 {
                     Vector2 tile = start + new Vector2(x, y);
                     var distance = (int)Math.Round(Vector2.Distance(position, tile));
-                    if (distance <= radius)
+                    if (data.AreaType == AOEType.Square || distance <= data.Radius)
                         list.Add(tile);
                 }
             }
             return list;
+        }
 
+        private static IEnumerable<Vector2> GetRoundedTiles(Vector2 pos)
+        {
+            return new List<Vector2>()
+            {
+                new Vector2((float)Math.Ceiling(pos.X), (float)Math.Ceiling(pos.Y)),
+                new Vector2((float)Math.Ceiling(pos.X), (float)Math.Floor(pos.Y)),
+                new Vector2((float)Math.Floor(pos.X), (float)Math.Ceiling(pos.Y)),
+                new Vector2((float)Math.Floor(pos.X), (float)Math.Floor(pos.Y))
+            };
         }
 
         public static Vector2 GetTargetTile(Farmer f, SpellData t, int maxDistance)
@@ -173,9 +195,9 @@ namespace AreaOfEffect
             if (__instance.modData.TryGetValue(effectKey, out key))
             {
             }
-            else if(TryGetTool(__instance, out var tdata) && tdata.Type != null)
+            else if(TryGetTool(__instance, out var tdata) && tdata.Spells?.Count == 1)
             {
-                key = tdata.Type;
+                key = tdata.Spells[0];
             }
             else
             {
@@ -263,6 +285,17 @@ namespace AreaOfEffect
             projectile.maxTravelDistance.Value = (int)(v.Length());
             projectile.height.Value = 32f;
             who.currentLocation.projectiles.Add(projectile);
+            if(data.AreaType == AOEType.Line)
+            {
+                ProjectileDict[projectile] = new()
+                {
+                    firer = who,
+                    location = l,
+                    target = tile,
+                    affectedTiles = new(),
+                    spell = data
+                };
+            }
         }
 
         public static void TrySetCustomVariable(object obj, SpellEffect effect)
@@ -599,6 +632,8 @@ namespace AreaOfEffect
             int seqLength = frameHeight / 3;
             int seqSide = seqLength / 2; // (int)Math.Round(seqLength / Math.Sqrt(2));
             int frameRate = 60;
+            string catName = SHelper.Translation.Get("aoe-cat");
+            string spellPrefix = SHelper.Translation.Get("aoe-spell-prefix");
             foreach (var kvp in SpellDict)
             {
                 if (kvp.Value.AddTutorial == true)
@@ -717,8 +752,8 @@ namespace AreaOfEffect
                     //continue;
                     var tdata = new TutorialData()
                     {
-                        Title = kvp.Value.DisplayName,
-                        Category = SHelper.Translation.Get("aoe-spells"),
+                        Title = spellPrefix + kvp.Value.DisplayName,
+                        Category = catName,
                         Frames = new()
                         {
                             new TutorialFrame()
@@ -736,45 +771,42 @@ namespace AreaOfEffect
             }
             var tutorial = new TutorialData()
             {
-                Title = "Spell Casting",
-                Category = "Area Of Effect",
-                Triggers = new()
-                {
-                    "(T)aedenthorn.AreaOfEffect/wand2"
-                },
+                Title = SHelper.Translation.Get("aoe-tutorial"),
+                Category = catName,
                 Frames = new()
                 {
                     new TutorialFrame()
                     {
-                        Texture = "aedenthorn.Tutorials/picture1",
-                        Text = "To cast a spell, hold a wand and press the use tool button.",
+                        Texture = internalPrefix + "1",
+                        Text = SHelper.Translation.Get("tutorial-1"),
 
                     },
                     new TutorialFrame()
                     {
-                        Texture = "aedenthorn.Tutorials/picture2",
-                        Text = "This will darken the screen and let you draw a pattern in the darkness.",
+                        Texture = internalPrefix + "2",
+                        Text = SHelper.Translation.Get("tutorial-2"),
 
                     },
                     new TutorialFrame()
                     {
-                        Texture = "aedenthorn.Tutorials/picturefireball",
+                        Texture = internalPrefix + "fireball",
                         StartRect = new Rectangle(0, 0, 1970, 1109),
-                        Text = "Hold down the use tool button and draw the pattern. When a pattern is recognized, the name of the spell will appear.",
+                        Text = SHelper.Translation.Get("tutorial-3"),
                         Frames = 4,
                         FrameRate = 60
                     },
                     new TutorialFrame()
                     {
-                        Texture = "aedenthorn.Tutorials/picture3",
+                        Texture = internalPrefix + "3",
                         StartRect = new Rectangle(0, 0, 1499, 843),
-                        Text = "Let go of the button to set the spell, then you can use the wand to cast it.",
+                        Text = SHelper.Translation.Get("tutorial-4"),
                         Frames = 2,
                         FrameRate = 60
                     }
                 }
             };
             iTutorialAPI.AddTutorial("aedenthorn.AreaOfEffect/basics", tutorial);
+            iTutorialAPI.AddTutorialTrigger("(T)aedenthorn.AreaOfEffect/wand2", "aedenthorn.AreaOfEffect/basics", null, new() { SHelper.Translation.Get("aoe-cat") });
 
         }
         public static Color GetDirectionColor(int i)

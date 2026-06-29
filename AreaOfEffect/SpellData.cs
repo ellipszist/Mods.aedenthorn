@@ -20,6 +20,14 @@ namespace AreaOfEffect
         UpLeft,
         None
     }
+
+    [Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
+    public enum AOEType
+    {
+        Circle,
+        Square,
+        Line
+    }
     
     [Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
     public enum SpriteType
@@ -32,6 +40,7 @@ namespace AreaOfEffect
         Fountain,
         Heart,
         Ice,
+        Lightning,
         Object,
         Poof,
         Texture,
@@ -109,7 +118,7 @@ namespace AreaOfEffect
         public int RechargeAmount { get; set; } = 1;
         public int MaxDistance { get; set; }
         public string RechargeSound { get; set; }
-        public string Type { get; set; }
+        public List<string> Spells { get; set; }
         public Color ChargesColor { get; set; } = Color.White;
         public Color ChargesBackColor { get; set; } = Color.DarkGray;
         public Color AuraColor { get; set; } = Color.White;
@@ -127,6 +136,7 @@ namespace AreaOfEffect
         public string CastSound { get; set; }
         public string TriggerSound { get; set; }
         public int Charges { get; set; } = 1;
+        public AOEType AreaType { get; set; } = AOEType.Circle;
         public int Radius { get; set; }
         public List<string> Buffs { get; set; } = new();
         public List<SpellProjectileData> Projectiles { get; set; } = new();

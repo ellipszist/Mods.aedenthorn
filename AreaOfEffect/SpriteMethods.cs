@@ -264,7 +264,7 @@ namespace AreaOfEffect
                 foreach (var e in data.Effects)
                 {
                     List<object> applied = new();
-                    foreach (var tile in GetTiles(tile, data.Radius))
+                    foreach (var tile in GetTiles(who.Tile, tile, data))
                     {
                         ApplyEffectToTile(l, who, tile, e, applied);
                     }

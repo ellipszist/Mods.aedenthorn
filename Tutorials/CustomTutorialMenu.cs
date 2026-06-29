@@ -7,6 +7,7 @@ using StardewValley.Menus;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using xTile.Tiles;
 
 namespace Tutorials
 {
@@ -74,9 +75,9 @@ namespace Tutorials
             width = size + sidebarWidth;
             
             xPositionOnScreen = Game1.uiViewport.Width / 2 - width / 2;
-            yPositionOnScreen = Game1.uiViewport.Height / 2 - height / 2;
+            yPositionOnScreen = Game1.uiViewport.Height / 2 - height / 2 - 32;
 
-            int entryHeight = 64;
+            int entryHeight = 48;
             int entryWidth = sidebarWidth - 18;
             maxEntries = size / entryHeight;
             int count = 0;
@@ -112,7 +113,10 @@ namespace Tutorials
                             if(openingTutorial && t == tutorialKey)
                             {
                                 openingTutorial = false;
-                                scrolled = count - 1;
+                                while(count > maxEntries + scrolled)
+                                {
+                                    scrolled++;
+                                } 
                                 Recalibrate();
                                 return;
                             }
@@ -132,7 +136,6 @@ namespace Tutorials
                 }
             }
         breakout:
-
             upperRightCloseButton = new ClickableTextureComponent(new Rectangle(xPositionOnScreen + width - 36, yPositionOnScreen + 8, 48, 48), Game1.mouseCursors, new Rectangle(337, 494, 12, 12), 4f, false)
             {
                 myID = 9175502
@@ -277,25 +280,7 @@ namespace Tutorials
             //b.Draw(Game1.menuTexture, new Vector2((float)(this.xPositionOnScreen + sidebarWidth + this.size - 64), (float)yPosition), new Rectangle?(Game1.getSourceRectForStandardTileSheet(Game1.menuTexture, 7, -1, -1)), Color.White);
            
             upperRightCloseButton.draw(b);
-            foreach(var cc in sidebarEntries)
-            {
-                if (cc.bounds.Contains(Game1.getMousePosition()))
-                {
-                    b.Draw(Game1.staminaRect, cc.bounds, Color.WhiteSmoke * 0.5f);
-                }
-                else if (cc.name == tutorialKey)
-                {
-                    b.Draw(Game1.staminaRect, cc.bounds, Color.LightGoldenrodYellow * 0.5f);
-                }
-                if (cc.name.StartsWith("cat|"))
-                {
-                    SpriteText.drawString(b, cc.name.Substring(4), cc.bounds.X + 16, cc.bounds.Y + 16, 999999, size - spaceToClearSideBorder * 8, 999999, 1f, 0.88f, false, -1, "", null, SpriteText.ScrollTextAlignment.Left);
-                }
-                else
-                {
-                    b.DrawString(Game1.dialogueFont, ModEntry.TutorialDict[cc.name].Title, new Vector2(cc.bounds.X + 24, cc.bounds.Y + 16), Game1.textColor);
-                }
-            }
+            
             if(tutorial != null)
             {
                 if(tutorial.Frames.Count > 1)
@@ -314,13 +299,58 @@ namespace Tutorials
                         which = 0;
                         ticks = 0;
                     }
-                    texture.sourceRect = new(r.Location + new Point(r.Width * which, 0), r.Size);
+                    int startX = r.Width * which;
+                    int startY = 0;
+                    while(startX >= texture.texture.Width)
+                    {
+                        startX -= texture.texture.Width;
+                        startY += r.Height;
+                    }
+                    texture.sourceRect = new(r.Location + new Point(startX, startY), r.Size);
                 }
                 texture?.draw(b);
 
                 if (tutorial.Frames[currentPage].Text is string str)
                 {
                     SpriteText.drawString(b, str, xPositionOnScreen + sidebarWidth + 80, yPosition + 64, 999999, size - spaceToClearSideBorder * 8, 999999, 1f, 0.88f, false, -1, "", null, SpriteText.ScrollTextAlignment.Left);
+                }
+            }
+            foreach (var cc in sidebarEntries)
+            {
+                if (cc.name.StartsWith("cat|"))
+                {
+                    if (cc.bounds.Contains(Game1.getMousePosition()))
+                    {
+                        b.Draw(Game1.staminaRect, cc.bounds, Color.WhiteSmoke * 0.5f);
+                    }
+                    Utility.drawTextWithShadow(b, cc.name.Substring(4), Game1.dialogueFont, new Vector2(cc.bounds.X + 8, cc.bounds.Y + 4), Game1.textColor);
+
+                    //SpriteText.drawString(b, cc.name.Substring(4), cc.bounds.X + 16, cc.bounds.Y + 4, 999999, size - spaceToClearSideBorder * 8, 999999, 1f, 0.88f, false, -1, "", null, SpriteText.ScrollTextAlignment.Left);
+                }
+                else
+                {
+                    var font = Game1.smallFont;
+                    string title = ModEntry.TutorialDict[cc.name].Title;
+                    if (cc.bounds.Contains(Game1.getMousePosition()))
+                    {
+                        b.Draw(Game1.staminaRect, new Rectangle(cc.bounds.Location, new Point((int)Math.Max(font.MeasureString(title).X + 48, cc.bounds.Width), cc.bounds.Height)), Color.WhiteSmoke * 0.5f);
+                    }
+                    else
+                    {
+                        if (cc.name == tutorialKey)
+                        {
+                            b.Draw(Game1.staminaRect, cc.bounds, Color.LightGoldenrodYellow * 0.5f);
+                        }
+                        if(font.MeasureString(title).X > cc.bounds.Width - 48) 
+                        {
+                            while (font.MeasureString(title).X > cc.bounds.Width - 48)
+                            {
+                                title = title.Substring(0, title.Length - 1);
+                            }
+                            title += "...";
+                        }
+                    }
+                    Utility.drawTextWithShadow(b, title, font, new Vector2(cc.bounds.X + 24, cc.bounds.Y + 8), Game1.textColor);
                 }
             }
             //leftArrow.draw(b);

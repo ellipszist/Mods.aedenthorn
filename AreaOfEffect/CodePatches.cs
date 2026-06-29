@@ -24,7 +24,7 @@ namespace AreaOfEffect
                 {
                     if (Config.ForceRecast)
                     {
-                        Game1.activeClickableMenu = new CastSpellMenu(t);
+                        Game1.activeClickableMenu = new CastSpellMenu(t, tdata.Spells);
                     }
                     else
                     {
@@ -66,7 +66,7 @@ namespace AreaOfEffect
                 {
                     if (Config.AutoOpenUI)
                     {
-                        Game1.activeClickableMenu = new CastSpellMenu(__instance, GetTargetTile(f, data, tdata.MaxDistance));
+                        Game1.activeClickableMenu = new CastSpellMenu(__instance, tdata.Spells, GetTargetTile(f, data, tdata.MaxDistance));
                     }
                     else
                     {

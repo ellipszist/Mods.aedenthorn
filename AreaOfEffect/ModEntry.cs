@@ -8,7 +8,6 @@ using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.GameData.Tools;
 using StardewValley.Monsters;
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -33,10 +32,12 @@ namespace AreaOfEffect
         public const string effectKey = "aedenthorn.AreaOfEffect/effect";
         public const string lightKey = "aedenthorn.AreaOfEffect/light";
         public const string texturePrefix = "aedenthorn.AreaOfEffect/textures/";
+        public const string internalPrefix = "aedenthorn.AreaOfEffect/internal/";
 
         public static Dictionary<string, Texture2D> TextureDict { get; set; } = new();
         public static Dictionary<string, SpellLightData> LightDict { get; set; } = new();
         public static Dictionary<Monster, MonsterBuffManager> BuffDict { get; set; } = new();
+        public static Dictionary<SpellProjectile, LinearProjectileInstance> ProjectileDict { get; set; } = new();
 
         public static Dictionary<string, SpellToolData> ToolDict
         {
@@ -67,7 +68,6 @@ namespace AreaOfEffect
             helper.Events.Content.AssetRequested += Content_AssetRequested;
             helper.Events.Input.ButtonPressed += Input_ButtonPressed;
             helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
-
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
@@ -106,6 +106,42 @@ namespace AreaOfEffect
                     }
                 }
             }
+            if (ProjectileDict.Any())
+            {
+                foreach (var p in ProjectileDict.Keys.ToArray())
+                {
+                    var data = ProjectileDict[p];
+                    if(!data.location.projectiles.Contains(p))
+                    {
+                        ProjectileDict.Remove(p);
+                        continue;
+                    }
+                    foreach(var tile in GetRoundedTiles(p.position.Value / 64))
+                    {
+                        if (Vector2.Distance(data.firer.Tile, tile) < 2)
+                            continue;
+                        if (!data.affectedTiles.Contains(tile))
+                        {
+                            foreach (var effect in data.spell.Effects)
+                            {
+                                if (effect.PerTile)
+                                {
+                                    List<object> applied = new();
+                                    ApplyEffectToTile(data.location, data.firer, tile, effect, applied);
+                                }
+                            }
+                            foreach (var s in data.spell.Sprites)
+                            {
+                                if (s.PerTile)
+                                {
+                                    ApplySpriteToTile(data.location, tile, s, Vector2.Distance(data.target, tile));
+                                }
+                            }
+                            data.affectedTiles.Add(tile);
+                        }
+                    }
+                }
+            }
         }
 
         private void Input_ButtonsChanged(object sender, ButtonsChangedEventArgs e)
@@ -114,9 +150,9 @@ namespace AreaOfEffect
                 return;
             if (Context.IsPlayerFree)
             {
-                if (Config.CastButton.JustPressed() && Game1.player.CurrentTool is Tool t && TryGetTool(t, out var data) && data.Type == null)
+                if (Config.CastButton.JustPressed() && Game1.player.CurrentTool is Tool t && TryGetTool(t, out var data) && data.Spells.Count != 1)
                 {
-                    Game1.activeClickableMenu = new CastSpellMenu(t);
+                    Game1.activeClickableMenu = new CastSpellMenu(t, data.Spells);
                     foreach(var k in Config.CastButton.Keybinds)
                     {
                         foreach (var b in k.Buttons)
@@ -148,7 +184,7 @@ namespace AreaOfEffect
                         //{
                         //    SHelper.GameContent.InvalidateCache(k);
                         //}
-                        CreateTutorials();
+                        //CreateTutorials();
                         //File.WriteAllText(Path.Combine(SHelper.DirectoryPath, "test.json"), JsonConvert.SerializeObject(SpellDict, Formatting.Indented));
                     }
                 }
@@ -159,7 +195,18 @@ namespace AreaOfEffect
         {
             if (!Config.ModEnabled)
                 return;
-            if (e.NameWithoutLocale.IsEquivalentTo(toolsPath))
+            if (e.NameWithoutLocale.StartsWith(texturePrefix))
+            {
+                if (TextureDict.TryGetValue(e.NameWithoutLocale.ToString(), out Texture2D tex))
+                {
+                    e.LoadFrom(() => tex, Priority.Last);
+                }
+            }
+            else if (e.NameWithoutLocale.StartsWith(internalPrefix))
+            {
+                e.LoadFromModFile<Texture2D>(e.NameWithoutLocale.ToString().Replace(internalPrefix, "assets/"), AssetLoadPriority.Exclusive);
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo(toolsPath))
             {
                 e.LoadFrom(() => new Dictionary<string, SpellToolData>()
                 {
@@ -167,11 +214,11 @@ namespace AreaOfEffect
                         testWand,
                         new()
                         {
-                            MaxCharges = 100,
+                            MaxCharges = 20,
                             RechargeItem = "768",
                             RechargeAmount = 10,
                             MaxDistance = 10,
-                            Type = "Fireball",
+                            Spells = new(){ "Fireball" },
                             RechargeSound = "cowboy_powerup",
                             ChargesColor = Color.OrangeRed,
                             AuraColor = Color.OrangeRed,
@@ -181,7 +228,7 @@ namespace AreaOfEffect
                         testWand2,
                         new()
                         {
-                            MaxCharges = 100,
+                            MaxCharges = 20,
                             RechargeItem = "768",
                             RechargeAmount = 10,
                             MaxDistance = 10,
@@ -215,6 +262,71 @@ namespace AreaOfEffect
                                 {
                                     CastSound = "discoverMineral",
                                     Radius = 0,
+                                    Charges = 1,
+                                    Sprites = new()
+                                    {
+                                        new()
+                                        {
+                                            Type = SpriteType.Sparkle,
+                                            Interval = 300,
+                                            Number = 5,
+                                        }
+                                    },
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Light,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Monster,
+                                                SpellAffectedType.Farmer,
+                                                SpellAffectedType.Tile
+                                            },
+                                            First = true,
+                                            Value = 10000,
+                                            Color = new Color(0, 50, 170),
+                                            Radius = 5
+                                        }
+                                    }
+                                },
+                                new()
+                                {
+                                    CastSound = "discoverMineral",
+                                    Radius = 0,
+                                    Charges = 2,
+                                    Sprites = new()
+                                    {
+                                        new()
+                                        {
+                                            Type = SpriteType.Sparkle,
+                                            Interval = 300,
+                                            Number = 5,
+                                        }
+                                    },
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Light,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Monster,
+                                                SpellAffectedType.Farmer,
+                                                SpellAffectedType.Tile
+                                            },
+                                            First = true,
+                                            Value = 20000,
+                                            Color = new Color(0, 50, 170),
+                                            Radius = 10
+                                        }
+                                    }
+                                },
+                                new()
+                                {
+                                    CastSound = "discoverMineral",
+                                    Radius = 0,
+                                    Charges = 3,
                                     Sprites = new()
                                     {
                                         new()
@@ -238,7 +350,171 @@ namespace AreaOfEffect
                                             First = true,
                                             Value = 30000,
                                             Color = new Color(0, 50, 170),
-                                            Radius = 10
+                                            Radius = 20
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "Lightning",
+                        new()
+                        {
+                            SetSound = "thunder",
+                            DisplayName = "Lightning Bolt",
+                            Sequence = new()
+                            {
+                                SpellDirection.DownLeft,
+                                SpellDirection.Right,
+                                SpellDirection.DownLeft
+                            },
+                            SpellLevels = new()
+                            {
+                                new()
+                                {
+                                    CastSound = "thunder",
+                                    Radius = 1,
+                                    Charges = 1,
+                                    Sprites = new()
+                                    {
+                                        new()
+                                        {
+                                            Type = SpriteType.Lightning,
+                                            PerTile = false
+                                        }
+                                    },
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Light,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Tile
+                                            },
+                                            Value = 1000,
+                                            Color = Color.White,
+                                            Radius = 1
+                                        },
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Damage,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Monster,
+                                                SpellAffectedType.Farmer
+                                            },
+                                            Value = 30
+                                        },
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Burn,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Twig,
+                                                SpellAffectedType.Weed,
+                                                SpellAffectedType.Grass,
+                                                SpellAffectedType.Tree
+                                            }
+                                        }
+                                    }
+                                },
+                                new()
+                                {
+                                    CastSound = "thunder",
+                                    Charges = 2,
+                                    Radius = 2,
+                                    Sprites = new()
+                                    {
+                                        new()
+                                        {
+                                            Type = SpriteType.Lightning,
+                                            PerTile = false
+                                        }
+                                    },
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Light,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Tile
+                                            },
+                                            Value = 1000,
+                                            Color = Color.White,
+                                            Radius = 2
+                                        },
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Damage,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Monster,
+                                                SpellAffectedType.Farmer
+                                            },
+                                            Value = 50
+                                        },
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Burn,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Twig,
+                                                SpellAffectedType.Weed,
+                                                SpellAffectedType.Grass,
+                                                SpellAffectedType.Tree
+                                            }
+                                        }
+                                    }
+                                },
+                                new()
+                                {
+                                    CastSound = "thunder",
+                                    Charges = 3,
+                                    Radius = 4,
+                                    Sprites = new()
+                                    {
+                                        new()
+                                        {
+                                            Type = SpriteType.Lightning,
+                                            PerTile = false
+                                        }
+                                    },
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Light,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Tile
+                                            },
+                                            Value = 1000,
+                                            Color = Color.White,
+                                            Radius = 4
+                                        },
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Damage,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Monster,
+                                                SpellAffectedType.Farmer
+                                            },
+                                            Value = 80
+                                        },
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Burn,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Twig,
+                                                SpellAffectedType.Weed,
+                                                SpellAffectedType.Grass,
+                                                SpellAffectedType.Tree
+                                            }
                                         }
                                     }
                                 }
@@ -327,7 +603,7 @@ namespace AreaOfEffect
                                                 SpellAffectedType.Monster,
                                                 SpellAffectedType.Farmer
                                             },
-                                            Value = 30
+                                            Value = 40
                                         },
                                         new()
                                         {
@@ -370,7 +646,7 @@ namespace AreaOfEffect
                                                 SpellAffectedType.Monster,
                                                 SpellAffectedType.Farmer
                                             },
-                                            Value = 40
+                                            Value = 60
                                         },
                                         new()
                                         {
@@ -431,10 +707,106 @@ namespace AreaOfEffect
                                             EffectType = SpellEffectType.Buff,
                                             Affected = new()
                                             {
-                                                SpellAffectedType.Monster,
                                                 SpellAffectedType.Farmer
                                             },
                                             Value = "19"
+                                        },
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Freeze,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Monster
+                                            },
+                                            Value = 4000
+                                        }
+                                    }
+                                },
+                                new()
+                                {
+                                    CastSound = "frozen",
+                                    Radius = 5,
+                                    Charges = 2,
+                                    Sprites = new()
+                                    {
+                                        new()
+                                        {
+                                            Type = SpriteType.Ice
+                                        }
+                                    },
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Damage,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Monster,
+                                                SpellAffectedType.Farmer
+                                            },
+                                            Value = 20
+                                        },
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Buff,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Farmer
+                                            },
+                                            Value = "19"
+                                        },
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Freeze,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Monster
+                                            },
+                                            Value = 8000
+                                        }
+                                    }
+                                },
+                                new()
+                                {
+                                    CastSound = "frozen",
+                                    Radius = 10,
+                                    Charges = 3,
+                                    Sprites = new()
+                                    {
+                                        new()
+                                        {
+                                            Type = SpriteType.Ice
+                                        }
+                                    },
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Damage,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Monster,
+                                                SpellAffectedType.Farmer
+                                            },
+                                            Value = 40
+                                        },
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Buff,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Farmer
+                                            },
+                                            Value = "19"
+                                        },
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Freeze,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Monster
+                                            },
+                                            Value = 16000
                                         }
                                     }
                                 }
@@ -461,7 +833,7 @@ namespace AreaOfEffect
                                 new()
                                 {
                                     CastSound = "yoba",
-                                    Radius = 3,
+                                    Radius = 0,
                                     Sprites = new()
                                     {
                                         new()
@@ -480,6 +852,56 @@ namespace AreaOfEffect
                                                 SpellAffectedType.Farmer
                                             },
                                             Value = 20
+                                        }
+                                    }
+                                },
+                                new()
+                                {
+                                    CastSound = "yoba",
+                                    Radius = 2,
+                                    Sprites = new()
+                                    {
+                                        new()
+                                        {
+                                            Type = SpriteType.Heart
+                                        }
+                                    },
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Heal,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Monster,
+                                                SpellAffectedType.Farmer
+                                            },
+                                            Value = 40
+                                        }
+                                    }
+                                },
+                                new()
+                                {
+                                    CastSound = "yoba",
+                                    Radius = 4,
+                                    Sprites = new()
+                                    {
+                                        new()
+                                        {
+                                            Type = SpriteType.Heart
+                                        }
+                                    },
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Heal,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Monster,
+                                                SpellAffectedType.Farmer
+                                            },
+                                            Value = 80
                                         }
                                     }
                                 }
@@ -505,7 +927,57 @@ namespace AreaOfEffect
                                 new()
                                 {
                                     CastSound = "thunder",
+                                    Radius = 3,
+                                    Sprites = new()
+                                    {
+                                        new()
+                                        {
+                                            Type = SpriteType.Fountain,
+                                            PerTile = false
+                                        }
+                                    },
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Water,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.HoeDirt
+                                            }
+                                        }
+                                    }
+                                },
+                                new()
+                                {
+                                    CastSound = "thunder",
                                     Radius = 5,
+                                    Charges = 2,
+                                    Sprites = new()
+                                    {
+                                        new()
+                                        {
+                                            Type = SpriteType.Fountain,
+                                            PerTile = false
+                                        }
+                                    },
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Water,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.HoeDirt
+                                            }
+                                        }
+                                    }
+                                },
+                                new()
+                                {
+                                    CastSound = "thunder",
+                                    Radius = 10,
+                                    Charges = 3,
                                     Sprites = new()
                                     {
                                         new()
@@ -547,7 +1019,49 @@ namespace AreaOfEffect
                                 new()
                                 {
                                     CastSound = "axchop",
+                                    Radius = 3,
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Tool,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Crop,
+                                                SpellAffectedType.Object,
+                                                SpellAffectedType.ResourceClump,
+                                                SpellAffectedType.Tree,
+                                            },
+                                            Value = "(T)CopperAxe"
+                                        }
+                                    }
+                                },
+                                new()
+                                {
+                                    CastSound = "axchop",
                                     Radius = 5,
+                                    Charges = 2,
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Tool,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Crop,
+                                                SpellAffectedType.Object,
+                                                SpellAffectedType.ResourceClump,
+                                                SpellAffectedType.Tree,
+                                            },
+                                            Value = "(T)GoldAxe"
+                                        }
+                                    }
+                                },
+                                new()
+                                {
+                                    CastSound = "axchop",
+                                    Radius = 10,
+                                    Charges = 3,
                                     Effects = new()
                                     {
                                         new()
@@ -585,7 +1099,49 @@ namespace AreaOfEffect
                                 new()
                                 {
                                     CastSound = "hammer",
+                                    Radius = 3,
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Tool,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Crop,
+                                                SpellAffectedType.Object,
+                                                SpellAffectedType.ResourceClump,
+                                                SpellAffectedType.Tree,
+                                            },
+                                            Value = "(T)CopperPickaxe"
+                                        }
+                                    }
+                                },
+                                new()
+                                {
+                                    CastSound = "hammer",
                                     Radius = 5,
+                                    Charges = 2,
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Tool,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Crop,
+                                                SpellAffectedType.Object,
+                                                SpellAffectedType.ResourceClump,
+                                                SpellAffectedType.Tree,
+                                            },
+                                            Value = "(T)GoldPickaxe"
+                                        }
+                                    }
+                                },
+                                new()
+                                {
+                                    CastSound = "hammer",
+                                    Radius = 10,
+                                    Charges = 3,
                                     Effects = new()
                                     {
                                         new()
@@ -623,7 +1179,7 @@ namespace AreaOfEffect
                                 new()
                                 {
                                     CastSound = "hoeHit",
-                                    Radius = 5,
+                                    Radius = 3,
                                     Effects = new()
                                     {
                                         new()
@@ -631,8 +1187,52 @@ namespace AreaOfEffect
                                             EffectType = SpellEffectType.Tool,
                                             Affected = new()
                                             {
-                                                SpellAffectedType.Tile,
-                                                SpellAffectedType.Object
+                                                SpellAffectedType.Crop,
+                                                SpellAffectedType.Object,
+                                                SpellAffectedType.ResourceClump,
+                                                SpellAffectedType.Tree,
+                                            },
+                                            Value = "(T)CopperHoe"
+                                        }
+                                    }
+                                },
+                                new()
+                                {
+                                    CastSound = "hoeHit",
+                                    Radius = 5,
+                                    Charges = 2,
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Tool,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Crop,
+                                                SpellAffectedType.Object,
+                                                SpellAffectedType.ResourceClump,
+                                                SpellAffectedType.Tree,
+                                            },
+                                            Value = "(T)GoldHoe"
+                                        }
+                                    }
+                                },
+                                new()
+                                {
+                                    CastSound = "hoeHit",
+                                    Radius = 10,
+                                    Charges = 3,
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Tool,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Crop,
+                                                SpellAffectedType.Object,
+                                                SpellAffectedType.ResourceClump,
+                                                SpellAffectedType.Tree,
                                             },
                                             Value = "(T)IridiumHoe"
                                         }
@@ -659,7 +1259,47 @@ namespace AreaOfEffect
                                 new()
                                 {
                                     CastSound = "explosion",
+                                    Radius = 3,
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Explode,
+                                            PerTile = false,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Farmer,
+                                                SpellAffectedType.Object
+                                            },
+                                            Value = -1
+                                        }
+                                    }
+                                },
+                                new()
+                                {
+                                    CastSound = "explosion",
                                     Radius = 5,
+                                    Charges = 2,
+                                    Effects = new()
+                                    {
+                                        new()
+                                        {
+                                            EffectType = SpellEffectType.Explode,
+                                            PerTile = false,
+                                            Affected = new()
+                                            {
+                                                SpellAffectedType.Farmer,
+                                                SpellAffectedType.Object
+                                            },
+                                            Value = -1
+                                        }
+                                    }
+                                },
+                                new()
+                                {
+                                    CastSound = "explosion",
+                                    Radius = 10,
+                                    Charges = 3,
                                     Effects = new()
                                     {
                                         new()
@@ -710,10 +1350,6 @@ namespace AreaOfEffect
             else if (e.NameWithoutLocale.IsEquivalentTo(testWand))
             {
                 e.LoadFromModFile<Texture2D>("assets/weapon.png", AssetLoadPriority.Exclusive);
-            }
-            else if (TextureDict.TryGetValue(e.NameWithoutLocale.ToString(), out Texture2D tex))
-            {
-                e.LoadFrom(() => tex, Priority.Last);
             }
         }
 

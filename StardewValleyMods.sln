@@ -763,6 +763,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BundleItemDescriptions", "B
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PettingAnimation", "PettingAnimation\PettingAnimation.csproj", "{0124CA07-F063-0494-89A0-0A173BAE02AC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SGStardewDrops", "SGStardewDrops\SGStardewDrops.csproj", "{C32E21C4-E198-02F6-42DA-4AEE788BE668}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3779,6 +3781,14 @@ Global
 		{0124CA07-F063-0494-89A0-0A173BAE02AC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0124CA07-F063-0494-89A0-0A173BAE02AC}.Release|x64.ActiveCfg = Release|x64
 		{0124CA07-F063-0494-89A0-0A173BAE02AC}.Release|x64.Build.0 = Release|x64
+		{C32E21C4-E198-02F6-42DA-4AEE788BE668}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C32E21C4-E198-02F6-42DA-4AEE788BE668}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C32E21C4-E198-02F6-42DA-4AEE788BE668}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C32E21C4-E198-02F6-42DA-4AEE788BE668}.Debug|x64.Build.0 = Debug|Any CPU
+		{C32E21C4-E198-02F6-42DA-4AEE788BE668}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C32E21C4-E198-02F6-42DA-4AEE788BE668}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C32E21C4-E198-02F6-42DA-4AEE788BE668}.Release|x64.ActiveCfg = Release|Any CPU
+		{C32E21C4-E198-02F6-42DA-4AEE788BE668}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

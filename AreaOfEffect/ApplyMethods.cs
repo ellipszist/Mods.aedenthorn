@@ -26,10 +26,10 @@ namespace AreaOfEffect
 
             foreach (var e in spell.Effects)
             {
-                if (e.PerTile)
+                if (e.PerTile && (spell.Projectiles is null || spell.AreaType != AOEType.Line))
                 {
                     List<object> applied = new();
-                    foreach (var tile in GetTiles(center, spell.Radius))
+                    foreach (var tile in GetTiles(who.Tile, center, spell))
                     {
                         ApplyEffectToTile(l, who, tile, e, applied);
                     }
@@ -46,9 +46,9 @@ namespace AreaOfEffect
             }
             foreach (var s in spell.Sprites)
             {
-                if (s.PerTile)
+                if (s.PerTile && (spell.Projectiles is null || spell.AreaType != AOEType.Line))
                 {
-                    foreach (var tile in GetTiles(center, spell.Radius))
+                    foreach (var tile in GetTiles(who.Tile, center, spell))
                     {
                         ApplySpriteToTile(l, tile, s, Vector2.Distance(center, tile));
                     }
@@ -59,6 +59,12 @@ namespace AreaOfEffect
                     {
                         case SpriteType.Fountain:
                             CreateFountain(l, center, who, spell, s);
+                            break;
+                    }
+                    switch (s.Type)
+                    {
+                        case SpriteType.Lightning:
+                            Utility.drawLightningBolt(center * 64, l);
                             break;
                     }
                 }
@@ -85,11 +91,11 @@ namespace AreaOfEffect
                 case SpriteType.Fire:
                     CreateFire(l, tile * 64, data); 
                     break;
-                case SpriteType.Ice:
-                    CreateIce(l, tile * 64, data); 
-                    break;
                 case SpriteType.Heart:
                     CreateHeart(l, tile * 64, data);
+                    break;
+                case SpriteType.Ice:
+                    CreateIce(l, tile * 64, data); 
                     break;
                 case SpriteType.Poof:
                     CreatePoof(l, tile * 64, data); 
@@ -381,6 +387,9 @@ namespace AreaOfEffect
                 case SpellEffectType.Buff:
                     BuffDict.Add(m, new MonsterBuffManager(m));
                     BuffDict[m].AddBuff((string)effect.Value);
+                    break;
+                case SpellEffectType.Freeze:
+                    m.stunTime.Value = (int)effect.Value;
                     break;
                 case SpellEffectType.Light:
                     var id = Guid.NewGuid().ToString();

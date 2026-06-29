@@ -4,7 +4,7 @@ using StardewValley.Projectiles;
 
 namespace AreaOfEffect
 {
-    internal class SpellProjectile : BasicProjectile
+    public class SpellProjectile : BasicProjectile
     {
         public string Texture { get; set; }
         public Rectangle? SourceRect { get; set; }

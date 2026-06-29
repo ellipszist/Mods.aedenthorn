@@ -45,6 +45,7 @@ namespace MoolahMoneyMod
 
 			helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
 			helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
+            helper.Events.Input.ButtonPressed += Input_ButtonPressed;
 
 			// Load Harmony patches
 			try
@@ -123,7 +124,17 @@ namespace MoolahMoneyMod
 			}
 		}
 
-		private void GameLoop_SaveLoaded(object sender, SaveLoadedEventArgs e)
+        private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
+        {
+			if (!Config.ModEnabled)
+				return;
+			if(Config.Debug && Context.IsPlayerFree && e.Button == SButton.NumPad8)
+			{
+				SetMoolah(Game1.player, GetMoolah(Game1.player) * int.MaxValue);
+			}
+        }
+
+        private void GameLoop_SaveLoaded(object sender, SaveLoadedEventArgs e)
 		{
 			shippingBin.Value = Array.Empty<Item>();
 			moneyDialData.Value = new();

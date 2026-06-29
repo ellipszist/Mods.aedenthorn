@@ -20,6 +20,7 @@ namespace Tutorials
         public static ModConfig Config;
         public static ModEntry context;
         public const string dictPath = "aedenthorn.Tutorials/dict";
+        public const string addedDictPath = "aedenthorn.Tutorials/added";
         public const string triggersPath = "aedenthorn.Tutorials/triggers";
 
         public static Dictionary<string, ITutorialData> TutorialDict
@@ -83,8 +84,8 @@ namespace Tutorials
                 {
                     if (e.Button == SButton.NumPad7)
                     {
-                        SHelper.GameContent.InvalidateCache(dictPath);
-                        OpenTutorial();
+                        //SHelper.GameContent.InvalidateCache(dictPath);
+                        //OpenTutorial();
                     }
                 }
             }
@@ -94,11 +95,7 @@ namespace Tutorials
         {
             if (!Config.ModEnabled)
                 return;
-            if (e.NameWithoutLocale.StartsWith("aedenthorn.Tutorials/picture"))
-            {
-                e.LoadFromModFile<Texture2D>(e.NameWithoutLocale.ToString().Replace("aedenthorn.Tutorials/picture", "assets/"), AssetLoadPriority.Exclusive);
-            }
-            else if (e.NameWithoutLocale.IsEquivalentTo(triggersPath))
+            if (e.NameWithoutLocale.IsEquivalentTo(triggersPath))
             {
                 e.LoadFrom(() => new Dictionary<string, TutorialTrigger>(), AssetLoadPriority.Exclusive);
             }
@@ -114,164 +111,41 @@ namespace Tutorials
                     };
                 });
             }
+            else if (e.NameWithoutLocale.IsEquivalentTo(addedDictPath))
+            {
+                e.LoadFrom(() => new Dictionary<string, ITutorialAddedFrames>(), AssetLoadPriority.Exclusive);
+            }
             else if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
             {
-                e.LoadFrom(() => new Dictionary<string, ITutorialData>()
+                var d = new Dictionary<string, ITutorialData>();
+                for (int i = 0; i < 20; i++) 
                 {
-                    { "aedenthorn.Test/1", new TutorialData()
+                    d["aasdf" + i] = new TutorialData()
+                    {
+                        Title = "aasdf",
+                        Category = "aasdf" + i,
+                        Frames = new()
                         {
-                            Title = "Farming Basics",
-                            Category = "Farming",
-                            Frames = new() 
+                            new TutorialFrame()
                             {
-                                new TutorialFrame()
-                                {
-                                    Texture = "aedenthorn.Tutorials/picturefireball",
-                                    StartRect = new Rectangle(0, 0, 1970, 1109),
-                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
-                                    Frames = 4,
-                                    FrameRate = 60
-                                }
+                                Text = "aasdf"
                             }
                         }
-                    },
-                    { "aedenthorn.Test/2", new TutorialData()
+                    };
+                }
+                e.LoadFrom(() => d, AssetLoadPriority.Exclusive);
+                e.Edit((IAssetData data) =>
+                {
+                    var dict = data.AsDictionary<string, ITutorialData>().Data;
+                    foreach(var kvp in SHelper.GameContent.Load<Dictionary<string, ITutorialAddedFrames>>(addedDictPath))
+                    {
+                        if(dict.TryGetValue(kvp.Key, out var tdata))
                         {
-                            Title = "Cooking Basics",
-                            Category = "Cooking",
-                            Frames = new() 
-                            {
-                                new TutorialFrame()
-                                {
-                                    Texture = "aedenthorn.Tutorials/picturefireball",
-                                    StartRect = new Rectangle(0, 0, 1970, 1109),
-                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
-                                    Frames = 4,
-                                    FrameRate = 60
-                                }
-                            }
-                        }
-                    },
-                    { "aedenthorn.Test/3", new TutorialData()
-                        {
-                            Title = "Mining Basics",
-                            Category = "Mining",
-                            Frames = new() 
-                            {
-                                new TutorialFrame()
-                                {
-                                    Texture = "aedenthorn.Tutorials/picturefireball",
-                                    StartRect = new Rectangle(0, 0, 1970, 1109),
-                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
-                                    Frames = 4,
-                                    FrameRate = 60
-                                }
-                            }
-                        }
-                    },
-                    { "aedenthorn.Test/4", new TutorialData()
-                        {
-                            Title = "Foraging Basics",
-                            Category = "Foraging",
-                            Frames = new() 
-                            {
-                                new TutorialFrame()
-                                {
-                                    Texture = "aedenthorn.Tutorials/picturefireball",
-                                    StartRect = new Rectangle(0, 0, 1970, 1109),
-                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
-                                    Frames = 4,
-                                    FrameRate = 60
-                                }
-                            }
-                        }
-                    },
-                    { "aedenthorn.Test/5", new TutorialData()
-                        {
-                            Title = "Combat Basics",
-                            Category = "Combat",
-                            Frames = new() 
-                            {
-                                new TutorialFrame()
-                                {
-                                    Texture = "aedenthorn.Tutorials/picturefireball",
-                                    StartRect = new Rectangle(0, 0, 1970, 1109),
-                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
-                                    Frames = 4,
-                                    FrameRate = 60
-                                }
-                            }
-                        }
-                    },
-                    { "aedenthorn.Test/6", new TutorialData()
-                        {
-                            Title = "Fishing Basics",
-                            Category = "Fishing",
-                            Frames = new() 
-                            {
-                                new TutorialFrame()
-                                {
-                                    Texture = "aedenthorn.Tutorials/picturefireball",
-                                    StartRect = new Rectangle(0, 0, 1970, 1109),
-                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
-                                    Frames = 4,
-                                    FrameRate = 60
-                                }
-                            }
-                        }
-                    },
-                    { "aedenthorn.Test/7", new TutorialData()
-                        {
-                            Title = "Friendship Basics",
-                            Category = "Friendship",
-                            Frames = new() 
-                            {
-                                new TutorialFrame()
-                                {
-                                    Texture = "aedenthorn.Tutorials/picturefireball",
-                                    StartRect = new Rectangle(0, 0, 1970, 1109),
-                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
-                                    Frames = 4,
-                                    FrameRate = 60
-                                }
-                            }
-                        }
-                    },
-                    { "aedenthorn.Test/8", new TutorialData()
-                        {
-                            Title = "Bundle Basics",
-                            Category = "Bundles",
-                            Frames = new() 
-                            {
-                                new TutorialFrame()
-                                {
-                                    Texture = "aedenthorn.Tutorials/picturefireball",
-                                    StartRect = new Rectangle(0, 0, 1970, 1109),
-                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
-                                    Frames = 4,
-                                    FrameRate = 60
-                                }
-                            }
-                        }
-                    },
-                    { "aedenthorn.Test/9", new TutorialData()
-                        {
-                            Title = "Ranching Basics",
-                            Category = "Ranching",
-                            Frames = new() 
-                            {
-                                new TutorialFrame()
-                                {
-                                    Texture = "aedenthorn.Tutorials/picturefireball",
-                                    StartRect = new Rectangle(0, 0, 1970, 1109),
-                                    Text = "To cast fireball, draw up, down-right, up-right, down.",
-                                    Frames = 4,
-                                    FrameRate = 60
-                                }
-                            }
+                            int idx = kvp.Value.Position < tdata.Frames.Count ? kvp.Value.Position : tdata.Frames.Count;
+                            tdata.Frames.InsertRange(idx, kvp.Value.Frames);
                         }
                     }
-                }, AssetLoadPriority.Exclusive);
+                });
             }
         }
 

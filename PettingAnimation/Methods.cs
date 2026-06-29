@@ -29,7 +29,6 @@ namespace PettingAnimation
                 3 => distance - new Vector2(-amount, 0),
                 _ => distance - new Vector2(0, 0),
             };
-            who.modData[pettingKey] = "true";
             int which = who.FacingDirection switch
             {
                 0 => FarmerSprite.swordswipeUp,

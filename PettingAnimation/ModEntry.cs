@@ -20,7 +20,6 @@ namespace PettingAnimation
         public static IModHelper SHelper;
         public static ModConfig Config;
         public static ModEntry context;
-        public const string pettingKey = "aedenthorn.PettingAnimation/facing";
         public static PerScreen<Vector2> offset = new PerScreen<Vector2>();
         public static PerScreen<float> layer = new PerScreen<float>();
         public static PerScreen<int> ticks = new PerScreen<int>();

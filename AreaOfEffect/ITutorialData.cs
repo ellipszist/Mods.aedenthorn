@@ -7,7 +7,6 @@ namespace AreaOfEffect
     {
         public string Title { get; set; }
         public string Category { get; set; }
-        public List<string> Triggers { get; set; } = new();
         public List<TutorialFrame> Frames { get; set; } = new();
     }
 

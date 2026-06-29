@@ -15,6 +15,7 @@ namespace AreaOfEffect
 
         private Vector2? tile;
         private Tool tool;
+        private List<string> spellTypes;
         private Vector2 lastPos;
         private List<Vector2> dots = new();
         private List<int> ends = new();
@@ -23,10 +24,11 @@ namespace AreaOfEffect
         private int lastOnTrackDot;
         private bool spelling;
 
-        public CastSpellMenu(Tool t, Vector2? v = null)
+        public CastSpellMenu(Tool t, List<string> types, Vector2? v = null)
         {
             tile = v;
             tool = t;
+            spellTypes = types;
             dots = new();
             ends = new();
         }
@@ -199,7 +201,7 @@ namespace AreaOfEffect
             {
                 dir.Add(currentDirection);
             }
-            foreach (var kvp in ModEntry.SpellDict)
+            foreach (var kvp in ModEntry.SpellDict.Where(p => spellTypes == null || spellTypes.Contains(p.Key)))
             {
                 if (kvp.Value.Sequence == null)
                     continue;
