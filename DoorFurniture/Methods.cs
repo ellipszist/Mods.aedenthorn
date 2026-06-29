@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using StardewValley;
+using StardewValley.GameData.HomeRenovations;
+using StardewValley.Monsters;
 using StardewValley.Objects;
 using System;
 using System.Collections.Generic;
@@ -20,6 +22,48 @@ namespace DoorFurniture
                 return true;
             if (f.currentRotation.Value == 1 && !f.Flipped)
                 return true;
+            return false;
+        }
+        public static bool CheckForDoorCollision(Furniture f, Rectangle position, Character c)
+        {
+            if (!Config.ModEnabled || !TryGetDoorData(f, out var data))
+                return f.IntersectsForCollision(position);
+            if (!f.modData.TryGetValue(openKey, out var open))
+            {
+                open = "closed";
+                f.modData[openKey] = open;
+            }
+            else if (open != "closed")
+            {
+                return false;
+            }
+
+            var rot = f.currentRotation.Value;
+            var loc = f.GetBoundingBox().Location + data.Bounds[rot].Location;
+            var bounds = new Rectangle(loc, data.Bounds[rot].Size);
+            bool villager = (c is NPC npc && c.IsVillager);
+            if (villager)
+                position.Inflate(16, 16);
+            bool __result = bounds.Intersects(position);
+            if (__result)
+            {
+                if (data.AutoOpen || Config.AutoOpen)
+                {
+                    return OpenDoor(f, data);
+                }
+                else
+                {
+                    if (villager)
+                    {
+
+                        return OpenDoor(f, data, true);
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                }
+            }
             return false;
 
         }

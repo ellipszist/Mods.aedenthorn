@@ -314,7 +314,29 @@ namespace DoorFurniture
 
         }
 
-        [HarmonyPatch(typeof(Furniture), nameof(Furniture.IntersectsForCollision))]
+        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.isCollidingPosition), new Type[] { typeof(Rectangle), typeof(xTile.Dimensions.Rectangle), typeof(bool), typeof(int), typeof(bool), typeof(Character), typeof(bool), typeof(bool), typeof(bool), typeof(bool) })]
+        public static class GameLocation_isCollidingPosition_Patch
+        {
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                SMonitor.Log($"Transpiling GameLocation.isCollidingPosition");
+                var codes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < codes.Count; i++)
+                {
+                    if (codes[i].opcode == OpCodes.Callvirt && codes[i].operand is MethodInfo mi && mi == AccessTools.Method(typeof(Furniture), nameof(Furniture.IntersectsForCollision)))
+                    {
+                        SMonitor.Log($"adding override for door furniture");
+                        codes[i].opcode = OpCodes.Call;
+                        codes[i].operand =  AccessTools.Method(typeof(ModEntry), nameof(CheckForDoorCollision));
+                        codes.Insert(i, new(OpCodes.Ldarg_S, 6));
+                    }
+                }
+
+                return codes.AsEnumerable();
+            }
+        }
+
+        //[HarmonyPatch(typeof(Furniture), nameof(Furniture.IntersectsForCollision))]
         public static class Furniture_IntersectsForCollision_Patch
         {
             public static bool Prefix(Furniture __instance, Rectangle rect, ref bool __result)

@@ -6,12 +6,60 @@ using StardewValley.Extensions;
 using StardewValley.Menus;
 using StardewValley.Projectiles;
 using System;
+using System.Linq;
 using Object = StardewValley.Object;
 
 namespace AreaOfEffect
 {
     public partial class ModEntry
     {
+        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.ShowConstructOptions))]
+        public static class GameLocation_performAction_Patch
+        {
+            public static bool Prefix(GameLocation __instance, ref string builder)
+            {
+                if (!Config.ModEnabled)
+                    return true;
+                if(builder == "WizardReal")
+                {
+                    builder = "Wizard";
+                    return true;
+                }
+                if (builder != "Wizard" || !ToolDict.Values.Any(t => t.AddToWizardBook))
+                    return true;
+                var responses = new Response[]
+                {
+                    new Response("Shop", SHelper.Translation.Get("wands")),
+                    new Response("Build", SHelper.Translation.Get("buildings")),
+                    new Response("Leave", SHelper.Translation.Get("leave"))
+                };
+                __instance.createQuestionDialogue("", responses, "WizardBook");
+
+
+                return false;
+            }
+        }
+        [HarmonyPatch(typeof(GameLocation), nameof(GameLocation.answerDialogueAction))]
+        public static class GameLocation_answerDialogueAction_Patch
+        {
+            public static bool Prefix(GameLocation __instance, string questionAndAnswer)
+            {
+                if (!Config.ModEnabled || !questionAndAnswer.StartsWith("WizardBook_"))
+                    return true;
+                switch (questionAndAnswer)
+                {
+                    case "WizardBook_Shop":
+                        Utility.TryOpenShopMenu("Wizard", "Wizard", true);
+                        break;
+                    case "WizardBook_Build":
+                        __instance.ShowConstructOptions("WizardReal", -1);
+                        break;
+                    case "WizardBook_Leave":
+                        break;
+                }
+                return false;
+            }
+        }
         [HarmonyPatch(typeof(Game1), nameof(Game1.pressUseToolButton))]
         private static class Game1_pressUseToolButton_Patch
         {
@@ -20,7 +68,7 @@ namespace AreaOfEffect
                 if (!Config.ModEnabled || Game1.player.CurrentTool is not Tool t || !TryGetTool(t, out var tdata))
                     return true;
 
-                if (!TryGetEffect(t, out var data))
+                if (!TryGetEffect(t, out _))
                 {
                     if (Config.ForceRecast)
                     {
@@ -30,6 +78,7 @@ namespace AreaOfEffect
                     {
                         Game1.showRedMessage(string.Format(SHelper.Translation.Get("x-no-spell"), t.DisplayName));
                     }
+                    __result = true;
                     return false;
                 }
                 return true;
@@ -56,7 +105,7 @@ namespace AreaOfEffect
         [HarmonyPatch(typeof(Tool), nameof(Tool.DoFunction))]
         public class Tool_DoFunction_Patch
         {
-            public static void Postfix(Tool __instance, int power)
+            public static void Postfix(Tool __instance)
             {
                 if (!Config.ModEnabled || __instance.lastUser is not Farmer f || !TryGetTool(__instance, out var tdata))
                 {
@@ -84,7 +133,7 @@ namespace AreaOfEffect
         {
             public static bool Prefix(Tool __instance)
             {
-                if (!Config.ModEnabled || !TryGetEffect(__instance, out var data))
+                if (!Config.ModEnabled || !TryGetEffect(__instance, out _))
                 {
                     return true;
                 }
@@ -97,7 +146,7 @@ namespace AreaOfEffect
         {
             public static bool Prefix(Tool __instance, ref bool __result)
             {
-                if (!Config.ModEnabled || !TryGetEffect(__instance, out var data))
+                if (!Config.ModEnabled || !TryGetEffect(__instance, out _))
                 {
                     return true;
                 }
@@ -111,7 +160,7 @@ namespace AreaOfEffect
         {
             public static bool Prefix(Item __instance, ref bool __result)
             {
-                if (!Config.ModEnabled || __instance is not Tool t || !TryGetEffect(t, out var data))
+                if (!Config.ModEnabled || __instance is not Tool t || !TryGetEffect(t, out _))
                 {
                     return true;
                 }

@@ -18,11 +18,13 @@ namespace AreaOfEffect
         private List<string> spellTypes;
         private Vector2 lastPos;
         private List<Vector2> dots = new();
+        private List<Vector2> predots = new();
         private List<int> ends = new();
         private List<SpellDirection> directions = new();
         private SpellDirection currentDirection = SpellDirection.None;
         private int lastOnTrackDot;
         private bool spelling;
+        private bool opened;
 
         public CastSpellMenu(Tool t, List<string> types, Vector2? v = null)
         {
@@ -44,10 +46,39 @@ namespace AreaOfEffect
             }
             if (spelling)
             {
+                predots.Clear();
                 var spell = GetSpell(true);
                 if (spell.Value != null)
                 {
                     SpriteText.drawStringWithScrollCenteredAt(b, spell.Value.DisplayName, Game1.viewport.Width / 2, Game1.viewport.Height - 128);
+                }
+            }
+            else
+            {
+                int c = 20;
+                var pos = Game1.getMousePosition().ToVector2();
+                predots.Add(pos);
+                if (predots.Count > c)
+                {
+                    predots.RemoveAt(0);
+                }
+                for(int i = 0; i < predots.Count; i++)
+                {
+                    float alpha = (i + 1) / (c * 2f);
+                    if (i > 0)
+                    {
+                        var distance = Vector2.Distance(predots[i], predots[i - 1]);
+                        if (distance > 20)
+                        {
+                            float f = 10f;
+                            while (f < distance)
+                            {
+                                b.Draw(Game1.mouseCursors, Vector2.Lerp(predots[i - 1], predots[i], f / distance) - new Vector2(60, 60), new Rectangle(88, 1779, 30, 30), Color.White * alpha, 0, Vector2.Zero, 4f, SpriteEffects.None, 1f);
+                                f += 20;
+                            }
+                        }
+                    }
+                    b.Draw(Game1.mouseCursors, predots[i] - new Vector2(60, 60), new Rectangle(88, 1779, 30, 30), Color.White * alpha, 0, Vector2.Zero, 4f, SpriteEffects.None, 1f);
                 }
             }
             //b.DrawString(Game1.dialogueFont, currentDirection.ToString(), new Vector2(0, directions.Count * 64), Color.White);
@@ -56,6 +87,19 @@ namespace AreaOfEffect
                 int count = 0;
                 for (int i = 0; i < dots.Count; i++)
                 {
+                    if(i > 0)
+                    {
+                        var distance = Vector2.Distance(dots[i], dots[i - 1]);
+                        if(distance > 30)
+                        {
+                            float f = 15f;
+                            while(f < distance)
+                            {
+                                b.Draw(Game1.mouseCursors, Vector2.Lerp(dots[i - 1], dots[i], f / distance) - new Vector2(60, 60), new Rectangle(88, 1779, 30, 30), GetColor(count), 0, Vector2.Zero, 4f, SpriteEffects.None, 1f);
+                                f += 30;
+                            }
+                        }
+                    }
                     b.Draw(Game1.mouseCursors, dots[i] - new Vector2(60, 60), new Rectangle(88, 1779, 30, 30), GetColor(count), 0, Vector2.Zero, 4f, SpriteEffects.None, 1f);
                     if (ends.Count > count && ends[count] <= i)
                     {
@@ -78,6 +122,10 @@ namespace AreaOfEffect
             int minSegment = 256;
             if (ModEntry.SHelper.Input.IsDown(SButton.MouseLeft))
             {
+                if (!opened)
+                {
+                    return;
+                }
                 if (!spelling)
                 {
                     spelling = true;
@@ -93,6 +141,11 @@ namespace AreaOfEffect
             }
             else
             {
+                if(!opened)
+                {
+                    opened = true;
+                    return;
+                }
                 if (spelling && directions.Any())
                 {
                     if(currentDirection != directions.Last())

@@ -113,7 +113,7 @@ namespace Tutorials
                             if(openingTutorial && t == tutorialKey)
                             {
                                 openingTutorial = false;
-                                while(count > maxEntries + scrolled)
+                                while(count >= maxEntries + scrolled)
                                 {
                                     scrolled++;
                                 } 

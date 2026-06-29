@@ -118,6 +118,7 @@ namespace AreaOfEffect
         public int RechargeAmount { get; set; } = 1;
         public int MaxDistance { get; set; }
         public string RechargeSound { get; set; }
+        public bool AddToWizardBook { get; set; }
         public List<string> Spells { get; set; }
         public Color ChargesColor { get; set; } = Color.White;
         public Color ChargesBackColor { get; set; } = Color.DarkGray;
@@ -184,6 +185,7 @@ namespace AreaOfEffect
     public class SpellEffect
     {
         public List<SpellAffectedType> Affected { get; set; }
+        public List<SpellAffectedType> Unaffected { get; set; }
         public SpellEffectType EffectType { get; set; }
         public FieldChangeType ChangeType { get; set; }
         public bool AsFarmer { get; set; }

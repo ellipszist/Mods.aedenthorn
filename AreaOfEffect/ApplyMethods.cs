@@ -116,14 +116,14 @@ namespace AreaOfEffect
             bool result = false;
             foreach(var t in effect.Affected)
             {
-                result = ApplyEffect(l, who, tile, t, effect, applied);
+                result = ApplyEffect(l, who, tile, t, effect, applied, effect.Unaffected);
                 if (effect.First && result)
                     return result;
             }
             return result;
         }
 
-        public static bool ApplyEffect(GameLocation l, Farmer who, Vector2 tile, SpellAffectedType t, SpellEffect effect, List<object> applied)
+        public static bool ApplyEffect(GameLocation l, Farmer who, Vector2 tile, SpellAffectedType t, SpellEffect effect, List<object> applied, List<SpellAffectedType> unaffected)
         {
             Object o;
             TerrainFeature tf;
@@ -213,7 +213,7 @@ namespace AreaOfEffect
                 case SpellAffectedType.Object:
                     if(l.Objects.TryGetValue(tile, out o) && !applied.Contains(o))
                     {
-                        ApplyObjectEffect(l, who, tile, o, effect);
+                        ApplyObjectEffect(l, who, tile, o, effect, unaffected);
                         applied.Add(o);
                         result = true;
                     }
@@ -230,7 +230,7 @@ namespace AreaOfEffect
                 case SpellAffectedType.HoeDirt:
                     if (l.terrainFeatures.TryGetValue(tile, out tf) && tf is HoeDirt && !applied.Contains(tf))
                     {
-                        ApplyTerrainFeatureEffect(l, who, tile, tf, effect);
+                        ApplyTerrainFeatureEffect(l, who, tile, tf, effect, unaffected);
                         applied.Add(tf);
                         result = true;
                     }
@@ -246,7 +246,7 @@ namespace AreaOfEffect
                 case SpellAffectedType.Grass:
                     if (l.terrainFeatures.TryGetValue(tile, out tf) && tf is Grass && !applied.Contains(tf))
                     {
-                        ApplyTerrainFeatureEffect(l, who, tile, tf, effect);
+                        ApplyTerrainFeatureEffect(l, who, tile, tf, effect, unaffected);
                         applied.Add(tf);
                         result = true;
                     }
@@ -254,7 +254,7 @@ namespace AreaOfEffect
                 case SpellAffectedType.Stone:
                     if (l.Objects.TryGetValue(tile, out o) && o.IsBreakableStone() && !applied.Contains(o))
                     {
-                        ApplyObjectEffect(l, who, tile, o, effect);
+                        ApplyObjectEffect(l, who, tile, o, effect, unaffected);
                         applied.Add(o);
                         result = true;
                     }
@@ -262,7 +262,7 @@ namespace AreaOfEffect
                 case SpellAffectedType.Twig:
                     if (l.Objects.TryGetValue(tile, out o) && o.IsTwig() && !applied.Contains(o))
                     {
-                        ApplyObjectEffect(l, who, tile, o, effect);
+                        ApplyObjectEffect(l, who, tile, o, effect, unaffected);
                         applied.Add(o);
                         result = true;
                     }
@@ -270,7 +270,7 @@ namespace AreaOfEffect
                 case SpellAffectedType.Weed:
                     if (l.Objects.TryGetValue(tile, out o) && o.IsWeeds() && !applied.Contains(o))
                     {
-                        ApplyObjectEffect(l, who, tile, o, effect);
+                        ApplyObjectEffect(l, who, tile, o, effect, unaffected);
                         applied.Add(o);
                         result = true;
                     }
@@ -278,7 +278,7 @@ namespace AreaOfEffect
                 case SpellAffectedType.Tree:
                     if (l.terrainFeatures.TryGetValue(tile, out tf) && tf is Tree && !applied.Contains(tf))
                     {
-                        ApplyTerrainFeatureEffect(l, who, tile, tf, effect);
+                        ApplyTerrainFeatureEffect(l, who, tile, tf, effect, unaffected);
                         applied.Add(tf);
                         result = true;
                     }
@@ -286,7 +286,7 @@ namespace AreaOfEffect
                 case SpellAffectedType.FruitTree:
                     if (l.terrainFeatures.TryGetValue(tile, out tf) && tf is FruitTree && !applied.Contains(tf))
                     {
-                        ApplyTerrainFeatureEffect(l, who, tile, tf, effect);
+                        ApplyTerrainFeatureEffect(l, who, tile, tf, effect, unaffected);
                         applied.Add(tf);
                         result = true;
                     }
@@ -448,8 +448,13 @@ namespace AreaOfEffect
             }
         }
 
-        public static void ApplyObjectEffect(GameLocation l, Farmer who, Vector2 tile, Object o, SpellEffect effect)
+        public static void ApplyObjectEffect(GameLocation l, Farmer who, Vector2 tile, Object o, SpellEffect effect, List<SpellAffectedType> unaffected)
         {
+            if (unaffected?.Count > 0)
+            {
+                if ((o.IsTwig() && unaffected.Contains(SpellAffectedType.Twig)) || (o.IsBreakableStone() && unaffected.Contains(SpellAffectedType.Stone)) || (o.IsWeeds() && unaffected.Contains(SpellAffectedType.Weed)))
+                    return;
+            }
             switch (effect.EffectType)
             {
                 case SpellEffectType.Burn:
@@ -469,6 +474,7 @@ namespace AreaOfEffect
 
         public static void ApplyResourceClumpEffect(GameLocation l, Farmer who, Vector2 tile, ResourceClump rc, SpellEffect effect)
         {
+
             switch (effect.EffectType)
             {
                 case SpellEffectType.Burn:
@@ -486,8 +492,13 @@ namespace AreaOfEffect
             }
         }
 
-        public static void ApplyTerrainFeatureEffect(GameLocation l, Farmer who, Vector2 tile, TerrainFeature tf, SpellEffect effect)
+        public static void ApplyTerrainFeatureEffect(GameLocation l, Farmer who, Vector2 tile, TerrainFeature tf, SpellEffect effect, List<SpellAffectedType> unaffected)
         {
+            if(unaffected?.Count > 0)
+            {
+                if ((tf is HoeDirt dirt && (unaffected.Contains(SpellAffectedType.HoeDirt)|| (dirt.crop is not null && unaffected.Contains(SpellAffectedType.Crop)))) || (tf is Grass && unaffected.Contains(SpellAffectedType.Grass)) || (tf is Tree && unaffected.Contains(SpellAffectedType.Tree)) || (tf is FruitTree && unaffected.Contains(SpellAffectedType.FruitTree)))
+                    return;
+            }
             switch (effect.EffectType)
             {
                 case SpellEffectType.Burn:

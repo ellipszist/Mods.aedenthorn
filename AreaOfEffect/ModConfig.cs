@@ -13,6 +13,7 @@ namespace AreaOfEffect
         public string SetEffectSound { get; set; } = "cowboy_explosion";
         public bool AutoOpenUI { get; set; } = true;
         public bool ForceRecast { get; set; } = true;
+        public int UpgradeDays { get; set; } = 2;
         public bool Debug { get; set; } = false;
     }
 }

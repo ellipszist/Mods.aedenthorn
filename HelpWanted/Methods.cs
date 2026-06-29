@@ -23,7 +23,8 @@ namespace HelpWanted
             if (fi is null)
                 return;
             var name = (NetString)fi.GetValue(quest);
-            questList.Add(new QuestData() { padTexture = GetPadTexture(name.Value, questType.ToString()), pinTexture = GetPinTexture(name.Value, questType.ToString()), padTextureSource = new Rectangle(0, 0, 64, 64), pinTextureSource = new Rectangle(0, 0, 64, 64), icon = icon, iconSource = iconRect, quest = Game1.questOfTheDay, pinColor = GetRandomColor(), padColor = GetRandomColor(), iconColor = new Color(Config.PortraitTintR, Config.PortraitTintG, Config.PortraitTintB, Config.PortraitTintA), iconOffset = iconOffset, iconScale = Config.PortraitScale });
+            quest.dailyQuest.Value = true;
+            questList.Add(new QuestData() { padTexture = GetPadTexture(name.Value, questType.ToString()), pinTexture = GetPinTexture(name.Value, questType.ToString()), padTextureSource = new Rectangle(0, 0, 64, 64), pinTextureSource = new Rectangle(0, 0, 64, 64), icon = icon, iconSource = iconRect, quest = quest, pinColor = GetRandomColor(), padColor = GetRandomColor(), iconColor = new Color(Config.PortraitTintR, Config.PortraitTintG, Config.PortraitTintB, Config.PortraitTintA), iconOffset = iconOffset, iconScale = Config.PortraitScale });
         }
         private static Texture2D GetTexture(string path)
         {
