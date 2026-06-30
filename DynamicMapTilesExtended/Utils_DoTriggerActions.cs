@@ -169,6 +169,9 @@ namespace DMT
                         case Actions.TeleportTileKey:
                             DoTeleportTile(who, value);
                             break;
+                        case Actions.TerrainFeatureKey:
+                            DoSpawnTerraiFeature(location, value);
+                            break;
                         case Actions.TransmogKey:
                             DoMakeover(who, value, false, false, true);
                             break;

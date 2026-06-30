@@ -54,9 +54,10 @@ namespace DMT.Data
         public const string StaminaKey = "DMT/stamina";
         public const string StaminaPerSecondContKey = "DMT/staminaPerSecondContinuous";
         public const string StaminaPerSecondKey = "DMT/staminaPerSecond";
+        public const string TakeKey = "DMT/take";
         public const string TeleportKey = "DMT/teleport";
         public const string TeleportTileKey = "DMT/teleportTile";
-        public const string TakeKey = "DMT/take";
+        public const string TerrainFeatureKey = "DMT/terrainFeature";
         public const string TransmogKey = "DMT/transmog";
         public const string TransmogGenderedKey = "DMT/transmogGendered";
         public const string WarpKey = "DMT/warp";

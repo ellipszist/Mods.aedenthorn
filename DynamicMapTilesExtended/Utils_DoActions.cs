@@ -725,6 +725,41 @@ namespace DMT
             }
         }
 
+        public static void DoSpawnTerraiFeature(GameLocation l, string value)
+        {
+
+            var split = value.Split('|');
+            foreach(var str in split)
+            {
+                var split2 = split[1].Split(',');
+                if (split2.Length < 3)
+                    continue;
+                Vector2 tilePos = new(int.Parse(split2[0]), int.Parse(split2[1]));
+                var type = split2[2];
+
+                TerrainFeature? tf = type switch
+                {
+                    "Grass" => split2.Length < 5 ? new Grass() : new Grass(int.Parse(split2[3]), int.Parse(split2[4])),
+                    "HoeDirt" => new HoeDirt((l.IsRainingHere() && l.IsOutdoors) ? 1 : 0, l),
+                    "Tree" => split2.Length switch
+                    {
+                        5 => new Tree(split2[3], int.Parse(split2[4])),
+                        4 => new Tree(split2[3]),
+                        _ => new Tree()
+                    },
+                    "FruitTree" => split2.Length switch
+                    {
+                        5 => new FruitTree(split2[3], int.Parse(split2[4])),
+                        _ => new FruitTree()
+                    },
+                    _ => null
+                };
+                if (tf is null)
+                    continue;
+                l.terrainFeatures.TryAdd(tilePos, tf);
+            }
+        }
+
         public static void DoUpdateHealth(Farmer? who, string value)
         {
             if (who == null)
@@ -1055,45 +1090,41 @@ namespace DMT
             var split = value.Split('|');
             foreach (var item in split)
             {
-                var kv = item.Split('=');
-                if (kv.Length != 2)
+                string[] split2;
+                var temp = item.Split('=');
+                if (temp.Length == 2)
                 {
-                    context.Monitor.Log($"[{nameof(DoSetCrop)}] Error in argument for {item}");
-                    continue;
-                }
-                var xy = kv[0].Split(',');
-                if (xy.Length != 2)
-                {
-                    context.Monitor.Log($"[{nameof(DoSetCrop)}] Error in argument for {item}");
-                    continue;
-                }
-                if (!int.TryParse(xy[0].Trim(), out int x) || !int.TryParse(xy[1].Trim(), out int y) || !location.terrainFeatures.TryGetValue(new Vector2(x, y), out var tf) || tf is not HoeDirt dirt)
-                    continue;
-                var crop = kv[1].Split(',');
-                if (crop.Length > 2)
-                {
-                    context.Monitor.Log($"[{nameof(DoSetCrop)}] Error in argument for {item}");
-                    continue;
-                }
-                if(dirt.crop != null && crop.Length == 1)
-                {
-                    var newCrop = new Crop(crop[0].Trim(), x, y, location);
-                    newCrop.currentPhase.Value = dirt.crop.currentPhase.Value;
-                    newCrop.dayOfCurrentPhase.Value = dirt.crop.dayOfCurrentPhase.Value;
-                    newCrop.fullyGrown.Value = dirt.crop.fullyGrown.Value;
-                    dirt.crop = newCrop;
+                    split2 = temp[0].Split(",").Concat(temp[1].Split(",")).ToArray();
                 }
                 else
                 {
-                    dirt.crop = new Crop(crop[0].Trim(), x, y, location);
-                    if (crop.Length == 2 && int.TryParse(crop[1].Trim(), out int phase))
-                    {
-                        dirt.crop.currentPhase.Value = phase < 0 ? dirt.crop.phaseDays.Count - 1 : Math.Min(phase, dirt.crop.phaseDays.Count - 1);
-                        dirt.crop.dayOfCurrentPhase.Value = 0;
-                        if (dirt.crop.currentPhase.Value == dirt.crop.phaseDays.Count - 1 && dirt.crop.RegrowsAfterHarvest())
-                            dirt.crop.fullyGrown.Value = true;
-                        dirt.crop.updateDrawMath(dirt.Tile);
-                    }
+                    split2 = item.Split(",");
+                }
+                if (split2.Length < 3)
+                {
+                    context.Monitor.Log($"[{nameof(DoSetCrop)}] Error in argument for {item}");
+                    continue;
+                }
+                if (!int.TryParse(split2[0].Trim(), out int x) || !int.TryParse(split2[1].Trim(), out int y))
+                    continue;
+                if(!location.terrainFeatures.TryGetValue(new Vector2(x, y), out var tf))
+                {
+                    location.makeHoeDirt(new Vector2(x, y), true);
+                    location.terrainFeatures.TryGetValue(new Vector2(x, y), out tf);
+                }
+                if(tf is not HoeDirt dirt)
+                {
+                    continue;
+                }
+
+                dirt.crop = new Crop(split2[2].Trim(), x, y, location);
+                if (split2.Length > 3 && int.TryParse(split2[3].Trim(), out int phase))
+                {
+                    dirt.crop.currentPhase.Value = phase < 0 ? dirt.crop.phaseDays.Count - 1 : Math.Min(phase, dirt.crop.phaseDays.Count - 1);
+                    dirt.crop.dayOfCurrentPhase.Value = 0;
+                    if (dirt.crop.currentPhase.Value == dirt.crop.phaseDays.Count - 1 && dirt.crop.RegrowsAfterHarvest())
+                        dirt.crop.fullyGrown.Value = true;
+                    dirt.crop.updateDrawMath(dirt.Tile);
                 }
             }
         }
