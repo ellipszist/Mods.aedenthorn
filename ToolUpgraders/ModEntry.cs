@@ -39,11 +39,6 @@ namespace ToolUpgraders
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
-
-            foreach (Type type in typeof(Game1).Assembly.GetTypes())
-            {
-            }
-            
         }
         public override object GetApi()
         {
