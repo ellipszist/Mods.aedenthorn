@@ -335,6 +335,19 @@ namespace DoorFurniture
                 return codes.AsEnumerable();
             }
         }
+        [HarmonyPatch(typeof(Furniture), nameof(Furniture.isPassable))]
+        public static class Furniture_isPassable_Patch
+        {
+            public static bool Prefix(Furniture __instance, ref bool __result)
+            {
+                if (!Config.ModEnabled || !IsDoor(__instance))
+                    return true;
+                var x = Environment.StackTrace;
+                __result = true;
+                return false;
+            }
+
+        }
 
         //[HarmonyPatch(typeof(Furniture), nameof(Furniture.IntersectsForCollision))]
         public static class Furniture_IntersectsForCollision_Patch

@@ -41,30 +41,21 @@ namespace DoorFurniture
             var rot = f.currentRotation.Value;
             var loc = f.GetBoundingBox().Location + data.Bounds[rot].Location;
             var bounds = new Rectangle(loc, data.Bounds[rot].Size);
-            bool villager = (c is NPC npc && c.IsVillager);
-            if (villager)
-                position.Inflate(16, 16);
             bool __result = bounds.Intersects(position);
-            if (__result)
+            var bb = c.GetBoundingBox();
+            bool colliding = bounds.Intersects(bb);
+            if (colliding)
             {
-                if (data.AutoOpen || Config.AutoOpen)
+                if ((c.IsVillager || c is Farmer) && (data.AutoOpen || Config.AutoOpen))
                 {
-                    return OpenDoor(f, data);
+                    return !OpenDoor(f, data, true);
                 }
                 else
                 {
-                    if (villager)
-                    {
-
-                        return OpenDoor(f, data, true);
-                    }
-                    else
-                    {
-                        return true;
-                    }
+                    return !c.IsVillager || !OpenDoor(f, data, true);
                 }
             }
-            return false;
+            return __result && !c.IsVillager;
 
         }
         public static bool IsDoor(Furniture f)

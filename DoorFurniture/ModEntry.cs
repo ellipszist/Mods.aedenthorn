@@ -90,6 +90,7 @@ namespace DoorFurniture
                 return;
             if (Config.Debug)
             {
+               // Game1.player.friendshipData["Emily"].WeddingDate.DayOfMonth = Game1.Date.DayOfMonth + 1;
                 //SHelper.GameContent.InvalidateCache(doorId);
             }
             if (Context.IsPlayerFree)
