@@ -18,6 +18,22 @@ namespace ToolUpgraders
     public partial class ModEntry
     {
 
+        [HarmonyPatch(typeof(Farmer), nameof(Farmer.dayupdate))]
+        public static class Farmer_dayupdate_Patch
+        {
+            public static void Postfix(Farmer __instance)
+            {
+                if (!Config.ModEnabled || !TryGetUpgrades(__instance, out var dict))
+                    return;
+                
+                foreach (var key in dict.Keys.ToArray())
+                {
+                    dict[key]--;
+                }
+                SetUpgrades(__instance, dict);
+            }
+        }
+
         [HarmonyPatch(typeof(Farmer), nameof(Farmer.showToolUpgradeAvailability))]
         public static class Farmer_showToolUpgradeAvailability_Patch
         {
@@ -28,8 +44,7 @@ namespace ToolUpgraders
                 
                 foreach (var key in dict.Keys.ToArray())
                 {
-                    dict[key]--;
-                    if (dict[key] == -1)
+                    if (dict[key] == 0)
                     {
                         var tool = ItemRegistry.Create<Tool>("(T)" + key);
                         Game1.showGlobalMessage(GetToolReadyString(tool));
@@ -48,7 +63,16 @@ namespace ToolUpgraders
                     return true;
                 if (TryGetUpgrades(who, out var dict))
                 {
-                    __result = !dict.Keys.Any(k => data.Tools.Contains(k));
+                    var id = dict.Keys.FirstOrDefault(k => data.Tools.Contains(k));
+                    if (id is not null)
+                    {
+                        Game1.showRedMessage(string.Format(SHelper.Translation.Get("busy-x"), ItemRegistry.Create("(T)"+id).DisplayName));
+                        __result = false;
+                    }
+                    else
+                    {
+                        __result = true;
+                    }
                 }
                 else
                 {
@@ -128,9 +152,11 @@ namespace ToolUpgraders
                     return true;
                 foreach(var key in dict.Where(p => p.Value <= 0 && data.Tools.Contains(p.Key)).Select(p => p.Key).ToArray())
                 {
-                    TryReturnUpgradedTool(data, key);
-                    dict.Remove(key);
-                    SetUpgrades(who, dict);
+                    if(TryReturnUpgradedTool(data, key))
+                    {
+                        dict.Remove(key);
+                        SetUpgrades(who, dict);
+                    }
                     return false;
                 }
                 return true;
@@ -148,9 +174,11 @@ namespace ToolUpgraders
                     return true;
                 foreach (var kvp in dict.Where(p => p.Value <= 0 && data.Tools.Contains(p.Key)))
                 {
-                    TryReturnUpgradedTool(data, kvp.Key);
-                    dict.Remove(kvp.Key);
-                    SetUpgrades(Game1.player, dict);
+                    if(TryReturnUpgradedTool(data, kvp.Key))
+                    {
+                        dict.Remove(kvp.Key);
+                        SetUpgrades(Game1.player, dict);
+                    }
                     return false;
                 }
                 return true;
@@ -168,9 +196,11 @@ namespace ToolUpgraders
                     return true;
                 foreach (var kvp in dict.Where(p => p.Value <= 0 && data.Tools.Contains(p.Key)))
                 {
-                    TryReturnUpgradedTool(data, kvp.Key);
-                    dict.Remove(kvp.Key);
-                    SetUpgrades(Game1.player, dict);
+                    if(TryReturnUpgradedTool(data, kvp.Key))
+                    {
+                        dict.Remove(kvp.Key);
+                        SetUpgrades(Game1.player, dict);
+                    }
                     return false;
                 }
                 return true;

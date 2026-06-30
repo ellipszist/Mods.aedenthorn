@@ -6,9 +6,12 @@ using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.GameData.Shops;
+using StardewValley.GameData.Tools;
+using StardewValley.ItemTypeDefinitions;
 using StardewValley.Monsters;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 
 namespace AreaOfEffect
@@ -184,6 +187,7 @@ namespace AreaOfEffect
             {
                 if (Context.IsWorldReady)
                 {
+                    //SHelper.GameContent.InvalidateCache("Data/Shops");
 
                     //if(Game1.player.CursorSlotItem is Tool t)
                     //{
@@ -279,6 +283,7 @@ namespace AreaOfEffect
                 });
                 var upgraders = Helper.ModRegistry.GetApi<IToolUpgradersAPI>("aedenthorn.ToolUpgraders");
                 upgraders?.AddUpgrader("Wizard", "Wizard", "WizardBook", upgrades, null, SHelper.Translation.Get("tool-ready-in-x"), null, "wand", "Wizard", Config.UpgradeDays);
+                //upgraders?.AddUpgrader("Carpenter", "Carpenter", "Carpenter", new List<string>() { "(T)CopperAxe" }, null, SHelper.Translation.Get("tool-ready-in-x"), null, null, "Robin", Config.UpgradeDays);
             }
         }
 

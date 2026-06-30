@@ -7,6 +7,7 @@ using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Characters;
 using StardewValley.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -38,6 +39,10 @@ namespace ToolUpgraders
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
+
+            foreach (Type type in typeof(Game1).Assembly.GetTypes())
+            {
+            }
             
         }
         public override object GetApi()

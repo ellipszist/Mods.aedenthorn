@@ -21,7 +21,7 @@ namespace ToolUpgraders
                 return Game1.content.LoadString("Strings\\StringsFromCSFiles:ToolReady", tool.DisplayName);
             return str.Contains("{0}") ? string.Format(str, tool.DisplayName) : str;
         }
-        public static void TryReturnUpgradedTool(UpgraderData data, string itemId)
+        public static bool TryReturnUpgradedTool(UpgraderData data, string itemId)
         {
             if (Game1.player.freeSpotsInInventory() > 0)
             {
@@ -36,12 +36,14 @@ namespace ToolUpgraders
                             TokenStringBuilder.ToolName(tool.QualifiedItemId, tool.UpgradeLevel)
                     });
                 }
+                return true;
             }
             else
             {
                 NPC npc = data.BeginNPC == null ? null : Game1.getCharacterFromName(data.BeginNPC, true, false);
                 Dialogue d = data.NoSpaceText is not null ? new Dialogue(npc, "ToolUpgrader", data.NoSpaceText) : new Dialogue(npc, "Data\\ExtraDialogue:Clint_NoInventorySpace", false);
                 Game1.DrawDialogue(d);
+                return false;
             }
         }
         public static bool IsUpgrade(string itemId)
