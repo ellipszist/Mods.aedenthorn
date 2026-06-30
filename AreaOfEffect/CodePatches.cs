@@ -146,7 +146,7 @@ namespace AreaOfEffect
         {
             public static bool Prefix(Tool __instance, ref bool __result)
             {
-                if (!Config.ModEnabled || !TryGetEffect(__instance, out _))
+                if (!Config.ModEnabled || !ToolDict.ContainsKey(__instance.ItemId))
                 {
                     return true;
                 }
@@ -160,7 +160,7 @@ namespace AreaOfEffect
         {
             public static bool Prefix(Item __instance, ref bool __result)
             {
-                if (!Config.ModEnabled || __instance is not Tool t || !TryGetEffect(t, out _))
+                if (!Config.ModEnabled || __instance is not Tool || !ToolDict.ContainsKey(__instance.ItemId))
                 {
                     return true;
                 }
