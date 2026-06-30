@@ -69,8 +69,8 @@ namespace Tutorials
         }
         private void Recalibrate()
         {
-            sidebarWidth = 400;
-            size = 1000;
+            sidebarWidth = ModEntry.Config.SidebarWidth;
+            size = ModEntry.Config.Height;
             height = size + 64;
             width = size + sidebarWidth;
             

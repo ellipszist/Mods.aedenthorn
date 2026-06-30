@@ -160,7 +160,7 @@ namespace AreaOfEffect
                 return;
             if (Context.IsPlayerFree)
             {
-                if (Config.CastButton.JustPressed() && Game1.player.CurrentTool is Tool t && TryGetTool(t, out var data) && data.Spells.Count != 1)
+                if (Config.CastButton.JustPressed() && Game1.player.CurrentTool is Tool t && TryGetTool(t, out var data) && data.Spells?.Count != 1)
                 {
                     Game1.activeClickableMenu = new CastSpellMenu(t, data.Spells);
                     foreach(var k in Config.CastButton.Keybinds)

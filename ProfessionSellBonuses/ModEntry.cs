@@ -1,18 +1,15 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.GameData.Shops;
-using StardewValley.Objects;
-using System;
+using StardewValley.Menus;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace LightSwitches
+namespace ProfessionSellBonuses
 {
     /// <summary>The mod entry point.</summary>
     public partial class ModEntry : Mod
@@ -22,20 +19,26 @@ namespace LightSwitches
         public static IModHelper SHelper;
         public static ModConfig Config;
         public static ModEntry context;
-        public const string onOffKey = "aedenthorn.LightSwitches/on";
-        public const string onTimeKey = "aedenthorn.LightSwitches/onTime";
-        public const string offTimeKey = "aedenthorn.LightSwitches/offTime";
-        public const string onTextureKey = "aedenthorn.LightSwitches/offTexture";
-        public const string colorKey = "aedenthorn.LightSwitches/color";
-        public const string strobeKey = "aedenthorn.LightSwitches/strobe";
-        public const string dictPath = "aedenthorn.LightSwitches/dict";
-        public static Dictionary<string, LightSwitchData> LightSwitches
+  
+        public static List<string> ProNames { get; private set; } = new();
+        public static List<string> SkillNames { get; private set; } = new()
+            {
+                "Farming",
+                "Fishing",
+                "Foraging",
+                "Mining",
+                "Combat",
+                "Luck"
+            };
+        public const string dictPath = "aedenthorn.ProfessionSellBonuses/dict";
+        public static Dictionary<string, SellBonusDataWhich> DataDict
         {
             get
             {
-                return SHelper.GameContent.Load<Dictionary<string, LightSwitchData>>(dictPath);
+                return SHelper.GameContent.Load<Dictionary<string, SellBonusDataWhich>>(dictPath);
             }
         }
+
         public override void Entry(IModHelper helper)
         {
             Config = Helper.ReadConfig<ModConfig>();
@@ -45,17 +48,22 @@ namespace LightSwitches
             context = this;
 
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
-            helper.Events.GameLoop.TimeChanged += GameLoop_TimeChanged;
             helper.Events.Content.AssetRequested += Content_AssetRequested;
-            helper.Events.Input.ButtonsChanged += Input_ButtonsChanged;
+            helper.Events.Input.ButtonPressed += Input_ButtonPressed;
 
             var harmony = new Harmony(ModManifest.UniqueID);
+            foreach(var t in typeof(Item).Assembly.GetTypes().Where(t => t.IsAssignableTo(typeof(Item))))
+            {
+                var mi = AccessTools.DeclaredMethod(t, nameof(Item.sellToStorePrice));
+                if(mi != null)
+                {
+                    harmony.Patch(
+                        original: mi,
+                        postfix: new HarmonyMethod(typeof(ModEntry), nameof(ModEntry.Item_sellToStorePrice_Postfix))
+                        );
+                }
+            }
             harmony.PatchAll();
-        }
-
-        public override object GetApi()
-        {
-            return new LSAPI();
         }
         private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
         {
@@ -63,107 +71,59 @@ namespace LightSwitches
                 return;
             if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
             {
-                e.LoadFrom(() => new Dictionary<string, LightSwitchData>()
-                {
-                    {
-                        "LightSwitch",
-                        new()
-                        {
-                            OnTexture = onTextureKey
-                        }
-                    }
-                }, AssetLoadPriority.Exclusive);
-            }
-            else if (e.NameWithoutLocale.IsEquivalentTo(onTextureKey))
-            {
-                e.LoadFromModFile<Texture2D>("assets/on.png", AssetLoadPriority.Exclusive);
-            }
-            else if (e.NameWithoutLocale.IsEquivalentTo("Data/Shops"))
-            {
-                e.Edit((IAssetData data) =>
-                {
-                    var dict = data.AsDictionary<string, ShopData>().Data;
-                    if (Config.ShopPrice > -1 && dict.TryGetValue("Carpenter", out var shopData))
-                    {
-                        shopData.Items.Add(new ShopItemData()
-                        {
-                            Id = "LightSwitch",
-                            ItemId = "LightSwitch",
-                            Price = Config.ShopPrice,
-                        });
-                    }
-                });
+                e.LoadFrom(() => new Dictionary<string, SellBonusDataWhich>(), AssetLoadPriority.Exclusive);
             }
         }
 
-        private void GameLoop_TimeChanged(object sender, TimeChangedEventArgs e)
+
+        private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
         {
-            if (!Config.ModEnabled)
-                return;
-            Utility.ForEachLocation((GameLocation l) =>
+            if (Config.Debug)
             {
-                foreach (var f in l.furniture)
-                {
-                    if (LightSwitches.TryGetValue(f.ItemId, out var data))
-                    {
-                        if(IsOn(f) && IsOffTime(f))
-                        {
-                            ToggleSwitch(f, data);
-                        }
-                        else if(!IsOn(f) && IsOnTime(f, e.NewTime))
-                        {
-                            ToggleSwitch(f, data);
-                        }
-                    }
-                }
-                return true;
-            },
-            true, true);
-        }
-        private void Input_ButtonsChanged(object sender, ButtonsChangedEventArgs e)
-        {
-            if (!Config.ModEnabled)
-                return;
-            if (Context.IsPlayerFree && Config.ColorButton.JustPressed())
+            }
+            if (Context.IsPlayerFree && Config.Debug)
             {
-                foreach(var f in Game1.currentLocation.furniture)
-                {
-                    if(LightSwitches.TryGetValue(f.ItemId, out var data) && !data.Prismatic)
-                    {
-                        var bb = f.GetBoundingBox();
-                        var tile = Game1.currentCursorTile * 64;
-                        var tile2 = tile - new Vector2(0, 64);
-                        if (bb.Contains(tile) || bb.Contains(tile2))
-                        {
-                            Game1.activeClickableMenu = new ColorPickMenu(f);
-                            foreach (var k in Config.ColorButton.Keybinds)
-                            {
-                                foreach (var b in k.Buttons)
-                                {
-                                    SHelper.Input.Suppress(b);
-                                }
-                            }
-                        }
-                    }
-                }
+                //Game1.player.setSkillLevel("Farming", 10);
+                //Game1.activeClickableMenu = new AnimationPreviewTool();
             }
         }
+
         private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
         {
+            if (Config.Debug)
+            {
+                //var qCPF = Helper.ModRegistry.GetApi<IQCPFAPI>("aedenthorn.QCPF");
+                //qCPF.StartPack();
+                //qCPF.AddEditData(dictPath, new Dictionary<string, object>(DataDict.Select(kvp => new KeyValuePair<string, object>(kvp.Key, kvp.Value))));
+                //qCPF.WritePack(Path.Combine(SHelper.DirectoryPath, "content.json"));
+            }
+            ProNames = new();
+            for (int i = 0; i < 1000; i++)
+            {
+                string name = (string)AccessTools.Method(typeof(LevelUpMenu), "getProfessionName").Invoke(null, new object[] { i });
+                if (ProNames.Contains(name))
+                    break;
+                ProNames.Add(name);
+            }
+            CheckDict();
             var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (configMenu is not null)
             {
                 configMenu.Register(
                     mod: ModManifest,
-                    reset: () => Config = new ModConfig(),
-                    save: () => Helper.WriteConfig(Config)
+                    reset: () => { Config = new ModConfig(); CheckDict(); },
+                    save: () => { Helper.WriteConfig(Config); CheckDict(); }
                 );
-                
+
+                var skip = new List<string>() { "Debug" };
+
                 var props = typeof(ModConfig).GetProperties().ToArray();
                 var configMenuExt = Helper.ModRegistry.GetApi<IGMCMOptionsAPI>("jltaylor-us.GMCMOptions");
 
                 foreach (var p in props)
                 {
+                    if (skip.Contains(p.Name))
+                        continue;
                     if (p.PropertyType == typeof(bool))
                     {
                         configMenu.AddBoolOption(
@@ -172,7 +132,7 @@ namespace LightSwitches
                             tooltip: () => { var t = Helper.Translation.Get(p.Name + ".Desc"); return t.HasValue() ? t : null; },
                             getValue: () => (bool)p.GetValue(Config),
                             setValue: value => p.SetValue(Config, value)
-                        );
+                        ); 
                     }
                     else if (p.PropertyType == typeof(int))
                     {

@@ -769,6 +769,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToolUpgraders", "ToolUpgrad
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SlimeCharmerRing", "SlimeCharmerRing\SlimeCharmerRing.csproj", "{454DB3D9-37C0-B734-4103-C237B0DEA269}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProfessionSellBonuses", "ProfessionSellBonuses\ProfessionSellBonuses.csproj", "{F2061852-174C-C282-AA03-13DAF0681178}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3809,6 +3811,14 @@ Global
 		{454DB3D9-37C0-B734-4103-C237B0DEA269}.Release|Any CPU.Build.0 = Release|Any CPU
 		{454DB3D9-37C0-B734-4103-C237B0DEA269}.Release|x64.ActiveCfg = Release|x64
 		{454DB3D9-37C0-B734-4103-C237B0DEA269}.Release|x64.Build.0 = Release|x64
+		{F2061852-174C-C282-AA03-13DAF0681178}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2061852-174C-C282-AA03-13DAF0681178}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2061852-174C-C282-AA03-13DAF0681178}.Debug|x64.ActiveCfg = Debug|x64
+		{F2061852-174C-C282-AA03-13DAF0681178}.Debug|x64.Build.0 = Debug|x64
+		{F2061852-174C-C282-AA03-13DAF0681178}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2061852-174C-C282-AA03-13DAF0681178}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2061852-174C-C282-AA03-13DAF0681178}.Release|x64.ActiveCfg = Release|x64
+		{F2061852-174C-C282-AA03-13DAF0681178}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

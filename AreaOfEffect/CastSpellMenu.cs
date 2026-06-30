@@ -46,7 +46,7 @@ namespace AreaOfEffect
             }
             if (spelling)
             {
-                predots.Clear();
+                //predots.Clear();
                 var spell = GetSpell(true);
                 if (spell.Value != null)
                 {
@@ -55,31 +55,33 @@ namespace AreaOfEffect
             }
             else
             {
-                int c = 20;
-                var pos = Game1.getMousePosition().ToVector2();
-                predots.Add(pos);
-                if (predots.Count > c)
+                
+            }
+            int c = 20;
+            var pos = Game1.getMousePosition().ToVector2();
+            predots.Add(pos);
+            if (predots.Count > c)
+            {
+                predots.RemoveAt(0);
+            }
+            for (int i = 0; i < predots.Count; i++)
+            {
+                float alpha = (i + 1) / (c * 2f);
+                float scale = 1 / alpha / 2;
+                if (i > 0)
                 {
-                    predots.RemoveAt(0);
-                }
-                for(int i = 0; i < predots.Count; i++)
-                {
-                    float alpha = (i + 1) / (c * 2f);
-                    if (i > 0)
+                    var distance = Vector2.Distance(predots[i], predots[i - 1]);
+                    if (distance > 20)
                     {
-                        var distance = Vector2.Distance(predots[i], predots[i - 1]);
-                        if (distance > 20)
+                        float f = 10f;
+                        while (f < distance)
                         {
-                            float f = 10f;
-                            while (f < distance)
-                            {
-                                b.Draw(Game1.mouseCursors, Vector2.Lerp(predots[i - 1], predots[i], f / distance) - new Vector2(60, 60), new Rectangle(88, 1779, 30, 30), Color.White * alpha, 0, Vector2.Zero, 4f, SpriteEffects.None, 1f);
-                                f += 20;
-                            }
+                            b.Draw(Game1.mouseCursors, Vector2.Lerp(predots[i - 1], predots[i], f / distance) - new Vector2(60, 60) * scale, new Rectangle(88, 1779, 30, 30), Color.White * alpha, 0, Vector2.Zero, 4f * scale, SpriteEffects.None, 1f);
+                            f += 20;
                         }
                     }
-                    b.Draw(Game1.mouseCursors, predots[i] - new Vector2(60, 60), new Rectangle(88, 1779, 30, 30), Color.White * alpha, 0, Vector2.Zero, 4f, SpriteEffects.None, 1f);
                 }
+                b.Draw(Game1.mouseCursors, predots[i] - new Vector2(60, 60) * scale, new Rectangle(88, 1779, 30, 30), Color.White * alpha, 0, Vector2.Zero, 4f * scale, SpriteEffects.None, 1f);
             }
             //b.DrawString(Game1.dialogueFont, currentDirection.ToString(), new Vector2(0, directions.Count * 64), Color.White);
             if (dots.Any())
