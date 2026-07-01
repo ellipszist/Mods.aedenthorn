@@ -1,7 +1,7 @@
 ﻿{
   "Name": "Petting Animation",
   "Author": "aedenthorn",
-  "Version": "0.1.3",
+  "Version": "0.1.4",
   "Description": "Petting Animation.",
   "UniqueID": "aedenthorn.PettingAnimation",
   "EntryDll": "PettingAnimation.dll",

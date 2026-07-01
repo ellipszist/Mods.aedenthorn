@@ -12,6 +12,8 @@ namespace PettingAnimation
     {
         public static void PetPet(Character target, Farmer who)
         {
+            if(target is null || who is null || target.currentLocation != who.currentLocation || Vector2.Distance(target.Position, who.Position) > 128f)
+                return;
             ticks.Value = 0;
             layer.Value = who.FacingDirection == 2 ? -1 : target.StandingPixel.Y / 10000f + 0.0002f;
             int amount = target.GetType().Name switch
