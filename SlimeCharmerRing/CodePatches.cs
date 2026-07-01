@@ -19,45 +19,65 @@ namespace SlimeCharmerRing
         {
             public static void Prefix(NPC __instance, ref Dictionary<Farmer, Vector2> __state)
             {
-                if (!Config.ModEnabled || __instance is not GreenSlime slime || __instance.currentLocation != null && !__instance.currentLocation.farmers.Any())
+                if (!Config.ModEnabled || __instance.currentLocation != null && !__instance.currentLocation.farmers.Any())
                 {
                     return;
                 }
                 int which = 0;
-                if(slime.color.Value == new Color(255, 255, 50))
+                if (__instance is GreenSlime slime)
                 {
-                    which = 6;
+
+                    if (slime.color.Value == new Color(255, 255, 50))
+                    {
+                        which = 6; // yellow
+                    }
+                    else if (slime.Name == "Frost Jelly")
+                    {
+                        which = 1; // blue
+                    }
+                    else if (slime.Name == "Tiger Slime")
+                    {
+                        which = 7; // tiger
+                    }
+                    else if (slime.Name == "Prismatic Slime")
+                    {
+                        which = 8; // prismatic
+                    }
+                    else if (slime.Name == "Sludge")
+                    {
+                        if (Math.Abs(slime.color.R - Color.BlueViolet.R) < 21 && Math.Abs(slime.color.G - Color.BlueViolet.G) < 21 && Math.Abs(slime.color.B - Color.BlueViolet.B) < 21)
+                        {
+                            which = 3; // purple
+                        }
+                        else if (slime.color.R > 199 || slime.color.Value == new Color(50, 10, 50) * 0.7f)
+                        {
+                            which = 2; // red
+                        }
+                    }
+                    else if (slime.color.Value.R > 119 && slime.color.Value.R == slime.color.Value.G && slime.color.Value.B == slime.color.Value.G)
+                    {
+                        which = 5; // iron
+                    }
+                    else if (slime.color.Value.R > 119 && slime.color.Value.G == slime.color.Value.R / 2 && slime.color.Value.B == slime.color.Value.R / 4)
+                    {
+                        which = 4; // copper
+                    }
                 }
-                else if(slime.Name == "Frost Jelly")
+                else if(__instance is BigSlime bigSlime)
                 {
-                    which = 1;
-                }
-                else if (slime.Name == "Tiger Slime")
-                {
-                    which = 7;
-                }
-                else if (slime.Name == "Prismatic Slime")
-                {
-                    which = 8;
-                }
-                else if(slime.Name == "Sludge")
-                {
-                    if(Math.Abs(slime.color.R - Color.BlueViolet.R) < 21 && Math.Abs(slime.color.G - Color.BlueViolet.G) < 21 && Math.Abs(slime.color.B - Color.BlueViolet.B) < 21)
+                    which = 0;
+                    if (InColorRange(bigSlime.c.Value, Color.BlueViolet))
                     {
                         which = 3;
                     }
-                    else if(slime.color.R > 199 || slime.color.Value == new Color(50, 10, 50) * 0.7f)
+                    else if (InColorRange(bigSlime.c.Value, Color.Red))
                     {
                         which = 2;
                     }
-                }
-                else if(slime.color.Value.R > 119 && slime.color.Value.R == slime.color.Value.G && slime.color.Value.B == slime.color.Value.G)
-                {
-                    which = 5;
-                }
-                else if(slime.color.Value.R > 119 && slime.color.Value.G == slime.color.Value.R / 2 && slime.color.Value.B == slime.color.Value.R / 4)
-                {
-                    which = 4;
+                    else if (InColorRange(bigSlime.c.Value, Color.Turquoise))
+                    {
+                        which = 1;
+                    }
                 }
 
                 __state = new();
@@ -67,12 +87,14 @@ namespace SlimeCharmerRing
                     if(!Attracts(f.leftRing.Value, which))
                     {
                         __state[f] = f.Position;
+                        positionDict[f] = f.Position;
                         f.Position = Vector2.One * float.MaxValue;
                         continue;
                     }
                     if (!Attracts(f.rightRing.Value, which))
                     {
                         __state[f] = f.Position;
+                        positionDict[f] = f.Position;
                         f.Position = Vector2.One * float.MaxValue;
                     }
                 }
@@ -85,6 +107,7 @@ namespace SlimeCharmerRing
                 {
                     f.Position = __state[f];
                 }
+                positionDict.Clear(); // this was backup just in case
             }
         }
 

@@ -36,6 +36,7 @@ namespace LauncherDrawer
         public static PerScreen<string> tooltip = new();
         public const string dictPath = "aedenthorn.LauncherDrawer/dict";
         public const string keybindPrefix = "aedenthorn.LauncherDrawer/keybinds/";
+        public const string linkPrefix = "aedenthorn.LauncherDrawer/links/";
         public static Dictionary<string, Dictionary<string, object>> LauncherDict 
         { 
             get
@@ -48,7 +49,9 @@ namespace LauncherDrawer
         public static List<string> SortedKeys {
             get
             {
-                return sortedKeys.Where(k => !Config.HideList.Contains(k)).Skip(scrolled.Value).Take(Config.MaxEntries > 0 ? Config.MaxEntries : sortedKeys.Count).ToList();
+                var keys = sortedKeys.Where(k => !Config.HideList.Contains(k)).Skip(scrolled.Value).Take(Config.MaxEntries > 0 ? Config.MaxEntries : sortedKeys.Count).ToList();
+                keys.Sort();
+                return keys;
             }
             set
             {
@@ -59,8 +62,7 @@ namespace LauncherDrawer
         { 
             get
             {
-                Config.DrawerSpeed = 10;
-                return (int)(LauncherDict.Count * 56 * ticks.Value / (float)Config.DrawerSpeed);
+                return (int)(SortedKeys.Count * 56 * ticks.Value / (float)Config.DrawerSpeed);
             }
         }
 
@@ -151,6 +153,21 @@ namespace LauncherDrawer
                             };
                     }
                 }
+                if(Config.Links is not null)
+                {
+                    for (int i = 0; i < Config.Links.Count; i++)
+                    {
+                        var split = Config.Links[i].Split('|');
+                        if (split.Length < 3)
+                            continue;
+                        dict[linkPrefix + i] = new()
+                            {
+                                { "Name", split[0] },
+                                { "Description", split[1]  },
+                                { "Link", split[2] },
+                            };
+                    }
+                }
                 e.LoadFrom(() => dict, AssetLoadPriority.Exclusive);
             }
         }
@@ -176,9 +193,10 @@ namespace LauncherDrawer
             }
             if (Config.HideKey.JustPressed())
             {
-                var height = MenuHeight;
+                var keys = SortedKeys;
                 var dict = LauncherDict;
-                var per = height / dict.Count;
+                var height = GetHeight(keys);
+                var per = height / keys.Count;
                 int count = 0;
                 Vector2 position = GetPosition(Game1.dayTimeMoneyBox.position);
                 var x = Game1.getMouseX(true);

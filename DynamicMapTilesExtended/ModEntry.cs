@@ -83,7 +83,7 @@ namespace DMT
             Helper.Events.GameLoop.TimeChanged += onTimeChanged;
             Helper.Events.GameLoop.DayStarted += onDayStarted;
 
-            Helper.ConsoleCommands.Add("dmt", "DMT test commands", onConsoleCommand);
+            //Helper.ConsoleCommands.Add("dmt", "DMT test commands", onConsoleCommand);
         }
 
         private void onDayStarted(object? sender, DayStartedEventArgs e)
@@ -266,7 +266,7 @@ namespace DMT
         {
             if (InvalidateOnLocationChanged.Contains(e.OldLocation))
             {
-                if (Game1.getAllFarmers().Where(f => f.currentLocation == e.OldLocation).Count() == 0)
+                if (!Game1.getAllFarmers().Any(f => f.currentLocation == e.OldLocation))
                 {
                     Helper.GameContent.InvalidateCache(e.OldLocation.mapPath.Value);
                     InvalidateOnLocationChanged.Remove(e.OldLocation);

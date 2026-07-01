@@ -21,5 +21,9 @@ namespace LauncherDrawer
         {
             "GMCM|Generic Mod Config Menu|F12"
         };
+        public List<string> Links { get; set; } = new()
+        {
+            "Wiki|Stardew Wiki|https://stardewvalleywiki.com"
+        };
     }
 }

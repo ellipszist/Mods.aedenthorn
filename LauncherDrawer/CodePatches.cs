@@ -18,16 +18,17 @@ namespace LauncherDrawer
             {
                 if (!Config.ModEnabled || currentDrawerState.Value == DrawerState.Closed)
                     return;
-                var height = MenuHeight;
-                var dict = LauncherDict;
-                if (!dict.Any())
+                var keys = SortedKeys;
+                if (!keys.Any())
                     return;
-                var per = height / dict.Count;
+                var dict = LauncherDict;
+                var height = GetHeight(keys);
+                var per = height / keys.Count;
                 if(!Config.CustomPosition)
                     overrideY = height + 184;
                 int count = 0;
                 Vector2 position = GetPosition(__instance.position);
-                foreach (var key in SortedKeys)
+                foreach (var key in keys)
                 {
                     try
                     {
@@ -78,9 +79,10 @@ namespace LauncherDrawer
                 }
                 else
                 {
-                    var height = MenuHeight;
                     var dict = LauncherDict;
-                    var per = height / dict.Count;
+                    var keys = SortedKeys;
+                    var height = GetHeight(keys);
+                    var per = height / keys.Count;
                     int count = 0;
                     Vector2 position = GetPosition(__instance.position);
 
@@ -89,7 +91,7 @@ namespace LauncherDrawer
                         Rectangle bounds = GetBounds(position, per, count++);
                         if(bounds.Contains(x, y))
                         {
-                            LaunchEntry(LauncherDict[key]);
+                            LaunchEntry(dict[key]);
                             return false;
                         }
                     }
@@ -112,7 +114,7 @@ namespace LauncherDrawer
                     return false;
                 }
                 Vector2 position = GetPosition(__instance.position);
-                var bounds = GetBounds(position, MenuHeight, 0);
+                var bounds = GetBounds(position, GetHeight(SortedKeys), 0);
                 if(bounds.Contains(x, y))
                 {
                     __result = true;
@@ -139,9 +141,10 @@ namespace LauncherDrawer
                 }
                 if (currentDrawerState.Value == DrawerState.Closed)
                     return true;
-                var height = MenuHeight;
                 var dict = LauncherDict;
-                var per = height / dict.Count;
+                var keys = SortedKeys;
+                var height = GetHeight(keys);
+                var per = height / keys.Count;
                 int count = 0;
                 foreach (var key in SortedKeys)
                 {

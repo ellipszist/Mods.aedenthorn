@@ -677,15 +677,20 @@ namespace DMT
             location.overlayObjects[tilePos] = chest;
         }
 
-        public static void DoSpawnObject(GameLocation location, string value)
+        public static void DoSpawnObject(GameLocation l, string value)
         {
 
             var split = value.Split('|');
             foreach(var str in split)
             {
-                var split2 = split[1].Split(',');
+                var split2 = str.Split(',');
                 Vector2 tilePos = new(int.Parse(split2[0]), int.Parse(split2[1]));
                 var id = split2[2];
+                if (string.IsNullOrEmpty(id))
+                {
+                    l.objects.Remove(tilePos);
+                    continue;
+                }
                 if (!ItemRegistry.IsQualifiedItemId(id))
                     return;
                 bool move = split2.Length > 3 && bool.TryParse(split2[3], out var m) ? m : true;
@@ -703,14 +708,14 @@ namespace DMT
                     {
                         f.modData[moveKey] = "false";
                     }
-                    Furniture targetFurniture = location.GetFurnitureAt(tilePos);
+                    Furniture targetFurniture = l.GetFurnitureAt(tilePos);
                     if (targetFurniture != null)
                     {
                         targetFurniture.heldObject.Value = f;
                     }
                     else
                     {
-                        location.furniture.Add(f);
+                        l.furniture.Add(f);
                     }
                 }
                 else if(item is Object obj)
@@ -720,7 +725,7 @@ namespace DMT
                         obj.modData[moveKey] = "false";
                     }
                     obj.TileLocation = tilePos;
-                    location.Objects[tilePos] = obj;
+                    l.Objects[tilePos] = obj;
                 }
             }
         }
@@ -731,12 +736,16 @@ namespace DMT
             var split = value.Split('|');
             foreach(var str in split)
             {
-                var split2 = split[1].Split(',');
+                var split2 = str.Split(',');
                 if (split2.Length < 3)
                     continue;
                 Vector2 tilePos = new(int.Parse(split2[0]), int.Parse(split2[1]));
                 var type = split2[2];
-
+                if (string.IsNullOrEmpty(type))
+                {
+                    l.terrainFeatures.Remove(tilePos);
+                    continue;
+                }
                 TerrainFeature? tf = type switch
                 {
                     "Grass" => split2.Length < 5 ? new Grass() : new Grass(int.Parse(split2[3]), int.Parse(split2[4])),

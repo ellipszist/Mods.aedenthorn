@@ -358,10 +358,10 @@ namespace DMT
         /// <param name="l">The location to load properties to</param>
         internal static void LoadLocation(GameLocation l)
         {
-            Stopwatch s = new();
-            s.Start();
             if (!context.Config.Enabled)
                 return;
+            Stopwatch s = new();
+            s.Start();
             var dict = context.Helper.GameContent.Load<Dictionary<string, DynamicTile>>(TileDataDictPath);
             var keys = dict.Keys.ToList();
             for(int i = keys.Count - 1; i >= 0 ; i--)
@@ -388,7 +388,7 @@ namespace DMT
                         foreach(var key in tile.Properties.Keys)
                         {
                             var prop = ParseProperty(new(key, tile.Properties[key]), allKeys);
-                            if(prop?.Trigger == Triggers.Load)
+                            if (prop?.Trigger == Triggers.Load)
                             {
                                 DoTriggerActions(Game1.player, l, new(x, y), [(prop, tile)]);
                             }

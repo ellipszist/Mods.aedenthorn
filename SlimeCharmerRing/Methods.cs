@@ -20,6 +20,19 @@ namespace SlimeCharmerRing
         {
             if (ring is null)
                 return true;
+            if(ring is CombinedRing cr)
+            {
+                foreach (var r in cr.combinedRings)
+                {
+                    if (!Attracts(r, which))
+                        return false;
+                }
+                return true;
+            }
+            else if(ring.ItemId != "520")
+            {
+                return true;
+            }
             int w = GetWhich(ring);
             string effect = GetEffect(ring);
             return effect switch
@@ -45,6 +58,16 @@ namespace SlimeCharmerRing
                 str = "";
             }
             return str;
+        }
+
+        public static bool InColorRange(Color slime, Color color)
+        {
+            return IsInRange(slime.R, color.R) && IsInRange(slime.G, color.G) && IsInRange(slime.B, color.B);
+        }
+
+        public static bool IsInRange(byte s, byte c)
+        {
+            return s >= (c - 20) * (7 / 10f) && s <= (c + 20) * (11 / 10f);
         }
     }
 }

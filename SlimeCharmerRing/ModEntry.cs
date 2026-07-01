@@ -5,12 +5,8 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.Characters;
-using StardewValley.Extensions;
-using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 
 namespace SlimeCharmerRing
@@ -26,6 +22,7 @@ namespace SlimeCharmerRing
         public const string ringPath = "aedenthorn.SlimeCharmerRing/ring";
         public const string whichKey = "aedenthorn.SlimeCharmerRing/which";
         public const string effectKey = "aedenthorn.SlimeCharmerRing/effect";
+        public static Dictionary<Farmer, Vector2> positionDict = new();
         public override void Entry(IModHelper helper)
         {
             Config = Helper.ReadConfig<ModConfig>();
@@ -35,12 +32,34 @@ namespace SlimeCharmerRing
             context = this;
 
             helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
+            helper.Events.GameLoop.UpdateTicked += GameLoop_UpdateTicked;
             helper.Events.Content.AssetRequested += Content_AssetRequested;
             helper.Events.Input.ButtonPressed += Input_ButtonPressed;
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
         }
+
+        private void GameLoop_UpdateTicked(object sender, UpdateTickedEventArgs e)
+        {
+            if (positionDict.Any())
+            {
+                if(Context.IsWorldReady)
+                {
+                    foreach (var kvp in positionDict)
+                    {
+                        var farmer = kvp.Key;
+                        var pos = kvp.Value;
+                        if (farmer?.currentLocation?.farmers.Contains(farmer) == true)
+                        {
+                            farmer.Position = pos;
+                        }
+                    }
+                }
+                positionDict.Clear();
+            }
+        }
+
         private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
         {
             if (!Config.ModEnabled)

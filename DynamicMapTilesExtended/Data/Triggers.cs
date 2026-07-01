@@ -45,6 +45,7 @@
             CropHarvestRegex,
             EnterLocation,
             Explode,
+            Load,
             MonsterSlainRegex,
             ObjectClickedRegex,
             ObjectPlacedRegex,

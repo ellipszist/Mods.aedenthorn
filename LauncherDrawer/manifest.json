@@ -1,7 +1,7 @@
 ﻿{
   "Name": "Launcher Drawer",
   "Author": "aedenthorn",
-  "Version": "0.3.0",
+  "Version": "0.4.1",
   "Description": "Launcher Drawer.",
   "UniqueID": "aedenthorn.LauncherDrawer",
   "EntryDll": "LauncherDrawer.dll",
