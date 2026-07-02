@@ -632,6 +632,7 @@ namespace AreaOfEffect
             int seqLength = frameHeight / 3;
             int seqSide = seqLength / 2; // (int)Math.Round(seqLength / Math.Sqrt(2));
             int frameRate = 60;
+            string catId = "aedenthorn.AreaOfEffect/aoe-cat";
             string catName = SHelper.Translation.Get("aoe-cat");
             string spellPrefix = SHelper.Translation.Get("aoe-spell-prefix");
             foreach (var kvp in SpellDict)
@@ -753,7 +754,7 @@ namespace AreaOfEffect
                     var tdata = new TutorialData()
                     {
                         Title = spellPrefix + kvp.Value.DisplayName,
-                        Category = catName,
+                        Category = catId,
                         Frames = new()
                         {
                             new TutorialFrame()
@@ -772,7 +773,7 @@ namespace AreaOfEffect
             var tutorial = new TutorialData()
             {
                 Title = SHelper.Translation.Get("aoe-tutorial"),
-                Category = catName,
+                Category = catId,
                 Frames = new()
                 {
                     new TutorialFrame()
@@ -805,8 +806,9 @@ namespace AreaOfEffect
                     }
                 }
             };
+            iTutorialAPI.AddCategory(catId, catName);
             iTutorialAPI.AddTutorial("aedenthorn.AreaOfEffect/basics", tutorial);
-            iTutorialAPI.AddTutorialTrigger("(T)aedenthorn.AreaOfEffect/wand2", "aedenthorn.AreaOfEffect/basics", null, new() { SHelper.Translation.Get("aoe-cat") });
+            iTutorialAPI.AddTutorialTrigger("(T)aedenthorn.AreaOfEffect/wand2", "aedenthorn.AreaOfEffect/basics", null, new() { catId });
 
         }
         public static Color GetDirectionColor(int i)

@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
+using StardewValley.Characters;
 using StardewValley.Menus;
 using System;
 using System.Collections.Generic;
@@ -13,7 +14,7 @@ namespace Tutorials
 {
     internal class CustomTutorialMenu : IClickableMenu
     {
-        private ITutorialData tutorial;
+        private TutorialData tutorial;
         private string tutorialKey;
         private List<ClickableTextureComponent> pageDots = new();
         private ClickableTextureComponent texture;
@@ -34,10 +35,10 @@ namespace Tutorials
 
         public CustomTutorialMenu(string key = null, string cat = null, List<string> cats = null) : base(Game1.uiViewport.Width / 2 - (600 + borderWidth * 2) / 2, Game1.uiViewport.Height / 2 - (600 + borderWidth * 2) / 2 - 192, 600 + borderWidth * 2, 600 + borderWidth * 2 + 192, true)
         {
-
+            string thisCat = key == null ? null : ModEntry.TutorialDict[key].Category;
             foreach (var kvp in ModEntry.TutorialDict)
             {
-                if (cats?.Contains(kvp.Value.Category) == false)
+                if (cats?.Contains(kvp.Value.Category) == false && (key == null || kvp.Value.Category != thisCat))
                     continue;
                 if (!categorizedTutorials.ContainsKey(kvp.Value.Category))
                 {
@@ -167,9 +168,9 @@ namespace Tutorials
                 float y = yPositionOnScreen + 100;
                 float w = size - 86;
                 float h = w * 9 / 16;
-                float xr = source.Width * d.Scale / w; // 200 / 600
-                float yr = source.Height * d.Scale / h; // 80 / 300
-                float scale = d.Scale;
+                float xr = source.Width / w; // 200 / 600
+                float yr = source.Height / h; // 80 / 300
+                float scale = 1f;
                 if (xr > yr)
                 {
                     scale /= xr;
@@ -323,9 +324,10 @@ namespace Tutorials
                     {
                         b.Draw(Game1.staminaRect, cc.bounds, Color.WhiteSmoke * 0.5f);
                     }
-                    Utility.drawTextWithShadow(b, cc.name.Substring(4), Game1.dialogueFont, new Vector2(cc.bounds.X + 8, cc.bounds.Y + 4), Game1.textColor);
-
-                    //SpriteText.drawString(b, cc.name.Substring(4), cc.bounds.X + 16, cc.bounds.Y + 4, 999999, size - spaceToClearSideBorder * 8, 999999, 1f, 0.88f, false, -1, "", null, SpriteText.ScrollTextAlignment.Left);
+                    if (ModEntry.CatDict.TryGetValue(cc.name.Substring(4), out var catName))
+                    {
+                        Utility.drawTextWithShadow(b, catName, Game1.dialogueFont, new Vector2(cc.bounds.X + 8, cc.bounds.Y + 4), Game1.textColor);
+                    }
                 }
                 else
                 {

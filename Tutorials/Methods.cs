@@ -19,7 +19,7 @@ namespace Tutorials
                     SHelper.Input.Suppress(b);
                 }
             }
-            if (!TutorialDict.Any() || (cats is not null && !TutorialDict.Values.Any(t => cats.Contains(t.Category))))
+            if (!TutorialDict.Any() || (key is not null && !TutorialDict.ContainsKey(key))  || (key is null && cats is not null && !TutorialDict.Values.Any(t => cats.Contains(t.Category))))
                 return false;
             Game1.playSound("bigSelect");
             Game1.activeClickableMenu = new CustomTutorialMenu(key, cat, cats);

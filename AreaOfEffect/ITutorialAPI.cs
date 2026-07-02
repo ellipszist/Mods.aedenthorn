@@ -5,8 +5,9 @@ namespace AreaOfEffect
 {
     public interface ITutorialAPI
     {
-        public void AddTutorialFrame(string key, string subtitle, string texture, int frames, int frameRate, float scale, Rectangle? startRect, string text);
-        public void AddTutorialTrigger(string key, string tutorial, string category, List<string> categories);
+        public void AddCategory(string key, string value);
         public void AddTutorial(string key, object indata);
+        public void AddTutorialFrame(string key, string subtitle, string texture, int frames, int frameRate, Rectangle? startRect, string text);
+        public void AddTutorialTrigger(string key, string tutorial, string category, List<string> categories);
     }
 }

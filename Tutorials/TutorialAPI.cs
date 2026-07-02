@@ -6,23 +6,27 @@ namespace Tutorials
 {
     public interface ITutorialAPI
     {
-        public void AddTutorialFrame(string key, string subtitle, string texture, int frames, int frameRate, float scale, Rectangle? startRect, string text);
+        public void AddTutorialFrame(string key, string subtitle, string texture, int frames, int frameRate, Rectangle? startRect, string text);
         public void AddTutorialTrigger(string key, string tutorial, string category, List<string> categories);
         public void AddTutorial(string key, object indata);
+        public void AddCategory(string key, string value);
     }
     public class TutorialAPI : ITutorialAPI
     {
-        public void AddTutorialFrame(string key, string subtitle, string texture, int frames, int frameRate, float scale, Rectangle? startRect, string text)
+        public void AddCategory(string key, string value)
+        {
+            ModEntry.CatDict[key] = value;
+        }
+
+        public void AddTutorialFrame(string key, string subtitle, string texture, int frames, int frameRate, Rectangle? startRect, string text)
         {
             if(ModEntry.TutorialDict.TryGetValue(key, out var data))
             {
                 data.Frames.Add(new TutorialFrame()
                 {
-                    Subtitle = subtitle,
                     Texture = texture,
                     Frames = frames,
                     FrameRate = frameRate,
-                    Scale = scale,
                     StartRect = startRect,
                     Text = text
                 });
@@ -30,7 +34,7 @@ namespace Tutorials
         }
         public void AddTutorialTrigger(string key, string tutorial, string category, List<string> categories)
         {
-            ModEntry.TutorialTriggerDict.Add(key, new()
+            ModEntry.TriggerDict.Add(key, new()
             {
                 Tutorial = tutorial,
                 Category = category,

@@ -7,6 +7,7 @@ using StardewModdingAPI.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 
 namespace Tutorials
@@ -20,18 +21,27 @@ namespace Tutorials
         public static ModConfig Config;
         public static ModEntry context;
         public const string dictPath = "aedenthorn.Tutorials/dict";
+        public const string catPath = "aedenthorn.Tutorials/cats";
         public const string addedDictPath = "aedenthorn.Tutorials/added";
         public const string triggersPath = "aedenthorn.Tutorials/triggers";
 
-        public static Dictionary<string, ITutorialData> TutorialDict
+        public static Dictionary<string, TutorialData> TutorialDict
         {
             get
             {
-                return SHelper.GameContent.Load<Dictionary<string, ITutorialData>>(dictPath);
+                return SHelper.GameContent.Load<Dictionary<string, TutorialData>>(dictPath);
             }
         }
 
-        public static Dictionary<string, TutorialTrigger> TutorialTriggerDict
+        public static Dictionary<string, string> CatDict
+        {
+            get
+            {
+                return SHelper.GameContent.Load<Dictionary<string, string>>(catPath);
+            }
+        }
+
+        public static Dictionary<string, TutorialTrigger> TriggerDict
         {
             get
             {
@@ -84,6 +94,14 @@ namespace Tutorials
                 {
                     if (e.Button == SButton.NumPad7)
                     {
+                        if (Config.Debug)
+                        {
+                            //var qCPF = Helper.ModRegistry.GetApi<IQCPFAPI>("aedenthorn.QCPF");
+                            //qCPF.StartPack();
+                            //qCPF.AddEditData(dictPath, new Dictionary<string, object>(TutorialDict.Select(kvp => new KeyValuePair<string, object>(kvp.Key, kvp.Value))));
+                            //qCPF.AddEditData(triggersPath, new Dictionary<string, object>(TriggerDict.Select(kvp => new KeyValuePair<string, object>(kvp.Key, kvp.Value))));
+                            //qCPF.WritePack(Path.Combine(SHelper.DirectoryPath, "content.json"));
+                        }
                         //SHelper.GameContent.InvalidateCache(dictPath);
                         //OpenTutorial();
                     }
@@ -99,6 +117,10 @@ namespace Tutorials
             {
                 e.LoadFrom(() => new Dictionary<string, TutorialTrigger>(), AssetLoadPriority.Exclusive);
             }
+            else if (e.NameWithoutLocale.IsEquivalentTo(catPath))
+            {
+                e.LoadFrom(() => new Dictionary<string, string>(), AssetLoadPriority.Exclusive);
+            }
             else if (e.NameWithoutLocale.IsEquivalentTo("aedenthorn.LauncherDrawer/dict"))
             {
                 e.Edit((IAssetData data) =>
@@ -113,35 +135,20 @@ namespace Tutorials
             }
             else if (e.NameWithoutLocale.IsEquivalentTo(addedDictPath))
             {
-                e.LoadFrom(() => new Dictionary<string, ITutorialAddedFrames>(), AssetLoadPriority.Exclusive);
+                e.LoadFrom(() => new Dictionary<string, TutorialAddedFrames>(), AssetLoadPriority.Exclusive);
             }
             else if (e.NameWithoutLocale.IsEquivalentTo(dictPath))
             {
-                var d = new Dictionary<string, ITutorialData>();
-                for (int i = 0; i < 20; i++) 
-                {
-                    d["aasdf" + i] = new TutorialData()
-                    {
-                        Title = "aasdf",
-                        Category = "aasdf" + i,
-                        Frames = new()
-                        {
-                            new TutorialFrame()
-                            {
-                                Text = "aasdf"
-                            }
-                        }
-                    };
-                }
+                var d = new Dictionary<string, TutorialData>();
                 e.LoadFrom(() => d, AssetLoadPriority.Exclusive);
                 e.Edit((IAssetData data) =>
                 {
-                    var dict = data.AsDictionary<string, ITutorialData>().Data;
-                    foreach(var kvp in SHelper.GameContent.Load<Dictionary<string, ITutorialAddedFrames>>(addedDictPath))
+                    var dict = data.AsDictionary<string, TutorialData>().Data;
+                    foreach(var kvp in SHelper.GameContent.Load<Dictionary<string, TutorialAddedFrames>>(addedDictPath))
                     {
-                        if(dict.TryGetValue(kvp.Key, out var tdata))
+                        if(dict.TryGetValue(kvp.Value.Tutorial, out var tdata))
                         {
-                            int idx = kvp.Value.Position < tdata.Frames.Count ? kvp.Value.Position : tdata.Frames.Count;
+                            int idx = kvp.Value.Position < tdata.Frames.Count && kvp.Value.Position >= 0 ? kvp.Value.Position : tdata.Frames.Count;
                             tdata.Frames.InsertRange(idx, kvp.Value.Frames);
                         }
                     }
@@ -151,6 +158,7 @@ namespace Tutorials
 
         private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
         {
+
             //SMonitor.Log(string.Join(",", Game1.objectData.Where(kvp => kvp.Value.Type == "Arch").Select(kvp => kvp.Key)));
             var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (configMenu is not null)
