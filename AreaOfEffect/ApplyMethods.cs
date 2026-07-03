@@ -9,6 +9,7 @@ using StardewValley.TerrainFeatures;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using xTile.Tiles;
 using Object = StardewValley.Object;
 
 namespace AreaOfEffect
@@ -60,11 +61,11 @@ namespace AreaOfEffect
                         case SpriteType.Fountain:
                             CreateFountain(l, center, who, spell, s);
                             break;
-                    }
-                    switch (s.Type)
-                    {
                         case SpriteType.Lightning:
                             Utility.drawLightningBolt(center * 64, l);
+                            break;
+                        default:
+                            ApplySpriteToTile(l, center, s, 0);
                             break;
                     }
                 }
@@ -76,6 +77,9 @@ namespace AreaOfEffect
                 return;
             switch (data.Type)
             {
+                case SpriteType.Animation:
+                    CreateAnimation(l, tile * 64, data); 
+                    break;
                 case SpriteType.Balloon:
                     CreateBalloon(l, tile * 64, data); 
                     break;
@@ -106,6 +110,9 @@ namespace AreaOfEffect
                 case SpriteType.Sparkle:
                     Rectangle r = new((tile * 64).ToPoint(), new Point(64, 64));
                     CreateSparkle(l, r, data); 
+                    break;
+                case SpriteType.Texture:
+                    CreateTexture(l, tile * 64, data);
                     break;
             }
         }
@@ -191,6 +198,19 @@ namespace AreaOfEffect
                     }
                     break;
                 case SpellAffectedType.NPC:
+                    foreach (var c in l.characters.Where(c => c.IsVillager))
+                    {
+                        if (applied.Contains(c))
+                            continue;
+                        var bb = c.GetBoundingBox();
+                        var rect = new Rectangle((tile * 64).ToPoint(), new(64, 64));
+                        if (bb.Intersects(rect))
+                        {
+                            ApplyNPCEffect(who, c, effect);
+                            applied.Add(c);
+                            result = true;
+                        }
+                    }
                     break;
                 case SpellAffectedType.Farmer:
                     foreach (var f in l.farmers)
@@ -249,6 +269,21 @@ namespace AreaOfEffect
                         ApplyTerrainFeatureEffect(l, who, tile, tf, effect, unaffected);
                         applied.Add(tf);
                         result = true;
+                    }
+                    break;
+                case SpellAffectedType.Horse:
+                    foreach (var c in l.characters.Where(c => c is Horse))
+                    {
+                        if (applied.Contains(c))
+                            continue;
+                        var bb = c.GetBoundingBox();
+                        var rect = new Rectangle((tile * 64).ToPoint(), new(64, 64));
+                        if (bb.Intersects(rect))
+                        {
+                            ApplyHorseEffect(who, c, effect);
+                            applied.Add(c);
+                            result = true;
+                        }
                     }
                     break;
                 case SpellAffectedType.Stone:
@@ -321,32 +356,45 @@ namespace AreaOfEffect
                         who.gainExperience(0, 5);
                     }
                     break;
+                case SpellEffectType.Custom:
+                    TrySetCustomVariable(a, effect);
+                    break;
+                case SpellEffectType.ModData:
+                    SetModData(a.modData, effect);
+                    break;
+
             }
         }
 
-        private static void ApplyBuildingEffect(GameLocation l, Farmer who, Building b, SpellEffect effect)
+        private static void ApplyBuildingEffect(GameLocation l, Farmer who, Building a, SpellEffect effect)
         {
             switch (effect.EffectType)
             {
                 case SpellEffectType.Water:
-                    if (b is PetBowl pb)
+                    if (a is PetBowl pb)
                         pb.watered.Value = true;
                     break;
                 case SpellEffectType.Custom:
-                    TrySetCustomVariable(b, effect);
+                    TrySetCustomVariable(a, effect);
+                    break;
+                case SpellEffectType.ModData:
+                    SetModData(a.modData, effect);
                     break;
             }
         }
 
-        private static void ApplyPetEffect(GameLocation l, Farmer who, Pet p, SpellEffect effect)
+        private static void ApplyPetEffect(GameLocation l, Farmer who, Pet a, SpellEffect effect)
         {
             switch (effect.EffectType)
             {
                 case SpellEffectType.Pet:
-                    p.checkAction(effect.AsFarmer ? who : new Farmer(), l);
+                    a.checkAction(effect.AsFarmer ? who : new Farmer(), l);
                     break;
                 case SpellEffectType.Custom:
-                    TrySetCustomVariable(p, effect);
+                    TrySetCustomVariable(a, effect);
+                    break;
+                case SpellEffectType.ModData:
+                    SetModData(a.modData, effect);
                     break;
             }
         }
@@ -377,88 +425,147 @@ namespace AreaOfEffect
             }
         }
 
-        public static void ApplyMonsterEffect(Farmer who, Monster m, SpellEffect effect)
+        public static void ApplyMonsterEffect(Farmer who, Monster a, SpellEffect effect)
         {
             switch (effect.EffectType)
             {
                 case SpellEffectType.Damage:
-                    m.takeDamage((int)effect.Value, 0, 0, false, 0, who);
+                    a.takeDamage((int)effect.Value, 0, 0, false, 0, who);
                     break;
                 case SpellEffectType.Buff:
-                    BuffDict.Add(m, new MonsterBuffManager(m));
-                    BuffDict[m].AddBuff((string)effect.Value);
+                    BuffDict.Add(a, new MonsterBuffManager(a));
+                    BuffDict[a].AddBuff((string)effect.Value);
                     break;
                 case SpellEffectType.Freeze:
-                    m.stunTime.Value = (int)effect.Value;
+                    a.stunTime.Value = (int)effect.Value;
                     break;
                 case SpellEffectType.Light:
                     var id = Guid.NewGuid().ToString();
-                    m.currentLocation.sharedLights.AddLight(new(id, 1, m.GetBoundingBox().Center.ToVector2(), effect.Radius, effect.Color));
+                    a.currentLocation.sharedLights.AddLight(new(id, 1, a.GetBoundingBox().Center.ToVector2(), effect.Radius, effect.Color));
                     LightDict.Add(id, new()
                     {
                         id = id,
-                        location = m.currentLocation,
-                        target = m,
+                        location = a.currentLocation,
+                        target = a,
                         timeLeft = (int)effect.Value,
                         totalTime = (int)effect.Value,
                         radius = effect.Radius
                     });
                         break;
                 case SpellEffectType.Custom:
-                    TrySetCustomVariable(m, effect);
+                    TrySetCustomVariable(a, effect);
+                    break;
+                case SpellEffectType.ModData:
+                    SetModData(a.modData, effect);
                     break;
             }
         }
 
-        public static void ApplyFarmerEffect(Farmer f, SpellEffect effect)
+        public static void ApplyNPCEffect(Farmer who, NPC a, SpellEffect effect)
+        {
+            switch (effect.EffectType)
+            {
+                case SpellEffectType.Light:
+                    var id = Guid.NewGuid().ToString();
+                    a.currentLocation.sharedLights.AddLight(new(id, 1, a.GetBoundingBox().Center.ToVector2(), effect.Radius, effect.Color));
+                    LightDict.Add(id, new()
+                    {
+                        id = id,
+                        location = a.currentLocation,
+                        target = a,
+                        timeLeft = (int)effect.Value,
+                        totalTime = (int)effect.Value,
+                        radius = effect.Radius
+                    });
+                        break;
+                case SpellEffectType.Custom:
+                    TrySetCustomVariable(a, effect);
+                    break;
+                case SpellEffectType.ModData:
+                    SetModData(a.modData, effect);
+                    break;
+            }
+        }
+
+        public static void ApplyHorseEffect(Farmer who, Horse a, SpellEffect effect)
+        {
+            switch (effect.EffectType)
+            {
+                case SpellEffectType.Light:
+                    var id = Guid.NewGuid().ToString();
+                    a.currentLocation.sharedLights.AddLight(new(id, 1, a.GetBoundingBox().Center.ToVector2(), effect.Radius, effect.Color));
+                    LightDict.Add(id, new()
+                    {
+                        id = id,
+                        location = a.currentLocation,
+                        target = a,
+                        timeLeft = (int)effect.Value,
+                        totalTime = (int)effect.Value,
+                        radius = effect.Radius
+                    });
+                        break;
+                case SpellEffectType.Custom:
+                    TrySetCustomVariable(a, effect);
+                    break;
+                case SpellEffectType.ModData:
+                    SetModData(a.modData, effect);
+                    break;
+            }
+        }
+
+        public static void ApplyFarmerEffect(Farmer a, SpellEffect effect)
         {
             switch (effect.EffectType)
             {
                 case SpellEffectType.Buff:
-                    f.applyBuff((string)effect.Value);
+                    a.applyBuff((string)effect.Value);
                     break;
                 case SpellEffectType.Damage:
-                    f.takeDamage((int)effect.Value, true, null);
+                    a.takeDamage((int)effect.Value, true, null);
                     break;
                 case SpellEffectType.Heal:
-                    f.health = Math.Clamp(f.health + (int)effect.Value, 0, f.maxHealth);
+                    a.health = Math.Clamp(a.health + (int)effect.Value, 0, a.maxHealth);
                     break;
                 case SpellEffectType.Invincible:
-                    f.temporarilyInvincible = true;
-                    f.flashDuringThisTemporaryInvincibility = true;
-                    f.temporaryInvincibilityTimer = 0;
-                    f.currentTemporaryInvincibilityDuration = (int)effect.Value;
+                    a.temporarilyInvincible = true;
+                    a.flashDuringThisTemporaryInvincibility = true;
+                    a.temporaryInvincibilityTimer = 0;
+                    a.currentTemporaryInvincibilityDuration = (int)effect.Value;
                     break;
                 case SpellEffectType.Light:
                     var id = Guid.NewGuid().ToString();
-                    f.currentLocation.sharedLights.AddLight(new(id, 1, new Vector2(f.Position.X + 32f, f.Position.Y + 64f), effect.Radius, effect.Color, LightSource.LightContext.None, f.UniqueMultiplayerID));
+                    a.currentLocation.sharedLights.AddLight(new(id, 1, new Vector2(a.Position.X + 32f, a.Position.Y + 64f), effect.Radius, effect.Color, LightSource.LightContext.None, a.UniqueMultiplayerID));
                     LightDict.Add(id, new()
                     {
                         id = id,
-                        location = f.currentLocation,
-                        target = f,
+                        location = a.currentLocation,
+                        target = a,
                         timeLeft = (int)effect.Value,
                         totalTime = (int)effect.Value,
                         radius = effect.Radius
                     });
                     break;
                 case SpellEffectType.Custom:
-                    TrySetCustomVariable(f, effect);
+                    TrySetCustomVariable(a, effect);
+                    break;
+
+                case SpellEffectType.ModData:
+                    SetModData(a.modData, effect);
                     break;
             }
         }
 
-        public static void ApplyObjectEffect(GameLocation l, Farmer who, Vector2 tile, Object o, SpellEffect effect, List<SpellAffectedType> unaffected)
+        public static void ApplyObjectEffect(GameLocation l, Farmer who, Vector2 tile, Object a, SpellEffect effect, List<SpellAffectedType> unaffected)
         {
             if (unaffected?.Count > 0)
             {
-                if ((o.IsTwig() && unaffected.Contains(SpellAffectedType.Twig)) || (o.IsBreakableStone() && unaffected.Contains(SpellAffectedType.Stone)) || (o.IsWeeds() && unaffected.Contains(SpellAffectedType.Weed)))
+                if ((a.IsTwig() && unaffected.Contains(SpellAffectedType.Twig)) || (a.IsBreakableStone() && unaffected.Contains(SpellAffectedType.Stone)) || (a.IsWeeds() && unaffected.Contains(SpellAffectedType.Weed)))
                     return;
             }
             switch (effect.EffectType)
             {
                 case SpellEffectType.Burn:
-                    CreateBurn(l, tile, o, null);
+                    CreateBurn(l, tile, a, null);
                     break;
                 case SpellEffectType.Tool:
                     PerformTool(l, tile, who, (string)effect.Value, effect.AsFarmer);
@@ -467,18 +574,21 @@ namespace AreaOfEffect
                     l.Objects.Remove(tile);
                     break;
                 case SpellEffectType.Custom:
-                    TrySetCustomVariable(o, effect);
+                    TrySetCustomVariable(a, effect);
+                    break;
+                case SpellEffectType.ModData:
+                    SetModData(a.modData, effect);
                     break;
             }
         }
 
-        public static void ApplyResourceClumpEffect(GameLocation l, Farmer who, Vector2 tile, ResourceClump rc, SpellEffect effect)
+        public static void ApplyResourceClumpEffect(GameLocation l, Farmer who, Vector2 tile, ResourceClump a, SpellEffect effect)
         {
 
             switch (effect.EffectType)
             {
                 case SpellEffectType.Burn:
-                    CreateBurn(l, tile, rc, null);
+                    CreateBurn(l, tile, a, null);
                     break;
                 case SpellEffectType.Tool:
                     PerformTool(l, tile, who, (string)effect.Value, effect.AsFarmer);
@@ -487,102 +597,111 @@ namespace AreaOfEffect
                     l.Objects.Remove(tile);
                     break;
                 case SpellEffectType.Custom:
-                    TrySetCustomVariable(rc, effect);
+                    TrySetCustomVariable(a, effect);
+                    break;
+                case SpellEffectType.ModData:
+                    SetModData(a.modData, effect);
                     break;
             }
         }
 
-        public static void ApplyTerrainFeatureEffect(GameLocation l, Farmer who, Vector2 tile, TerrainFeature tf, SpellEffect effect, List<SpellAffectedType> unaffected)
+        public static void ApplyTerrainFeatureEffect(GameLocation l, Farmer who, Vector2 tile, TerrainFeature a, SpellEffect effect, List<SpellAffectedType> unaffected)
         {
             if(unaffected?.Count > 0)
             {
-                if ((tf is HoeDirt dirt && (unaffected.Contains(SpellAffectedType.HoeDirt)|| (dirt.crop is not null && unaffected.Contains(SpellAffectedType.Crop)))) || (tf is Grass && unaffected.Contains(SpellAffectedType.Grass)) || (tf is Tree && unaffected.Contains(SpellAffectedType.Tree)) || (tf is FruitTree && unaffected.Contains(SpellAffectedType.FruitTree)))
+                if ((a is HoeDirt dirt && (unaffected.Contains(SpellAffectedType.HoeDirt)|| (dirt.crop is not null && unaffected.Contains(SpellAffectedType.Crop)))) || (a is Grass && unaffected.Contains(SpellAffectedType.Grass)) || (a is Tree && unaffected.Contains(SpellAffectedType.Tree)) || (a is FruitTree && unaffected.Contains(SpellAffectedType.FruitTree)))
                     return;
             }
             switch (effect.EffectType)
             {
                 case SpellEffectType.Burn:
-                    CreateBurn(l, tile, tf, null);
+                    CreateBurn(l, tile, a, null);
                     break;
                 case SpellEffectType.Destroy:
                     l.terrainFeatures.Remove(tile);
                     break;
                 case SpellEffectType.Fertilize:
-                    if(tf is HoeDirt)
+                    if(a is HoeDirt)
                     {
-                        (tf as HoeDirt).plant((string)effect.Value, who, true);
+                        (a as HoeDirt).plant((string)effect.Value, who, true);
                     }
                     break;
                 case SpellEffectType.Grow:
-                    if(tf is Grass)
+                    if(a is Grass)
                     {
-                        (tf as Grass).numberOfWeeds.Value = 4;
+                        (a as Grass).numberOfWeeds.Value = 4;
                     }
-                    else if (tf is FruitTree)
+                    else if (a is FruitTree)
                     {
-                        (tf as FruitTree).growthStage.Value = 5;
+                        (a as FruitTree).growthStage.Value = 5;
                     }
-                    else if(tf is Tree)
+                    else if(a is Tree)
                     {
-                        (tf as Tree).growthStage.Value = 4;
+                        (a as Tree).growthStage.Value = 4;
                     }
                     break;
                 case SpellEffectType.Harvest:
-                    if(tf is Grass)
+                    if(a is Grass)
                     {
-                        (tf as Grass).TryDropItemsOnCut((Tool)ItemRegistry.Create(effect.Value as string ?? "(W)47"), false);
+                        (a as Grass).TryDropItemsOnCut((Tool)ItemRegistry.Create(effect.Value as string ?? "(W)47"), false);
                     }
-                    else if (tf is FruitTree && (tf as FruitTree).struckByLightningCountdown.Value <= 0)
+                    else if (a is FruitTree && (a as FruitTree).struckByLightningCountdown.Value <= 0)
                     {
-                        foreach (var f in (tf as FruitTree).fruit)
+                        foreach (var f in (a as FruitTree).fruit)
                         {
                             TryReturnObject(f, who);
                         }
-                        (tf as FruitTree).fruit.Clear();
+                        (a as FruitTree).fruit.Clear();
                     }
                     break;
                 case SpellEffectType.Plant:
-                    if(tf is HoeDirt)
+                    if(a is HoeDirt)
                     {
-                        (tf as HoeDirt).plant((string)effect.Value, who, false);
+                        (a as HoeDirt).plant((string)effect.Value, who, false);
                     }
                     break;
                 case SpellEffectType.Tool:
                     PerformTool(l, tile, who, (string)effect.Value, effect.AsFarmer);
                     break;
                 case SpellEffectType.Water:
-                    if (tf is HoeDirt)
+                    if (a is HoeDirt)
                     {
-                        (tf as HoeDirt).state.Value = 1;
+                        (a as HoeDirt).state.Value = 1;
                     }
                     break;
                 case SpellEffectType.Custom:
-                    TrySetCustomVariable(tf, effect);
+                    TrySetCustomVariable(a, effect);
+                    break;
+                case SpellEffectType.ModData:
+                    SetModData(a.modData, effect);
                     break;
             }
         }
 
-        public static void ApplyCropEffect(GameLocation l, Farmer who, Vector2 tile, HoeDirt dirt, SpellEffect effect)
+        public static void ApplyCropEffect(GameLocation l, Farmer who, Vector2 tile, HoeDirt a, SpellEffect effect)
         {
             switch (effect.EffectType)
             {
                 case SpellEffectType.Burn:
-                    CreateBurn(l, tile, dirt, null);
+                    CreateBurn(l, tile, a, null);
                     break;
                 case SpellEffectType.Grow:
-                    dirt.crop?.growCompletely();
+                    a.crop?.growCompletely();
                     break;
                 case SpellEffectType.Harvest:
-                    dirt.crop?.harvest((int)tile.X,(int)tile.Y, dirt, null, true);
+                    a.crop?.harvest((int)tile.X,(int)tile.Y, a, null, true);
                     break;
                 case SpellEffectType.Tool:
                     PerformTool(l, tile, who, (string)effect.Value, effect.AsFarmer);
                     break;
                 case SpellEffectType.Water:
-                    dirt.state.Value = 1;
+                    a.state.Value = 1;
                     break;
                 case SpellEffectType.Custom:
-                    TrySetCustomVariable(dirt.crop, effect);
+                    TrySetCustomVariable(a.crop, effect);
+                    break;
+                case SpellEffectType.ModData:
+                    SetModData(a.modData, effect);
                     break;
             }
         }

@@ -32,6 +32,7 @@ namespace AreaOfEffect
     [Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
     public enum SpriteType
     {
+        Animation,
         Balloon,
         Butterfly,
         EvilRabbit,
@@ -59,6 +60,7 @@ namespace AreaOfEffect
         FruitTree,
         Grass,
         HoeDirt,
+        Horse,
         Monster,
         NPC,
         Object,
@@ -151,7 +153,6 @@ namespace AreaOfEffect
         public bool PerTile { get; set; } = true;
         public string Texture { get; set; }
         public Rectangle SourceRect { get; set; }
-        public Rectangle? Rect { get; set; }
         public float Alpha { get; set; } = 1;
         public float AlphaFade { get; set; }
         public Color Color { get; set; } = Color.White;
@@ -169,12 +170,12 @@ namespace AreaOfEffect
         public Vector2 Motion { get; set; }
         public float Rotation { get; set; }
         public float RotationChange { get; set; }
-        public int Row { get; set; }
         public int SourceWidth { get; set; } = -1;
         public int SourceHeight { get; set; } = -1;
         public float LayerDepth { get; set; } = -1;
         public float? Scale { get; set; }
         public float ScaleChange { get; set; }
+        public float ScaleChangeChange { get; set; }
         public int Delay { get; set; }
         public int Number { get; set; }
         public bool DrawAbove { get; set; }

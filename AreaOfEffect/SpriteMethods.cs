@@ -340,6 +340,8 @@ namespace AreaOfEffect
                 rotation = data.Rotation,
                 rotationChange = data.RotationChange,
                 scale = data.Scale ?? 4f,
+                scaleChange = data.ScaleChange,
+                scaleChangeChange = data.ScaleChangeChange,
                 totalNumberOfLoops = data.Loops,
                 yStopCoordinate = data.YStop,
             };
@@ -357,6 +359,8 @@ namespace AreaOfEffect
                 rotation = data.Rotation,
                 rotationChange = data.RotationChange,
                 scale = data.Scale ?? 1,
+                scaleChange = data.ScaleChange,
+                scaleChangeChange = data.ScaleChangeChange,
                 yStopCoordinate = data.YStop,
                 delayBeforeAnimationStart = data.Delay,
             };

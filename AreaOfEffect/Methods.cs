@@ -8,6 +8,7 @@ using StardewValley.Extensions;
 using StardewValley.GameData;
 using StardewValley.GameData.Weapons;
 using StardewValley.Internal;
+using StardewValley.Mods;
 using StardewValley.Monsters;
 using StardewValley.Projectiles;
 using StardewValley.TerrainFeatures;
@@ -296,6 +297,11 @@ namespace AreaOfEffect
                     spell = data
                 };
             }
+        }
+
+        public static void SetModData(ModDataDictionary dict, SpellEffect effect)
+        {
+            dict[effect.Name] = effect.Value.ToString();
         }
 
         public static void TrySetCustomVariable(object obj, SpellEffect effect)
