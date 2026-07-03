@@ -196,6 +196,6 @@ namespace AreaOfEffect
         public object Value { get; set; }
         public float Radius { get; set; }
         public float Multiplier { get; set; }
-        public Color Color { get; set; }
+        public Color Color { get; set; } = Color.White;
     }
 }

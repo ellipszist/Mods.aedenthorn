@@ -629,15 +629,15 @@ namespace AreaOfEffect
                 case SpellEffectType.Grow:
                     if(a is Grass)
                     {
-                        (a as Grass).numberOfWeeds.Value = 4;
+                        (a as Grass).numberOfWeeds.Value = effect.Value is null ? 4 : (int)effect.Value;
                     }
                     else if (a is FruitTree)
                     {
-                        (a as FruitTree).growthStage.Value = 5;
+                        (a as FruitTree).growthStage.Value = effect.Value is null ? 5 : (int)effect.Value;
                     }
                     else if(a is Tree)
                     {
-                        (a as Tree).growthStage.Value = 4;
+                        (a as Tree).growthStage.Value = effect.Value is null ? 4 : (int)effect.Value;
                     }
                     break;
                 case SpellEffectType.Harvest:
@@ -686,7 +686,15 @@ namespace AreaOfEffect
                     CreateBurn(l, tile, a, null);
                     break;
                 case SpellEffectType.Grow:
-                    a.crop?.growCompletely();
+                    if(effect.Value is null)
+                    {
+                        a.crop?.growCompletely();
+                    }
+                    else
+                    {
+                        a.crop.currentPhase.Value = Math.Min(a.crop.phaseDays.Count - 1, (int)effect.Value);
+                        a.crop.dayOfCurrentPhase.Value = 0;
+                    }
                     break;
                 case SpellEffectType.Harvest:
                     a.crop?.harvest((int)tile.X,(int)tile.Y, a, null, true);
