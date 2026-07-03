@@ -6,7 +6,14 @@ Projectile properties are too numerous to list here, but two simple types are ex
 
 ## Simple Projectile
 
-To create a simple projectile, just specify the sprite index as in the example above. Sprite indexes correspond to the `TileSheets/projectiles` file in the game content.
+To create a simple projectile, just specify the sprite index, e.g.:
+```
+{
+    "SpriteIndex": 10
+}
+```
+
+Sprite indexes correspond to the `TileSheets/projectiles` file in the game content.
 
 ## Custom Texture Projectile
 
