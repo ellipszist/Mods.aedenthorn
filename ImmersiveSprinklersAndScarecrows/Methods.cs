@@ -232,7 +232,7 @@ namespace ImmersiveSprinklersAndScarecrows
                     TryReturnObject(sprinkler.heldObject.Value, who);
                     if (sprinkler.modData.ContainsKey(nozzleKey))
                     {
-                        TryReturnObject(ItemRegistry.Create("(O)315"), who);
+                        TryReturnObject(ItemRegistry.Create("(O)915"), who);
                         sprinkler.modData.Remove(nozzleKey);
                     }
                 }

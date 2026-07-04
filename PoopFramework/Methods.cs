@@ -55,23 +55,7 @@ namespace PoopFramework
                     currentChance += p.poopChance;
                     if (Game1.random.Next(Math.Max(100, totalChance)) < currentChance)
                     {
-                        IDictionary<int, string> dict = p.bigCraftablePoop ? Game1.bigCraftablesInformation : Game1.objectInformation;
-                        Item item = null;
-                        int index = -1;
-                        if (!int.TryParse(p.poopItem, out index) || !dict.ContainsKey(index))
-                        {
-                            foreach (var kvp in dict)
-                            {
-                                if (kvp.Value.StartsWith(p.poopItem + "/"))
-                                {
-                                    index = kvp.Key;
-                                }
-                            }
-                        }
-                        if (index > -1)
-                        {
-                            item = p.bigCraftablePoop ? new Object(Vector2.Zero, index) : new Object(index, 1);
-                        }
+                        Item item = ItemRegistry.Create(p.poopItem);
                         if (item != null)
                         {
                             if (p.poopSound != null)
