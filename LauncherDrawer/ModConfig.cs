@@ -14,6 +14,10 @@ namespace LauncherDrawer
         public int Y { get; set; } = -1;
         public int MaxEntries { get; set; } = -1;
         public int DrawerSpeed { get; set; } = 10;
+        public string OpenSound { get; set; } = "doorCreak";
+        public string CloseSound { get; set; } = "doorCreakReverse";
+        public string KeybindSound { get; set; } = "coin";
+        public string LinkSound { get; set; } = "coin";
         public KeybindList DrawerKey { get; set; } = new(SButton.NumPad5);
         public KeybindList HideKey { get; set; } = new(SButton.MouseMiddle);
         public HashSet<string> HideList { get; set; } = new();

@@ -769,6 +769,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProfessionSellBonuses", "Pr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NozzleAndEnricher", "NozzleAndEnricher\NozzleAndEnricher.csproj", "{D31B6270-454C-2396-0DE4-F228534AC1A8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WizardShop", "WizardShop\WizardShop.csproj", "{7590ED50-B54F-6237-B9EC-D31EB319A82B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -3809,6 +3811,14 @@ Global
 		{D31B6270-454C-2396-0DE4-F228534AC1A8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D31B6270-454C-2396-0DE4-F228534AC1A8}.Release|x64.ActiveCfg = Release|x64
 		{D31B6270-454C-2396-0DE4-F228534AC1A8}.Release|x64.Build.0 = Release|x64
+		{7590ED50-B54F-6237-B9EC-D31EB319A82B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7590ED50-B54F-6237-B9EC-D31EB319A82B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7590ED50-B54F-6237-B9EC-D31EB319A82B}.Debug|x64.ActiveCfg = Debug|x64
+		{7590ED50-B54F-6237-B9EC-D31EB319A82B}.Debug|x64.Build.0 = Debug|x64
+		{7590ED50-B54F-6237-B9EC-D31EB319A82B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7590ED50-B54F-6237-B9EC-D31EB319A82B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7590ED50-B54F-6237-B9EC-D31EB319A82B}.Release|x64.ActiveCfg = Release|x64
+		{7590ED50-B54F-6237-B9EC-D31EB319A82B}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -3,6 +3,7 @@
   "Close-drawer": "Close Launcher",
   "keybinds": "Keybinds",
   "back": "<- Back",
+  "add-keybind": "Add Keybind",
   "name": "Name",
   "desc": "Description",
   "keybind": "Keybind"

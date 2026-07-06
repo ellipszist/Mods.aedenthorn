@@ -5,13 +5,12 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.GameData.Shops;
-using StardewValley.GameData.Tools;
-using StardewValley.ItemTypeDefinitions;
+using StardewValley.Buildings;
+using StardewValley.Characters;
 using StardewValley.Monsters;
+using StardewValley.TerrainFeatures;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 
 namespace AreaOfEffect
@@ -42,6 +41,7 @@ namespace AreaOfEffect
         public static Dictionary<string, Texture2D> TextureDict { get; set; } = new();
         public static Dictionary<string, SpellLightData> LightDict { get; set; } = new();
         public static Dictionary<Monster, MonsterBuffManager> BuffDict { get; set; } = new();
+        public static Dictionary<object, EffectOverTimeData> EOTDict { get; set; } = new();
         public static Dictionary<SpellProjectile, LinearProjectileInstance> ProjectileDict { get; set; } = new();
 
         public static Dictionary<string, SpellToolData> ToolDict
@@ -86,7 +86,7 @@ namespace AreaOfEffect
                 CreateTutorials();
                 loadingTutorials = false;
             }
-            if (Game1.activeClickableMenu is null)
+            if (Game1.shouldTimePass())
             {
                 if (BuffDict.Any())
                 {
@@ -112,6 +112,69 @@ namespace AreaOfEffect
                         if (m.Update(Game1.currentGameTime))
                         {
                             LightDict.Remove(key);
+                        }
+                    }
+                }
+                if (EOTDict.Any())
+                {
+                    foreach (var obj in EOTDict.Keys.ToArray())
+                    {
+                        var d = EOTDict[obj];
+                        int seconds = d.Milliseconds / 1000;
+                        d.Milliseconds -= Game1.currentGameTime.ElapsedGameTime.Milliseconds;
+                        if (d.Milliseconds / 1000 == seconds)
+                            continue;
+                        if (obj is Vector2 v)
+                        {
+                            ApplyTileEffect(d.Location, d.Who, v, d.Effect);
+                        }
+                        else if (obj is Monster m)
+                        {
+                            ApplyMonsterEffect(d.Who, m, d.Effect);
+                        }
+                        else if (obj is Farmer f)
+                        {
+                            ApplyFarmerEffect(f, d.Effect);
+                        }
+                        else if (obj is Object o)
+                        {
+                            ApplyObjectEffect(d.Location, d.Who, d.Tile, o, d.Effect);
+                        }
+                        else if (obj is TerrainFeature tf)
+                        {
+                            ApplyTerrainFeatureEffect(d.Location, d.Who, d.Tile, tf, d.Effect);
+                        }
+                        else if (obj is ResourceClump rc)
+                        {
+                            ApplyResourceClumpEffect(d.Location, d.Who, d.Tile, rc, d.Effect);
+                        }
+                        else if (obj is Crop c)
+                        {
+                            ApplyCropEffect(d.Location, d.Who, d.Tile, c.Dirt, d.Effect);
+                        }
+                        else if (obj is Horse h)
+                        {
+                            ApplyHorseEffect(d.Who, h, d.Effect);
+                        }
+                        else if (obj is Pet p)
+                        {
+                            ApplyPetEffect(d.Location, d.Who, p, d.Effect);
+                        }
+                        else if (obj is NPC n && n.IsVillager)
+                        {
+                            ApplyNPCEffect(d.Who, n, d.Effect);
+                        }
+                        else if (obj is FarmAnimal a)
+                        {
+                            ApplyAnimalEffect(d.Location, d.Who, a, d.Effect);
+                        }
+                        else if (obj is Building b)
+                        {
+                            ApplyBuildingEffect(d.Location, d.Who, b, d.Effect);
+                        }
+                        if(d.Milliseconds <= 0)
+                        {
+                            EOTDict.Remove(obj);
                         }
                     }
                 }
@@ -232,58 +295,6 @@ namespace AreaOfEffect
             else if (e.NameWithoutLocale.IsEquivalentTo(toolsPath))
             {
                 e.LoadFrom(() => new Dictionary<string, SpellToolData>(), AssetLoadPriority.Exclusive);
-            }
-            else if (e.NameWithoutLocale.IsEquivalentTo("Data/Shops"))
-            {
-                var tools = ToolDict.Where(p => p.Value.AddToWizardBook);
-                if (!tools.Any())
-                    return;
-                var upgrades = new List<string>();
-                e.Edit((IAssetData data) =>
-                {
-                    var dict = data.AsDictionary<string, ShopData>().Data;
-                    if (!dict.ContainsKey("Wizard"))
-                    {
-                        dict["Wizard"] = new ShopData()
-                        {
-                            Owners = new()
-                            {
-                                new()
-                                {
-                                    Id = "Wizard",
-                                    Name = "Wizard"
-                                }
-                            }
-                        };
-                    }
-                    foreach(var kvp in tools)
-                    {
-                        if (!Game1.toolData.TryGetValue(kvp.Key, out var toolData))
-                            continue;
-                        if(toolData.UpgradeFrom == null)
-                        {
-                            dict["Wizard"].Items.Add(new()
-                            {
-                                Id = kvp.Key,
-                                ItemId = kvp.Key,
-                                Price = toolData.SalePrice
-                            });
-                        }
-                        else
-                        {
-                            upgrades.Add(kvp.Key);
-                            dict["Wizard"].Items.Add(new()
-                            {
-                                Id = kvp.Key,
-                                ItemId = $"TOOL_UPGRADES (T){kvp.Key}",
-                                
-                            });
-                        }
-                    }
-                });
-                var upgraders = Helper.ModRegistry.GetApi<IToolUpgradersAPI>("aedenthorn.ToolUpgraders");
-                upgraders?.AddUpgrader("Wizard", "Wizard", "WizardBook", upgrades, null, SHelper.Translation.Get("tool-ready-in-x"), null, "wand", "Wizard", Config.UpgradeDays);
-                //upgraders?.AddUpgrader("Carpenter", "Carpenter", "Carpenter", new List<string>() { "(T)CopperAxe" }, null, SHelper.Translation.Get("tool-ready-in-x"), null, null, "Robin", Config.UpgradeDays);
             }
         }
 

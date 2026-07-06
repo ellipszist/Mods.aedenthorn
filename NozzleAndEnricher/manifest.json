@@ -1,7 +1,7 @@
 ﻿{
   "Name": "Nozzle and Enricher",
   "Author": "aedenthorn",
-  "Version": "0.1.0",
+  "Version": "0.2.1",
   "Description": "Nozzle and Enricher.",
   "UniqueID": "aedenthorn.NozzleAndEnricher",
   "EntryDll": "NozzleAndEnricher.dll",

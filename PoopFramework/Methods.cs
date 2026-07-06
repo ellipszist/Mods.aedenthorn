@@ -80,7 +80,7 @@ namespace PoopFramework
                             instance.modData[dataKey] = timeOfDay + "";
                             foreach (var t in toiletDict.Values)
                             {
-                                if (t.sit && instance is Farmer && ((Farmer)instance).IsSitting() && ((Farmer)instance).sittingFurniture is Furniture && ((((Farmer)instance).sittingFurniture as Furniture).Name == t.toiletNameOrId || (((Farmer)instance).sittingFurniture as Furniture).ParentSheetIndex + "" == t.toiletNameOrId || Config.ToiletKeywords.Split(',').Where(s => (((Farmer)instance).sittingFurniture as Furniture).Name.ToLower().Contains(s.Trim().ToLower())).Any()) && (t.poopTypes is null || t.poopTypes.Contains(item.Name) || t.poopTypes.Contains(item.ParentSheetIndex + "")))
+                                if (t.sit && instance is Farmer && ((Farmer)instance).IsSitting() && ((Farmer)instance).sittingFurniture is Furniture && ((((Farmer)instance).sittingFurniture as Furniture).Name == t.toiletNameOrId || (((Farmer)instance).sittingFurniture as Furniture).ItemId == t.toiletNameOrId || Config.ToiletKeywords.Split(',').Any(s => (((Farmer)instance).sittingFurniture as Furniture).Name.ToLower().Contains(s.Trim().ToLower()))) && (t.poopTypes is null || t.poopTypes.Contains(item.Name) || t.poopTypes.Contains(item.QualifiedItemId)))
                                 {
                                     SMonitor.Log("Pooping in toilet");
                                     return;

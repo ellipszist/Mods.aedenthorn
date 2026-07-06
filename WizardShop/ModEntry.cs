@@ -1,14 +1,22 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
+using StardewValley;
+using StardewValley.GameData.Shops;
+using StardewValley.GameData.Tools;
+using StardewValley.ItemTypeDefinitions;
+using StardewValley.Monsters;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 
-namespace NozzleAndEnricher
+namespace WizardShop
 {
+    /// <summary>The mod entry point.</summary>
     public partial class ModEntry : Mod
     {
 
@@ -16,16 +24,8 @@ namespace NozzleAndEnricher
         public static IModHelper SHelper;
         public static ModConfig Config;
         public static ModEntry context;
-        public const string nozzleKey = "aedenthorn.NozzleAndEnricher/nozzle";
-        public const string scarecrowKey = "aedenthorn.NozzleAndEnricher/scarecrow";
-        public const string nozzleDictPath = "aedenthorn.NozzleAndEnricher/dict";
-        public static Dictionary<string, int> Nozzles 
-        { 
-            get
-            {
-                return SHelper.GameContent.Load<Dictionary<string, int>>(nozzleDictPath);
-            }
-        }
+
+
         public override void Entry(IModHelper helper)
         {
             Config = Helper.ReadConfig<ModConfig>();
@@ -39,19 +39,13 @@ namespace NozzleAndEnricher
 
             var harmony = new Harmony(ModManifest.UniqueID);
             harmony.PatchAll();
+
         }
 
         private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
         {
             if (!Config.ModEnabled)
                 return;
-            if (e.NameWithoutLocale.IsEquivalentTo(nozzleDictPath))
-            {
-                e.LoadFrom(() => new Dictionary<string, int>()
-                {
-                    { "(O)915", Config.NozzleBonus }
-                }, AssetLoadPriority.Exclusive);
-            }
         }
 
         private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)
@@ -65,13 +59,16 @@ namespace NozzleAndEnricher
                     save: () => Helper.WriteConfig(Config)
                 );
 
-                var skip = new List<string>() { "Debug" };
-
+                var exclude = new List<string>()
+                {
+                    "Debug"
+                };
                 var props = typeof(ModConfig).GetProperties().ToArray();
+
 
                 foreach (var p in props)
                 {
-                    if (skip.Contains(p.Name))
+                    if (exclude.Contains(p.Name))
                         continue;
                     if (p.PropertyType == typeof(bool))
                     {
@@ -81,7 +78,7 @@ namespace NozzleAndEnricher
                             tooltip: () => { var t = Helper.Translation.Get(p.Name + ".Desc"); return t.HasValue() ? t : null; },
                             getValue: () => (bool)p.GetValue(Config),
                             setValue: value => p.SetValue(Config, value)
-                        ); 
+                        );
                     }
                     else if (p.PropertyType == typeof(int))
                     {
@@ -90,7 +87,7 @@ namespace NozzleAndEnricher
                             name: () => { var t = Helper.Translation.Get(p.Name); return t.HasValue() ? t : AddSpaces(p.Name); },
                             tooltip: () => { var t = Helper.Translation.Get(p.Name + ".Desc"); return t.HasValue() ? t : null; },
                             getValue: () => (int)p.GetValue(Config),
-                            setValue: value => { p.SetValue(Config, value); SHelper.GameContent.InvalidateCache(nozzleDictPath); }
+                            setValue: value => p.SetValue(Config, value)
                         );
                     }
                     else if (p.PropertyType == typeof(float))
@@ -146,6 +143,7 @@ namespace NozzleAndEnricher
                 }
             }
         }
+
         public static string AddSpaces(string str)
         {
             string newStr = "";

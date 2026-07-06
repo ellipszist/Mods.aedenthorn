@@ -1,13 +1,9 @@
 ﻿using HarmonyLib;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.BellsAndWhistles;
-using StardewValley.Extensions;
 using StardewValley.Menus;
 using System;
 using System.Collections.Generic;
@@ -46,11 +42,16 @@ namespace LauncherDrawer
             }
         }
         public static List<string> sortedKeys = new();
+        
+        public static PerScreen<string> keybindName = new(() => "");
+        public static PerScreen<string> keybindDesc = new(() => "");
+        public static PerScreen<KeybindList> keybind = new(() => new KeybindList());
+
+
         public static List<string> SortedKeys {
             get
             {
                 var keys = sortedKeys.Where(k => !Config.HideList.Contains(k)).Skip(scrolled.Value).Take(Config.MaxEntries > 0 ? Config.MaxEntries : sortedKeys.Count).ToList();
-                keys.Sort();
                 return keys;
             }
             set
@@ -123,12 +124,15 @@ namespace LauncherDrawer
 
         private void Content_AssetReady(object sender, AssetReadyEventArgs e)
         {
-            var dict = LauncherDict;
-            SortedKeys = dict.Keys.ToList();
-            SortedKeys.Sort((string a, string b) =>
+            if (true || e.NameWithoutLocale.IsEquivalentTo(dictPath))
             {
-                return (dict[a].TryGetValue("Name", out var name) ? name.ToString() : a).CompareTo(dict[b].TryGetValue("Name", out var name2) ? name2.ToString() : b);
-            });
+                var dict = LauncherDict;
+                sortedKeys = dict.Keys.ToList();
+                sortedKeys.Sort((string a, string b) =>
+                {
+                    return (dict[a].TryGetValue("Name", out var name) ? name.ToString() : a).CompareTo(dict[b].TryGetValue("Name", out var name2) ? name2.ToString() : b);
+                });
+            }
         }
 
         private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
@@ -206,7 +210,27 @@ namespace LauncherDrawer
                     Rectangle bounds = GetBounds(position, per, count++);
                     if (bounds.Contains(x, y))
                     {
+                        var name = LauncherDict[key]["Name"];
+                        foreach (var str in Config.Keybinds)
+                        {
+                            if (str.StartsWith(name + "|"))
+                            {
+                                Config.Keybinds.Remove(str);
+                                SHelper.GameContent.InvalidateCache(dictPath);
+                                goto cont;
+                            }
+                        }
+                        foreach(var str in Config.Links)
+                        {
+                            if (str.StartsWith(name + "|"))
+                            {
+                                Config.Links.Remove(str);
+                                SHelper.GameContent.InvalidateCache(dictPath);
+                                goto cont;
+                            }
+                        }
                         Config.HideList.Add(key);
+                    cont:
                         SHelper.WriteConfig(Config);
                         Suppress(Config.HideKey);
                         Game1.playSound("grassyStep");
@@ -343,62 +367,55 @@ namespace LauncherDrawer
                         );
                     }
                 }
-                //configMenu.AddPageLink(
-                //    mod: ModManifest,
-                //    pageId: "keybinds",
-                //    text: () => Helper.Translation.Get("keybinds")
-                //);
-                //configMenu.AddPage(
-                //    mod: ModManifest,
-                //    pageId: "keybinds"
-                //);
-                //configMenu.AddPageLink(
-                //    mod: ModManifest,
-                //    pageId: "main",
-                //    text: () => Helper.Translation.Get("back")
-                //);
-                //for(int i = 0; i < Config.Keybinds.Count; i++)
-                //{
-                //    var split = Config.Keybinds[i].Split('|');
-
-                //    configMenu.AddComplexOption(
-                //        mod: ModManifest,
-                //        name: () => Config.Keybinds[i],
-                //        draw: (SpriteBatch b, Vector2 pos) =>
-                //        {
-                //            var str = Helper.Translation.Get("delete");
-                //            var mpos = Game1.getMousePosition(true);
-                //            var size = Game1.getMousePosition(true);
-                //            if (mpos.X > pos.X && mpos.Y > pos.Y && )
-                //            foreach(var ib in Game1.options.useToolButton)
-                //            {
-                //                if(SHelper.Input.IsDown((SButton)ib.key))
-                //            }
-                //            Utility.drawTextWithShadow(b, str, Game1.dialogueFont, pos, Game1.textColor);
-                //        }
-                //    );
-
-                //    configMenu.AddTextOption(
-                //        mod: ModManifest,
-                //        name: () => Helper.Translation.Get("name"),
-                //        getValue: () => split[0],
-                //        setValue: value => { split[0] = value; Config.Keybinds[i] = string.Join('|', split); }  
-                //    );
-                //    configMenu.AddTextOption(
-                //        mod: ModManifest,
-                //        name: () => Helper.Translation.Get("desc"),
-                //        getValue: () => split[1],
-                //        setValue: value => { split[1] = value; Config.Keybinds[i] = string.Join('|', split); }  
-                //    );
-                //    configMenu.AddKeybindList(
-                //        mod: ModManifest,
-                //        name: () => Helper.Translation.Get("keybind"),
-                //        getValue: () => new KeybindList(new Keybind(split[2].Split(',').Select(s => Enum.Parse<SButton>(s)).ToArray())),
-                //        setValue: value => { split[2] = string.Join(',', value.Keybinds[0].Buttons.Select(b => b.ToString())); Config.Keybinds[i] = string.Join('|', split); }  
-                //    );
-                //}
+                configMenu.AddSectionTitle(
+                    mod: ModManifest,
+                    text: () => Helper.Translation.Get("add-keybind")
+                );
+                configMenu.AddTextOption(
+                    mod: ModManifest,
+                    name: () => Helper.Translation.Get("name"),
+                    getValue: () => keybindName.Value,
+                    setValue: value => { keybindName.Value = value; }
+                );
+                configMenu.AddTextOption(
+                    mod: ModManifest,
+                    name: () => Helper.Translation.Get("desc"),
+                    getValue: () => keybindDesc.Value,
+                    setValue: value => { keybindDesc.Value = value; }
+                );
+                configMenu.AddKeybindList(
+                    mod: ModManifest,
+                    name: () => Helper.Translation.Get("keybind"),
+                    getValue: () => keybind.Value,
+                    setValue: value => { keybind.Value = value; TryCreateKeyBind(); }
+                );
+                
             }
         }
+
+        private void TryCreateKeyBind()
+        {
+            if(keybind.Value?.Keybinds.Length > 0 && !string.IsNullOrEmpty(keybindDesc.Value) && !string.IsNullOrEmpty(keybindName.Value))
+            {
+                var str = $"{keybindName.Value}|{keybindDesc.Value}|{string.Join(',', keybind.Value.Keybinds[0].Buttons)}";
+                for(int i = 0; i < Config.Keybinds.Count; i++)
+                {
+                    if (Config.Keybinds[i].StartsWith($"{keybindName.Value}|"))
+                    {
+                        Config.Keybinds[i] = str;
+                        goto cont;
+                    }
+                }
+                Config.Keybinds.Add(str);
+            cont:
+                Helper.WriteConfig(Config);
+                Helper.GameContent.InvalidateCache(dictPath);
+                keybind.Value = new KeybindList();
+                keybindName.Value = "";
+                keybindDesc.Value = "";
+            }
+        }
+
 
         public static string AddSpaces(string str)
         {

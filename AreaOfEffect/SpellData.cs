@@ -82,6 +82,7 @@ namespace AreaOfEffect
         Custom, // all except tile
         Damage, // monster, farmer
         Destroy, //rc, obj, tf
+        EffectOverTime, // all
         Explode, // tile
         Fertilize, // hd
         Freeze, // Monster, Farmer
@@ -120,7 +121,6 @@ namespace AreaOfEffect
         public int RechargeAmount { get; set; } = 1;
         public int MaxDistance { get; set; }
         public string RechargeSound { get; set; }
-        public bool AddToWizardBook { get; set; }
         public List<string> Spells { get; set; }
         public Color ChargesColor { get; set; } = Color.White;
         public Color ChargesBackColor { get; set; } = Color.DarkGray;

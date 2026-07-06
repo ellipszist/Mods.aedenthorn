@@ -123,14 +123,14 @@ namespace AreaOfEffect
             bool result = false;
             foreach(var t in effect.Affected)
             {
-                result = ApplyEffect(l, who, tile, t, effect, applied, effect.Unaffected);
+                result = ApplyEffect(l, who, tile, t, effect, applied);
                 if (effect.First && result)
                     return result;
             }
             return result;
         }
 
-        public static bool ApplyEffect(GameLocation l, Farmer who, Vector2 tile, SpellAffectedType t, SpellEffect effect, List<object> applied, List<SpellAffectedType> unaffected)
+        public static bool ApplyEffect(GameLocation l, Farmer who, Vector2 tile, SpellAffectedType t, SpellEffect effect, List<object> applied)
         {
             Object o;
             TerrainFeature tf;
@@ -233,7 +233,7 @@ namespace AreaOfEffect
                 case SpellAffectedType.Object:
                     if(l.Objects.TryGetValue(tile, out o) && !applied.Contains(o))
                     {
-                        ApplyObjectEffect(l, who, tile, o, effect, unaffected);
+                        ApplyObjectEffect(l, who, tile, o, effect);
                         applied.Add(o);
                         result = true;
                     }
@@ -250,7 +250,7 @@ namespace AreaOfEffect
                 case SpellAffectedType.HoeDirt:
                     if (l.terrainFeatures.TryGetValue(tile, out tf) && tf is HoeDirt && !applied.Contains(tf))
                     {
-                        ApplyTerrainFeatureEffect(l, who, tile, tf, effect, unaffected);
+                        ApplyTerrainFeatureEffect(l, who, tile, tf, effect);
                         applied.Add(tf);
                         result = true;
                     }
@@ -266,7 +266,7 @@ namespace AreaOfEffect
                 case SpellAffectedType.Grass:
                     if (l.terrainFeatures.TryGetValue(tile, out tf) && tf is Grass && !applied.Contains(tf))
                     {
-                        ApplyTerrainFeatureEffect(l, who, tile, tf, effect, unaffected);
+                        ApplyTerrainFeatureEffect(l, who, tile, tf, effect);
                         applied.Add(tf);
                         result = true;
                     }
@@ -280,7 +280,7 @@ namespace AreaOfEffect
                         var rect = new Rectangle((tile * 64).ToPoint(), new(64, 64));
                         if (bb.Intersects(rect))
                         {
-                            ApplyHorseEffect(who, c, effect);
+                            ApplyHorseEffect(who, c as Horse, effect);
                             applied.Add(c);
                             result = true;
                         }
@@ -289,7 +289,7 @@ namespace AreaOfEffect
                 case SpellAffectedType.Stone:
                     if (l.Objects.TryGetValue(tile, out o) && o.IsBreakableStone() && !applied.Contains(o))
                     {
-                        ApplyObjectEffect(l, who, tile, o, effect, unaffected);
+                        ApplyObjectEffect(l, who, tile, o, effect);
                         applied.Add(o);
                         result = true;
                     }
@@ -297,7 +297,7 @@ namespace AreaOfEffect
                 case SpellAffectedType.Twig:
                     if (l.Objects.TryGetValue(tile, out o) && o.IsTwig() && !applied.Contains(o))
                     {
-                        ApplyObjectEffect(l, who, tile, o, effect, unaffected);
+                        ApplyObjectEffect(l, who, tile, o, effect);
                         applied.Add(o);
                         result = true;
                     }
@@ -305,7 +305,7 @@ namespace AreaOfEffect
                 case SpellAffectedType.Weed:
                     if (l.Objects.TryGetValue(tile, out o) && o.IsWeeds() && !applied.Contains(o))
                     {
-                        ApplyObjectEffect(l, who, tile, o, effect, unaffected);
+                        ApplyObjectEffect(l, who, tile, o, effect);
                         applied.Add(o);
                         result = true;
                     }
@@ -313,7 +313,7 @@ namespace AreaOfEffect
                 case SpellAffectedType.Tree:
                     if (l.terrainFeatures.TryGetValue(tile, out tf) && tf is Tree && !applied.Contains(tf))
                     {
-                        ApplyTerrainFeatureEffect(l, who, tile, tf, effect, unaffected);
+                        ApplyTerrainFeatureEffect(l, who, tile, tf, effect);
                         applied.Add(tf);
                         result = true;
                     }
@@ -321,7 +321,7 @@ namespace AreaOfEffect
                 case SpellAffectedType.FruitTree:
                     if (l.terrainFeatures.TryGetValue(tile, out tf) && tf is FruitTree && !applied.Contains(tf))
                     {
-                        ApplyTerrainFeatureEffect(l, who, tile, tf, effect, unaffected);
+                        ApplyTerrainFeatureEffect(l, who, tile, tf, effect);
                         applied.Add(tf);
                         result = true;
                     }
@@ -362,10 +362,12 @@ namespace AreaOfEffect
                 case SpellEffectType.ModData:
                     SetModData(a.modData, effect);
                     break;
+                case SpellEffectType.EffectOverTime:
+                    SetEffectOverTime(l, who, Vector2.Zero, a, effect);
+                    break;
 
             }
         }
-
         private static void ApplyBuildingEffect(GameLocation l, Farmer who, Building a, SpellEffect effect)
         {
             switch (effect.EffectType)
@@ -379,6 +381,9 @@ namespace AreaOfEffect
                     break;
                 case SpellEffectType.ModData:
                     SetModData(a.modData, effect);
+                    break;
+                case SpellEffectType.EffectOverTime:
+                    SetEffectOverTime(l, who, Vector2.Zero, a, effect);
                     break;
             }
         }
@@ -395,6 +400,9 @@ namespace AreaOfEffect
                     break;
                 case SpellEffectType.ModData:
                     SetModData(a.modData, effect);
+                    break;
+                case SpellEffectType.EffectOverTime:
+                    SetEffectOverTime(l, who, Vector2.Zero, a, effect);
                     break;
             }
         }
@@ -421,6 +429,9 @@ namespace AreaOfEffect
                     break;
                 case SpellEffectType.Explode:
                     l.explode(tile, 0, who, effect.Affected.Contains(SpellAffectedType.Farmer), (int)effect.Value, effect.Affected.Contains(SpellAffectedType.Object));
+                    break;
+                case SpellEffectType.EffectOverTime:
+                    SetEffectOverTime(l, who, tile, tile, effect);
                     break;
             }
         }
@@ -458,6 +469,9 @@ namespace AreaOfEffect
                 case SpellEffectType.ModData:
                     SetModData(a.modData, effect);
                     break;
+                case SpellEffectType.EffectOverTime:
+                    SetEffectOverTime(null, who, Vector2.Zero, a, effect);
+                    break;
             }
         }
 
@@ -484,6 +498,9 @@ namespace AreaOfEffect
                 case SpellEffectType.ModData:
                     SetModData(a.modData, effect);
                     break;
+                case SpellEffectType.EffectOverTime:
+                    SetEffectOverTime(null, who, Vector2.Zero, a, effect);
+                    break;
             }
         }
 
@@ -509,6 +526,9 @@ namespace AreaOfEffect
                     break;
                 case SpellEffectType.ModData:
                     SetModData(a.modData, effect);
+                    break;
+                case SpellEffectType.EffectOverTime:
+                    SetEffectOverTime(null, who, Vector2.Zero, a, effect);
                     break;
             }
         }
@@ -552,14 +572,17 @@ namespace AreaOfEffect
                 case SpellEffectType.ModData:
                     SetModData(a.modData, effect);
                     break;
+                case SpellEffectType.EffectOverTime:
+                    SetEffectOverTime(null, null, Vector2.Zero, a, effect);
+                    break;
             }
         }
 
-        public static void ApplyObjectEffect(GameLocation l, Farmer who, Vector2 tile, Object a, SpellEffect effect, List<SpellAffectedType> unaffected)
+        public static void ApplyObjectEffect(GameLocation l, Farmer who, Vector2 tile, Object a, SpellEffect effect)
         {
-            if (unaffected?.Count > 0)
+            if (effect.Unaffected?.Count > 0)
             {
-                if ((a.IsTwig() && unaffected.Contains(SpellAffectedType.Twig)) || (a.IsBreakableStone() && unaffected.Contains(SpellAffectedType.Stone)) || (a.IsWeeds() && unaffected.Contains(SpellAffectedType.Weed)))
+                if ((a.IsTwig() && effect.Unaffected.Contains(SpellAffectedType.Twig)) || (a.IsBreakableStone() && effect.Unaffected.Contains(SpellAffectedType.Stone)) || (a.IsWeeds() && effect.Unaffected.Contains(SpellAffectedType.Weed)))
                     return;
             }
             switch (effect.EffectType)
@@ -578,6 +601,9 @@ namespace AreaOfEffect
                     break;
                 case SpellEffectType.ModData:
                     SetModData(a.modData, effect);
+                    break;
+                case SpellEffectType.EffectOverTime:
+                    SetEffectOverTime(l, who, tile, a, effect);
                     break;
             }
         }
@@ -602,14 +628,17 @@ namespace AreaOfEffect
                 case SpellEffectType.ModData:
                     SetModData(a.modData, effect);
                     break;
+                case SpellEffectType.EffectOverTime:
+                    SetEffectOverTime(l, who, tile, a, effect);
+                    break;
             }
         }
 
-        public static void ApplyTerrainFeatureEffect(GameLocation l, Farmer who, Vector2 tile, TerrainFeature a, SpellEffect effect, List<SpellAffectedType> unaffected)
+        public static void ApplyTerrainFeatureEffect(GameLocation l, Farmer who, Vector2 tile, TerrainFeature a, SpellEffect effect)
         {
-            if(unaffected?.Count > 0)
+            if(effect.Unaffected?.Count > 0)
             {
-                if ((a is HoeDirt dirt && (unaffected.Contains(SpellAffectedType.HoeDirt)|| (dirt.crop is not null && unaffected.Contains(SpellAffectedType.Crop)))) || (a is Grass && unaffected.Contains(SpellAffectedType.Grass)) || (a is Tree && unaffected.Contains(SpellAffectedType.Tree)) || (a is FruitTree && unaffected.Contains(SpellAffectedType.FruitTree)))
+                if ((a is HoeDirt dirt && (effect.Unaffected.Contains(SpellAffectedType.HoeDirt)|| (dirt.crop is not null && effect.Unaffected.Contains(SpellAffectedType.Crop)))) || (a is Grass && effect.Unaffected.Contains(SpellAffectedType.Grass)) || (a is Tree && effect.Unaffected.Contains(SpellAffectedType.Tree)) || (a is FruitTree && effect.Unaffected.Contains(SpellAffectedType.FruitTree)))
                     return;
             }
             switch (effect.EffectType)
@@ -675,6 +704,9 @@ namespace AreaOfEffect
                 case SpellEffectType.ModData:
                     SetModData(a.modData, effect);
                     break;
+                case SpellEffectType.EffectOverTime:
+                    SetEffectOverTime(l, who, tile, a, effect);
+                    break;
             }
         }
 
@@ -710,6 +742,9 @@ namespace AreaOfEffect
                     break;
                 case SpellEffectType.ModData:
                     SetModData(a.modData, effect);
+                    break;
+                case SpellEffectType.EffectOverTime:
+                    SetEffectOverTime(l, who, tile, a, effect);
                     break;
             }
         }

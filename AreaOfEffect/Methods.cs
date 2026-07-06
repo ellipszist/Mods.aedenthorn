@@ -846,5 +846,16 @@ namespace AreaOfEffect
                 who.currentLocation.debris.Add(new Debris(obj, who.Position));
             }
         }
+        private static void SetEffectOverTime(GameLocation l, Farmer who, Vector2 tile, object a, SpellEffect effect)
+        {
+            EOTDict[a] = new()
+            {
+                Effect = effect,
+                Location = l,
+                Who = who,
+                Tile = tile,
+                Milliseconds = (int)effect.Value
+            };
+        }
     }
 }

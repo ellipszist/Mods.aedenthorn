@@ -29,13 +29,13 @@ namespace LauncherDrawer
             {
                 ticks.Value = Config.DrawerSpeed;
                 currentDrawerState.Value = DrawerState.Closing;
-                Game1.playSound("bigDeSelect");
+                Game1.playSound(Config.CloseSound);
             }
             else if (currentDrawerState.Value == DrawerState.Closed)
             {
                 ticks.Value = 0;
                 currentDrawerState.Value = DrawerState.Opening;
-                Game1.playSound("bigSelect");
+                Game1.playSound(Config.OpenSound);
             }
             else
             {
@@ -62,6 +62,7 @@ namespace LauncherDrawer
                         {
                             SHelper.Input.Press(Enum.Parse<SButton>(s.ToString()));
                         }
+                        Game1.playSound(Config.KeybindSound);
                     }
                 }
                 if (value.TryGetValue("Action", out obj))
@@ -80,6 +81,7 @@ namespace LauncherDrawer
                 else if (value.TryGetValue("Link", out obj) && obj is string s2)
                 {
                     OpenUrl(s2);
+                    Game1.playSound(Config.LinkSound);
                 }
             }
             catch { }

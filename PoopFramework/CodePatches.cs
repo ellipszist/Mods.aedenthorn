@@ -13,11 +13,11 @@ namespace PoopFramework
         [HarmonyPatch(typeof(NPC), nameof(NPC.performTenMinuteUpdate))]
         public class NPC_performTenMinuteUpdate_Patch
         {
-            public static void Postfix(NPC __instance, int timeOfDay, GameLocation l)
+            public static void Postfix(NPC __instance, int timeOfDay, GameLocation location)
             {
                 if (!Config.ModEnabled)
                     return;
-                TryPoop(__instance, timeOfDay, l);
+                TryPoop(__instance, timeOfDay, location);
             }
         }
         [HarmonyPatch(typeof(Farmer), nameof(Farmer.performTenMinuteUpdate))]
