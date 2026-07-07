@@ -24,6 +24,7 @@ namespace AreaOfEffect
         public static ModConfig Config;
         public static ModEntry context;
         public static bool loadingTutorials;
+
         public const string toolsPath = "aedenthorn.AreaOfEffect/tools";
         public const string effectsPath = "aedenthorn.AreaOfEffect/effects";
         public const string spellsPath = "aedenthorn.AreaOfEffect/spells";
@@ -36,12 +37,12 @@ namespace AreaOfEffect
         public const string lightKey = "aedenthorn.AreaOfEffect/light";
         public const string texturePrefix = "aedenthorn.AreaOfEffect/textures/";
         public const string internalPrefix = "aedenthorn.AreaOfEffect/internal/";
-        public const string upgradersPath = "aedenthorn.ToolUpgraders/dict";
 
         public static Dictionary<string, Texture2D> TextureDict { get; set; } = new();
         public static Dictionary<string, SpellLightData> LightDict { get; set; } = new();
         public static Dictionary<Monster, MonsterBuffManager> BuffDict { get; set; } = new();
         public static Dictionary<object, EffectOverTimeData> EOTDict { get; set; } = new();
+        public static Dictionary<TemporaryAnimatedSprite, MovingSpriteData> MovingSpriteDict { get; set; } = new();
         public static Dictionary<SpellProjectile, LinearProjectileInstance> ProjectileDict { get; set; } = new();
 
         public static Dictionary<string, SpellToolData> ToolDict
@@ -115,6 +116,20 @@ namespace AreaOfEffect
                         }
                     }
                 }
+                if (MovingSpriteDict.Any())
+                {
+                    foreach (var key in MovingSpriteDict.Keys.ToArray())
+                    {
+                        var m = MovingSpriteDict[key];
+                        var moved = m.Parent.Position - m.LastPos;
+                        key.Position += moved;
+                        m.LastPos = key.Position;
+                        if (!m.Location.temporarySprites.Contains(key))
+                        {
+                            MovingSpriteDict.Remove(key);
+                        }
+                    }
+                }
                 if (EOTDict.Any())
                 {
                     foreach (var obj in EOTDict.Keys.ToArray())
@@ -130,11 +145,11 @@ namespace AreaOfEffect
                         }
                         else if (obj is Monster m)
                         {
-                            ApplyMonsterEffect(d.Who, m, d.Effect);
+                            ApplyMonsterEffect(d.Location, d.Who, m, d.Effect);
                         }
                         else if (obj is Farmer f)
                         {
-                            ApplyFarmerEffect(f, d.Effect);
+                            ApplyFarmerEffect(d.Location, f, d.Effect);
                         }
                         else if (obj is Object o)
                         {
@@ -154,7 +169,7 @@ namespace AreaOfEffect
                         }
                         else if (obj is Horse h)
                         {
-                            ApplyHorseEffect(d.Who, h, d.Effect);
+                            ApplyHorseEffect(d.Location, d.Who, h, d.Effect);
                         }
                         else if (obj is Pet p)
                         {
@@ -162,7 +177,7 @@ namespace AreaOfEffect
                         }
                         else if (obj is NPC n && n.IsVillager)
                         {
-                            ApplyNPCEffect(d.Who, n, d.Effect);
+                            ApplyNPCEffect(d.Location, d.Who, n, d.Effect);
                         }
                         else if (obj is FarmAnimal a)
                         {

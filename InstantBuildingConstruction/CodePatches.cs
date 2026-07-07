@@ -43,7 +43,7 @@ namespace InstantBuildingConstructionAndUpgrade
 						}
 						else
 						{
-							Game1.drawObjectDialogue(Game1.content.LoadString("Strings\\Locations:ScienceHouse_Carpenter_NotEnoughWood1"));     
+							Game1.drawObjectDialogue(Game1.content.LoadString("Strings\\Locations:ScienceHouse_Carpenter_NotEnoughWood"));     
 						}
 						break;
 					case 1:
@@ -72,7 +72,7 @@ namespace InstantBuildingConstructionAndUpgrade
 						}
 						else
 						{
-							Game1.drawObjectDialogue(Game1.content.LoadString("Strings\\Locations:ScienceHouse_Carpenter_NotEnoughWood2", "100"));
+							Game1.drawObjectDialogue(Game1.content.LoadString("Strings\\Locations:ScienceHouse_Carpenter_NotEnoughHardwood", "100"));
 						}
 						break;
 					case 2:
@@ -150,7 +150,7 @@ namespace InstantBuildingConstructionAndUpgrade
 					}
 					else
 					{
-						Game1.drawObjectDialogue(Game1.content.LoadString("Strings\\Locations:ScienceHouse_Carpenter_NotEnoughWood3"));
+						Game1.drawObjectDialogue(Game1.content.LoadString("Strings\\Locations:ScienceHouse_Carpenter_NotEnoughWood"));
 					}
 				}
 				else if (!Game1.MasterPlayer.mailReceived.Contains("communityUpgradeShortcuts"))

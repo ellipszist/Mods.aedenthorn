@@ -82,7 +82,6 @@ namespace AreaOfEffect
         Custom, // all except tile
         Damage, // monster, farmer
         Destroy, //rc, obj, tf
-        EffectOverTime, // all
         Explode, // tile
         Fertilize, // hd
         Freeze, // Monster, Farmer
@@ -187,8 +186,10 @@ namespace AreaOfEffect
     {
         public List<SpellAffectedType> Affected { get; set; }
         public List<SpellAffectedType> Unaffected { get; set; }
+        public List<SpriteData> Sprites { get; set; }
         public SpellEffectType EffectType { get; set; }
         public FieldChangeType ChangeType { get; set; }
+        public int Seconds { get; set; }
         public bool AsFarmer { get; set; }
         public bool First { get; set; }
         public bool PerTile { get; set; } = true;

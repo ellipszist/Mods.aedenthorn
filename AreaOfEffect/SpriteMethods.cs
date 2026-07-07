@@ -10,10 +10,10 @@ namespace AreaOfEffect
 {
     public partial class ModEntry
     {
-        public static void CreateIce(GameLocation l, Vector2 position, SpriteData data)
+        public static TemporaryAnimatedSprite CreateIce(GameLocation l, Vector2 position, SpriteData data)
         {
             if (!Context.IsWorldReady || l is null)
-                return;
+                return null;
             var t = new TemporaryAnimatedSprite("LooseSprites\\Cursors2", new Rectangle(118, 227, 16, 13), position + new Vector2(0, 9), false, 0f, Color.White)
             {
                 layerDepth = (float)(position.Y + 33) / 10000f,
@@ -31,11 +31,12 @@ namespace AreaOfEffect
                 yStopCoordinate = data.YStop,
             };
             l.TemporarySprites.Add(t);
+            return t;
         }
-        public static void CreateFire(GameLocation l, Vector2 position, SpriteData data)
+        public static TemporaryAnimatedSprite CreateFire(GameLocation l, Vector2 position, SpriteData data)
         {
             if (!Context.IsWorldReady || l is null)
-                return;
+                return null;
             var t = new TemporaryAnimatedSprite("LooseSprites\\Cursors", new Microsoft.Xna.Framework.Rectangle(276, 1985, 12, 11), position + new Vector2(32f, -32f) + new Vector2((float)Game1.random.Next(-32, 32), (float)Game1.random.Next(-16, 16)), false, 0f, Color.White)
             {
                 interval = 30f,
@@ -52,11 +53,12 @@ namespace AreaOfEffect
                 yStopCoordinate = data.YStop,
             };
             l.TemporarySprites.Add(t);
+            return t;
         }
-        public static void CreateBurn(GameLocation l, Vector2 tile, object o, SpriteData data)
+        public static TemporaryAnimatedSprite CreateBurn(GameLocation l, Vector2 tile, object o, SpriteData data)
         {
             if (!Context.IsWorldReady || l is null)
-                return;
+                return null;
             var t = new TemporaryAnimatedSprite("LooseSprites\\Cursors", new Microsoft.Xna.Framework.Rectangle(276, 1985, 12, 11), tile * 64 + new Vector2((float)Game1.random.Next(-16, 16), (float)Game1.random.Next(-16, 16)), false, 0f, Color.White)
             {
                 interval = 30f,
@@ -78,11 +80,12 @@ namespace AreaOfEffect
                 DestroyAt(l, tile, o);
             }));
             l.TemporarySprites.Add(t);
+            return t;
         }
-        public static void CreateSmoking(GameLocation l, Vector2 position, SpriteData data)
+        public static TemporaryAnimatedSprite CreateSmoking(GameLocation l, Vector2 position, SpriteData data)
         {
             if (!Context.IsWorldReady || l is null)
-                return;
+                return null;
             var t = new TemporaryAnimatedSprite("LooseSprites\\Cursors", new Rectangle(372, 1956, 10, 10), position + new Vector2(32f) + new Vector2((float)Game1.random.Next(-16, 16), (float)Game1.random.Next(-32, 16)), false, 0.002f, Color.White)
             {
                 alphaFade = 0.0043333336f,
@@ -97,18 +100,20 @@ namespace AreaOfEffect
                 rotationChange = (float)Game1.random.Next(-5, 6) * 3.1415927f / 256f
             };
             l.TemporarySprites.Add(t);
+            return t;
         }
-        public static void CreatePoof(GameLocation l, Vector2 position, SpriteData data)
+        public static TemporaryAnimatedSprite CreatePoof(GameLocation l, Vector2 position, SpriteData data)
         {
             if (!Context.IsWorldReady || l is null)
-                return;
+                return null;
             var t = new TemporaryAnimatedSprite(5, position, Color.White, 8, false, 50f, 0, -1, -1f, -1, 0);
             l.TemporarySprites.Add(t);
+            return t;
         }
-        public static void CreateButterfly(GameLocation l, Vector2 position, SpriteData data)
+        public static TemporaryAnimatedSprite CreateButterfly(GameLocation l, Vector2 position, SpriteData data)
         {
             if (!Context.IsWorldReady || l is null)
-                return;
+                return null;
             var rect = Game1.random.ChooseFrom(new Rectangle[] { 
                 new(128, 96, 16, 16), new(192, 96, 16, 16), new(256, 96, 16, 16), new(192, 96, 16, 16), 
                 new(128, 112, 16, 16), new(192, 112, 16, 16), new(256, 112, 16, 16), new(192, 112, 16, 16), 
@@ -132,11 +137,12 @@ namespace AreaOfEffect
                 yPeriodicLoopTime = 3800f
             };
             l.TemporarySprites.Add(t);
+            return t;
         }
-        public static void CreateGlitter(GameLocation l, Vector2 position, SpriteData data)
+        public static TemporaryAnimatedSprite CreateGlitter(GameLocation l, Vector2 position, SpriteData data)
         {
             if (!Context.IsWorldReady || l is null)
-                return;
+                return null;
             var t = new TemporaryAnimatedSprite("LooseSprites\\Cursors", new Rectangle(432, 1435, 16, 16), 100f, 6, 99999, position + data.Offset, false, false, 1f, 0f, Color.White, 2f, 0f, 0f, 0f, false)
             {
                 acceleration = data.Acceleration,
@@ -154,14 +160,15 @@ namespace AreaOfEffect
                 yStopCoordinate = data.YStop,
             };
             l.TemporarySprites.Add(t);
+            return t;
         }
-        public static void CreateBalloon(GameLocation l, Vector2 position, SpriteData data)
+        public static TemporaryAnimatedSprite CreateBalloon(GameLocation l, Vector2 position, SpriteData data)
         {
             if (!Context.IsWorldReady || l is null)
-                return;
+                return null;
 
             int scale = Game1.random.Next(2, 5);
-            l.temporarySprites.Add(new TemporaryAnimatedSprite("LooseSprites\\Cursors", new Microsoft.Xna.Framework.Rectangle(424, 1266, 8, 8), 60f + (float)Game1.random.Next(-10, 10), 7, 999999, position + data.Offset, false, false, 0.99f, 0f, Color.White, (float)scale, 0f, 0f, 0f, false)
+            var t = new TemporaryAnimatedSprite("LooseSprites\\Cursors", new Microsoft.Xna.Framework.Rectangle(424, 1266, 8, 8), 60f + (float)Game1.random.Next(-10, 10), 7, 999999, position + data.Offset, false, false, 0.99f, 0f, Color.White, (float)scale, 0f, 0f, 0f, false)
             {
                 local = true,
                 motion = new Vector2(0.1625f, -0.25f) * (float)scale,
@@ -177,14 +184,16 @@ namespace AreaOfEffect
                 scale = data.Scale ?? 4f,
                 totalNumberOfLoops = data.Loops,
                 yStopCoordinate = data.YStop,
-            }); 
+            };
+            l.temporarySprites.Add(t);
+            return t;
         }
-        public static void CreateEvilRabbit(GameLocation l, Vector2 position, SpriteData data)
+        public static TemporaryAnimatedSprite CreateEvilRabbit(GameLocation l, Vector2 position, SpriteData data)
         {
             if (!Context.IsWorldReady || l is null)
-                return;
+                return null;
 
-            l.temporarySprites.Add(new TemporaryAnimatedSprite
+            var t = new TemporaryAnimatedSprite
             {
                 texture = Game1.temporaryContent.Load<Texture2D>("TileSheets\\critters"),
                 sourceRect = new Microsoft.Xna.Framework.Rectangle(264, 209, 19, 16),
@@ -200,12 +209,14 @@ namespace AreaOfEffect
                 yStopCoordinate = 204,
                 xStopCoordinate = 316,
                 flipped = true
-            });
+            };
+            l.temporarySprites.Add(t);
+            return t;
         }
-        public static void CreateExplosion(GameLocation l, Vector2 position, float distance, SpriteData data)
+        public static TemporaryAnimatedSprite CreateExplosion(GameLocation l, Vector2 position, float distance, SpriteData data)
         {
             if (!Context.IsWorldReady || l is null)
-                return;
+                return null;
             if (Game1.random.NextDouble() < 0.45)
             {
                 if (Game1.random.NextBool())
@@ -241,12 +252,14 @@ namespace AreaOfEffect
                     });
                 }
             }
-            l.temporarySprites.Add(new TemporaryAnimatedSprite(6, position, Color.White, 8, Game1.random.NextBool(), distance * 20f, 0, -1, -1f, -1, 0));
+            var t = new TemporaryAnimatedSprite(6, position, Color.White, 8, Game1.random.NextBool(), distance * 20f, 0, -1, -1f, -1, 0);
+            l.temporarySprites.Add(t);
+            return t;
         }
-        public static void CreateFountain(GameLocation l, Vector2 tile, Farmer who, SpellCastData data, SpriteData sdata)
+        public static TemporaryAnimatedSprite CreateFountain(GameLocation l, Vector2 tile, Farmer who, SpellCastData data, SpriteData sdata)
         {
             if (!Context.IsWorldReady || l is null)
-                return;
+                return null;
             int id = (int)(tile.X * 4000f + tile.Y * 10);
             float layerDepth = 1;
 
@@ -271,17 +284,20 @@ namespace AreaOfEffect
                 }
             });
             l.temporarySprites.Add(t);
+            return t;
         }
-        public static void CreateSparkle(GameLocation l, Rectangle r, SpriteData data)
+        public static TemporaryAnimatedSpriteList CreateSparkle(GameLocation l, Rectangle r, SpriteData data)
         {
             if (!Context.IsWorldReady || l is null)
-                return;
-            l.TemporarySprites.AddRange(Utility.sparkleWithinArea(r, data.Number, data.Color, (int)data.Interval, data.Delay, ""));
+                return null;
+            var ts = Utility.sparkleWithinArea(r, data.Number, data.Color, (int)data.Interval, data.Delay, "");
+            l.TemporarySprites.AddRange(ts);
+            return ts;
         }
-        public static void CreateHeart(GameLocation l, Vector2 position, SpriteData data)
+        public static TemporaryAnimatedSprite CreateHeart(GameLocation l, Vector2 position, SpriteData data)
         {
             if (!Context.IsWorldReady || l is null)
-                return;
+                return null;
             var t = new TemporaryAnimatedSprite("LooseSprites\\Cursors", new Rectangle(211, 428, 7, 6), 2000f, 1, 0, position, false, false, 1f, 0f, Color.White, 4f, 0f, 0f, 0f, false)
             {
                 motion = data.Motion == Vector2.Zero ? new Vector2(0f, -0.5f) : data.Motion,
@@ -299,29 +315,32 @@ namespace AreaOfEffect
                 yStopCoordinate = data.YStop,
             };
             l.TemporarySprites.Add(t);
+            return t;
         }
-        public static void CreateTexture(GameLocation l, Vector2 position, SpriteData data)
+        public static TemporaryAnimatedSprite CreateTexture(GameLocation l, Vector2 position, SpriteData data)
         {
             if (!Context.IsWorldReady || l is null)
-                return;
+                return null;
             var t = GetTextureSprite(position, data);
             if (data.Bounce)
             {
                 t.reachedStopCoordinate = new TemporaryAnimatedSprite.endBehavior(t.bounce);
             }
             l.TemporarySprites.Add(t);
+            return t;
         }
 
-        public static void CreateAnimation(GameLocation l, Vector2 position, SpriteData data)
+        public static TemporaryAnimatedSprite CreateAnimation(GameLocation l, Vector2 position, SpriteData data)
         {
             if (!Context.IsWorldReady || l is null)
-                return;
+                return null;
             var t = GetAnimationSprite(position, data);
             if (data.Bounce)
             {
                 t.reachedStopCoordinate = new TemporaryAnimatedSprite.endBehavior(t.bounce);
             }
             l.TemporarySprites.Add(t);
+            return t;
         }
 
         public static TemporaryAnimatedSprite GetTextureSprite(Vector2 position, SpriteData data)
