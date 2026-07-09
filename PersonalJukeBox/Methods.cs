@@ -57,7 +57,17 @@ namespace PersonalJukeBox
             }
             else
             {
-                list = Config.LimitToKnown ? Utility.GetJukeboxTracks(Game1.player, Game1.player.currentLocation) : Game1.jukeboxTrackData.Keys.Select(s => GetValidTrack(s)).Where(s => s != null).ToList();
+                list = Utility.GetJukeboxTracks(Game1.player, Game1.player.currentLocation);
+                if (!Config.LimitToKnown)
+                {
+                    foreach(var str in Game1.jukeboxTrackData.Keys.Select(s => GetValidTrack(s)).Where(s => s != null))
+                    {
+                        if (!list.Contains(str))
+                        {
+                            list.Add(str);
+                        }
+                    }
+                }
             }
             list.Sort((string a, string b) =>
             {

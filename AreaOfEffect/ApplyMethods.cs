@@ -9,7 +9,6 @@ using StardewValley.TerrainFeatures;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using xTile.Tiles;
 using Object = StardewValley.Object;
 
 namespace AreaOfEffect
@@ -27,28 +26,50 @@ namespace AreaOfEffect
 
             foreach (var e in spell.Effects)
             {
-                if (e.PerTile && (spell.Projectiles is null || spell.AreaType != AOEType.Line))
+                if (e.PerTile)
                 {
+                    if (spell.AreaType == AOEType.Line)
+                        continue;
                     List<object> applied = new();
-                    foreach (var tile in GetTiles(who.Tile, center, spell))
+                    var tiles = GetTiles(who.Tile, center, spell);
+                    if(e.Delay > 0)
                     {
-                        ApplyEffectToTile(l, who, tile, e, applied);
+                        DelayTileList.Add(new(l, who, tiles, e, e.Delay));
+                    }
+                    else
+                    {
+                        foreach (var tile in tiles)
+                        {
+                            ApplyEffectToTile(l, who, tile, e, applied);
+                        }
+                        if (e.Seconds > 0 && e.ReapplyToTile)
+                        {
+                            EOTTileList.Add(new(l, who, tiles, e, e.Seconds * 1000 - 1));
+                        }
                     }
                 }
                 else
                 {
-                    switch (e.EffectType)
+                    if (e.Delay > 0)
                     {
-                        case SpellEffectType.Explode:
-                            l.explode(center, e.Radius > 0 ? (int)e.Radius : spell.Radius, who, e.Affected.Contains(SpellAffectedType.Farmer), (int)e.Value, e.Affected.Contains(SpellAffectedType.Object));
-                            break;
+                        DelayTileList.Add(new(l, who, new Vector2[] { center }, e, e.Delay));
+                    }
+                    else
+                    {
+                        ApplyCenteredEffect(l, who, center, e, spell.Radius);
+                        if (e.Seconds > 0 && e.ReapplyToTile)
+                        {
+                            EOTTileList.Add(new(l, who, new Vector2[] { center }, e, e.Seconds * 1000 - 1));
+                        }
                     }
                 }
             }
             foreach (var s in spell.Sprites)
             {
-                if (s.PerTile && (spell.Projectiles is null || spell.AreaType != AOEType.Line))
+                if (s.PerTile)
                 {
+                    if (spell.AreaType == AOEType.Line)
+                        continue;
                     foreach (var tile in GetTiles(who.Tile, center, spell))
                     {
                         ApplySpriteToTile(l, tile, s, Vector2.Distance(center, tile));
@@ -182,6 +203,15 @@ namespace AreaOfEffect
                 };
             }
         }
+        public static void ApplyCenteredEffect(GameLocation l, Farmer who, Vector2 center, SpellEffect e, int radius)
+        {
+            switch (e.EffectType)
+            {
+                case SpellEffectType.Explode:
+                    l.explode(center, e.Radius > 0 ? (int)e.Radius : radius, who, e.Affected.Contains(SpellAffectedType.Farmer), (int)e.Value, e.Affected.Contains(SpellAffectedType.Object));
+                    break;
+            }
+        }
         public static bool ApplyEffectToTile(GameLocation l, Farmer who, Vector2 tile, SpellEffect effect, List<object> applied)
         {
             if (!Context.IsWorldReady || l is null)
@@ -198,6 +228,7 @@ namespace AreaOfEffect
 
         public static bool ApplyEffect(GameLocation l, Farmer who, Vector2 tile, SpellAffectedType t, SpellEffect effect, List<object> applied)
         {
+            List<object> newApplied = new();
             Object o;
             TerrainFeature tf;
             bool result = false;
@@ -214,81 +245,87 @@ namespace AreaOfEffect
                         {
                             ApplyAnimalEffect(l, who, a, effect);
                             applied.Add(a);
+                            newApplied.Add(a);
                             result = true;
                         }
                     }
                     break;
                 case SpellAffectedType.Building:
-                    foreach(var b in l.buildings)
+                    foreach(var a in l.buildings)
                     {
-                        if (applied.Contains(b))
+                        if (applied.Contains(a))
                             continue;
-                        var bb = b.GetBoundingBox();
+                        var bb = a.GetBoundingBox();
                         var rect = new Rectangle((tile * 64).ToPoint(), new(64, 64));
                         if (bb.Intersects(rect))
                         {
-                            ApplyBuildingEffect(l, who, b, effect);
-                            applied.Add(b);
+                            ApplyBuildingEffect(l, who, a, effect);
+                            applied.Add(a);
+                            newApplied.Add(a);
                             result = true;
                         }
                     }
                     break;
                 case SpellAffectedType.Pet:
-                    foreach(var p in l.characters.Where(c => c is Pet))
+                    foreach(var a in l.characters.Where(c => c is Pet))
                     {
-                        if (applied.Contains(p))
+                        if (applied.Contains(a))
                             continue;
-                        var bb = p.GetBoundingBox();
+                        var bb = a.GetBoundingBox();
                         var rect = new Rectangle((tile * 64).ToPoint(), new(64, 64));
                         if (bb.Intersects(rect))
                         {
-                            ApplyPetEffect(l, who, p as Pet, effect);
-                            applied.Add(p);
+                            ApplyPetEffect(l, who, a as Pet, effect);
+                            applied.Add(a);
+                            newApplied.Add(a);
                             result = true;
                         }
                     }
                     break;
                 case SpellAffectedType.Monster:
-                    foreach(var c in l.characters.Where(c => c is Monster))
+                    foreach(var a in l.characters.Where(c => c is Monster))
                     {
-                        if (applied.Contains(c))
+                        if (applied.Contains(a))
                             continue;
-                        var bb = c.GetBoundingBox();
+                        var bb = a.GetBoundingBox();
                         var rect = new Rectangle((tile * 64).ToPoint(), new(64, 64));
                         if (bb.Intersects(rect))
                         {
-                            ApplyMonsterEffect(l, who, c as Monster, effect);
-                            applied.Add(c);
+                            ApplyMonsterEffect(l, who, a as Monster, effect);
+                            applied.Add(a);
+                            newApplied.Add(a);
                             result = true;
                         }
                     }
                     break;
                 case SpellAffectedType.NPC:
-                    foreach (var c in l.characters.Where(c => c.IsVillager))
+                    foreach (var a in l.characters.Where(c => c.IsVillager))
                     {
-                        if (applied.Contains(c))
+                        if (applied.Contains(a))
                             continue;
-                        var bb = c.GetBoundingBox();
+                        var bb = a.GetBoundingBox();
                         var rect = new Rectangle((tile * 64).ToPoint(), new(64, 64));
                         if (bb.Intersects(rect))
                         {
-                            ApplyNPCEffect(l, who, c, effect);
-                            applied.Add(c);
+                            ApplyNPCEffect(l, who, a, effect);
+                            applied.Add(a);
+                            newApplied.Add(a);
                             result = true;
                         }
                     }
                     break;
                 case SpellAffectedType.Farmer:
-                    foreach (var f in l.farmers)
+                    foreach (var a in l.farmers)
                     {
-                        if (applied.Contains(f))
+                        if (applied.Contains(a))
                             continue;
-                        var bb = f.GetBoundingBox();
+                        var bb = a.GetBoundingBox();
                         var rect = new Rectangle((tile * 64).ToPoint(), new(64, 64));
                         if (bb.Intersects(rect))
                         {
-                            ApplyFarmerEffect(l, f, effect);
-                            applied.Add(f);
+                            ApplyFarmerEffect(l, a, effect);
+                            applied.Add(a);
+                            newApplied.Add(a);
                             result = true;
                         }
                     }
@@ -301,6 +338,7 @@ namespace AreaOfEffect
                     {
                         ApplyObjectEffect(l, who, tile, o, effect);
                         applied.Add(o);
+                        newApplied.Add(o);
                         result = true;
                     }
                     break;
@@ -309,7 +347,8 @@ namespace AreaOfEffect
                     if (rc is not null)
                     {
                         ApplyResourceClumpEffect(l, who, tile, rc, effect);
-                        //applied.Add(rc);
+                        applied.Add(rc);
+                        newApplied.Add(rc);
                         result = true;
                     }
                     break;
@@ -318,6 +357,7 @@ namespace AreaOfEffect
                     {
                         ApplyTerrainFeatureEffect(l, who, tile, tf, effect);
                         applied.Add(tf);
+                        newApplied.Add(tf);
                         result = true;
                     }
                     break;
@@ -326,6 +366,7 @@ namespace AreaOfEffect
                     {
                         ApplyCropEffect(l, who, tile, dirt, effect);
                         applied.Add(tf);
+                        newApplied.Add(tf);
                         result = true;
                     }
                     break;
@@ -334,20 +375,22 @@ namespace AreaOfEffect
                     {
                         ApplyTerrainFeatureEffect(l, who, tile, tf, effect);
                         applied.Add(tf);
+                        newApplied.Add(tf);
                         result = true;
                     }
                     break;
                 case SpellAffectedType.Horse:
-                    foreach (var c in l.characters.Where(c => c is Horse))
+                    foreach (var a in l.characters.Where(c => c is Horse))
                     {
-                        if (applied.Contains(c))
+                        if (applied.Contains(a))
                             continue;
-                        var bb = c.GetBoundingBox();
+                        var bb = a.GetBoundingBox();
                         var rect = new Rectangle((tile * 64).ToPoint(), new(64, 64));
                         if (bb.Intersects(rect))
                         {
-                            ApplyHorseEffect(l, who, c as Horse, effect);
-                            applied.Add(c);
+                            ApplyHorseEffect(l, who, a as Horse, effect);
+                            applied.Add(a);
+                            newApplied.Add(a);
                             result = true;
                         }
                     }
@@ -357,6 +400,7 @@ namespace AreaOfEffect
                     {
                         ApplyObjectEffect(l, who, tile, o, effect);
                         applied.Add(o);
+                        newApplied.Add(o);
                         result = true;
                     }
                     break;
@@ -365,6 +409,7 @@ namespace AreaOfEffect
                     {
                         ApplyObjectEffect(l, who, tile, o, effect);
                         applied.Add(o);
+                        newApplied.Add(o);
                         result = true;
                     }
                     break;
@@ -373,6 +418,7 @@ namespace AreaOfEffect
                     {
                         ApplyObjectEffect(l, who, tile, o, effect);
                         applied.Add(o);
+                        newApplied.Add(o);
                         result = true;
                     }
                     break;
@@ -381,6 +427,7 @@ namespace AreaOfEffect
                     {
                         ApplyTerrainFeatureEffect(l, who, tile, tf, effect);
                         applied.Add(tf);
+                        newApplied.Add(tf);
                         result = true;
                     }
                     break;
@@ -389,25 +436,23 @@ namespace AreaOfEffect
                     {
                         ApplyTerrainFeatureEffect(l, who, tile, tf, effect);
                         applied.Add(tf);
+                        newApplied.Add(tf);
                         result = true;
                     }
                     break;
+            }
+            if (effect.Seconds > 0 && !effect.ReapplyToTile && newApplied.Any())
+            {
+                for(int i = 0; i < newApplied.Count; i++)
+                {
+                    EOTObjDict[newApplied[i]] = new(l, who, new Vector2[] { tile }, effect, effect.Seconds * 1000 - 1);
+                }
             }
             return result;
         }
 
         private static void ApplyAnimalEffect(GameLocation l, Farmer who, FarmAnimal a, SpellEffect effect)
         {
-            if (effect.Seconds > 0)
-            {
-                EOTDict.Add(a, new()
-                {
-                    Location = l,
-                    Who = who,
-                    Effect = effect,
-                    Milliseconds = effect.Seconds * 1000 - 1
-                });
-            }
             if (effect.Sprites.Any())
             {
                 foreach (var sprite in effect.Sprites)
@@ -451,16 +496,6 @@ namespace AreaOfEffect
 
         private static void ApplyBuildingEffect(GameLocation l, Farmer who, Building a, SpellEffect effect)
         {
-            if (effect.Seconds > 0)
-            {
-                EOTDict.Add(a, new()
-                {
-                    Location = l,
-                    Who = who,
-                    Effect = effect,
-                    Milliseconds = effect.Seconds * 1000 - 1,
-                });
-            }
             switch (effect.EffectType)
             {
                 case SpellEffectType.Water:
@@ -478,16 +513,6 @@ namespace AreaOfEffect
 
         private static void ApplyPetEffect(GameLocation l, Farmer who, Pet a, SpellEffect effect)
         {
-            if (effect.Seconds > 0)
-            {
-                EOTDict.Add(a, new()
-                {
-                    Location = l,
-                    Who = who,
-                    Effect = effect,
-                    Milliseconds = effect.Seconds * 1000 - 1
-                });
-            }
             if (effect.Sprites.Any())
             {
                 foreach (var sprite in effect.Sprites)
@@ -511,17 +536,6 @@ namespace AreaOfEffect
 
         private static void ApplyTileEffect(GameLocation l, Farmer who, Vector2 tile, SpellEffect effect)
         {
-            if (effect.Seconds > 0)
-            {
-                EOTDict.Add(tile, new()
-                {
-                    Location = l,
-                    Who = who,
-                    Effect = effect,
-                    Milliseconds = effect.Seconds * 1000 - 1,
-                    Tile = tile
-                });
-            }
             switch (effect.EffectType)
             {
                 case SpellEffectType.Light:
@@ -531,8 +545,8 @@ namespace AreaOfEffect
                     {
                         id = id,
                         location = l,
-                        timeLeft = (int)effect.Value,
-                        totalTime = (int)effect.Value,
+                        timeLeft = Convert.ToInt32(effect.Value),
+                        totalTime = Convert.ToInt32(effect.Value),
                         radius = effect.Radius
                     });
                     break;
@@ -540,23 +554,13 @@ namespace AreaOfEffect
                     PerformTool(l, tile, who, (string)effect.Value, effect.AsFarmer);
                     break;
                 case SpellEffectType.Explode:
-                    l.explode(tile, 0, who, effect.Affected.Contains(SpellAffectedType.Farmer), (int)effect.Value, effect.Affected.Contains(SpellAffectedType.Object));
+                    l.explode(tile, 0, who, effect.Affected.Contains(SpellAffectedType.Farmer), Convert.ToInt32(effect.Value), effect.Affected.Contains(SpellAffectedType.Object));
                     break;
             }
         }
 
         public static void ApplyMonsterEffect(GameLocation l, Farmer who, Monster a, SpellEffect effect)
         {
-            if (effect.Seconds > 0)
-            {
-                EOTDict.Add(a, new()
-                {
-                    Who = who,
-                    Effect = effect,
-                    Location = l,
-                    Milliseconds = effect.Seconds * 1000 - 1,
-                });
-            }
             if (effect.Sprites.Any())
             {
                 foreach (var sprite in effect.Sprites)
@@ -567,14 +571,14 @@ namespace AreaOfEffect
             switch (effect.EffectType)
             {
                 case SpellEffectType.Damage:
-                    a.takeDamage((int)effect.Value, 0, 0, false, 0, who);
+                    a.takeDamage(Convert.ToInt32(effect.Value), 0, 0, false, 0, who);
                     break;
                 case SpellEffectType.Buff:
                     BuffDict.Add(a, new MonsterBuffManager(a));
                     BuffDict[a].AddBuff((string)effect.Value);
                     break;
                 case SpellEffectType.Freeze:
-                    a.stunTime.Value = (int)effect.Value;
+                    a.stunTime.Value = Convert.ToInt32(effect.Value);
                     break;
                 case SpellEffectType.Light:
                     var id = Guid.NewGuid().ToString();
@@ -584,8 +588,8 @@ namespace AreaOfEffect
                         id = id,
                         location = a.currentLocation,
                         target = a,
-                        timeLeft = (int)effect.Value,
-                        totalTime = (int)effect.Value,
+                        timeLeft = Convert.ToInt32(effect.Value),
+                        totalTime = Convert.ToInt32(effect.Value),
                         radius = effect.Radius
                     });
                         break;
@@ -600,16 +604,6 @@ namespace AreaOfEffect
 
         public static void ApplyNPCEffect(GameLocation l, Farmer who, NPC a, SpellEffect effect)
         {
-            if (effect.Seconds > 0)
-            {
-                EOTDict.Add(a, new()
-                {
-                    Who = who,
-                    Effect = effect,
-                    Location = l,
-                    Milliseconds = effect.Seconds * 1000 - 1,
-                });
-            }
             if (effect.Sprites.Any())
             {
                 foreach (var sprite in effect.Sprites)
@@ -627,8 +621,8 @@ namespace AreaOfEffect
                         id = id,
                         location = a.currentLocation,
                         target = a,
-                        timeLeft = (int)effect.Value,
-                        totalTime = (int)effect.Value,
+                        timeLeft = Convert.ToInt32(effect.Value),
+                        totalTime = Convert.ToInt32(effect.Value),
                         radius = effect.Radius
                     });
                         break;
@@ -643,16 +637,6 @@ namespace AreaOfEffect
 
         public static void ApplyHorseEffect(GameLocation l, Farmer who, Horse a, SpellEffect effect)
         {
-            if (effect.Seconds > 0)
-            {
-                EOTDict.Add(a, new()
-                {
-                    Who = who,
-                    Effect = effect,
-                    Location = l,
-                    Milliseconds = effect.Seconds * 1000 - 1,
-                });
-            }
             if (effect.Sprites.Any())
             {
                 foreach (var sprite in effect.Sprites)
@@ -670,8 +654,8 @@ namespace AreaOfEffect
                         id = id,
                         location = a.currentLocation,
                         target = a,
-                        timeLeft = (int)effect.Value,
-                        totalTime = (int)effect.Value,
+                        timeLeft = Convert.ToInt32(effect.Value),
+                        totalTime = Convert.ToInt32(effect.Value),
                         radius = effect.Radius
                     });
                         break;
@@ -686,15 +670,7 @@ namespace AreaOfEffect
 
         public static void ApplyFarmerEffect(GameLocation l, Farmer a, SpellEffect effect)
         {
-            if (effect.Seconds > 0)
-            {
-                EOTDict.Add(a, new()
-                {
-                    Effect = effect,
-                    Milliseconds = effect.Seconds * 1000 - 1,
-                });
-            }
-            if (effect.Sprites.Any())
+            if (effect.Sprites?.Any() == true)
             {
                 foreach (var sprite in effect.Sprites)
                 {
@@ -707,16 +683,16 @@ namespace AreaOfEffect
                     a.applyBuff((string)effect.Value);
                     break;
                 case SpellEffectType.Damage:
-                    a.takeDamage((int)effect.Value, true, null);
+                    a.takeDamage(Convert.ToInt32(effect.Value), true, null);
                     break;
                 case SpellEffectType.Heal:
-                    a.health = Math.Clamp(a.health + (int)effect.Value, 0, a.maxHealth);
+                    a.health = Math.Clamp(a.health + Convert.ToInt32(effect.Value), 0, a.maxHealth);
                     break;
                 case SpellEffectType.Invincible:
                     a.temporarilyInvincible = true;
                     a.flashDuringThisTemporaryInvincibility = true;
                     a.temporaryInvincibilityTimer = 0;
-                    a.currentTemporaryInvincibilityDuration = (int)effect.Value;
+                    a.currentTemporaryInvincibilityDuration = Convert.ToInt32(effect.Value);
                     break;
                 case SpellEffectType.Light:
                     var id = Guid.NewGuid().ToString();
@@ -726,8 +702,8 @@ namespace AreaOfEffect
                         id = id,
                         location = a.currentLocation,
                         target = a,
-                        timeLeft = (int)effect.Value,
-                        totalTime = (int)effect.Value,
+                        timeLeft = Convert.ToInt32(effect.Value),
+                        totalTime = Convert.ToInt32(effect.Value),
                         radius = effect.Radius
                     });
                     break;
@@ -743,17 +719,6 @@ namespace AreaOfEffect
 
         public static void ApplyObjectEffect(GameLocation l, Farmer who, Vector2 tile, Object a, SpellEffect effect)
         {
-            if (effect.Seconds > 0)
-            {
-                EOTDict.Add(a, new()
-                {
-                    Location = l,
-                    Who = who,
-                    Effect = effect,
-                    Milliseconds = effect.Seconds * 1000 - 1,
-                    Tile = tile
-                });
-            }
             if (effect.Unaffected?.Count > 0)
             {
                 if ((a.IsTwig() && effect.Unaffected.Contains(SpellAffectedType.Twig)) || (a.IsBreakableStone() && effect.Unaffected.Contains(SpellAffectedType.Stone)) || (a.IsWeeds() && effect.Unaffected.Contains(SpellAffectedType.Weed)))
@@ -781,17 +746,6 @@ namespace AreaOfEffect
 
         public static void ApplyResourceClumpEffect(GameLocation l, Farmer who, Vector2 tile, ResourceClump a, SpellEffect effect)
         {
-            if (effect.Seconds > 0)
-            {
-                EOTDict.Add(a, new()
-                {
-                    Location = l,
-                    Who = who,
-                    Effect = effect,
-                    Milliseconds = effect.Seconds * 1000 - 1,
-                    Tile = tile
-                });
-            }
 
             switch (effect.EffectType)
             {
@@ -815,17 +769,7 @@ namespace AreaOfEffect
 
         public static void ApplyTerrainFeatureEffect(GameLocation l, Farmer who, Vector2 tile, TerrainFeature a, SpellEffect effect)
         {
-            if (effect.Seconds > 0)
-            {
-                EOTDict.Add(a, new()
-                {
-                    Location = l,
-                    Who = who,
-                    Effect = effect,
-                    Milliseconds = effect.Seconds * 1000 - 1,
-                    Tile = tile
-                });
-            }
+
             if (effect.Unaffected?.Count > 0)
             {
                 if ((a is HoeDirt dirt && (effect.Unaffected.Contains(SpellAffectedType.HoeDirt)|| (dirt.crop is not null && effect.Unaffected.Contains(SpellAffectedType.Crop)))) || (a is Grass && effect.Unaffected.Contains(SpellAffectedType.Grass)) || (a is Tree && effect.Unaffected.Contains(SpellAffectedType.Tree)) || (a is FruitTree && effect.Unaffected.Contains(SpellAffectedType.FruitTree)))
@@ -848,15 +792,15 @@ namespace AreaOfEffect
                 case SpellEffectType.Grow:
                     if(a is Grass)
                     {
-                        (a as Grass).numberOfWeeds.Value = effect.Value is null ? 4 : (int)effect.Value;
+                        (a as Grass).numberOfWeeds.Value = effect.Value is null ? 4 : Convert.ToInt32(effect.Value);
                     }
                     else if (a is FruitTree)
                     {
-                        (a as FruitTree).growthStage.Value = effect.Value is null ? 5 : (int)effect.Value;
+                        (a as FruitTree).growthStage.Value = effect.Value is null ? 5 : Convert.ToInt32(effect.Value);
                     }
                     else if(a is Tree)
                     {
-                        (a as Tree).growthStage.Value = effect.Value is null ? 4 : (int)effect.Value;
+                        (a as Tree).growthStage.Value = effect.Value is null ? 4 : Convert.ToInt32(effect.Value);
                     }
                     break;
                 case SpellEffectType.Harvest:
@@ -899,17 +843,7 @@ namespace AreaOfEffect
 
         public static void ApplyCropEffect(GameLocation l, Farmer who, Vector2 tile, HoeDirt a, SpellEffect effect)
         {
-            if (effect.Seconds > 0)
-            {
-                EOTDict.Add(a, new()
-                {
-                    Location = l,
-                    Who = who,
-                    Effect = effect,
-                    Milliseconds = effect.Seconds * 1000 - 1,
-                    Tile = tile
-                });
-            }
+
             switch (effect.EffectType)
             {
                 case SpellEffectType.Burn:
@@ -922,7 +856,7 @@ namespace AreaOfEffect
                     }
                     else
                     {
-                        a.crop.currentPhase.Value = Math.Min(a.crop.phaseDays.Count - 1, (int)effect.Value);
+                        a.crop.currentPhase.Value = Math.Min(a.crop.phaseDays.Count - 1, Convert.ToInt32(effect.Value));
                         a.crop.dayOfCurrentPhase.Value = 0;
                     }
                     break;

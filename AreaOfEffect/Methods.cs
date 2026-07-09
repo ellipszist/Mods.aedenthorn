@@ -6,17 +6,12 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Extensions;
 using StardewValley.GameData;
-using StardewValley.GameData.Weapons;
 using StardewValley.Internal;
 using StardewValley.Mods;
-using StardewValley.Monsters;
-using StardewValley.Projectiles;
 using StardewValley.TerrainFeatures;
-using StardewValley.Tools;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Object = StardewValley.Object;
@@ -103,7 +98,7 @@ namespace AreaOfEffect
                 for (int y = 0; y < diameter; y++)
                 {
                     Vector2 tile = start + new Vector2(x, y);
-                    var distance = (int)Math.Round(Vector2.Distance(position, tile));
+                    var distance = Convert.ToInt32(Math.Round(Vector2.Distance(position, tile)));
                     if (data.AreaType == AOEType.Square || distance <= data.Radius)
                         list.Add(tile);
                 }
@@ -130,7 +125,7 @@ namespace AreaOfEffect
             if(m > d)
             {
                 target = Vector2.Lerp(f.Tile, target, d / m);
-                target = new Vector2((int)Math.Round(target.X), (int)Math.Round(target.Y));
+                target = new Vector2(Convert.ToInt32(Math.Round(target.X)), Convert.ToInt32(Math.Round(target.Y)));
             }
             return target;
         }
@@ -229,7 +224,7 @@ namespace AreaOfEffect
                 SMonitor.Log($"Missing tool for id {id}", LogLevel.Warn);
                 return;
             }
-            tool.DoFunction(l, (int)tile.X * 64, (int)tile.Y * 64, 1, who);
+            tool.DoFunction(l, Convert.ToInt32(tile.X) * 64, Convert.ToInt32(tile.Y) * 64, 1, who);
         }
 
         public static void FireProjectile(GameLocation l, Farmer who, SpellProjectileData pdata, Vector2 tile, SpellCastData data)
@@ -283,7 +278,7 @@ namespace AreaOfEffect
             }), shotItemId, pdata.Texture, pdata.SourceRect);
             projectile.ignoreTravelGracePeriod.Value = true;
             projectile.ignoreMeleeAttacks.Value = true;
-            projectile.maxTravelDistance.Value = (int)(v.Length());
+            projectile.maxTravelDistance.Value = Convert.ToInt32((v.Length()));
             projectile.height.Value = 32f;
             who.currentLocation.projectiles.Add(projectile);
             if(data.AreaType == AOEType.Line)
@@ -313,8 +308,8 @@ namespace AreaOfEffect
                 {
                     if (prop.PropertyType == typeof(int))
                     {
-                        var nf = (int)prop.GetValue(obj);
-                        nf = (int)GetNumber(nf, effect);
+                        var nf = Convert.ToInt32(prop.GetValue(obj));
+                        nf = Convert.ToInt32(GetNumber(nf, effect));
                         prop.SetValue(obj, nf);
                     }
                     else if (prop.PropertyType == typeof(long))
@@ -332,8 +327,8 @@ namespace AreaOfEffect
                     }
                     else if (prop.PropertyType == typeof(byte))
                     {
-                        var nf = (byte)prop.GetValue(obj);
-                        nf = (byte)GetNumber(nf, effect);
+                        var nf = Convert.ToByte(prop.GetValue(obj));
+                        nf = Convert.ToByte(GetNumber(nf, effect));
                         prop.SetValue(obj, nf);
                     }
                     else if (prop.PropertyType == typeof(float))
@@ -397,12 +392,12 @@ namespace AreaOfEffect
                     if(field.FieldType == typeof(NetInt))
                     {
                         var nf = (NetInt)field.GetValue(obj);
-                        nf.Value = (int)GetNumber(nf.Value, effect);
+                        nf.Value = Convert.ToInt32(GetNumber(nf.Value, effect));
                     }
                     else if(field.FieldType == typeof(int))
                     {
-                        var nf = (int)field.GetValue(obj);
-                        nf = (int)GetNumber(nf, effect);
+                        var nf = Convert.ToInt32(field.GetValue(obj));
+                        nf = Convert.ToInt32(GetNumber(nf, effect));
                         field.SetValue(obj, nf);
                     }
                     else if(field.FieldType == typeof(NetLong))
@@ -562,8 +557,8 @@ namespace AreaOfEffect
             {
                 FieldChangeType.Add => new Rectangle(i.X + int.Parse(split[0]), i.Y + int.Parse(split[1]), i.Width + int.Parse(split[2]), i.Height + int.Parse(split[3])),
                 FieldChangeType.Subtract => new Rectangle(i.X - int.Parse(split[0]), i.Y - int.Parse(split[1]), i.Width - int.Parse(split[2]), i.Height - int.Parse(split[3])),
-                FieldChangeType.Multiply => new Rectangle((int)Math.Round(i.X * float.Parse(split[1], NumberStyles.Any, CultureInfo.InvariantCulture)), (int)Math.Round(i.Y * float.Parse(split[1], NumberStyles.Any, CultureInfo.InvariantCulture)), (int)Math.Round(i.Width * float.Parse(split[2], NumberStyles.Any, CultureInfo.InvariantCulture)), (int)Math.Round(i.Height * float.Parse(split[3], NumberStyles.Any, CultureInfo.InvariantCulture))),
-                FieldChangeType.Divide => new Rectangle((int)Math.Round(i.X / float.Parse(split[1], NumberStyles.Any, CultureInfo.InvariantCulture)), (int)Math.Round(i.Y / float.Parse(split[1], NumberStyles.Any, CultureInfo.InvariantCulture)), (int)Math.Round(i.Width / float.Parse(split[2], NumberStyles.Any, CultureInfo.InvariantCulture)), (int)Math.Round(i.Height / float.Parse(split[3], NumberStyles.Any, CultureInfo.InvariantCulture))),
+                FieldChangeType.Multiply => new Rectangle(Convert.ToInt32(Math.Round(i.X * float.Parse(split[1], NumberStyles.Any, CultureInfo.InvariantCulture))), Convert.ToInt32(Math.Round(i.Y * float.Parse(split[1], NumberStyles.Any, CultureInfo.InvariantCulture))), Convert.ToInt32(Math.Round(i.Width * float.Parse(split[2], NumberStyles.Any, CultureInfo.InvariantCulture))), Convert.ToInt32(Math.Round(i.Height * float.Parse(split[3], NumberStyles.Any, CultureInfo.InvariantCulture)))),
+                FieldChangeType.Divide => new Rectangle(Convert.ToInt32(Math.Round(i.X / float.Parse(split[1], NumberStyles.Any, CultureInfo.InvariantCulture))), Convert.ToInt32(Math.Round(i.Y / float.Parse(split[1], NumberStyles.Any, CultureInfo.InvariantCulture))), Convert.ToInt32(Math.Round(i.Width / float.Parse(split[2], NumberStyles.Any, CultureInfo.InvariantCulture))), Convert.ToInt32(Math.Round(i.Height / float.Parse(split[3], NumberStyles.Any, CultureInfo.InvariantCulture)))),
                 FieldChangeType.Set => new Rectangle(int.Parse(split[0]), int.Parse(split[1]), int.Parse(split[2]), int.Parse(split[3])),
                 _ => i
             };
@@ -590,8 +585,8 @@ namespace AreaOfEffect
             {
                 FieldChangeType.Add => i + new Point(int.Parse(split[0]), int.Parse(split[1])),
                 FieldChangeType.Subtract => i - new Point(int.Parse(split[0]), int.Parse(split[1])),
-                FieldChangeType.Multiply => new Point((int)Math.Round(i.X * float.Parse(split[1], NumberStyles.Any, CultureInfo.InvariantCulture)), (int)Math.Round(i.Y * float.Parse(split[1], NumberStyles.Any, CultureInfo.InvariantCulture))),
-                FieldChangeType.Divide => new Point((int)Math.Round(i.X / float.Parse(split[1], NumberStyles.Any, CultureInfo.InvariantCulture)), (int)Math.Round(i.Y / float.Parse(split[1], NumberStyles.Any, CultureInfo.InvariantCulture))),
+                FieldChangeType.Multiply => new Point(Convert.ToInt32(Math.Round(i.X * float.Parse(split[1], NumberStyles.Any, CultureInfo.InvariantCulture))), Convert.ToInt32(Math.Round(i.Y * float.Parse(split[1], NumberStyles.Any, CultureInfo.InvariantCulture)))),
+                FieldChangeType.Divide => new Point(Convert.ToInt32(Math.Round(i.X / float.Parse(split[1], NumberStyles.Any, CultureInfo.InvariantCulture))), Convert.ToInt32(Math.Round(i.Y / float.Parse(split[1], NumberStyles.Any, CultureInfo.InvariantCulture)))),
                 FieldChangeType.Set => new Point(int.Parse(split[0]), int.Parse(split[1])),
                 _ => i
             };
@@ -743,7 +738,7 @@ namespace AreaOfEffect
                         {
                             for (int j = 0; j < amount; j++)
                             {
-                                renderBatch.Draw(Game1.mouseCursors, drawPos + Vector2.Lerp(offsets[i], offsets[i + 1], j / (float)amount) - new Vector2(15, 15), new Rectangle(88, 1779, 30, 30), GetDirectionColor((int)kvp.Value.Sequence[i]), 0, Vector2.Zero, 1f, SpriteEffects.None, 1f);
+                                renderBatch.Draw(Game1.mouseCursors, drawPos + Vector2.Lerp(offsets[i], offsets[i + 1], j / (float)amount) - new Vector2(15, 15), new Rectangle(88, 1779, 30, 30), GetDirectionColor(Convert.ToInt32(kvp.Value.Sequence[i])), 0, Vector2.Zero, 1f, SpriteEffects.None, 1f);
                             }
                         }
                         renderBatch.Draw(Game1.mouseCursors, drawPos + offsets[k + 1], new Rectangle?(Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 0, 16, 16)), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 1f);
@@ -845,17 +840,6 @@ namespace AreaOfEffect
             {
                 who.currentLocation.debris.Add(new Debris(obj, who.Position));
             }
-        }
-        private static void SetEffectOverTime(GameLocation l, Farmer who, Vector2 tile, object a, SpellEffect effect)
-        {
-            EOTDict[a] = new()
-            {
-                Effect = effect,
-                Location = l,
-                Who = who,
-                Tile = tile,
-                Milliseconds = (int)effect.Value
-            };
         }
     }
 }

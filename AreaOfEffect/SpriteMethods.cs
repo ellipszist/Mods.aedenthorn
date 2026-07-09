@@ -39,11 +39,11 @@ namespace AreaOfEffect
                 return null;
             var t = new TemporaryAnimatedSprite("LooseSprites\\Cursors", new Microsoft.Xna.Framework.Rectangle(276, 1985, 12, 11), position + new Vector2(32f, -32f) + new Vector2((float)Game1.random.Next(-32, 32), (float)Game1.random.Next(-16, 16)), false, 0f, Color.White)
             {
-                interval = 30f,
-                totalNumberOfLoops = 99999,
-                animationLength = 4,
-                scale = 4f,
-                alphaFade = 0.01f,
+                interval = data.Interval > 0 ? data.Interval : 30f,
+                totalNumberOfLoops = data.Loops > 0 ? data.Loops : 99999,
+                animationLength = data.Length > 0 ? data.Length : 4,
+                scale = data.Scale ?? 4f,
+                alphaFade = data.AlphaFade >= 0 ? data.AlphaFade : 0.01f,
                 acceleration = data.Acceleration,
                 alpha = data.Alpha,
                 drawAboveAlwaysFront = data.DrawAbove,
@@ -59,20 +59,26 @@ namespace AreaOfEffect
         {
             if (!Context.IsWorldReady || l is null)
                 return null;
-            var t = new TemporaryAnimatedSprite("LooseSprites\\Cursors", new Microsoft.Xna.Framework.Rectangle(276, 1985, 12, 11), tile * 64 + new Vector2((float)Game1.random.Next(-16, 16), (float)Game1.random.Next(-16, 16)), false, 0f, Color.White)
+            var t = new TemporaryAnimatedSprite("LooseSprites\\Cursors", new Rectangle(276, 1985, 12, 11), tile * 64 + new Vector2((float)Game1.random.Next(-16, 16), (float)Game1.random.Next(-16, 16)), false, 0f, Color.White)
             {
                 interval = 30f,
                 totalNumberOfLoops = 15,
                 animationLength = 4,
-                scale = 4f
+                scale = 4f,
+                layerDepth = Math.Max(0f, (float)((tile.Y + 1) * 64 - 24 + 1) / 10000f) + (float)tile.X * 1E-05f
             };
             if(data != null)
             {
-                t.delayBeforeAnimationStart = data.Delay;
-                t.interval = data.Interval;
-                t.totalNumberOfLoops = data.Loops;
-                t.animationLength = data.Length; 
-                t.scale = data.Scale ?? 4f;
+                if(data.Delay > 0)
+                    t.delayBeforeAnimationStart = data.Delay;
+                if (data.Interval > 0)
+                    t.interval = data.Interval;
+                if (data.Loops > 0)
+                    t.totalNumberOfLoops = data.Loops;
+                if (data.Length > 0)
+                    t.animationLength = data.Length;
+                if (data.Scale is not null)
+                    t.scale = data.Scale.Value;
             }
             Game1.delayedActions.Add(new(1000, () =>
             {

@@ -1,17 +1,10 @@
 ﻿using HarmonyLib;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
-using StardewValley;
 using StardewValley.GameData.Shops;
-using StardewValley.GameData.Tools;
-using StardewValley.ItemTypeDefinitions;
-using StardewValley.Monsters;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 
 namespace WizardShop
@@ -46,6 +39,38 @@ namespace WizardShop
         {
             if (!Config.ModEnabled)
                 return;
+            if (e.NameWithoutLocale.IsEquivalentTo("Data/Shops"))
+            {
+                e.Edit((IAssetData data) =>
+                {
+                    var dict = data.AsDictionary<string, ShopData>().Data;
+                    dict["Wizard"] = new()
+                    {
+                        Owners = new()
+                        {
+                            new()
+                            {
+                                Dialogues = new()
+                                {
+                                    new()
+                                    {
+                                        RandomDialogue = new()
+                                        {
+                                            SHelper.Translation.Get("dialogue-1"),
+                                            SHelper.Translation.Get("dialogue-2"),
+                                            SHelper.Translation.Get("dialogue-3"),
+                                            SHelper.Translation.Get("dialogue-4"),
+                                        }
+                                    }
+                                },
+                                RandomizeDialogueOnOpen = true,
+                                Id = "Wizard",
+                                Name = "Wizard",
+                            }
+                        }
+                    };
+                });
+            }
         }
 
         private void GameLoop_GameLaunched(object sender, GameLaunchedEventArgs e)

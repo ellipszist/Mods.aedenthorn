@@ -21,7 +21,7 @@ namespace WizardShop
                     return true;
                 var responses = new Response[]
                 {
-                    new Response("Shop", SHelper.Translation.Get("wands")),
+                    new Response("Shop", SHelper.Translation.Get("shop")),
                     new Response("Build", SHelper.Translation.Get("buildings")),
                     new Response("Leave", SHelper.Translation.Get("leave"))
                 };
@@ -39,6 +39,10 @@ namespace WizardShop
                 switch (questionAndAnswer)
                 {
                     case "WizardBook_Shop":
+                        if (!DataLoader.Shops(Game1.content).TryGetValue("Wizard", out var shop))
+                        {
+                            return false;
+                        }
                         Utility.TryOpenShopMenu("Wizard", "Wizard", true);
                         break;
                     case "WizardBook_Build":

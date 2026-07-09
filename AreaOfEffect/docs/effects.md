@@ -13,7 +13,8 @@ Different effect types will require different data. Generic effect fields are:
 | AsFarmer | bool | Whether to act as though the caster themselves was performing the action. This means, for example, that tool spells will consume stamina, gain XP, etc. Default is false. |
 | First | bool | Whether to stop after the first instance of each affected type is found. Default is false. |
 | PerTile | bool | Whether to apply the effect to each tile in the AOE. Default is true. Only used for explosions. |
-| Seconds | int | Set this to a positive integer if you want the effect to trigger repeatedly every second for the number of seconds specified. |
+| Seconds | int | Set this to a positive integer if you want the effect to reapply every second for the number of seconds specified. |
+| ReapplyToTile | bool | Whether reapplied effects over time should be reapplied to the tile (otherwise they will be reapplied to each originally affected object, even if those objects leave the triggering tile). |
 | Value | varies | A generic variable used by various effect types for different purposes (see below). |
 
 

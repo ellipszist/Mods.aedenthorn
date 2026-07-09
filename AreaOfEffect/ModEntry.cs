@@ -10,8 +10,10 @@ using StardewValley.Characters;
 using StardewValley.Monsters;
 using StardewValley.TerrainFeatures;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.Linq;
+using xTile.Tiles;
 
 namespace AreaOfEffect
 {
@@ -41,7 +43,9 @@ namespace AreaOfEffect
         public static Dictionary<string, Texture2D> TextureDict { get; set; } = new();
         public static Dictionary<string, SpellLightData> LightDict { get; set; } = new();
         public static Dictionary<Monster, MonsterBuffManager> BuffDict { get; set; } = new();
-        public static Dictionary<object, EffectOverTimeData> EOTDict { get; set; } = new();
+        public static Dictionary<object, DelayedEffectData> EOTObjDict { get; set; } = new();
+        public static List<DelayedEffectData> DelayTileList { get; set; } = new();
+        public static List<DelayedEffectData> EOTTileList { get; set; } = new();
         public static Dictionary<TemporaryAnimatedSprite, MovingSpriteData> MovingSpriteDict { get; set; } = new();
         public static Dictionary<SpellProjectile, LinearProjectileInstance> ProjectileDict { get; set; } = new();
 
@@ -130,20 +134,74 @@ namespace AreaOfEffect
                         }
                     }
                 }
-                if (EOTDict.Any())
+                if (DelayTileList.Any())
                 {
-                    foreach (var obj in EOTDict.Keys.ToArray())
+                    for (int i = DelayTileList.Count - 1; i >= 0; i--)
                     {
-                        var d = EOTDict[obj];
+                        var d = DelayTileList[i];
+                        d.Milliseconds -= Game1.currentGameTime.ElapsedGameTime.Milliseconds;
+                        if (d.Milliseconds > 0)
+                            continue;
+                        if (!d.Effect.PerTile)
+                        {
+                            ApplyCenteredEffect(d.Location, d.Who, d.Tile, d.Effect, d.Radius);
+                            if (d.Effect.Seconds > 0 && d.Effect.ReapplyToTile)
+                            {
+                                EOTTileList.Add(new(d.Location, d.Who, d.Tiles, d.Effect, d.Effect.Seconds * 1000 - 1));
+                            }
+                        }
+                        else
+                        {
+                            List<object> applied = new();
+                            foreach (var tile in d.Tiles)
+                            {
+                                ApplyEffectToTile(d.Location, d.Who, tile, d.Effect, applied);
+                            }
+                            if (d.Effect.Seconds > 0 && d.Effect.ReapplyToTile)
+                            {
+                                EOTTileList.Add(new(d.Location, d.Who, d.Tiles, d.Effect, d.Effect.Seconds * 1000 - 1));
+                            }
+                        }
+                        DelayTileList.RemoveAt(i);
+                    }
+                }
+                if (EOTTileList.Any())
+                {
+                    for (int i = EOTTileList.Count - 1; i >= 0; i--)
+                    {
+                        var d = EOTTileList[i];
                         int seconds = d.Milliseconds / 1000;
                         d.Milliseconds -= Game1.currentGameTime.ElapsedGameTime.Milliseconds;
-                        if (d.Milliseconds / 1000 == seconds)
+                        if (d.Milliseconds / 1000 == seconds && d.Milliseconds > 0)
                             continue;
-                        if (obj is Vector2 v)
+                        if (!d.Effect.PerTile)
                         {
-                            ApplyTileEffect(d.Location, d.Who, v, d.Effect);
+                            ApplyCenteredEffect(d.Location, d.Who, d.Tile, d.Effect, d.Radius);
                         }
-                        else if (obj is Monster m)
+                        else
+                        {
+                            List<object> applied = new();
+                            foreach (var tile in d.Tiles)
+                            {
+                                ApplyEffectToTile(d.Location, d.Who, tile, d.Effect, applied);
+                            }
+                        }
+                        if (d.Milliseconds <= 0)
+                        {
+                            EOTTileList.RemoveAt(i);
+                        }
+                    }
+                }
+                if (EOTObjDict.Any())
+                {
+                    foreach (var obj in EOTObjDict.Keys.ToArray())
+                    {
+                        var d = EOTObjDict[obj];
+                        int seconds = d.Milliseconds / 1000;
+                        d.Milliseconds -= Game1.currentGameTime.ElapsedGameTime.Milliseconds;
+                        if (d.Milliseconds / 1000 == seconds && d.Milliseconds > 0)
+                            continue;
+                        if (obj is Monster m)
                         {
                             ApplyMonsterEffect(d.Location, d.Who, m, d.Effect);
                         }
@@ -189,7 +247,7 @@ namespace AreaOfEffect
                         }
                         if(d.Milliseconds <= 0)
                         {
-                            EOTDict.Remove(obj);
+                            EOTObjDict.Remove(obj);
                         }
                     }
                 }

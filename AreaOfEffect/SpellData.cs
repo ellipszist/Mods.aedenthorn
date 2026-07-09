@@ -153,7 +153,7 @@ namespace AreaOfEffect
         public string Texture { get; set; }
         public Rectangle SourceRect { get; set; }
         public float Alpha { get; set; } = 1;
-        public float AlphaFade { get; set; }
+        public float AlphaFade { get; set; } = -1;
         public Color Color { get; set; } = Color.White;
         public int Index { get; set; } = -1;
         public float Interval { get; set; } = 100;
@@ -186,10 +186,12 @@ namespace AreaOfEffect
     {
         public List<SpellAffectedType> Affected { get; set; }
         public List<SpellAffectedType> Unaffected { get; set; }
-        public List<SpriteData> Sprites { get; set; }
+        public List<SpriteData> Sprites { get; set; } = new();
         public SpellEffectType EffectType { get; set; }
         public FieldChangeType ChangeType { get; set; }
+        public int Delay { get; set; }
         public int Seconds { get; set; }
+        public bool ReapplyToTile { get; set; } = true;
         public bool AsFarmer { get; set; }
         public bool First { get; set; }
         public bool PerTile { get; set; } = true;
