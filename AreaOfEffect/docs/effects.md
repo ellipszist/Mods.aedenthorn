@@ -5,7 +5,7 @@ Spell effects are applied to a variety of objects including the tiles themselves
 Different effect types will require different data. Generic effect fields are:
 
 | Field | Type | Description |
-|:-----:|:----:|:------------|
+|:-----|:----:|:------------|
 | Affected | string[] | Types of objects affected by the effect. |
 | Unaffected | string[] | Types of objects unaffected by the effect (used for sub-types, e.g. Trees vs TerrainFeatures). |
 | EffectType | string | The type of effect to apply (see below). |
@@ -25,7 +25,7 @@ You can specify multiple affected types for each effect, and optionally specify 
 Here is a list of implemented affected types:
 
 | Type | Description |
-|:----:|:------------|
+|:----|:------------|
 | Animal | farm animals. |
 | Building |  |
 | Crop |  |
@@ -53,7 +53,7 @@ Different objects are affected differently by different effect types.
 Here is a list of implemented spell effects:
 
 | Effect | Can Affect | Description |
-|:------:|:-------:|:------------|
+|:------|:-------:|:------------|
 | Buff | Farmer, Monster | Applies a buff to the target (monster buffing is limited atm to those that effect their speed or cause them to freeze). |
 | Burn | Tile, TerrainFeature, Crop, Object, ResourceClump | Causes the target to catch fire, being destroyed after a time. |
 | Custom | all except Tile | Change a custom C# field or property for the target. |
@@ -118,7 +118,7 @@ E.g.:
 You can optionally specify "ChangeType", which can be one of the following:
 
 | ChangeType | Value Type | Description | Notes |
-|:-----------:|:----------:|:------------|:-----|
+|:-----------|:----------:|:------------|:-----|
 | Set | same | Sets the field or property to the given value. | default type |
 | Toggle | N/A | Toggles the field or property to the opposite of its current value. | boolean only |
 | Subtract | same | Subtracts for numbers, vectors, points; removes the substring from strings. | 
